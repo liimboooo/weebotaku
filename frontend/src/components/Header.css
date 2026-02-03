@@ -1,0 +1,31 @@
+.home-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 50px;
+  }
+  
+  .home-header h1 {
+    color: #e63636;
+    font-size: 48px;
+    letter-spacing: 2px;
+  }
+  
+  .home-header nav button {
+    background-color: transparent;
+    border: 2px solid #e63636;
+    color: #e63636;
+    padding: 10px 20px;
+    margin-left: 15px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  
+  .home-header nav button:hover {
+    background-color: #e63636;
+    color: #fff;
+    transform: scale(1.05);
+  }
+  
