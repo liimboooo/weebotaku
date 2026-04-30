@@ -1,13 +1,25 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import "./Categories.css";
 
 export default function Categories({ categories }) {
+  const navigate = useNavigate();
+
   return (
     <section className="categories-section">
-      <h2>Categories</h2>
-      <div className="categories">
+      <div className="section-title">
+        <h2>🎭 Browse by Genre</h2>
+        <p>Find your next favorite anime</p>
+      </div>
+      <div className="categories-grid">
         {categories.map((cat) => (
-          <button key={cat}>{cat}</button>
+          <div 
+            key={cat} 
+            className="category-card"
+            onClick={() => navigate(`/search?genre=${cat}`)}
+          >
+            <h3>{cat}</h3>
+          </div>
         ))}
       </div>
     </section>

@@ -7,7 +7,6 @@ export default function FeaturedAnime({ animeList }) {
 
   return (
     <section className="featured-section">
-      <h2>Featured Anime</h2>
       <div className="anime-grid">
         {animeList.map((anime) => (
           <div
@@ -15,8 +14,22 @@ export default function FeaturedAnime({ animeList }) {
             key={anime.id}
             onClick={() => navigate(`/anime/${anime.id}`)}
           >
-            <img src={anime.img} alt={anime.name} />
-            <p>{anime.name}</p>
+            <div className="card-img-wrapper">
+              <img src={anime.img} alt={anime.name} />
+              <div className="card-overlay">
+                <ion-icon name="play-circle"></ion-icon>
+              </div>
+              <div className="card-badges">
+                {anime.rating && <span className="badge rating">★ {anime.rating}</span>}
+                {anime.episodes && <span className="badge eps">{anime.episodes} EP</span>}
+              </div>
+            </div>
+            <div className="card-info">
+              <h3>{anime.name}</h3>
+              <p className="card-genres">
+                {anime.genres ? anime.genres.slice(0, 2).join(", ") : "Anime"}
+              </p>
+            </div>
           </div>
         ))}
       </div>

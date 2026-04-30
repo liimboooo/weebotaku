@@ -1,31 +1,96 @@
 .home-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 50px;
+  padding: 15px 30px;
+  background: rgba(20, 20, 23, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  position: sticky;
+  top: 20px;
+  z-index: 100;
+}
+
+.logo-container {
+  cursor: pointer;
+}
+
+.logo-container h1 {
+  color: #fff;
+  font-size: 36px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.logo-container h1 span {
+  color: #e63636;
+}
+
+.header-nav {
+  display: flex;
+  gap: 10px;
+}
+
+.header-nav button {
+  background-color: transparent;
+  border: none;
+  color: #ccc;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+.header-nav button:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.header-nav .logout-btn {
+  background-color: rgba(230, 54, 54, 0.1);
+  color: #e63636;
+  border: 1px solid rgba(230, 54, 54, 0.3);
+  margin-left: 10px;
+}
+
+.header-nav .logout-btn:hover {
+  background-color: #e63636;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(230, 54, 54, 0.4);
+}
+
+.surprise-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(230, 54, 54, 0.1), rgba(255, 82, 82, 0.1)) !important;
+  color: #ff5252 !important;
+  border: 1px dashed rgba(255, 82, 82, 0.4) !important;
+}
+
+.surprise-btn:hover {
+  background: linear-gradient(135deg, #e63636, #ff5252) !important;
+  color: #fff !important;
+  border-style: solid !important;
+  box-shadow: 0 4px 15px rgba(230, 54, 54, 0.4);
+}
+
+@media (max-width: 768px) {
+  .home-header {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
   }
-  
-  .home-header h1 {
-    color: #e63636;
-    font-size: 48px;
-    letter-spacing: 2px;
+  .header-nav {
+    flex-wrap: wrap;
+    justify-content: center;
   }
-  
-  .home-header nav button {
-    background-color: transparent;
-    border: 2px solid #e63636;
-    color: #e63636;
-    padding: 10px 20px;
-    margin-left: 15px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
-  }
-  
-  .home-header nav button:hover {
-    background-color: #e63636;
-    color: #fff;
-    transform: scale(1.05);
-  }
-  
+}

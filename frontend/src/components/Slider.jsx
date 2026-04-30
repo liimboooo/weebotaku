@@ -1,29 +1,15 @@
 import React, { useState, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
-import { useNavigate } from "react-router-dom"; // ✅ IMPORT
+import { useNavigate } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/pagination";
 import "./Slider.css";
 
-export default function Slider() {
+export default function Slider({ sliderData }) {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const navigate = useNavigate(); // ✅ DEFINE
-
-  const slides = [
-    { id: 1, title: "Naruto", img: "/beta-1.jpg" },
-    { id: 2, title: "One Piece", description: "A young ninja chasing his dream to become Hokage.",img: "/beta-2.jpg" },
-    { id: 3, title: "Demon Slayer", description: "A young ninja chasing his dream to become Hokage.",img: "/beta-3.jpg" },
-    { id: 4, title: "Demon Slayer", description: "A young ninja chasing his dream to become Hokage.",img: "/beta-1.jpg" },
-    { id: 5, title: "Demon Slayer", description: "A young ninja chasing his dream to become Hokage.",img: "/beta-2.jpg" },
-    { id: 6, title: "Demon Slayer", description: "A young ninja chasing his dream to become Hokage.",img: "/beta-3.jpg" },
-    { id: 7, title: "Demon Slayer", description: "A young ninja chasing his dream to become Hokage.",img: "/beta-1.jpg" },
-    { id: 8, title: "Demon Slayer", description: "A young ninja chasing his dream to become Hokage.",img: "/beta-3.jpg" },
-    { id: 9, title: "Demon Slayer", description: "A young ninja chasing his dream to become Hokage.",img: "/beta-2.jpg" },
-    { id: 10, title: "Demon Slayer", description: "A young ninja chasing his dream to become Hokage.",img: "/beta-1.jpg" }
-    
-  ];
+  const navigate = useNavigate();
 
   const togglePlayPause = () => {
     if (!audioRef.current) return;
@@ -34,6 +20,8 @@ export default function Slider() {
     }
     setIsPlaying(!isPlaying);
   };
+
+  if (!sliderData || sliderData.length === 0) return null;
 
   return (
     <div className="slider">
@@ -56,44 +44,35 @@ export default function Slider() {
           name="pause"
         ></ion-icon>
       </button>
+      
       <Swiper
-  modules={[Autoplay]}
-  grabCursor={true}
-  slidesPerView={"auto"}
-  centeredSlides={true}
-  spaceBetween={8}
-  loop={false} // disable loop for proper starting order
-  speed={1000}
-  autoplay={{
-    delay: 2000,
-    disableOnInteraction: false,
-  }}
->
-  onSwiper={(swiper) => {
-  setTimeout(() => {
-    swiper.slideTo(0, 0, false); // jump to first real slide without animation
-    swiper.autoplay.start();     // restart autoplay
-  }, 100); // small delay to let Swiper finish mounting
-}}
+        modules={[Autoplay]}
+        grabCursor={true}
+        slidesPerView={"auto"}
+        centeredSlides={true}
+        spaceBetween={8}
+        loop={false}
+        speed={1000}
+        autoplay={{
+          delay: 3000,
+          disableOnInteraction: false,
+        }}
+      >
+        {sliderData.map((slide) => (
+          <SwiperSlide
+            key={slide.id}
+            onClick={() => navigate(`/anime/${slide.id}`)}
+            className="anime-slide"
+          >
+            <img src={slide.img} alt={slide.name} />
 
-
-
-{slides.map((slide) => (
-  <SwiperSlide
-    key={slide.id}
-    onClick={() => navigate(`/anime/${slide.id}`)}
-    className="anime-slide"
-  >
-    <img src={slide.img} alt={slide.title} />
-
-    <div className="anime-info">
-      <span className="anime-desc">{slide.description}</span>
-      <p className="anime-title">{slide.title}</p>
-    </div>
-  </SwiperSlide>
-))}
-</Swiper>
-
+            <div className="anime-info">
+              <span className="anime-desc">{slide.description}</span>
+              <p className="anime-title">{slide.name}</p>
+            </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
     </div>
   );
 }

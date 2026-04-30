@@ -4,19 +4,15 @@ import Slider from "../components/Slider";
 import FeaturedAnime from "../components/FeaturedAnime";
 import Categories from "../components/Categories";
 import Background from "../components/Background";
+import { getFeaturedAnime, getAllGenres, getTrendingAnime, getNewEpisodes } from "../data/animeData";
+import Footer from "../components/Footer";
 import "./Home.css";
 
 export default function Home() {
-  const featuredAnime = [
-    { id: 1, name: "Naruto", img: "/beta-1.jpg" },
-    { id: 2, name: "One Piece", img: "/beta-2.jpg" },
-    { id: 3, name: "Demon Slayer", img: "/beta-3.jpg" },
-    { id: 4, name: "Attack on Titan", img: "/beta-1.jpg" },
-    { id: 5, name: "Bleach", img: "/beta-2.jpg" },
-    { id: 6, name: "Jujutsu Kaisen", img: "/beta-3.jpg" },
-  ];
-
-  const categories = ["Action", "Romance", "Shonen", "Slice of Life", "Fantasy"];
+  const featuredAnime = getFeaturedAnime();
+  const categories = getAllGenres();
+  const trendingAnime = getTrendingAnime();
+  const newEpisodes = getNewEpisodes();
 
   return (
     <div className="home-container">
@@ -24,9 +20,39 @@ export default function Home() {
       <Background />
 
       <Header />
-      <Slider />
-      <FeaturedAnime animeList={featuredAnime} />
+      
+      {/* Quick Stats Banner */}
+      <div className="stats-banner">
+        <div className="stat-item">
+          <h3>2,405</h3>
+          <p>Anime Available</p>
+        </div>
+        <div className="stat-item">
+          <h3>42</h3>
+          <p>Airing Now</p>
+        </div>
+        <div className="stat-item">
+          <h3>1.2M</h3>
+          <p>Active Users</p>
+        </div>
+      </div>
+
+      <Slider sliderData={featuredAnime} />
+      
+      <div className="section-title">
+        <h2>🔥 Trending Now</h2>
+        <p>The most watched anime this week</p>
+      </div>
+      <FeaturedAnime animeList={trendingAnime} />
+
+      <div className="section-title">
+        <h2>🆕 New Episodes</h2>
+        <p>Recently updated</p>
+      </div>
+      <FeaturedAnime animeList={newEpisodes} />
+
       <Categories categories={categories} />
+      <Footer />
     </div>
   );
 }
