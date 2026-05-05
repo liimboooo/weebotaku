@@ -51,6 +51,69 @@
   color: #fff;
   position: relative;
   z-index: 1;
+  overflow: hidden;
+}
+
+.avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-edit-form input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-family: inherit;
+  outline: none;
+}
+
+.avatar-upload-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.avatar-upload-btn,
+.clear-avatar-btn,
+.edit-profile-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.avatar-upload-btn input {
+  display: none;
+}
+
+.clear-avatar-btn {
+  color: #ffb0b0;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.edit-profile-btn {
+  background: linear-gradient(135deg, #e63636, #ff5252);
+  border-color: transparent;
 }
 
 .avatar-ring {
@@ -161,6 +224,7 @@
   border-radius: 10px;
   transition: all 0.3s ease;
   font-family: inherit;
+  overflow: hidden;
 }
 
 .tab-btn:hover {
@@ -168,9 +232,15 @@
 }
 
 .tab-btn.active {
-  background: linear-gradient(135deg, #e63636, #ff5252);
   color: #fff;
-  box-shadow: 0 4px 15px rgba(230, 54, 54, 0.3);
+}
+
+.active-pill-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #e63636, #ff5252);
+  border-radius: 25px;
+  z-index: 0;
 }
 
 /* Tab content */
@@ -282,6 +352,13 @@
 .recent-item span {
   color: #ffd700;
   font-size: 13px;
+}
+
+.user-score {
+  display: block;
+  color: #e63636 !important;
+  font-weight: 700;
+  margin-top: 5px;
 }
 
 /* Activity timeline */

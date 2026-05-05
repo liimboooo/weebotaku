@@ -1,0 +1,103 @@
+/* Global Glassmorphism and Animations */
+:root {
+  --glass: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-hover: rgba(230, 54, 54, 0.1);
+  --primary: #e63636;
+  --primary-glow: rgba(230, 54, 54, 0.4);
+}
+
+body {
+  background-color: #0a0a0c;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  overflow-x: hidden;
+  will-change: transform;
+}
+
+/* GPU acceleration for smoother animations */
+.search-result-card, .anime-card, .hero-bg {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0c;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 10px;
+  border: 2px solid #0a0a0c;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #e63636;
+}
+
+.glass-panel {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #fff 0%, #888 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Advanced View Transitions */
+:root {
+  --reveal-radius: 100%;
+  --reveal-x: 50%;
+  --reveal-y: 50%;
+}
+
+::view-transition-old(root) {
+  animation: none;
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2;
+  animation: none;
+  clip-path: circle(var(--reveal-radius) at var(--reveal-x) var(--reveal-y));
+}
+
+/* Morphing specific elements (Hero Expansion) */
+::view-transition-old(anime-card),
+::view-transition-new(anime-card) {
+  animation-duration: 0.9s;
+  animation-timing-function: cubic-bezier(0.5, 0, 0.1, 1);
+}
+
+/* Custom Scrollbar Reveal Effect */
+.reveal-circle {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #e63636;
+  z-index: 10000;
+  clip-path: circle(0% at 50% 50%);
+  pointer-events: none;
+}

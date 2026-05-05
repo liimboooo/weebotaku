@@ -1,0 +1,109 @@
+.anime-detail-page {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  z-index: 0;
+  padding: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.watch-sources-section {
+  background: linear-gradient(135deg, rgba(230, 54, 54, 0.06), rgba(255, 82, 82, 0.03));
+  border: 1px solid rgba(230, 54, 54, 0.1);
+  border-radius: 16px;
+  padding: 30px;
+  margin: 30px 0;
+}
+
+.watch-sources-section h2 {
+  color: #e63636;
+  font-size: 22px;
+  margin-bottom: 20px;
+}
+
+.sources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.source-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 100px;
+}
+
+.source-btn:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.source-logo {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.source-name {
+  font-size: 12px;
+  color: #bbb;
+  font-weight: 600;
+}
+
+.source-btn.crunchyroll {
+  border-color: rgba(255, 168, 0, 0.3);
+}
+
+.source-btn.crunchyroll:hover {
+  background: rgba(255, 168, 0, 0.1);
+  border-color: rgba(255, 168, 0, 0.5);
+}
+
+.source-btn.netflix {
+  border-color: rgba(229, 9, 20, 0.3);
+}
+
+.source-btn.netflix:hover {
+  background: rgba(229, 9, 20, 0.1);
+  border-color: rgba(229, 9, 20, 0.5);
+}
+
+.source-btn.hulu {
+  border-color: rgba(31, 221, 15, 0.3);
+}
+
+.source-btn.hulu:hover {
+  background: rgba(31, 221, 15, 0.1);
+  border-color: rgba(31, 221, 15, 0.5);
+}
+
+.source-btn.hidive {
+  border-color: rgba(102, 102, 255, 0.3);
+}
+
+.source-btn.hidive:hover {
+  background: rgba(102, 102, 255, 0.1);
+  border-color: rgba(102, 102, 255, 0.5);
+}
+
+.recommendations-container {
+  margin-top: 60px;
+}
+
+.section-header {
+  color: #e63636;
+  font-size: 26px;
+  margin-bottom: 25px;
+  text-align: left;
+}

@@ -6,15 +6,16 @@ export default function Background() {
     if (window.particlesJS) {
       window.particlesJS("particles-js", {
         particles: {
-          number: { value: 180, density: { enable: true, value_area: 800 } },
-          color: { value: "#fff" }, // particles color
+          number: { value: 25, density: { enable: true, value_area: 1500 } }, // Reduced from 60
+          color: { value: "#e63636" },
           shape: { type: "circle" },
-          opacity: { value: 0.3 },
-          size: { value: 4, random: true },
+          opacity: { value: 0.1 }, // Reduced from 0.15
+          size: { value: 2, random: true }, // Reduced from 3
           line_linked: { enable: false },
-          move: { enable: true, speed: 0.4, direction: "right", random: true },
+          move: { enable: true, speed: 0.15, direction: "none", random: true }, // Reduced speed
         },
-        retina_detect: true,
+        retina_detect: false,
+        interactivity: { enable: false }, // Disable mouse interaction
       });
     }
   }, []);
@@ -22,15 +23,18 @@ export default function Background() {
   return (
     <div
       id="particles-js"
+      className="animated-bg"
       style={{
         position: "fixed",
         top: 0,
         left: 0,
         width: "100%",
         height: "100%",
-        background: "radial-gradient(circle at top left, #950923 10%, #111113 30%)",
         zIndex: -1,
+        pointerEvents: "none"
       }}
-    ></div>
+    >
+      <div className="bg-gradient-overlay"></div>
+    </div>
   );
 }

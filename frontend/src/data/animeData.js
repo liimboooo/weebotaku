@@ -18,7 +18,11 @@ export const animeDatabase = {
     description: "A young ninja chasing his dream to become Hokage.",
     currentEp: 220,
     nextEpDate: "Ended",
-    imdbId: "tt0409591"
+    imdbId: "tt0409591",
+    seasons: [
+      { name: "Original Series", episodes: 220 },
+      { name: "Shippuden", episodes: 500 }
+    ]
   },
   2: {
     id: 2,
@@ -62,7 +66,13 @@ export const animeDatabase = {
     currentEp: 55,
     nextEpDate: "May 10, 2026",
     imdbId: "tt9335440",
-    airingDay: "Sunday"
+    airingDay: "Sunday",
+    seasons: [
+      { name: "Season 1", episodes: 26 },
+      { name: "Mugen Train Arc", episodes: 7 },
+      { name: "Entertainment District Arc", episodes: 11 },
+      { name: "Swordsmith Village Arc", episodes: 11 }
+    ]
   },
   4: {
     id: 4,
@@ -83,7 +93,15 @@ export const animeDatabase = {
     description: "Humanity's last stand against titans.",
     currentEp: 87,
     nextEpDate: "Ended",
-    imdbId: "tt2560140"
+    imdbId: "tt2560140",
+    seasons: [
+      { name: "Season 1", episodes: 25 },
+      { name: "Season 2", episodes: 12 },
+      { name: "Season 3 Part 1", episodes: 12 },
+      { name: "Season 3 Part 2", episodes: 10 },
+      { name: "The Final Season Part 1", episodes: 16 },
+      { name: "The Final Season Part 2", episodes: 12 }
+    ]
   },
   5: {
     id: 5,
@@ -260,6 +278,7 @@ export const animeDatabase = {
 
 export const getAllAnime = () => Object.values(animeDatabase);
 export const getAnimeById = (id) => animeDatabase[id];
+export const getAnimeType = (anime) => anime?.type || "TV";
 export const searchAnime = (query) => {
   const q = query.toLowerCase();
   return getAllAnime().filter(
@@ -272,6 +291,16 @@ export const searchAnime = (query) => {
 export const getTrendingAnime = () => getAllAnime().slice(0, 6);
 export const getFeaturedAnime = () => getAllAnime().slice(0, 4);
 export const getNewEpisodes = () => getAllAnime().filter(a => a.status === "Ongoing").slice(0, 4);
+export const getSeasonPicks = () =>
+  getAllAnime()
+    .filter((anime) => anime.status === "Ongoing")
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 6);
+export const getLatestAnime = () => getAllAnime().slice(-6).reverse();
+export const getAiringTodayAnime = () => {
+  const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
+  return getAllAnime().filter((anime) => anime.airingDay === today);
+};
 export const getAllGenres = () => {
   const genres = new Set();
   getAllAnime().forEach((a) => a.genres.forEach((g) => genres.add(g)));

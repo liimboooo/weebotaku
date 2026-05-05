@@ -1,32 +1,19 @@
-import React, { useState, useEffect, createContext, useContext } from "react";
+import React, { createContext, useContext } from "react";
 import "./Toast.css";
 
 const ToastContext = createContext();
 
 export const useToast = () => useContext(ToastContext);
 
+// No-op provider to disable toast notifications app-wide.
 export const ToastProvider = ({ children }) => {
-  const [toasts, setToasts] = useState([]);
-
-  const showToast = (message, type = "success") => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
+  const showToast = () => {
+    // Intentionally empty: notifications disabled
   };
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="toast-container">
-        {toasts.map((t) => (
-          <div key={t.id} className={`toast toast-${t.type}`}>
-            <ion-icon name={t.type === "success" ? "checkmark-circle" : "alert-circle"}></ion-icon>
-            <p>{t.message}</p>
-          </div>
-        ))}
-      </div>
     </ToastContext.Provider>
   );
 };

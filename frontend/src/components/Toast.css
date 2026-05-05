@@ -14,14 +14,36 @@
   align-items: center;
   gap: 12px;
   padding: 15px 25px;
-  background: rgba(20, 20, 23, 0.9);
-  backdrop-filter: blur(10px);
+  background: rgba(20, 20, 23, 0.95);
+  backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
   animation: toastSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   pointer-events: auto;
+  position: relative;
+  overflow: hidden;
+  min-width: 280px;
 }
+
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  animation: toastProgress 3s linear forwards;
+}
+
+@keyframes toastProgress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+.toast-success .toast-progress { background: #4caf50; }
+.toast-error .toast-progress { background: #ff5252; }
+.toast-info .toast-progress { background: #3b82f6; }
 
 .toast ion-icon {
   font-size: 24px;
@@ -34,25 +56,18 @@
   font-size: 15px;
 }
 
-.toast-success {
-  border-left: 4px solid #4caf50;
-}
+.toast-success { border-left: none; }
+.toast-success ion-icon { color: #4caf50; }
 
-.toast-success ion-icon {
-  color: #4caf50;
-}
+.toast-error { border-left: none; }
+.toast-error ion-icon { color: #ff5252; }
 
-.toast-error {
-  border-left: 4px solid #ff5252;
-}
-
-.toast-error ion-icon {
-  color: #ff5252;
-}
+.toast-info { border-left: none; }
+.toast-info ion-icon { color: #3b82f6; }
 
 @keyframes toastSlideIn {
   from {
-    transform: translateX(100%);
+    transform: translateX(120%);
     opacity: 0;
   }
   to {
