@@ -6,13 +6,64 @@ import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import AnimeDetail from "./pages/AnimeDetail";
 import SearchPage from "./pages/SearchPage";
-import News from "./pages/News";
 import WatchlistPage from "./pages/WatchlistPage";
 import ProfilePage from "./pages/ProfilePage";
 import HistoryPage from "./pages/HistoryPage";
 import { Navigate } from "react-router-dom";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import GenericRoutePage from "./components/GenericRoutePage";
+import Browse from "./pages/Browse";
+import MangaVault from "./pages/MangaVault";
+import FanArtReviews from "./pages/Feeds/FanArtReviews";
+import WatchTogetherCreative from "./pages/Community/WatchTogetherCreative";
+import Rankings from "./pages/Rankings/Rankings";
+import Overview from "./pages/Rankings/Overview";
+import CharacterArena from "./pages/Rankings/CharacterArena";
+import BestAnime from "./pages/Rankings/BestAnime";
+import TierLists from "./pages/Rankings/TierLists";
+import Rules from "./pages/System/Rules";
+import Report from "./pages/System/Report";
+
+const simplePage = (eyebrow, title, description, items) => ({
+  eyebrow,
+  title,
+  description,
+  sections: items ? [{ heading: "Overview", items }] : [],
+});
+
+const routePageMap = {
+  settings: simplePage(
+    "Preferences",
+    "Settings",
+    "Tune the experience, manage your account, and keep the interface aligned with how you browse.",
+    [
+      { title: "Playback", description: "Autoplay, episode order, and progress sync preferences.", meta: "Streaming" },
+      { title: "Notifications", description: "Choose the alerts you want to see for releases, comments, and rooms.", meta: "Alerts" },
+      { title: "Appearance", description: "Control compact mode, motion, and accent density.", meta: "UI" },
+    ]
+  ),
+  help: simplePage(
+    "Support",
+    "Help & Support",
+    "Find the quick answers first, then escalate to the moderation and support flow if needed.",
+    [
+      { title: "FAQ", description: "How watch history, watchlists, and ratings work in this app.", meta: "Docs" },
+      { title: "Contact moderators", description: "Reach the team for account, content, or community issues.", meta: "Support" },
+      { title: "Report a bug", description: "Log layout issues, playback problems, or broken links.", meta: "Fast track" },
+    ]
+  ),
+  notifications: simplePage(
+    "Inbox",
+    "Notifications",
+    "A single place for watch reminders, new comments, room invites, and moderation notices.",
+    [
+      { title: "Episode alerts", description: "Know when an ongoing series is ready for the next watch.", meta: "Priority" },
+      { title: "Community updates", description: "See likes, replies, and mentions from the community feed.", meta: "Social" },
+      { title: "Watch room invites", description: "Jump straight into active rooms without hunting for the link.", meta: "Live" },
+    ]
+  ),
+};
 
 function App() {
   return (
@@ -23,7 +74,22 @@ function App() {
           <Routes>
             <Route path="/" element={<AuthPage />} />
             <Route path="/home" element={<Home />} />
-            <Route path="/news" element={<News />} />
+            <Route path="/browse/anime" element={<Browse />} />
+            <Route path="/browse/manga" element={<MangaVault />} />
+            <Route path="/watch-together" element={<WatchTogetherCreative />} />
+            <Route path="/watch-together/new" element={<WatchTogetherCreative />} />
+            <Route path="/feeds/fanart" element={<FanArtReviews />} />
+            <Route path="/arena" element={<Rankings />} />
+            <Route path="/arena/overview" element={<Overview />} />
+            <Route path="/rankings/anime" element={<BestAnime />} />
+            <Route path="/rankings/manga" element={<TierLists />} />
+            <Route path="/arena/character-battle" element={<CharacterArena />} />
+            <Route path="/arena/tier-lists" element={<TierLists />} />
+            <Route path="/settings" element={<GenericRoutePage {...routePageMap.settings} />} />
+            <Route path="/help" element={<GenericRoutePage {...routePageMap.help} />} />
+            <Route path="/notifications" element={<GenericRoutePage {...routePageMap.notifications} />} />
+            <Route path="/system/rules" element={<Rules />} />
+            <Route path="/report" element={<Report />} />
             <Route path="/anime/:id" element={<AnimeDetail />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/watchlist" element={<WatchlistPage />} />

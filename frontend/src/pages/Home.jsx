@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Flame, PlayCircle, Shuffle, TrendingUp, Zap, Users, Clock } from "lucide-react";
+import { ArrowRight, Clock, Flame, PlayCircle, Shuffle, Sparkles, Swords, TrendingUp, Users, Video, Zap } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -10,6 +10,7 @@ import Header from "../components/Header";
 import Slider from "../components/Slider";
 import FeaturedAnime from "../components/FeaturedAnime";
 import Trending from "../components/Trending";
+import LiveRooms from "../components/LiveRooms";
 import NewEpisodes from "../components/NewEpisodes";
 import Categories from "../components/Categories";
 import Background from "../components/Background";
@@ -124,9 +125,34 @@ export default function Home() {
   const spotlight = featuredAnime[0];
   const quickLinks = [
     { label: "Trending", icon: TrendingUp, target: "trending" },
+    { label: "Live Rooms", icon: Video, target: "live-rooms" },
     { label: "New Episodes", icon: Zap, target: "episodes" },
     { label: "Season Picks", icon: Users, target: "season" },
-    { label: "Latest Added", icon: Shuffle, target: "latest" },
+    { label: "Arena", icon: Swords, target: "arena-pulse" },
+  ];
+
+  const arenaPulse = [
+    {
+      label: "Live battles",
+      title: "Vote where the crowd is leaning.",
+      description: "Jump straight into the matchup board and push the energy forward.",
+      target: "/arena/character-battle",
+      accent: "VS",
+    },
+    {
+      label: "Arena overview",
+      title: "Read the temperature before you jump in.",
+      description: "A compact pulse check for what is trending, moving, and climbing.",
+      target: "/arena/overview",
+      accent: "LIVE",
+    },
+    {
+      label: "Tier lists",
+      title: "Browse the strongest titles with cleaner structure.",
+      description: "Less clutter, more hierarchy, and a faster way to find the top lanes.",
+      target: "/arena/tier-lists",
+      accent: "TOP",
+    },
   ];
 
   const scrollToSection = (sectionId) => {
@@ -162,7 +188,7 @@ export default function Home() {
           <section className="home-spotlight">
             <div className="home-spotlight-copy">
               <div className="spotlight-kicker">
-                <Flame size={14} /> Featured now
+                <Sparkles size={14} /> Featured now
               </div>
               <h1>{spotlight.name}</h1>
               <p>{spotlight.synopsis}</p>
@@ -180,10 +206,19 @@ export default function Home() {
                   Explore picks <ArrowRight size={16} />
                 </button>
               </div>
+              <div className="spotlight-microcopy">
+                <span>Curated every session</span>
+                <span>Best viewed full-screen</span>
+              </div>
             </div>
             <div className="home-spotlight-art" onClick={() => navigate(`/anime/${spotlight.id}`)}>
               <img src={spotlight.img} alt={spotlight.name} />
               <div className="home-spotlight-art-glow" />
+              <div className="home-spotlight-art-panel">
+                <span>Featured story</span>
+                <strong>{spotlight.name}</strong>
+                <p>Tap in for the full watch page, then jump back into the arena flow.</p>
+              </div>
             </div>
           </section>
         )}
@@ -196,6 +231,41 @@ export default function Home() {
             </button>
           ))}
         </div>
+
+        <section id="arena-pulse" className="home-arena-pulse">
+          <div className="section-title arena-pulse-head">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="title-with-icon"
+            >
+              <Swords color="#e63636" size={24} />
+              <h2>Arena Pulse</h2>
+            </motion.div>
+            <p>Fast routes into the loudest part of the site</p>
+          </div>
+
+          <div className="arena-pulse-grid">
+            {arenaPulse.map((card, index) => (
+              <motion.button
+                key={card.label}
+                type="button"
+                className="arena-pulse-card"
+                onClick={() => navigate(card.target)}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.08 }}
+              >
+                <span className="arena-pulse-card-chip">{card.accent}</span>
+                <small>{card.label}</small>
+                <h3>{card.title}</h3>
+                <p>{card.description}</p>
+              </motion.button>
+            ))}
+          </div>
+        </section>
 
         <Slider sliderData={featuredAnime} />
 
@@ -228,6 +298,10 @@ export default function Home() {
           <p>The most watched anime this week</p>
         </div>
         <Trending />
+
+        <div id="live-rooms">
+          <LiveRooms />
+        </div>
 
         <div id="episodes" className="section-title">
           <motion.div

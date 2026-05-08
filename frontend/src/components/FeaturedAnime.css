@@ -5,24 +5,43 @@
 .anime-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 25px;
+  gap: 22px;
 }
 
 .anime-card {
-  background: rgba(20, 20, 23, 0.6);
-  border-radius: 16px;
+  position: relative;
+  background: linear-gradient(180deg, rgba(20, 20, 23, 0.82), rgba(10, 10, 12, 0.94));
+  border-radius: 22px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.35s ease, border-color 0.35s ease;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.2);
+}
+
+.anime-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top, rgba(230, 54, 54, 0.18), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 30%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .anime-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 15px 30px rgba(230, 54, 54, 0.2);
-  border-color: rgba(230, 54, 54, 0.3);
+  transform: translateY(-12px);
+  box-shadow: 0 24px 50px rgba(230, 54, 54, 0.18);
+  border-color: rgba(230, 54, 54, 0.35);
+}
+
+.anime-card:hover::before {
+  opacity: 1;
 }
 
 .anime-card:active {
@@ -35,6 +54,7 @@
   width: 100%;
   aspect-ratio: 2 / 3;
   overflow: hidden;
+  z-index: 1;
 }
 
 .card-img-wrapper img {
@@ -51,8 +71,8 @@
 .card-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(17, 17, 19, 0.4);
-  backdrop-filter: blur(2px);
+  background: linear-gradient(180deg, rgba(17, 17, 19, 0.12), rgba(17, 17, 19, 0.56));
+  backdrop-filter: blur(1px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -64,7 +84,7 @@
 .play-btn-circle {
   width: 50px;
   height: 50px;
-  background: #e63636;
+  background: linear-gradient(135deg, #e63636, #ff6b6b);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -92,6 +112,7 @@
   justify-content: space-between;
   align-items: flex-start;
   pointer-events: none;
+  z-index: 3;
 }
 
 .badges-right {
@@ -102,17 +123,18 @@
 }
 
 .badge {
-  background: rgba(17, 17, 19, 0.9);
-  backdrop-filter: blur(8px);
+  background: rgba(17, 17, 19, 0.84);
+  backdrop-filter: blur(10px);
   color: #fff;
   padding: 5px 10px;
-  border-radius: 8px;
+  border-radius: 999px;
   font-size: 11px;
   font-weight: 800;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   gap: 4px;
+  letter-spacing: 0.04em;
 }
 
 .badge.rating {
@@ -160,8 +182,8 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(17, 17, 19, 0.8);
-  backdrop-filter: blur(8px);
+  background: rgba(17, 17, 19, 0.82);
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
   display: flex;
@@ -202,10 +224,12 @@
 }
 
 .card-info {
-  padding: 15px;
+  padding: 16px 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .card-info h3 {
@@ -216,10 +240,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   transition: color 0.3s ease;
+  font-family: var(--font-display);
 }
 
 .anime-card:hover .card-info h3 {
   color: #e63636;
+}
+
+.card-info::before {
+  content: "";
+  display: block;
+  width: 42px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e63636, transparent);
+  margin-bottom: 2px;
 }
 
 .card-meta {
@@ -231,7 +266,7 @@
 
 .meta-year {
   color: #aaa;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.07);
   padding: 2px 6px;
   border-radius: 3px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -267,9 +302,9 @@
 .genre-tag-mini {
   font-size: 11px;
   color: #888;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   transition: all 0.3s ease;
 }
@@ -285,6 +320,8 @@
   flex-direction: column;
   gap: 4px;
   margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .extra-info-item {
@@ -301,5 +338,9 @@
   .anime-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 15px;
+  }
+
+  .anime-card {
+    border-radius: 18px;
   }
 }
