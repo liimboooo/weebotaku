@@ -15,7 +15,7 @@ import { AnimatePresence } from "framer-motion";
 import GenericRoutePage from "./components/GenericRoutePage";
 import Browse from "./pages/Browse";
 import MangaVault from "./pages/MangaVault";
-import FanArtReviews from "./pages/Feeds/FanArtReviews";
+import AMVsEdits from "./pages/Feeds/AMVsEdits";
 import WatchTogetherCreative from "./pages/Community/WatchTogetherCreative";
 import Rankings from "./pages/Rankings/Rankings";
 import Overview from "./pages/Rankings/Overview";
@@ -78,7 +78,7 @@ function App() {
             <Route path="/browse/manga" element={<MangaVault />} />
             <Route path="/watch-together" element={<WatchTogetherCreative />} />
             <Route path="/watch-together/new" element={<WatchTogetherCreative />} />
-            <Route path="/feeds/fanart" element={<FanArtReviews />} />
+            <Route path="/feeds/amvs" element={<AMVsEdits />} />
             <Route path="/arena" element={<Rankings />} />
             <Route path="/arena/overview" element={<Overview />} />
             <Route path="/rankings/anime" element={<BestAnime />} />

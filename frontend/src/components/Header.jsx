@@ -63,7 +63,7 @@ export default function Header() {"use strict";
 
   const feedItems = useMemo(
     () => [
-      { label: 'Fan Art & Reviews', path: '/feeds/fanart', icon: Star, description: 'Artwork, critiques, and long-form takes worth spotlighting' },
+      { label: 'AMVs & Edits', path: '/feeds/amvs', icon: Star, description: 'High-energy AMVs and creative edits from the community' },
       { label: 'Live Rooms', path: '/watch-together', icon: Video, description: 'Jump into live rooms and sync the next episode together' },
     ],
     []
