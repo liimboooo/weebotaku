@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import AnimatedPage from "../../components/AnimatedPage";
 import Header from "../../components/Header";
-import Footer from "../../components/Footer";
 import Background from "../../components/Background";
 import "./ArenaShowcase.css";
 
@@ -185,7 +184,6 @@ export default function CharacterArena() {
 						</div>
 					</section>
 				</main>
-				<Footer />
 			</div>
 		</AnimatedPage>
 	);

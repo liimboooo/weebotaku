@@ -8,7 +8,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import AnimatedPage from "../components/AnimatedPage";
 import Header from "../components/Header";
-import Footer from "../components/Footer";
 import Background from "../components/Background";
 import "./SearchPage.css";
 
@@ -462,7 +461,6 @@ export default function SearchPage() {
           </motion.div>
         ) : null}
 
-        <Footer />
       </div>
     </AnimatedPage>
   );

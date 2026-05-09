@@ -4,7 +4,6 @@ import { getAnimeById } from "../data/animeData";
 import { motion, AnimatePresence } from "framer-motion";
 import AnimatedPage from "../components/AnimatedPage";
 import Header from "../components/Header";
-import Footer from "../components/Footer";
 import Background from "../components/Background";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -433,7 +432,6 @@ export default function ProfilePage() {
           </motion.div>
         </AnimatePresence>
 
-        <Footer />
       </div>
     </AnimatedPage>
   );

@@ -19,6 +19,7 @@ export const animeDatabase = {
     currentEp: 220,
     nextEpDate: "Ended",
     imdbId: "tt0409591",
+    trailerUrl: "https://www.youtube-nocookie.com/embed/Rk6L7WvrE0c",
     seasons: [
       { name: "Original Series", episodes: 220 },
       { name: "Shippuden", episodes: 500 }
@@ -44,6 +45,7 @@ export const animeDatabase = {
     currentEp: 1100,
     nextEpDate: "May 4, 2026",
     imdbId: "tt0388629",
+    trailerUrl: "https://www.youtube-nocookie.com/embed/S8_YwFLCh4U",
     airingDay: "Sunday"
   },
   3: {
@@ -66,6 +68,7 @@ export const animeDatabase = {
     currentEp: 55,
     nextEpDate: "May 10, 2026",
     imdbId: "tt9335440",
+    trailerUrl: "https://www.youtube-nocookie.com/embed/VQGC0Q3tZ4U",
     airingDay: "Sunday",
     seasons: [
       { name: "Season 1", episodes: 26 },
@@ -94,6 +97,7 @@ export const animeDatabase = {
     currentEp: 87,
     nextEpDate: "Ended",
     imdbId: "tt2560140",
+    trailerUrl: "https://www.youtube-nocookie.com/embed/MGRmZyfzm_w",
     seasons: [
       { name: "Season 1", episodes: 25 },
       { name: "Season 2", episodes: 12 },
@@ -123,6 +127,7 @@ export const animeDatabase = {
     currentEp: 366,
     nextEpDate: "May 7, 2026",
     imdbId: "tt0434665",
+    trailerUrl: "https://www.youtube-nocookie.com/embed/iIGnSsCCrGc",
     airingDay: "Monday"
   },
   6: {
@@ -145,6 +150,7 @@ export const animeDatabase = {
     currentEp: 48,
     nextEpDate: "May 15, 2026",
     imdbId: "tt12343534",
+    trailerUrl: "https://www.youtube-nocookie.com/embed/p5J2sYyHl4o",
     airingDay: "Thursday"
   },
   7: {
@@ -167,6 +173,7 @@ export const animeDatabase = {
     currentEp: 138,
     nextEpDate: "May 3, 2026",
     imdbId: "tt5626028",
+    trailerUrl: "https://www.youtube-nocookie.com/embed/CcooCHrnCSE",
     airingDay: "Saturday"
   },
   8: {
@@ -188,7 +195,8 @@ export const animeDatabase = {
     description: "A mind-bending journey through time.",
     currentEp: 24,
     nextEpDate: "Ended",
-    imdbId: "tt1910272"
+    imdbId: "tt1910272",
+    trailerUrl: "https://www.youtube-nocookie.com/embed/2IBxR0i_DI0"
   },
   9: {
     id: 9,
@@ -209,7 +217,8 @@ export const animeDatabase = {
     description: "Two brothers on a quest for redemption.",
     currentEp: 64,
     nextEpDate: "Ended",
-    imdbId: "tt1592154"
+    imdbId: "tt1592154",
+    trailerUrl: "https://www.youtube-nocookie.com/embed/5E4E0RzwkEM"
   },
   10: {
     id: 10,
@@ -230,7 +239,8 @@ export const animeDatabase = {
     description: "A genius with the power to kill with a notebook.",
     currentEp: 37,
     nextEpDate: "Ended",
-    imdbId: "tt0877057"
+    imdbId: "tt0877057",
+    trailerUrl: "https://www.youtube-nocookie.com/embed/TBPpL5qy4is"
   },
   11: {
     id: 11,
@@ -251,7 +261,8 @@ export const animeDatabase = {
     description: "A boy's journey to find his legendary father.",
     currentEp: 148,
     nextEpDate: "Ended",
-    imdbId: "tt2098220"
+    imdbId: "tt2098220",
+    trailerUrl: "https://www.youtube-nocookie.com/embed/d6kBeJj1R5I"
   },
   12: {
     id: 12,
@@ -272,7 +283,8 @@ export const animeDatabase = {
     description: "A family of secrets with a hilarious twist.",
     currentEp: 37,
     nextEpDate: "May 6, 2026",
-    imdbId: "tt13706018"
+    imdbId: "tt13706018",
+    trailerUrl: "https://www.youtube-nocookie.com/embed/GjUQVwY_3iA"
   },
 };
 

@@ -1,7 +1,6 @@
 import React from "react";
 import AnimatedPage from "../components/AnimatedPage";
 import Header from "../components/Header";
-import Footer from "../components/Footer";
 import Background from "../components/Background";
 import { getLatestAnime, getNewEpisodes } from "../data/animeData";
 import { useNavigate } from "react-router-dom";
@@ -35,7 +34,6 @@ export default function News() {
             ))}
           </div>
         </div>
-        <Footer />
       </div>
     </AnimatedPage>
   );

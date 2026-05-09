@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ChevronDown,
-  Filter,
   Play,
   Plus,
   Search,
@@ -14,16 +13,13 @@ import {
   List,
   Grid3x3,
   Library,
-  X,
+  Loader2,
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Header from "../components/Header";
-import Footer from "../components/Footer";
 import Background from "../components/Background";
-import { getAllAnime, getAllGenres } from "../data/animeData";
+import { fetchTopAnime, fetchSearchAnime, fetchAnimeGenres } from "../services/jikanApi";
 import "./Browse.css";
-
-const PAGE_SIZE = 15;
 
 const sortOptions = [
   { value: "popularity", label: "Popularity" },
@@ -47,10 +43,6 @@ function getAnimeStatusBucket(anime) {
 
 function getAnimeSeasonLabel(anime) {
   return anime?.season || "Unknown";
-}
-
-function normalize(value) {
-  return String(value || "").toLowerCase();
 }
 
 function loadWatchlist() {
@@ -126,7 +118,7 @@ function AnimeCard({ anime, onOpen, onAdd, wishlist, onWishlist }) {
             <span>{anime.type || "TV"}</span>
           </div>
         </div>
-        <div className="br-card-badge"><Star size={10} fill="currentColor" /> {anime.rating.toFixed(1)}</div>
+        <div className="br-card-badge"><Star size={10} fill="currentColor" /> {anime.rating?.toFixed(1)}</div>
         <button
           type="button"
           className={`br-card-wish ${inWishlist ? "active" : ""}`}
@@ -156,11 +148,15 @@ function AnimeCard({ anime, onOpen, onAdd, wishlist, onWishlist }) {
 
 export default function Browse() {
   const navigate = useNavigate();
-  const allAnime = useMemo(() => getAllAnime(), []);
-  const allGenres = useMemo(() => getAllGenres(), []);
-  const allStudios = useMemo(() => Array.from(new Set(allAnime.map((a) => a.studio))).sort(), [allAnime]);
-  const allSeasons = useMemo(() => Array.from(new Set(allAnime.map((a) => getAnimeSeasonLabel(a)))).sort(), [allAnime]);
-  const allYears = useMemo(() => Array.from(new Set(allAnime.map((a) => a.year))).sort((a, b) => b - a), [allAnime]);
+
+  const [allAnime, setAllAnime] = useState([]);
+  const [genres, setGenres] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [activeGenres, setActiveGenres] = useState([]);
   const [activeFormats, setActiveFormats] = useState([]);
@@ -168,65 +164,125 @@ export default function Browse() {
   const [activeSeasons, setActiveSeasons] = useState([]);
   const [activeYears, setActiveYears] = useState([]);
   const [activeStudios, setActiveStudios] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("popularity");
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [view, setView] = useState("grid");
   const [watchlist, setWatchlist] = useState(() => loadWatchlist());
   const sentinelRef = useRef(null);
-
-  const filteredAnime = useMemo(() => {
-    const query = normalize(searchTerm);
-    const filtered = allAnime.filter((anime) => {
-      const matchesQuery = !query || normalize(anime.name).includes(query) || normalize(anime.studio).includes(query) || anime.genres.some((g) => normalize(g).includes(query));
-      const matchesGenres = activeGenres.length === 0 || activeGenres.some((g) => anime.genres.includes(g));
-      const matchesFormats = activeFormats.length === 0 || activeFormats.includes(getAnimeFormat(anime));
-      const matchesStatuses = activeStatuses.length === 0 || activeStatuses.includes(getAnimeStatusBucket(anime));
-      const matchesSeasons = activeSeasons.length === 0 || activeSeasons.includes(getAnimeSeasonLabel(anime));
-      const matchesYears = activeYears.length === 0 || activeYears.includes(String(anime.year));
-      const matchesStudios = activeStudios.length === 0 || activeStudios.includes(anime.studio);
-      return matchesQuery && matchesGenres && matchesFormats && matchesStatuses && matchesSeasons && matchesYears && matchesStudios;
-    });
-    const sorted = [...filtered].sort((l, r) => {
-      if (sortBy === "score") return r.rating - l.rating;
-      if (sortBy === "recent") return r.id - l.id;
-      return r.votes - l.votes;
-    });
-    return sorted;
-  }, [allAnime, activeFormats, activeGenres, activeSeasons, activeStatuses, activeStudios, activeYears, searchTerm, sortBy]);
-
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [searchTerm, activeGenres, activeFormats, activeStatuses, activeSeasons, activeYears, activeStudios, sortBy]);
+  const mountedRef = useRef(false);
 
   useEffect(() => {
+    fetchAnimeGenres().then(setGenres).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    loadAnime(1, true);
+  }, []);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    setAllAnime([]);
+    setPage(1);
+    setHasMore(true);
+    loadAnime(1, true);
+  }, [debouncedSearch]);
+
+  async function loadAnime(p, replace = false) {
+    if (replace) setLoading(true);
+    else setLoadingMore(true);
+    try {
+      const isSearch = debouncedSearch.trim().length > 0;
+      const result = isSearch
+        ? await fetchSearchAnime(debouncedSearch, p)
+        : await fetchTopAnime(p);
+      setAllAnime(prev => replace ? result.data : [...prev, ...result.data]);
+      setHasMore(result.pagination.has_next_page);
+      setPage(p);
+    } catch (err) {
+      console.error("Failed to load anime:", err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }
+
+  const allStudios = useMemo(() =>
+    Array.from(new Set(allAnime.map(a => a.studio).filter(Boolean))).sort(),
+    [allAnime]
+  );
+
+  const allSeasons = useMemo(() =>
+    Array.from(new Set(allAnime.map(a => getAnimeSeasonLabel(a)).filter(s => s !== "Unknown"))).sort(),
+    [allAnime]
+  );
+
+  const allYears = useMemo(() =>
+    Array.from(new Set(allAnime.map(a => a.year).filter(Boolean))).sort((a, b) => b - a),
+    [allAnime]
+  );
+
+  const filteredAnime = useMemo(() => {
+    return allAnime
+      .filter(anime => {
+        if (activeGenres.length && !activeGenres.some(g => anime.genres.includes(g))) return false;
+        if (activeFormats.length && !activeFormats.includes(getAnimeFormat(anime))) return false;
+        if (activeStatuses.length && !activeStatuses.includes(getAnimeStatusBucket(anime))) return false;
+        if (activeSeasons.length && !activeSeasons.includes(getAnimeSeasonLabel(anime))) return false;
+        if (activeYears.length && !activeYears.includes(String(anime.year))) return false;
+        if (activeStudios.length && !activeStudios.includes(anime.studio)) return false;
+        return true;
+      })
+      .sort((l, r) => {
+        if (sortBy === "score") return (r.rating || 0) - (l.rating || 0);
+        if (sortBy === "recent") return (r.id || 0) - (l.id || 0);
+        return (r.votes || 0) - (l.votes || 0);
+      });
+  }, [allAnime, activeFormats, activeGenres, activeSeasons, activeStatuses, activeStudios, activeYears, sortBy]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!sentinelRef.current || !hasMore || loadingMore || loading) return;
     const observer = new IntersectionObserver(
-      (entries) => { if (entries[0]?.isIntersecting) setVisibleCount((c) => Math.min(c + PAGE_SIZE, filteredAnime.length)); },
-      { rootMargin: "240px" }
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadAnime(page + 1);
+        }
+      },
+      { rootMargin: "400px" }
     );
-    if (sentinelRef.current) observer.observe(sentinelRef.current);
+    observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [filteredAnime.length]);
-
-  useEffect(() => { setVisibleCount((c) => Math.min(c, filteredAnime.length)); }, [filteredAnime.length]);
-
-  const visibleAnime = filteredAnime.slice(0, visibleCount);
+  }, [hasMore, loadingMore, loading]);
 
   const handleQuickAdd = (anime) => setWatchlist(addToWatchlist(anime));
-  const toggleWishlist = (id) => setWatchlist((p) => p.includes(id) ? p.filter((i) => i !== id) : [...p, id]);
-
-  const toggleValue = (setter, value) => setter((c) => c.includes(value) ? c.filter((i) => i !== value) : [...c, value]);
+  const toggleWishlist = (id) => setWatchlist(p => p.includes(id) ? p.filter(i => i !== id) : [...p, id]);
+  const toggleValue = (setter, value) => setter(c => c.includes(value) ? c.filter(i => i !== value) : [...c, value]);
 
   const activeCount = activeGenres.length + activeFormats.length + activeStatuses.length + activeSeasons.length + activeYears.length + activeStudios.length;
 
   const selectedPills = [
-    ...activeGenres.map((v) => ({ key: `g:${v}`, label: v, remove: () => setActiveGenres((c) => c.filter((i) => i !== v)) })),
-    ...activeFormats.map((v) => ({ key: `f:${v}`, label: v, remove: () => setActiveFormats((c) => c.filter((i) => i !== v)) })),
-    ...activeStatuses.map((v) => ({ key: `s:${v}`, label: v, remove: () => setActiveStatuses((c) => c.filter((i) => i !== v)) })),
-    ...activeSeasons.map((v) => ({ key: `se:${v}`, label: v, remove: () => setActiveSeasons((c) => c.filter((i) => i !== v)) })),
-    ...activeYears.map((v) => ({ key: `y:${v}`, label: v, remove: () => setActiveYears((c) => c.filter((i) => i !== v)) })),
-    ...activeStudios.map((v) => ({ key: `st:${v}`, label: v, remove: () => setActiveStudios((c) => c.filter((i) => i !== v)) })),
+    ...activeGenres.map(v => ({ key: `g:${v}`, label: v, remove: () => setActiveGenres(c => c.filter(i => i !== v)) })),
+    ...activeFormats.map(v => ({ key: `f:${v}`, label: v, remove: () => setActiveFormats(c => c.filter(i => i !== v)) })),
+    ...activeStatuses.map(v => ({ key: `s:${v}`, label: v, remove: () => setActiveStatuses(c => c.filter(i => i !== v)) })),
+    ...activeSeasons.map(v => ({ key: `se:${v}`, label: v, remove: () => setActiveSeasons(c => c.filter(i => i !== v)) })),
+    ...activeYears.map(v => ({ key: `y:${v}`, label: v, remove: () => setActiveYears(c => c.filter(i => i !== v)) })),
+    ...activeStudios.map(v => ({ key: `st:${v}`, label: v, remove: () => setActiveStudios(c => c.filter(i => i !== v)) })),
   ];
 
-  const topAnime = useMemo(() => allAnime.reduce((best, a) => a.rating > best.rating ? a : best, allAnime[0]), [allAnime]);
+  const topAnime = allAnime.length > 0
+    ? allAnime.reduce((best, a) => (a.rating || 0) > (best.rating || 0) ? a : best, allAnime[0])
+    : null;
+
+  const totalEpisodes = useMemo(() =>
+    allAnime.reduce((s, a) => s + (a.episodes || 0), 0),
+    [allAnime]
+  );
 
   const renderChip = (value, active, onClick) => (
     <button key={value} type="button" className={`br-chip ${active ? "active" : ""}`} onClick={onClick}>{value}</button>
@@ -241,39 +297,48 @@ export default function Browse() {
 
         <main className="br-shell">
           <motion.section className="br-hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="br-hero-bg">
+              {topAnime?.trailerUrl && (
+                <iframe
+                  className="br-hero-video"
+                  src={`${topAnime.trailerUrl}${topAnime.trailerUrl.includes('?') ? '&' : '?'}autoplay=1&mute=1&controls=0&loop=1&playlist=${topAnime.trailerUrl.split('/').pop().split('?')[0]}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0`}
+                  title={topAnime.name}
+                  allow="autoplay; fullscreen"
+                  loading="lazy"
+                />
+              )}
+            </div>
+            <div className="br-hero-poster" />
+            <div className="br-hero-gradient" />
             <div className="br-hero-content">
-              <span className="br-eyebrow"><Sparkles size={14} /> Anime Collection</span>
+              <span className="br-eyebrow"><Sparkles size={14} /> ANIME COLLECTION</span>
               <h1>
-                <span className="br-hero-small">Explore</span>
-                <span className="br-hero-big">Anime</span>
+                <span className="br-hero-main">EXPLORE</span>
+                <span className="br-hero-accent">ANIME</span>
               </h1>
               <p className="br-hero-desc">
                 Discover thousands of anime across every genre. Track your watchlist, find your next favorite series, and dive into the community.
               </p>
               <div className="br-hero-metrics">
-                <div className="br-metric"><strong>{allAnime.length}</strong><span>Series</span></div>
-                <div className="br-metric"><strong>{allAnime.reduce((s, a) => s + (a.episodes || 0), 0)}</strong><span>Episodes</span></div>
-                <div className="br-metric"><strong>{allGenres.length}</strong><span>Genres</span></div>
+                <div className="br-metric"><strong>{allAnime.length}</strong><span>Loaded</span></div>
+                <div className="br-metric"><strong>{totalEpisodes}</strong><span>Episodes</span></div>
+                <div className="br-metric"><strong>{genres.length}</strong><span>Genres</span></div>
               </div>
             </div>
-            <div className="br-hero-visual">
-              <div className="br-hero-orb" />
-              <div className="br-hero-grid" />
-              <div className="br-hero-spotlight">
-                <span className="br-spotlight-label">TOP RATED</span>
-                <span className="br-spotlight-title">{topAnime.name}</span>
-                <span className="br-spotlight-rating"><Star size={12} fill="currentColor" /> {topAnime.rating}</span>
-              </div>
+            <div className="br-hero-hud">
+              <span className="br-hud-label">TOP RATED</span>
+              <span className="br-hud-title">{topAnime?.name || "Loading..."}</span>
+              <span className="br-hud-rating"><Star size={12} fill="currentColor" /> {topAnime?.rating?.toFixed(1) || "?"}</span>
             </div>
           </motion.section>
 
           <div className="br-controls">
             <div className="br-search">
               <Search size={15} />
-              <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search anime, studio, or genre..." />
+              <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search anime..." />
             </div>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-              {sortOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+              {sortOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
             <div className="br-view-toggle">
               <button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")}><Grid3x3 size={14} /></button>
@@ -282,13 +347,13 @@ export default function Browse() {
           </div>
 
           <div className="br-filters">
-            <FilterDropdown label="Genres" icon={SlidersHorizontal} items={allGenres} active={activeGenres}>
+            <FilterDropdown label="Genres" icon={SlidersHorizontal} items={genres} active={activeGenres}>
               {(item) => renderChip(item, activeGenres.includes(item), () => toggleValue(setActiveGenres, item))}
             </FilterDropdown>
             <FilterDropdown label="Format" icon={SlidersHorizontal} items={formatOptions} active={activeFormats}>
               {(item) => renderChip(item, activeFormats.includes(item), () => toggleValue(setActiveFormats, item))}
             </FilterDropdown>
-            <FilterDropdown label="Status" icon={SlidersHorizontal} items={statusOptions.map((s) => s.value)} active={activeStatuses}>
+            <FilterDropdown label="Status" icon={SlidersHorizontal} items={statusOptions.map(s => s.value)} active={activeStatuses}>
               {(item) => renderChip(item, activeStatuses.includes(item), () => toggleValue(setActiveStatuses, item))}
             </FilterDropdown>
             <FilterDropdown label="Season" icon={SlidersHorizontal} items={allSeasons} active={activeSeasons}>
@@ -310,7 +375,7 @@ export default function Browse() {
 
           {selectedPills.length > 0 && (
             <div className="br-active-pills">
-              {selectedPills.map((p) => (
+              {selectedPills.map(p => (
                 <button key={p.key} type="button" className="br-active-pill" onClick={p.remove}>
                   {p.label} <span>×</span>
                 </button>
@@ -321,40 +386,64 @@ export default function Browse() {
             </div>
           )}
 
-          <motion.div
-            layout
-            key={`${searchTerm}-${sortBy}-${activeCount}-${view}`}
-            className={`br-grid ${view === "list" ? "br-list" : ""}`}
-            initial="hidden"
-            animate="show"
-            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}
-          >
-            <AnimatePresence mode="popLayout">
-              {visibleAnime.map((anime) => (
-                <AnimeCard
-                  key={anime.id}
-                  anime={anime}
-                  onOpen={(item) => navigate(`/anime/${item.id}`)}
-                  onAdd={handleQuickAdd}
-                  wishlist={watchlist}
-                  onWishlist={toggleWishlist}
-                />
-              ))}
-            </AnimatePresence>
-          </motion.div>
-
-          {visibleCount < filteredAnime.length && <div ref={sentinelRef} className="br-sentinel" />}
-
-          {filteredAnime.length === 0 && (
+          {loading ? (
             <div className="br-empty">
-              <Library size={36} />
-              <h3>No matches</h3>
-              <p>Try clearing a filter or widening your search.</p>
+              <Loader2 size={36} className="br-spin" />
+              <h3>Loading anime...</h3>
             </div>
+          ) : (
+            <>
+              <motion.div
+                layout
+                key={`${searchTerm}-${sortBy}-${activeCount}-${view}`}
+                className={`br-grid ${view === "list" ? "br-list" : ""}`}
+                initial="hidden"
+                animate="show"
+                variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}
+              >
+                <AnimatePresence mode="popLayout">
+                  {filteredAnime.map(anime => (
+                    <AnimeCard
+                      key={anime.id}
+                      anime={anime}
+                      onOpen={item => navigate(`/anime/${item.id}`)}
+                      onAdd={handleQuickAdd}
+                      wishlist={watchlist}
+                      onWishlist={toggleWishlist}
+                    />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+
+              {hasMore && !loadingMore && <div ref={sentinelRef} className="br-sentinel" />}
+
+              {hasMore && (
+                <div className="br-load-more-wrap">
+                  <button
+                    className="br-load-more"
+                    onClick={() => loadAnime(page + 1)}
+                    disabled={loadingMore}
+                  >
+                    {loadingMore ? (
+                      <><Loader2 size={16} className="br-spin" /> Loading...</>
+                    ) : (
+                      <><ChevronDown size={16} /> Load More</>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {filteredAnime.length === 0 && !loading && (
+                <div className="br-empty">
+                  <Library size={36} />
+                  <h3>No matches</h3>
+                  <p>Try clearing a filter or widening your search.</p>
+                </div>
+              )}
+            </>
           )}
         </main>
 
-        <Footer />
       </div>
     </AnimatedPage>
   );

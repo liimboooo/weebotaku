@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { getAnimeById } from "../data/animeData";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "../components/Header";
-import Footer from "../components/Footer";
 import Background from "../components/Background";
 import { useToast } from "../components/Toast";
 import AnimatedPage from "../components/AnimatedPage";
@@ -184,7 +183,6 @@ export default function WatchlistPage() {
           </div>
         )}
 
-        <Footer />
       </div>
     </AnimatedPage>
   );

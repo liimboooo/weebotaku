@@ -6,7 +6,6 @@ import { useGSAP } from "@gsap/react";
 import { ArrowLeft, Play, Bookmark, Heart, Share2, Star, Calendar, Tv, ShieldCheck, User, Bell } from "lucide-react";
 import { getAnimeById, getTrendingAnime } from "../data/animeData";
 import Header from "../components/Header";
-import Footer from "../components/Footer";
 import Background from "../components/Background";
 import Reviews from "../components/Reviews";
 import FeaturedAnime from "../components/FeaturedAnime";
@@ -451,7 +450,6 @@ export default function AnimeDetail() {
         />
       </div>
 
-      <Footer />
     </div>
     </AnimatedPage>
   );

@@ -1,31 +1,21 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Star, BookOpen, Eye, Heart, Sparkles, Zap, Library, List, Grid3x3 } from "lucide-react";
+import { Search, X, Star, BookOpen, Eye, Heart, Sparkles, Zap, Library, List, Grid3x3, Loader2, ChevronDown } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Header from "../components/Header";
-import Footer from "../components/Footer";
 import Background from "../components/Background";
+import { fetchTopManga, fetchSearchManga } from "../services/jikanApi";
 import "./MangaVault.css";
-
-const MANGA = [
-  { id: 1, title: "One Piece", author: "Eiichiro Oda", cover: "/beta-1.jpg", demo: "Shonen", status: "Ongoing", ch: 1120, last: 1080, rating: 9.5, genres: ["Adventure", "Comedy", "Fantasy"], desc: "Luffy and the Straw Hat crew sail the Grand Line pursuing the greatest treasure.", progress: 0.71 },
-  { id: 2, title: "Berserk", author: "Kentaro Miura", cover: "/beta-2.jpg", demo: "Seinen", status: "Hiatus", ch: 376, last: 376, rating: 9.6, genres: ["Dark Fantasy", "Action", "Drama"], desc: "A lone mercenary battles fate and monsters in a brutal medieval world.", progress: 0.38 },
-  { id: 3, title: "Jujutsu Kaisen", author: "Gege Akutami", cover: "/beta-3.jpg", demo: "Shonen", status: "Completed", ch: 271, last: 271, rating: 9.0, genres: ["Action", "Supernatural", "Horror"], desc: "Sorcerers and curses collide where power has a brutal cost.", progress: 0.86 },
-  { id: 4, title: "Vinland Saga", author: "Makoto Yukimura", cover: "/beta-1.jpg", demo: "Seinen", status: "Ongoing", ch: 214, last: 206, rating: 9.2, genres: ["Historical", "Drama", "Action"], desc: "A Viking saga of revenge, redemption, and the true meaning of freedom.", progress: 0.52 },
-  { id: 5, title: "Blue Lock", author: "Muneyuki Kaneshiro", cover: "/beta-2.jpg", demo: "Shonen", status: "Ongoing", ch: 290, last: 257, rating: 8.9, genres: ["Sports", "Psychological", "Drama"], desc: "Japan's future strikers fight in a ruthless football program.", progress: 0.48 },
-  { id: 6, title: "Monster", author: "Naoki Urasawa", cover: "/beta-3.jpg", demo: "Seinen", status: "Completed", ch: 162, last: 162, rating: 9.3, genres: ["Thriller", "Mystery", "Drama"], desc: "A surgeon chases a serial killer whose life he once saved.", progress: 0.2 },
-  { id: 7, title: "Skip & Loafer", author: "Misaki Takamatsu", cover: "/beta-1.jpg", demo: "Josei", status: "Ongoing", ch: 67, last: 62, rating: 8.7, genres: ["Romance", "Slice of Life", "School"], desc: "A small-town student navigates Tokyo high school life.", progress: 0.12 },
-  { id: 8, title: "Nana", author: "Ai Yazawa", cover: "/beta-2.jpg", demo: "Josei", status: "Hiatus", ch: 84, last: 84, rating: 9.1, genres: ["Drama", "Music", "Romance"], desc: "Two women named Nana build a fragile friendship in Tokyo.", progress: 0.63 },
-  { id: 9, title: "Yotsuba&!", author: "Kiyohiko Azuma", cover: "/beta-3.jpg", demo: "Shonen", status: "Ongoing", ch: 116, last: 113, rating: 8.8, genres: ["Comedy", "Slice of Life"], desc: "A curious child transforms everyday moments into adventure.", progress: 0.33 },
-  { id: 10, title: "Kingdom", author: "Yasuhisa Hara", cover: "/beta-1.jpg", demo: "Seinen", status: "Ongoing", ch: 816, last: 802, rating: 9.4, genres: ["Historical", "War", "Action"], desc: "An orphan soldier rises through ancient China's wars.", progress: 0.58 },
-  { id: 11, title: "Fruits Basket", author: "Natsuki Takaya", cover: "/beta-2.jpg", demo: "Shojo", status: "Completed", ch: 136, last: 136, rating: 8.9, genres: ["Romance", "Drama", "Fantasy"], desc: "A girl becomes involved with a family cursed as zodiac spirits.", progress: 0.4 },
-  { id: 12, title: "Oyasumi Punpun", author: "Inio Asano", cover: "/beta-3.jpg", demo: "Seinen", status: "Completed", ch: 147, last: 147, rating: 9.0, genres: ["Psychological", "Drama"], desc: "A surreal coming-of-age story of trauma and alienation.", progress: 0.15 },
-];
 
 const DEMOGRAPHICS = ["All", "Shonen", "Seinen", "Shojo", "Josei"];
 const STATUSES = ["All", "Ongoing", "Completed", "Hiatus"];
 
 export default function MangaVault() {
+  const [allManga, setAllManga] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [search, setSearch] = useState("");
   const [demo, setDemo] = useState("All");
   const [status, setStatus] = useState("All");
@@ -33,29 +23,79 @@ export default function MangaVault() {
   const [view, setView] = useState("grid");
   const [preview, setPreview] = useState(null);
   const [wishlist, setWishlist] = useState([]);
+  const sentinelRef = useRef(null);
+  const searchRef = useRef(search);
+  searchRef.current = search;
+
+  const loadManga = useCallback(async (p, replace = false) => {
+    if (replace) setLoading(true);
+    else setLoadingMore(true);
+    try {
+      const q = searchRef.current.trim();
+      const result = q
+        ? await fetchSearchManga(q, p)
+        : await fetchTopManga(p);
+      setAllManga(prev => replace ? result.data : [...prev, ...result.data]);
+      setHasMore(result.pagination.has_next_page);
+      setPage(p);
+    } catch (err) {
+      console.error("Failed to load manga:", err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    setAllManga([]);
+    setPage(1);
+    setHasMore(true);
+    loadManga(1, true);
+  }, [search, loadManga]);
+
+  useEffect(() => {
+    if (!sentinelRef.current || !hasMore || loadingMore || loading) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadManga(page + 1);
+        }
+      },
+      { rootMargin: "400px" }
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, loading, loadManga, page]);
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    return MANGA
+    return allManga
       .filter(m => {
         if (demo !== "All" && m.demo !== demo) return false;
         if (status !== "All" && m.status !== status) return false;
-        if (q && !m.title.toLowerCase().includes(q) && !m.author.toLowerCase().includes(q)) return false;
         return true;
       })
       .sort((a, b) => {
-        if (sort === "rating") return b.rating - a.rating;
-        if (sort === "chapters") return b.ch - a.ch;
-        if (sort === "title") return a.title.localeCompare(b.title);
+        if (sort === "rating") return (b.rating || 0) - (a.rating || 0);
+        if (sort === "chapters") return (b.ch || 0) - (a.ch || 0);
+        if (sort === "title") return (a.title || "").localeCompare(b.title || "");
         return 0;
       });
-  }, [search, demo, status, sort]);
+  }, [allManga, demo, status, sort]);
 
-  const topRated = MANGA.reduce((best, m) => m.rating > best.rating ? m : best, MANGA[0]);
+  const topRated = allManga.length > 0
+    ? allManga.reduce((best, m) => (m.rating || 0) > (best.rating || 0) ? m : best, allManga[0])
+    : null;
 
   const toggleWishlist = (id) => {
     setWishlist(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
+
+  const totalCh = useMemo(() => allManga.reduce((s, m) => s + (m.ch || 0), 0), [allManga]);
+  const allGenres = useMemo(() => {
+    const g = new Set();
+    allManga.forEach(m => m.genres?.forEach(gen => g.add(gen)));
+    return g.size;
+  }, [allManga]);
 
   return (
     <AnimatedPage>
@@ -65,11 +105,7 @@ export default function MangaVault() {
         <div className="mv-bg-ornament" />
 
         <main className="mv-shell">
-          <motion.section
-            className="mv-hero"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+          <motion.section className="mv-hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
             <div className="mv-hero-content">
               <span className="mv-eyebrow"><Sparkles size={14} /> Manga Collection</span>
               <h1>
@@ -77,23 +113,14 @@ export default function MangaVault() {
                 <span className="mv-hero-title-big">Library</span>
               </h1>
               <p className="mv-hero-desc">
-                Browse thousands of series across every genre. Track your reading, discover hidden gems, 
+                Browse thousands of series across every genre. Track your reading, discover hidden gems,
                 and build your perfect manga collection.
               </p>
               <div className="mv-hero-actions">
                 <div className="mv-hero-metrics">
-                  <div className="mv-metric">
-                    <strong>{MANGA.length}</strong>
-                    <span>Series</span>
-                  </div>
-                  <div className="mv-metric">
-                    <strong>3.8K</strong>
-                    <span>Chapters</span>
-                  </div>
-                  <div className="mv-metric">
-                    <strong>12</strong>
-                    <span>Genres</span>
-                  </div>
+                  <div className="mv-metric"><strong>{allManga.length}</strong><span>Series</span></div>
+                  <div className="mv-metric"><strong>{totalCh}</strong><span>Chapters</span></div>
+                  <div className="mv-metric"><strong>{allGenres}</strong><span>Genres</span></div>
                 </div>
               </div>
             </div>
@@ -102,8 +129,8 @@ export default function MangaVault() {
               <div className="mv-hero-grid" />
               <div className="mv-hero-spotlight">
                 <span className="mv-spotlight-label">TOP RATED</span>
-                <span className="mv-spotlight-title">{topRated.title}</span>
-                <span className="mv-spotlight-rating"><Star size={12} fill="currentColor" /> {topRated.rating}</span>
+                <span className="mv-spotlight-title">{topRated?.title || "Loading..."}</span>
+                <span className="mv-spotlight-rating"><Star size={12} fill="currentColor" /> {topRated?.rating?.toFixed(1) || "?"}</span>
               </div>
             </div>
           </motion.section>
@@ -111,11 +138,7 @@ export default function MangaVault() {
           <section className="mv-controls">
             <div className="mv-search-box">
               <Search size={18} className="mv-search-icon" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search manga, author, or genre..."
-              />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search manga..." />
             </div>
             <div className="mv-controls-right">
               <div className="mv-pills">
@@ -147,92 +170,119 @@ export default function MangaVault() {
               <span className="mv-count">{filtered.length} series found</span>
             </div>
 
-            <div className={`mv-grid ${view === "list" ? "mv-list" : ""}`}>
-              <AnimatePresence mode="popLayout">
-                {filtered.map((m, i) => (
-                  <motion.article
-                    key={m.id}
-                    className={view === "grid" ? "mv-card" : "mv-row-card"}
-                    layout
-                    initial={{ opacity: 0, scale: 0.92 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.92 }}
-                    transition={{ delay: (i % 12) * 0.025 }}
-                  >
-                    {view === "grid" ? (
-                      <>
-                        <div className="mv-card-thumb" onClick={() => setPreview(m)}>
-                          <img src={m.cover} alt={m.title} loading="lazy" />
-                          <div className="mv-card-overlay">
-                            <div className="mv-card-play">
-                              <Eye size={20} />
+            {loading ? (
+              <div className="mv-empty">
+                <Loader2 size={36} className="mv-spin" />
+                <h3>Loading manga...</h3>
+              </div>
+            ) : (
+              <div className={`mv-grid ${view === "list" ? "mv-list" : ""}`}>
+                <AnimatePresence mode="popLayout">
+                  {filtered.map((m, i) => (
+                    <motion.article
+                      key={m.id}
+                      className={view === "grid" ? "mv-card" : "mv-row-card"}
+                      layout
+                      initial={{ opacity: 0, scale: 0.92 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.92 }}
+                      transition={{ delay: (i % 12) * 0.025 }}
+                    >
+                      {view === "grid" ? (
+                        <>
+                          <div className="mv-card-thumb" onClick={() => setPreview(m)}>
+                            <img src={m.cover} alt={m.title} loading="lazy" />
+                            <div className="mv-card-overlay">
+                              <div className="mv-card-play"><Eye size={20} /></div>
+                              <div className="mv-card-tech">
+                                <span>Ch. {m.last}</span>
+                                <span>{m.demo}</span>
+                              </div>
                             </div>
-                            <div className="mv-card-tech">
-                              <span>Ch. {m.last}</span>
-                              <span>{m.demo}</span>
+                            <div className="mv-card-badge">
+                              {m.status === "Ongoing" ? <Zap size={10} /> : null}
+                              {m.status}
+                            </div>
+                            <div className="mv-card-progress" style={{ width: `${(m.progress || 0) * 100}%` }} />
+                          </div>
+                          <div className="mv-card-body">
+                            <div className="mv-card-head">
+                              <div>
+                                <h3>{m.title}</h3>
+                                <span className="mv-card-author">{m.author}</span>
+                              </div>
+                              <button className={`mv-wish-btn ${wishlist.includes(m.id) ? "active" : ""}`} onClick={() => toggleWishlist(m.id)}>
+                                <Heart size={14} fill={wishlist.includes(m.id) ? "currentColor" : "none"} />
+                              </button>
+                            </div>
+                            <p className="mv-card-desc">{m.desc}</p>
+                            <div className="mv-card-foot">
+                              <span className="mv-card-rating"><Star size={11} fill="currentColor" /> {m.rating}</span>
+                              <span className="mv-card-ch"><BookOpen size={11} /> {m.ch} ch</span>
+                              <span className="mv-card-tag">{m.demo}</span>
                             </div>
                           </div>
-                          <div className="mv-card-badge">
-                            {m.status === "Ongoing" ? <Zap size={10} /> : null}
-                            {m.status}
+                          <div className="mv-card-glow" />
+                        </>
+                      ) : (
+                        <>
+                          <div className="mv-row-thumb" onClick={() => setPreview(m)}>
+                            <img src={m.cover} alt={m.title} loading="lazy" />
                           </div>
-                          <div className="mv-card-progress" style={{ width: `${m.progress * 100}%` }} />
-                        </div>
-                        <div className="mv-card-body">
-                          <div className="mv-card-head">
-                            <div>
+                          <div className="mv-row-body" onClick={() => setPreview(m)}>
+                            <div className="mv-row-head">
                               <h3>{m.title}</h3>
-                              <span className="mv-card-author">{m.author}</span>
+                              <span className="mv-row-author">{m.author}</span>
                             </div>
-                            <button
-                              className={`mv-wish-btn ${wishlist.includes(m.id) ? "active" : ""}`}
-                              onClick={() => toggleWishlist(m.id)}
-                            >
-                              <Heart size={14} fill={wishlist.includes(m.id) ? "currentColor" : "none"} />
-                            </button>
+                            <p className="mv-row-desc">{m.desc}</p>
+                            <div className="mv-row-meta">
+                              <span><Star size={11} /> {m.rating}</span>
+                              <span><BookOpen size={11} /> {m.ch} chapters</span>
+                              <span className="mv-row-tag">{m.demo}</span>
+                              <span className={`mv-row-status ${(m.status || "").toLowerCase()}`}>{m.status}</span>
+                            </div>
                           </div>
-                          <p className="mv-card-desc">{m.desc}</p>
-                          <div className="mv-card-foot">
-                            <span className="mv-card-rating"><Star size={11} fill="currentColor" /> {m.rating}</span>
-                            <span className="mv-card-ch"><BookOpen size={11} /> {m.ch} ch</span>
-                            <span className="mv-card-tag">{m.demo}</span>
-                          </div>
-                        </div>
-                        <div className="mv-card-glow" />
-                      </>
-                    ) : (
-                      <>
-                        <div className="mv-row-thumb" onClick={() => setPreview(m)}>
-                          <img src={m.cover} alt={m.title} loading="lazy" />
-                        </div>
-                        <div className="mv-row-body" onClick={() => setPreview(m)}>
-                          <div className="mv-row-head">
-                            <h3>{m.title}</h3>
-                            <span className="mv-row-author">{m.author}</span>
-                          </div>
-                          <p className="mv-row-desc">{m.desc}</p>
-                          <div className="mv-row-meta">
-                            <span><Star size={11} /> {m.rating}</span>
-                            <span><BookOpen size={11} /> {m.ch} chapters</span>
-                            <span className="mv-row-tag">{m.demo}</span>
-                            <span className={`mv-row-status ${m.status.toLowerCase()}`}>{m.status}</span>
-                          </div>
-                        </div>
-                        <button
-                          className={`mv-row-wish ${wishlist.includes(m.id) ? "active" : ""}`}
-                          onClick={() => toggleWishlist(m.id)}
-                        >
-                          <Heart size={15} fill={wishlist.includes(m.id) ? "currentColor" : "none"} />
-                        </button>
-                        <div className="mv-card-glow" />
-                      </>
-                    )}
-                  </motion.article>
-                ))}
-              </AnimatePresence>
-            </div>
+                          <button className={`mv-row-wish ${wishlist.includes(m.id) ? "active" : ""}`} onClick={() => toggleWishlist(m.id)}>
+                            <Heart size={15} fill={wishlist.includes(m.id) ? "currentColor" : "none"} />
+                          </button>
+                          <div className="mv-card-glow" />
+                        </>
+                      )}
+                    </motion.article>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
 
-            {filtered.length === 0 && (
+            {!loading && (
+              <>
+                {loadingMore && (
+                  <div className="mv-empty" style={{ padding: "24px" }}>
+                    <Loader2 size={24} className="mv-spin" />
+                  </div>
+                )}
+
+                {hasMore && !loadingMore && <div ref={sentinelRef} className="mv-sentinel" />}
+
+                {hasMore && (
+                  <div className="mv-load-more-wrap">
+                    <button
+                      className="mv-load-more"
+                      onClick={() => loadManga(page + 1)}
+                      disabled={loadingMore}
+                    >
+                      {loadingMore ? (
+                        <><Loader2 size={16} className="mv-spin" /> Loading...</>
+                      ) : (
+                        <><ChevronDown size={16} /> Load More</>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+
+            {!loading && filtered.length === 0 && (
               <div className="mv-empty">
                 <BookOpen size={40} />
                 <h3>No results found</h3>
@@ -242,7 +292,6 @@ export default function MangaVault() {
           </section>
         </main>
 
-        <Footer />
 
         <AnimatePresence>
           {preview && (
@@ -275,13 +324,13 @@ export default function MangaVault() {
                       <div className="mv-modal-details">
                         <div className="mv-modal-detail"><Star size={13} /> {preview.rating} Rating</div>
                         <div className="mv-modal-detail"><BookOpen size={13} /> {preview.ch} Chapters</div>
-                        <div className="mv-modal-detail"><Zap size={13} /> {preview.progress * 100}% Read</div>
+                        <div className="mv-modal-detail"><Zap size={13} /> {Math.round((preview.progress || 0) * 100)}% Read</div>
                       </div>
                     </div>
                     <div className="mv-modal-section">
                       <label>Genres</label>
                       <div className="mv-modal-tags">
-                        {preview.genres.map(g => <span key={g}>{g}</span>)}
+                        {preview.genres?.map(g => <span key={g}>{g}</span>)}
                         <span className="mv-modal-tag-accent">{preview.demo}</span>
                       </div>
                     </div>
@@ -290,7 +339,7 @@ export default function MangaVault() {
                       <p>{preview.desc}</p>
                     </div>
                     <div className="mv-modal-bar">
-                      <div className="mv-modal-bar-fill" style={{ width: `${preview.progress * 100}%` }} />
+                      <div className="mv-modal-bar-fill" style={{ width: `${(preview.progress || 0) * 100}%` }} />
                     </div>
                     <button className="mv-modal-btn" onClick={() => toggleWishlist(preview.id)}>
                       <Heart size={16} fill={wishlist.includes(preview.id) ? "currentColor" : "none"} />

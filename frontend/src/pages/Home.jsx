@@ -15,7 +15,6 @@ import NewEpisodes from "../components/NewEpisodes";
 import Categories from "../components/Categories";
 import Background from "../components/Background";
 import { getFeaturedAnime, getAllGenres, getTrendingAnime, getNewEpisodes, getLatestAnime, getSeasonPicks, getAiringTodayAnime, getAnimeById } from "../data/animeData";
-import Footer from "../components/Footer";
 import "./Home.css";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -334,7 +333,6 @@ export default function Home() {
         <TodaySchedulePreview />
 
         <Categories categories={categories} />
-        <Footer />
       </div>
     </AnimatedPage>
   );
