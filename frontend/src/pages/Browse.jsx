@@ -14,6 +14,7 @@ import {
   List,
   Grid3x3,
   Library,
+  X,
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Header from "../components/Header";
@@ -55,7 +56,7 @@ function normalize(value) {
 function loadWatchlist() {
   try {
     return JSON.parse(localStorage.getItem("watchlist") || "[]");
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -68,33 +69,40 @@ function addToWatchlist(anime) {
   return next;
 }
 
-function FilterGroup({ title, icon: Icon, open, onToggle, children, count }) {
+function FilterDropdown({ label, icon: Icon, items, active, children }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   return (
-    <section className="br-filter-group">
-      <button className="br-filter-trigger" type="button" onClick={onToggle} aria-expanded={open}>
-        <span className="br-filter-title">
-          <Icon size={15} />
-          {title}
-        </span>
-        <span className="br-filter-meta">
-          {count > 0 && <span className="br-filter-count">{count}</span>}
-          <ChevronDown size={15} className={`br-filter-chevron ${open ? "open" : ""}`} />
-        </span>
+    <div className="br-drop" ref={ref}>
+      <button className={`br-drop-btn ${active.length > 0 ? "has-active" : ""}`} onClick={() => setOpen(!open)}>
+        <Icon size={14} />
+        {label}
+        {active.length > 0 && <span className="br-drop-count">{active.length}</span>}
+        <ChevronDown size={12} className={`br-drop-chevron ${open ? "open" : ""}`} />
       </button>
-      <AnimatePresence initial={false}>
+      <AnimatePresence>
         {open && (
           <motion.div
-            className="br-filter-panel"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.24, ease: "easeOut" }}
+            className="br-drop-panel"
+            initial={{ opacity: 0, y: -6, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+            transition={{ duration: 0.15 }}
           >
-            <div className="br-filter-inner">{children}</div>
+            <div className="br-drop-items">
+              {items.map((item) => typeof children === "function" ? children(item) : item)}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </section>
+    </div>
   );
 }
 
@@ -107,22 +115,18 @@ function AnimeCard({ anime, onOpen, onAdd, wishlist, onWishlist }) {
       initial={{ opacity: 0, scale: 0.92 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.92 }}
-      transition={{ duration: 0.28, ease: "easeOut" }}
+      transition={{ duration: 0.28 }}
     >
       <div className="br-card-thumb" onClick={() => onOpen(anime)}>
         <img className="br-card-img" src={anime.img} alt={anime.name} loading="lazy" />
         <div className="br-card-overlay">
-          <div className="br-card-play-icon">
-            <Play size={20} fill="currentColor" />
-          </div>
+          <div className="br-card-play-icon"><Play size={20} fill="currentColor" /></div>
           <div className="br-card-tech">
             <span>{anime.episodes} eps</span>
             <span>{anime.type || "TV"}</span>
           </div>
         </div>
-        <div className="br-card-badge">
-          <Star size={10} fill="currentColor" /> {anime.rating.toFixed(1)}
-        </div>
+        <div className="br-card-badge"><Star size={10} fill="currentColor" /> {anime.rating.toFixed(1)}</div>
         <button
           type="button"
           className={`br-card-wish ${inWishlist ? "active" : ""}`}
@@ -135,11 +139,7 @@ function AnimeCard({ anime, onOpen, onAdd, wishlist, onWishlist }) {
       <div className="br-card-body">
         <div className="br-card-head">
           <h3>{anime.name}</h3>
-          <button
-            type="button"
-            className="br-card-add"
-            onClick={(e) => { e.stopPropagation(); onAdd(anime); }}
-          >
+          <button type="button" className="br-card-add" onClick={(e) => { e.stopPropagation(); onAdd(anime); }}>
             <Plus size={13} />
           </button>
         </div>
@@ -172,21 +172,13 @@ export default function Browse() {
   const [sortBy, setSortBy] = useState("popularity");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [view, setView] = useState("grid");
-  const [openGroups, setOpenGroups] = useState({
-    genres: true, format: true, status: true, season: true, year: true, studio: true,
-  });
   const [watchlist, setWatchlist] = useState(() => loadWatchlist());
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const sentinelRef = useRef(null);
 
   const filteredAnime = useMemo(() => {
     const query = normalize(searchTerm);
     const filtered = allAnime.filter((anime) => {
-      const matchesQuery =
-        !query ||
-        normalize(anime.name).includes(query) ||
-        normalize(anime.studio).includes(query) ||
-        anime.genres.some((genre) => normalize(genre).includes(query));
+      const matchesQuery = !query || normalize(anime.name).includes(query) || normalize(anime.studio).includes(query) || anime.genres.some((g) => normalize(g).includes(query));
       const matchesGenres = activeGenres.length === 0 || activeGenres.some((g) => anime.genres.includes(g));
       const matchesFormats = activeFormats.length === 0 || activeFormats.includes(getAnimeFormat(anime));
       const matchesStatuses = activeStatuses.length === 0 || activeStatuses.includes(getAnimeStatusBucket(anime));
@@ -218,14 +210,10 @@ export default function Browse() {
 
   const visibleAnime = filteredAnime.slice(0, visibleCount);
 
-  const toggleGroup = (key) => setOpenGroups((c) => ({ ...c, [key]: !c[key] }));
-  const toggleValue = (setter, value) => setter((c) => c.includes(value) ? c.filter((i) => i !== value) : [...c, value]);
-
   const handleQuickAdd = (anime) => setWatchlist(addToWatchlist(anime));
+  const toggleWishlist = (id) => setWatchlist((p) => p.includes(id) ? p.filter((i) => i !== id) : [...p, id]);
 
-  const toggleWishlist = (id) => {
-    setWatchlist((prev) => prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]);
-  };
+  const toggleValue = (setter, value) => setter((c) => c.includes(value) ? c.filter((i) => i !== value) : [...c, value]);
 
   const activeCount = activeGenres.length + activeFormats.length + activeStatuses.length + activeSeasons.length + activeYears.length + activeStudios.length;
 
@@ -240,9 +228,13 @@ export default function Browse() {
 
   const topAnime = useMemo(() => allAnime.reduce((best, a) => a.rating > best.rating ? a : best, allAnime[0]), [allAnime]);
 
+  const renderChip = (value, active, onClick) => (
+    <button key={value} type="button" className={`br-chip ${active ? "active" : ""}`} onClick={onClick}>{value}</button>
+  );
+
   return (
     <AnimatedPage>
-      <div className={`br ${filtersOpen ? "br-filters-open" : ""}`}>
+      <div className="br">
         <Background />
         <Header />
         <div className="br-bg-ornament" />
@@ -275,135 +267,91 @@ export default function Browse() {
             </div>
           </motion.section>
 
-          <div className="br-layout">
-            <aside className="br-sidebar">
-              <div className="br-sidebar-head">
-                <div>
-                  <span className="br-sidebar-kicker">Filters</span>
-                  <h2>The Lab</h2>
-                </div>
-                <Filter size={16} />
-              </div>
-
-              <FilterGroup title="Genres" icon={SlidersHorizontal} open={openGroups.genres} onToggle={() => toggleGroup("genres")} count={activeGenres.length}>
-                <div className="br-chip-grid">
-                  {allGenres.map((g) => (
-                    <button key={g} type="button" className={`br-chip ${activeGenres.includes(g) ? "active" : ""}`} onClick={() => toggleValue(setActiveGenres, g)}>{g}</button>
-                  ))}
-                </div>
-              </FilterGroup>
-
-              <FilterGroup title="Format" icon={SlidersHorizontal} open={openGroups.format} onToggle={() => toggleGroup("format")} count={activeFormats.length}>
-                <div className="br-chip-grid">
-                  {formatOptions.map((f) => (
-                    <button key={f} type="button" className={`br-chip ${activeFormats.includes(f) ? "active" : ""}`} onClick={() => toggleValue(setActiveFormats, f)}>{f}</button>
-                  ))}
-                </div>
-              </FilterGroup>
-
-              <FilterGroup title="Status" icon={SlidersHorizontal} open={openGroups.status} onToggle={() => toggleGroup("status")} count={activeStatuses.length}>
-                <div className="br-chip-grid">
-                  {statusOptions.map((s) => (
-                    <button key={s.value} type="button" className={`br-chip ${activeStatuses.includes(s.value) ? "active" : ""}`} onClick={() => toggleValue(setActiveStatuses, s.value)}>{s.label}</button>
-                  ))}
-                </div>
-              </FilterGroup>
-
-              <FilterGroup title="Season" icon={SlidersHorizontal} open={openGroups.season} onToggle={() => toggleGroup("season")} count={activeSeasons.length}>
-                <div className="br-chip-grid br-chip-grid-scroll">
-                  {allSeasons.map((s) => (
-                    <button key={s} type="button" className={`br-chip ${activeSeasons.includes(s) ? "active" : ""}`} onClick={() => toggleValue(setActiveSeasons, s)}>{s}</button>
-                  ))}
-                </div>
-              </FilterGroup>
-
-              <FilterGroup title="Year" icon={SlidersHorizontal} open={openGroups.year} onToggle={() => toggleGroup("year")} count={activeYears.length}>
-                <div className="br-chip-grid br-chip-grid-scroll">
-                  {allYears.map((y) => (
-                    <button key={y} type="button" className={`br-chip ${activeYears.includes(String(y)) ? "active" : ""}`} onClick={() => toggleValue(setActiveYears, String(y))}>{y}</button>
-                  ))}
-                </div>
-              </FilterGroup>
-
-              <FilterGroup title="Studio" icon={SlidersHorizontal} open={openGroups.studio} onToggle={() => toggleGroup("studio")} count={activeStudios.length}>
-                <div className="br-chip-grid">
-                  {allStudios.map((s) => (
-                    <button key={s} type="button" className={`br-chip ${activeStudios.includes(s) ? "active" : ""}`} onClick={() => toggleValue(setActiveStudios, s)}>{s}</button>
-                  ))}
-                </div>
-              </FilterGroup>
-            </aside>
-
-            <section className="br-results">
-              <div className="br-controls">
-                <button className="br-filter-toggle" type="button" onClick={() => setFiltersOpen(true)}>
-                  <Filter size={16} />
-                </button>
-                <div className="br-search">
-                  <Search size={15} />
-                  <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search anime, studio, or genre..." />
-                </div>
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                  {sortOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-                <div className="br-view-toggle">
-                  <button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")}><Grid3x3 size={14} /></button>
-                  <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}><List size={14} /></button>
-                </div>
-              </div>
-
-              <div className="br-summary">
-                <span>{filteredAnime.length} results</span>
-                <span><Heart size={12} /> {watchlist.length} in watchlist</span>
-                {activeCount > 0 && <span>{activeCount} filters active</span>}
-              </div>
-
-              {selectedPills.length > 0 && (
-                <div className="br-active-pills">
-                  {selectedPills.map((p) => (
-                    <button key={p.key} type="button" className="br-active-pill" onClick={p.remove}>
-                      {p.label} <span>×</span>
-                    </button>
-                  ))}
-                  <button type="button" className="br-active-pill br-active-pill-clear" onClick={() => { setActiveGenres([]); setActiveFormats([]); setActiveStatuses([]); setActiveSeasons([]); setActiveYears([]); setActiveStudios([]); }}>
-                    Clear all
-                  </button>
-                </div>
-              )}
-
-              <motion.div
-                layout
-                key={`${searchTerm}-${sortBy}-${activeCount}-${view}`}
-                className={`br-grid ${view === "list" ? "br-list" : ""}`}
-                initial="hidden"
-                animate="show"
-                variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}
-              >
-                <AnimatePresence mode="popLayout">
-                  {visibleAnime.map((anime) => (
-                    <AnimeCard
-                      key={anime.id}
-                      anime={anime}
-                      onOpen={(item) => navigate(`/anime/${item.id}`)}
-                      onAdd={handleQuickAdd}
-                      wishlist={watchlist}
-                      onWishlist={toggleWishlist}
-                    />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-
-              {visibleCount < filteredAnime.length && <div ref={sentinelRef} className="br-sentinel" />}
-
-              {filteredAnime.length === 0 && (
-                <div className="br-empty">
-                  <Library size={36} />
-                  <h3>No matches</h3>
-                  <p>Try clearing a filter or widening your search.</p>
-                </div>
-              )}
-            </section>
+          <div className="br-controls">
+            <div className="br-search">
+              <Search size={15} />
+              <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search anime, studio, or genre..." />
+            </div>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              {sortOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+            <div className="br-view-toggle">
+              <button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")}><Grid3x3 size={14} /></button>
+              <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}><List size={14} /></button>
+            </div>
           </div>
+
+          <div className="br-filters">
+            <FilterDropdown label="Genres" icon={SlidersHorizontal} items={allGenres} active={activeGenres}>
+              {(item) => renderChip(item, activeGenres.includes(item), () => toggleValue(setActiveGenres, item))}
+            </FilterDropdown>
+            <FilterDropdown label="Format" icon={SlidersHorizontal} items={formatOptions} active={activeFormats}>
+              {(item) => renderChip(item, activeFormats.includes(item), () => toggleValue(setActiveFormats, item))}
+            </FilterDropdown>
+            <FilterDropdown label="Status" icon={SlidersHorizontal} items={statusOptions.map((s) => s.value)} active={activeStatuses}>
+              {(item) => renderChip(item, activeStatuses.includes(item), () => toggleValue(setActiveStatuses, item))}
+            </FilterDropdown>
+            <FilterDropdown label="Season" icon={SlidersHorizontal} items={allSeasons} active={activeSeasons}>
+              {(item) => renderChip(item, activeSeasons.includes(item), () => toggleValue(setActiveSeasons, item))}
+            </FilterDropdown>
+            <FilterDropdown label="Year" icon={SlidersHorizontal} items={allYears} active={activeYears}>
+              {(item) => renderChip(String(item), activeYears.includes(String(item)), () => toggleValue(setActiveYears, String(item)))}
+            </FilterDropdown>
+            <FilterDropdown label="Studio" icon={SlidersHorizontal} items={allStudios} active={activeStudios}>
+              {(item) => renderChip(item, activeStudios.includes(item), () => toggleValue(setActiveStudios, item))}
+            </FilterDropdown>
+          </div>
+
+          <div className="br-summary">
+            <span>{filteredAnime.length} results</span>
+            <span><Heart size={12} /> {watchlist.length} in watchlist</span>
+            {activeCount > 0 && <span>{activeCount} active</span>}
+          </div>
+
+          {selectedPills.length > 0 && (
+            <div className="br-active-pills">
+              {selectedPills.map((p) => (
+                <button key={p.key} type="button" className="br-active-pill" onClick={p.remove}>
+                  {p.label} <span>×</span>
+                </button>
+              ))}
+              <button type="button" className="br-active-pill br-active-pill-clear" onClick={() => { setActiveGenres([]); setActiveFormats([]); setActiveStatuses([]); setActiveSeasons([]); setActiveYears([]); setActiveStudios([]); }}>
+                Clear all
+              </button>
+            </div>
+          )}
+
+          <motion.div
+            layout
+            key={`${searchTerm}-${sortBy}-${activeCount}-${view}`}
+            className={`br-grid ${view === "list" ? "br-list" : ""}`}
+            initial="hidden"
+            animate="show"
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}
+          >
+            <AnimatePresence mode="popLayout">
+              {visibleAnime.map((anime) => (
+                <AnimeCard
+                  key={anime.id}
+                  anime={anime}
+                  onOpen={(item) => navigate(`/anime/${item.id}`)}
+                  onAdd={handleQuickAdd}
+                  wishlist={watchlist}
+                  onWishlist={toggleWishlist}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.div>
+
+          {visibleCount < filteredAnime.length && <div ref={sentinelRef} className="br-sentinel" />}
+
+          {filteredAnime.length === 0 && (
+            <div className="br-empty">
+              <Library size={36} />
+              <h3>No matches</h3>
+              <p>Try clearing a filter or widening your search.</p>
+            </div>
+          )}
         </main>
 
         <Footer />
