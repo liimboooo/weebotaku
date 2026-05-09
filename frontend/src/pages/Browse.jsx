@@ -295,7 +295,12 @@ export default function Browse() {
         <div className="br-bg-ornament" />
 
         <main className="br-shell">
-          <motion.section className="br-hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.section
+            className="br-hero"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
             <div className="br-hero-bg">
               {topAnime?.trailerUrl && (
                 <iframe
@@ -309,31 +314,60 @@ export default function Browse() {
             </div>
             <div className="br-hero-gradient" />
             <div className="br-hero-content">
-              <span className="br-eyebrow"><Sparkles size={14} /> ANIME COLLECTION</span>
-              <h1>
+              <motion.span
+                className="br-eyebrow"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+              ><Sparkles size={14} /> ANIME COLLECTION</motion.span>
+              <motion.h1
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35, duration: 0.5 }}
+              >
                 <span className="br-hero-main">EXPLORE</span>
                 <span className="br-hero-accent">ANIME</span>
-              </h1>
-              <p className="br-hero-desc">
+              </motion.h1>
+              <motion.p
+                className="br-hero-desc"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+              >
                 Discover thousands of anime across every genre. Track your watchlist, find your next favorite series, and dive into the community.
-              </p>
-              <div className="br-hero-metrics">
+              </motion.p>
+              <motion.div
+                className="br-hero-metrics"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.65, duration: 0.5 }}
+              >
                 <div className="br-metric"><strong>{allAnime.length}</strong><span>Loaded</span></div>
                 <div className="br-metric"><strong>{totalEpisodes}</strong><span>Episodes</span></div>
                 <div className="br-metric"><strong>{genres.length}</strong><span>Genres</span></div>
-              </div>
+              </motion.div>
             </div>
-            <div className="br-hero-hud">
+            <motion.div
+              className="br-hero-hud"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+            >
               {topAnime?.img && <div className="br-hud-img"><img src={topAnime.img} alt={topAnime.name} /></div>}
               <div className="br-hud-info">
                 <span className="br-hud-label">TOP RATED</span>
                 <span className="br-hud-title">{topAnime?.name || "Loading..."}</span>
                 <span className="br-hud-rating"><Star size={12} fill="currentColor" /> {topAnime?.rating?.toFixed(1) || "?"}</span>
               </div>
-            </div>
+            </motion.div>
           </motion.section>
 
-          <div className="br-controls">
+          <motion.div
+            className="br-controls"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
             <div className="br-search">
               <Search size={15} />
               <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search anime..." />
@@ -345,7 +379,7 @@ export default function Browse() {
               <button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")}><Grid3x3 size={14} /></button>
               <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}><List size={14} /></button>
             </div>
-          </div>
+          </motion.div>
 
           <div className="br-filters">
             <FilterDropdown label="Genres" icon={SlidersHorizontal} items={genres} active={activeGenres}>

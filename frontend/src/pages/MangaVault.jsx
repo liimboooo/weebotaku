@@ -110,37 +110,71 @@ export default function MangaVault() {
         <div className="mv-bg-ornament" />
 
         <main className="mv-shell">
-          <motion.section className="mv-hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.section
+            className="mv-hero"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
             <div className="mv-hero-bg" style={topRated?.cover ? { backgroundImage: `url(${topRated.cover})` } : {}} />
             <div className="mv-hero-gradient" />
             <div className="mv-hero-texture" />
             <div className="mv-hero-content">
-              <span className="mv-eyebrow"><Sparkles size={14} /> MANGA COLLECTION</span>
-              <h1>
+              <motion.span
+                className="mv-eyebrow"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+              ><Sparkles size={14} /> MANGA COLLECTION</motion.span>
+              <motion.h1
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35, duration: 0.5 }}
+              >
                 <span className="mv-hero-main">EXPLORE</span>
                 <span className="mv-hero-accent">MANGA</span>
-              </h1>
-              <p className="mv-hero-desc">
+              </motion.h1>
+              <motion.p
+                className="mv-hero-desc"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+              >
                 Browse thousands of series across every genre. Track your reading, discover hidden gems,
                 and build your perfect manga collection.
-              </p>
-              <div className="mv-hero-metrics">
+              </motion.p>
+              <motion.div
+                className="mv-hero-metrics"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.65, duration: 0.5 }}
+              >
                 <div className="mv-metric"><strong>{allManga.length}</strong><span>Series</span></div>
                 <div className="mv-metric"><strong>{totalCh}</strong><span>Chapters</span></div>
                 <div className="mv-metric"><strong>{totalVol}</strong><span>Volumes</span></div>
-              </div>
+              </motion.div>
             </div>
-            <div className="mv-hero-hud">
+            <motion.div
+              className="mv-hero-hud"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+            >
               {topRated?.cover && <div className="mv-hud-img"><img src={topRated.cover} alt={topRated.title} /></div>}
               <div className="mv-hud-info">
                 <span className="mv-hud-label">TOP RATED</span>
                 <span className="mv-hud-title">{topRated?.title || "Loading..."}</span>
                 <span className="mv-hud-rating"><Star size={12} fill="currentColor" /> {topRated?.rating?.toFixed(1) || "?"}</span>
               </div>
-            </div>
+            </motion.div>
           </motion.section>
 
-          <section className="mv-controls">
+          <motion.section
+            className="mv-controls"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
             <div className="mv-search-box">
               <Search size={18} className="mv-search-icon" />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search manga..." />
@@ -167,7 +201,7 @@ export default function MangaVault() {
                 </div>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           <section className="mv-grid-section">
             <div className="mv-grid-header">

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+
 import {
   Bell,
   Bookmark,
@@ -287,40 +287,22 @@ export default function Header() {"use strict";
                 <ChevronDown size={14} className="nav-chevron" />
               </button>
               {exploreOpen && (
-                <motion.div 
-                  className="explore-dropdown"
-                  initial={{ opacity: 0, scale: 0.95, y: -8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -8 }}
-                  transition={{ duration: 0.18, ease: [0.2, 0.9, 0.2, 1] }}
-                >
-                  <motion.button 
-                    className="explore-item" 
-                    onClick={() => navigateTo('/browse/anime')}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.05 }}
-                  >
+                <div className="explore-dropdown">
+                  <button className="explore-item" onClick={() => navigateTo('/browse/anime')}>
                     <span className="explore-item-icon">🎬</span>
                     <div>
                       <span className="explore-item-label">Browse Anime</span>
                       <span className="explore-item-description">All anime, filters & tags</span>
                     </div>
-                  </motion.button>
-                  <motion.button 
-                    className="explore-item" 
-                    onClick={() => navigateTo('/browse/manga')}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 }}
-                  >
+                  </button>
+                  <button className="explore-item" onClick={() => navigateTo('/browse/manga')}>
                     <span className="explore-item-icon">📚</span>
                     <div>
                       <span className="explore-item-label">Browse Manga</span>
                       <span className="explore-item-description">Manga vault & chapters</span>
                     </div>
-                  </motion.button>
-                </motion.div>
+                  </button>
+                </div>
               )}
             </div>
 
@@ -337,14 +319,8 @@ export default function Header() {"use strict";
               </button>
 
               {feedsOpen && (
-                <motion.div 
-                  className="feeds-dropdown"
-                  initial={{ opacity: 0, scale: 0.95, y: -8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -8 }}
-                  transition={{ duration: 0.18, ease: [0.2, 0.9, 0.2, 1] }}
-                >
-                  {feedItems.map((item, idx) => {
+                <div className="feeds-dropdown">
+                  {feedItems.map((item) => {
                     const Icon = item.icon;
                     let renderedIcon = React.isValidElement(Icon)
                       ? Icon
@@ -352,30 +328,21 @@ export default function Header() {"use strict";
                         ? <Icon size={16} />
                         : Icon || null;
 
-                    // Defensive: some icon imports may be objects with {$$typeof, render}
-                    // which are not valid to render directly as React children — skip them.
                     if (renderedIcon && typeof renderedIcon === 'object' && renderedIcon.$$typeof && renderedIcon.render) {
                       renderedIcon = null;
                     }
 
                     return (
-                      <motion.button 
-                        key={item.path} 
-                        className="feeds-item" 
-                        onClick={() => navigateTo(item.path)}
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                      >
+                      <button key={item.path} className="feeds-item" onClick={() => navigateTo(item.path)}>
                         <span className="feeds-item-icon">{renderedIcon}</span>
                         <div>
                           <span className="feeds-item-label">{item.label}</span>
                           {item.description ? <span className="feeds-item-description">{item.description}</span> : null}
                         </div>
-                      </motion.button>
+                      </button>
                     );
                   })}
-                </motion.div>
+                </div>
               )}
             </div>
 
@@ -394,13 +361,7 @@ export default function Header() {"use strict";
               </button>
 
               {arenaOpen && (
-                <motion.div 
-                  className="arena-mega-menu"
-                  initial={{ opacity: 0, scale: 0.95, y: -8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -8 }}
-                  transition={{ duration: 0.18, ease: [0.2, 0.9, 0.2, 1] }}
-                >
+                <div className="arena-mega-menu">
                   <div className="arena-mega-menu-glow" />
                   <div className="arena-grid">
                     <div className="arena-column">
@@ -409,18 +370,11 @@ export default function Header() {"use strict";
                         Rankings
                       </div>
                       <div className="column-items">
-                        {hallOfFameLinks.map((link, idx) => (
-                          <motion.button
-                            key={link.path}
-                            className="arena-item"
-                            onClick={() => navigateTo(link.path)}
-                            initial={{ opacity: 0, x: -8 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: idx * 0.06 }}
-                          >
+                        {hallOfFameLinks.map((link) => (
+                          <button key={link.path} className="arena-item" onClick={() => navigateTo(link.path)}>
                             <span className="arena-item-icon">{link.icon}</span>
                             <span className="arena-item-label">{link.label}</span>
-                          </motion.button>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -431,13 +385,7 @@ export default function Header() {"use strict";
                         Live Battles
                       </div>
                       <div className="column-items">
-                        <motion.button 
-                          className="arena-item battle-item-live" 
-                          onClick={() => navigateTo('/arena/character-battle')}
-                          initial={{ opacity: 0, x: -8 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.12 }}
-                        >
+                        <button className="arena-item battle-item-live" onClick={() => navigateTo('/arena/character-battle')}>
                           <span className="vs-badge">VS</span>
                           <div className="battle-content">
                             <div className="battle-title">{battleArenaData.character.left.name} vs {battleArenaData.character.right.name}</div>
@@ -448,7 +396,7 @@ export default function Header() {"use strict";
                               </span>
                             </div>
                           </div>
-                        </motion.button>
+                        </button>
                       </div>
                     </div>
 
@@ -465,7 +413,7 @@ export default function Header() {"use strict";
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               )}
             </div>
 
