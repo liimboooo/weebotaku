@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Clock, Flame, PlayCircle, Shuffle, Sparkles, Swords, TrendingUp, Users, Video, Zap } from "lucide-react";
+import { ArrowRight, Clock, Flame, PlayCircle, RefreshCw, Shuffle, Sparkles, Swords, TrendingUp, Users, Video, Zap } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -15,6 +15,7 @@ import NewEpisodes from "../components/NewEpisodes";
 import Categories from "../components/Categories";
 import Background from "../components/Background";
 import { getFeaturedAnime, getAllGenres, getTrendingAnime, getNewEpisodes, getLatestAnime, getSeasonPicks, getAiringTodayAnime, getAnimeById } from "../data/animeData";
+import { fetchRandomQuote, fetchWaifuImage } from "../services/communityApi";
 import "./Home.css";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -117,6 +118,20 @@ const TodaySchedulePreview = () => {
 
 export default function Home() {
   const navigate = useNavigate();
+  const [quote, setQuote] = useState(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [decorImg, setDecorImg] = useState(null);
+
+  useEffect(() => {
+    fetchRandomQuote().then(setQuote).catch(() => {});
+    fetchWaifuImage().then(r => setDecorImg(r.url)).catch(() => {});
+  }, []);
+
+  const refreshQuote = () => {
+    setQuoteLoading(true);
+    fetchRandomQuote().then(q => { setQuote(q); setQuoteLoading(false); }).catch(() => setQuoteLoading(false));
+  };
+
   const featuredAnime = getFeaturedAnime();
   const categories = getAllGenres();
   const seasonPicks = getSeasonPicks();
@@ -209,6 +224,19 @@ export default function Home() {
                 <span>Curated every session</span>
                 <span>Best viewed full-screen</span>
               </div>
+              {quote && (
+                <div className="spotlight-quote">
+                  <p className="spotlight-quote-text">"{quote.quote}"</p>
+                  <div className="spotlight-quote-attribution">
+                    <span className="spotlight-quote-char">{quote.character}</span>
+                    <span className="spotlight-quote-dash">—</span>
+                    <span className="spotlight-quote-anime">{quote.anime}</span>
+                    <button className="spotlight-quote-refresh" onClick={refreshQuote} disabled={quoteLoading}>
+                      <RefreshCw size={12} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="home-spotlight-art" onClick={() => navigate(`/anime/${spotlight.id}`)}>
               <img src={spotlight.img} alt={spotlight.name} />
@@ -218,6 +246,9 @@ export default function Home() {
                 <strong>{spotlight.name}</strong>
                 <p>Tap in for the full watch page, then jump back into the arena flow.</p>
               </div>
+              {decorImg && (
+                <img src={decorImg} alt="" className="spotlight-decor-char" />
+              )}
             </div>
           </section>
         )}

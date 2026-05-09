@@ -15,6 +15,7 @@ import { AnimatePresence } from "framer-motion";
 import GenericRoutePage from "./components/GenericRoutePage";
 import Browse from "./pages/Browse";
 import MangaVault from "./pages/MangaVault";
+import News from "./pages/News";
 import AMVsEdits from "./pages/Feeds/AMVsEdits";
 import WatchTogetherCreative from "./pages/Community/WatchTogetherCreative";
 import Rankings from "./pages/Rankings/Rankings";
@@ -92,6 +93,7 @@ function App() {
             <Route path="/report" element={<Report />} />
             <Route path="/anime/:id" element={<AnimeDetail />} />
             <Route path="/search" element={<SearchPage />} />
+            <Route path="/news" element={<News />} />
             <Route path="/watchlist" element={<WatchlistPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/history" element={<HistoryPage />} />

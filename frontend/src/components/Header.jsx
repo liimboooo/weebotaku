@@ -11,6 +11,7 @@ import {
   Globe,
   Menu,
   MessageSquare,
+  Newspaper,
   Search,
   Settings,
   Star,
@@ -65,6 +66,7 @@ export default function Header() {"use strict";
     () => [
       { label: 'AMVs & Edits', path: '/feeds/amvs', icon: Star, description: 'High-energy AMVs and creative edits from the community' },
       { label: 'Live Rooms', path: '/watch-together', icon: Video, description: 'Jump into live rooms and sync the next episode together' },
+      { label: 'Anime News', path: '/news', icon: Newspaper, description: 'Trending, new episodes & announcements' },
     ],
     []
   );

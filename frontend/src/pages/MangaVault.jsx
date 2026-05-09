@@ -9,7 +9,6 @@ import "./MangaVault.css";
 
 const DEMOGRAPHICS = ["All", "Shonen", "Seinen", "Shojo", "Josei"];
 const STATUSES = ["All", "Ongoing", "Completed", "Hiatus"];
-const HERO_VIDEO_ID = "-0Mhu7RSz-c";
 
 export default function MangaVault() {
   const [allManga, setAllManga] = useState([]);
@@ -107,15 +106,7 @@ export default function MangaVault() {
 
         <main className="mv-shell">
           <motion.section className="mv-hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="mv-hero-bg">
-              <iframe
-                className="mv-hero-video"
-                src={`https://www.youtube.com/embed/${HERO_VIDEO_ID}?autoplay=1&mute=1&controls=0&loop=1&playlist=${HERO_VIDEO_ID}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0`}
-                title="Hero Video"
-                allow="autoplay; fullscreen"
-                loading="lazy"
-              />
-            </div>
+            <div className="mv-hero-bg" style={topRated?.cover ? { backgroundImage: `url(${topRated.cover})` } : {}} />
             <div className="mv-hero-gradient" />
             <div className="mv-hero-texture" />
             <div className="mv-hero-content">
@@ -135,9 +126,12 @@ export default function MangaVault() {
               </div>
             </div>
             <div className="mv-hero-hud">
-              <span className="mv-hud-label">TOP RATED</span>
-              <span className="mv-hud-title">{topRated?.title || "Loading..."}</span>
-              <span className="mv-hud-rating"><Star size={12} fill="currentColor" /> {topRated?.rating?.toFixed(1) || "?"}</span>
+              {topRated?.cover && <div className="mv-hud-img"><img src={topRated.cover} alt={topRated.title} /></div>}
+              <div className="mv-hud-info">
+                <span className="mv-hud-label">TOP RATED</span>
+                <span className="mv-hud-title">{topRated?.title || "Loading..."}</span>
+                <span className="mv-hud-rating"><Star size={12} fill="currentColor" /> {topRated?.rating?.toFixed(1) || "?"}</span>
+              </div>
             </div>
           </motion.section>
 
