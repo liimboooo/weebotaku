@@ -12,11 +12,13 @@ const STATUSES = ["All", "Ongoing", "Completed", "Hiatus"];
 
 export default function MangaVault() {
   const [allManga, setAllManga] = useState([]);
+  const [heroManga, setHeroManga] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [demo, setDemo] = useState("All");
   const [status, setStatus] = useState("All");
   const [sort, setSort] = useState("rating");
@@ -24,8 +26,17 @@ export default function MangaVault() {
   const [preview, setPreview] = useState(null);
   const [wishlist, setWishlist] = useState([]);
   const sentinelRef = useRef(null);
-  const searchRef = useRef(search);
-  searchRef.current = search;
+  const searchRef = useRef(debouncedSearch);
+  searchRef.current = debouncedSearch;
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    fetchTopManga(1).then(r => setHeroManga(r.data[0])).catch(() => {});
+  }, []);
 
   const loadManga = useCallback(async (p, replace = false) => {
     if (replace) setLoading(true);
@@ -51,7 +62,7 @@ export default function MangaVault() {
     setPage(1);
     setHasMore(true);
     loadManga(1, true);
-  }, [search, loadManga]);
+  }, [debouncedSearch, loadManga]);
 
   useEffect(() => {
     if (!sentinelRef.current || !hasMore || loadingMore || loading) return;
@@ -82,20 +93,14 @@ export default function MangaVault() {
       });
   }, [allManga, demo, status, sort]);
 
-  const topRated = allManga.length > 0
-    ? allManga.reduce((best, m) => (m.rating || 0) > (best.rating || 0) ? m : best, allManga[0])
-    : null;
+  const topRated = heroManga;
 
   const toggleWishlist = (id) => {
     setWishlist(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
   const totalCh = useMemo(() => allManga.reduce((s, m) => s + (m.ch || 0), 0), [allManga]);
-  const allGenres = useMemo(() => {
-    const g = new Set();
-    allManga.forEach(m => m.genres?.forEach(gen => g.add(gen)));
-    return g.size;
-  }, [allManga]);
+  const totalVol = useMemo(() => allManga.reduce((s, m) => s + (m.volumes || 0), 0), [allManga]);
 
   return (
     <AnimatedPage>
@@ -122,7 +127,7 @@ export default function MangaVault() {
               <div className="mv-hero-metrics">
                 <div className="mv-metric"><strong>{allManga.length}</strong><span>Series</span></div>
                 <div className="mv-metric"><strong>{totalCh}</strong><span>Chapters</span></div>
-                <div className="mv-metric"><strong>{allGenres}</strong><span>Genres</span></div>
+                <div className="mv-metric"><strong>{totalVol}</strong><span>Volumes</span></div>
               </div>
             </div>
             <div className="mv-hero-hud">

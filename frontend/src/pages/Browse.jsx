@@ -101,14 +101,7 @@ function FilterDropdown({ label, icon: Icon, items, active, children }) {
 function AnimeCard({ anime, onOpen, onAdd, wishlist, onWishlist }) {
   const inWishlist = wishlist.includes(anime.id);
   return (
-    <motion.article
-      layout
-      className="br-card"
-      initial={{ opacity: 0, scale: 0.92 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.92 }}
-      transition={{ duration: 0.28 }}
-    >
+    <article className="br-card">
       <div className="br-card-thumb" onClick={() => onOpen(anime)}>
         <img className="br-card-img" src={anime.img} alt={anime.name} loading="lazy" />
         <div className="br-card-overlay">
@@ -142,7 +135,7 @@ function AnimeCard({ anime, onOpen, onAdd, wishlist, onWishlist }) {
         </div>
       </div>
       <div className="br-card-glow" />
-    </motion.article>
+    </article>
   );
 }
 
@@ -150,6 +143,7 @@ export default function Browse() {
   const navigate = useNavigate();
 
   const [allAnime, setAllAnime] = useState([]);
+  const [heroAnime, setHeroAnime] = useState(null);
   const [genres, setGenres] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -169,9 +163,11 @@ export default function Browse() {
   const [watchlist, setWatchlist] = useState(() => loadWatchlist());
   const sentinelRef = useRef(null);
   const mountedRef = useRef(false);
+  const loadingRef = useRef(false);
 
   useEffect(() => {
     fetchAnimeGenres().then(setGenres).catch(() => {});
+    fetchTopAnime(1).then(r => setHeroAnime(r.data[0])).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -193,13 +189,18 @@ export default function Browse() {
     loadAnime(1, true);
   }, [debouncedSearch]);
 
+  const searchRef = useRef("");
+  searchRef.current = debouncedSearch;
+
   async function loadAnime(p, replace = false) {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     if (replace) setLoading(true);
     else setLoadingMore(true);
     try {
-      const isSearch = debouncedSearch.trim().length > 0;
-      const result = isSearch
-        ? await fetchSearchAnime(debouncedSearch, p)
+      const q = searchRef.current.trim();
+      const result = q
+        ? await fetchSearchAnime(q, p)
         : await fetchTopAnime(p);
       setAllAnime(prev => replace ? result.data : [...prev, ...result.data]);
       setHasMore(result.pagination.has_next_page);
@@ -209,6 +210,7 @@ export default function Browse() {
     } finally {
       setLoading(false);
       setLoadingMore(false);
+      loadingRef.current = false;
     }
   }
 
@@ -245,9 +247,8 @@ export default function Browse() {
       });
   }, [allAnime, activeFormats, activeGenres, activeSeasons, activeStatuses, activeStudios, activeYears, sortBy]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (!sentinelRef.current || !hasMore || loadingMore || loading) return;
+    if (!sentinelRef.current || !hasMore || loadingRef.current) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
@@ -258,7 +259,7 @@ export default function Browse() {
     );
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [hasMore, loadingMore, loading]);
+  }, [hasMore, page]);
 
   const handleQuickAdd = (anime) => setWatchlist(addToWatchlist(anime));
   const toggleWishlist = (id) => setWatchlist(p => p.includes(id) ? p.filter(i => i !== id) : [...p, id]);
@@ -275,9 +276,7 @@ export default function Browse() {
     ...activeStudios.map(v => ({ key: `st:${v}`, label: v, remove: () => setActiveStudios(c => c.filter(i => i !== v)) })),
   ];
 
-  const topAnime = allAnime.length > 0
-    ? allAnime.reduce((best, a) => (a.rating || 0) > (best.rating || 0) ? a : best, allAnime[0])
-    : null;
+  const topAnime = heroAnime;
 
   const totalEpisodes = useMemo(() =>
     allAnime.reduce((s, a) => s + (a.episodes || 0), 0),
@@ -303,7 +302,7 @@ export default function Browse() {
                   className="br-hero-video"
                   src={`${topAnime.trailerUrl}${topAnime.trailerUrl.includes('?') ? '&' : '?'}autoplay=1&mute=1&controls=0&loop=1&playlist=${topAnime.trailerUrl.split('/').pop().split('?')[0]}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0`}
                   title={topAnime.name}
-                  allow="autoplay; fullscreen"
+                  allow="autoplay; encrypted-media; fullscreen"
                   loading="lazy"
                 />
               )}
@@ -325,9 +324,12 @@ export default function Browse() {
               </div>
             </div>
             <div className="br-hero-hud">
-              <span className="br-hud-label">TOP RATED</span>
-              <span className="br-hud-title">{topAnime?.name || "Loading..."}</span>
-              <span className="br-hud-rating"><Star size={12} fill="currentColor" /> {topAnime?.rating?.toFixed(1) || "?"}</span>
+              {topAnime?.img && <div className="br-hud-img"><img src={topAnime.img} alt={topAnime.name} /></div>}
+              <div className="br-hud-info">
+                <span className="br-hud-label">TOP RATED</span>
+                <span className="br-hud-title">{topAnime?.name || "Loading..."}</span>
+                <span className="br-hud-rating"><Star size={12} fill="currentColor" /> {topAnime?.rating?.toFixed(1) || "?"}</span>
+              </div>
             </div>
           </motion.section>
 
@@ -392,27 +394,24 @@ export default function Browse() {
             </div>
           ) : (
             <>
-              <motion.div
-                layout
-                key={`${searchTerm}-${sortBy}-${activeCount}-${view}`}
-                className={`br-grid ${view === "list" ? "br-list" : ""}`}
-                initial="hidden"
-                animate="show"
-                variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}
-              >
-                <AnimatePresence mode="popLayout">
-                  {filteredAnime.map(anime => (
-                    <AnimeCard
-                      key={anime.id}
-                      anime={anime}
-                      onOpen={item => navigate(`/anime/${item.id}`)}
-                      onAdd={handleQuickAdd}
-                      wishlist={watchlist}
-                      onWishlist={toggleWishlist}
-                    />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
+              <div className={`br-grid ${view === "list" ? "br-list" : ""}`}>
+                {filteredAnime.map(anime => (
+                  <AnimeCard
+                    key={anime.id}
+                    anime={anime}
+                    onOpen={item => navigate(`/anime/${item.id}`)}
+                    onAdd={handleQuickAdd}
+                    wishlist={watchlist}
+                    onWishlist={toggleWishlist}
+                  />
+                ))}
+              </div>
+
+              {loadingMore && (
+                <div className="br-empty" style={{ padding: "24px" }}>
+                  <Loader2 size={24} className="br-spin" />
+                </div>
+              )}
 
               {hasMore && !loadingMore && <div ref={sentinelRef} className="br-sentinel" />}
 

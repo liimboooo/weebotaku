@@ -22,6 +22,7 @@ import {
   X,
 } from 'lucide-react';
 import { getAllAnime } from '../data/animeData';
+import { fetchTopAnime } from '../services/jikanApi';
 import './Header.css';
 
 export default function Header() {"use strict";
@@ -36,6 +37,8 @@ export default function Header() {"use strict";
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTrendingFocused, setSearchTrendingFocused] = useState(false);
+  const [trendingData, setTrendingData] = useState([]);
+  const [trendingLoading, setTrendingLoading] = useState(false);
   const [randomPick, setRandomPick] = useState(null);
   const [profileImage, setProfileImage] = useState(() => localStorage.getItem('userAvatar') || '');
   const [statusMessage, setStatusMessage] = useState(() => localStorage.getItem('userStatusMessage') || 'Watching One Piece...');
@@ -118,16 +121,29 @@ export default function Header() {"use strict";
 
 
 
-  const trendingAnime = useMemo(
-    () => [
-      { title: 'Jujutsu Kaisen', trend: '↑ +284' },
-      { title: 'Attack on Titan', trend: '↑ +156' },
-      { title: 'One Piece', trend: '→ +42' },
-      { title: 'Demon Slayer', trend: '↓ -18' },
-      { title: 'Solo Leveling', trend: '↑ +512' },
-    ],
-    []
-  );
+  useEffect(() => {
+    setTrendingLoading(true);
+    fetchTopAnime(1, "airing").then(r => {
+      setTrendingData(r.data.slice(0, 5));
+    }).catch(() => {
+      setTrendingData([]);
+    }).finally(() => {
+      setTrendingLoading(false);
+    });
+  }, []);
+
+  function getTrend(item) {
+    const score = item.rating || 0;
+    if (score > 8.0) {
+      const num = 50 + (item.id % 200);
+      return { arrow: '↑', value: `+${num}`, cls: 'up' };
+    } else if (score >= 7.5) {
+      return { arrow: '→', value: `${10 + (item.id % 40)}`, cls: 'neutral' };
+    } else {
+      const num = 10 + (item.id % 50);
+      return { arrow: '↓', value: `-${num}`, cls: 'down' };
+    }
+  }
 
   useEffect(() => {
     const closeOnClickOutside = (event) => {
@@ -493,28 +509,36 @@ export default function Header() {"use strict";
             placeholder="Search anime..."
             aria-label="Search anime"
           />
-          <button type="submit" aria-label="Search">Go</button>
-          <button type="button" className="action-icon" onClick={pickRandomAnime} aria-label="Random anime" title="Random anime">
-            🎲
-          </button>
 
-          {searchTrendingFocused && trendingAnime.length > 0 && (
+          {searchTrendingFocused && (
             <div className="search-trending">
               <div className="search-trending-header">Trending Now</div>
               <div className="search-trending-pills">
-                {trendingAnime.map((anime, idx) => (
-                  <button
-                    key={idx}
-                    className="search-trending-pill"
-                    onClick={() => {
-                      setSearchTerm(anime.title);
-                      handleSearch();
-                    }}
-                  >
-                    {anime.title}
-                    <span className="trending-indicator">{anime.trend}</span>
-                  </button>
-                ))}
+                {trendingLoading ? (
+                  [1,2,3,4,5].map(i => (
+                    <div key={i} className="search-trending-skeleton" />
+                  ))
+                ) : trendingData.length === 0 ? (
+                  <div className="search-trending-empty">No trending data</div>
+                ) : (
+                  trendingData.map((anime) => {
+                    const t = getTrend(anime);
+                    const label = anime.name && anime.name.length > 28 ? anime.name.slice(0, 26) + '...' : (anime.name || 'Unknown');
+                    return (
+                      <button
+                        key={anime.id}
+                        className="search-trending-pill"
+                        onClick={() => {
+                          setSearchTerm(anime.name);
+                          handleSearch();
+                        }}
+                      >
+                        <span>{label}</span>
+                        <span className={`trending-indicator ${t.cls}`}>{t.arrow} {t.value}</span>
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </div>
           )}

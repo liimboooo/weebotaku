@@ -21,7 +21,7 @@ async function jikanFetch(endpoint) {
   if (cached) return cached;
 
   const now = Date.now();
-  const wait = Math.max(0, 400 - (now - lastCall));
+  const wait = Math.max(0, 1100 - (now - lastCall));
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   lastCall = Date.now();
 
@@ -64,6 +64,7 @@ function mapManga(m) {
     demo: m.demographics?.[0]?.name || "Unknown",
     status: m.status === "Publishing" ? "Ongoing" : m.status === "Finished" ? "Completed" : m.status || "Unknown",
     ch: m.chapters || 0,
+    volumes: m.volumes || 0,
     last: (m.chapters || 0) > 0 ? Math.floor((m.chapters || 0) * 0.8) : 0,
     rating: m.score || 0,
     genres: m.genres?.map(g => g.name) || [],

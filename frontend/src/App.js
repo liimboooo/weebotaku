@@ -16,6 +16,7 @@ import GenericRoutePage from "./components/GenericRoutePage";
 import Browse from "./pages/Browse";
 import MangaVault from "./pages/MangaVault";
 import News from "./pages/News";
+import NotFound from "./pages/NotFound";
 import AMVsEdits from "./pages/Feeds/AMVsEdits";
 import WatchTogetherCreative from "./pages/Community/WatchTogetherCreative";
 import Rankings from "./pages/Rankings/Rankings";
@@ -98,6 +99,7 @@ function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/following" element={<Navigate to="/home" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </AnimatePresence>
       </Router>
