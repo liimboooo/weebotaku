@@ -31,8 +31,6 @@ const statusOptions = [
 	{ value: "Finished", label: "Finished" },
 ];
 
-const typographyOptions = ["Body", "Display", "Mono"];
-
 function getAnimeFormat(anime) {
 	return anime?.type || "TV";
 }
@@ -162,7 +160,6 @@ export default function Browse() {
 	const [sortBy, setSortBy] = useState("popularity");
 	const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 	const [openGroups, setOpenGroups] = useState({
-		typography: true,
 		genres: true,
 		format: true,
 		status: true,
@@ -171,11 +168,8 @@ export default function Browse() {
 		studio: true,
 	});
 	const [watchlist, setWatchlist] = useState(() => loadWatchlist());
-	const [typography, setTypography] = useState("Body");
 	const [filtersOpen, setFiltersOpen] = useState(false);
 	const sentinelRef = useRef(null);
-
-	const typographyClass = typography ? `typography-${typography.toLowerCase().replace(/\s+/g, "-")}` : "";
 
 	const filteredAnime = useMemo(() => {
 		const query = normalize(searchTerm);
@@ -272,7 +266,7 @@ export default function Browse() {
 
 	return (
 		<AnimatedPage>
-			<div className={`browse-page ${typographyClass} ${filtersOpen ? "filters-open" : ""}`}>
+			<div className={`browse-page ${filtersOpen ? "filters-open" : ""}`}>
 				<Background />
 				<Header />
 
@@ -288,31 +282,6 @@ export default function Browse() {
 								</div>
 								<Filter size={18} />
 							</div>
-
-							<FilterGroup
-								title="Typography"
-								icon={Filter}
-								open={openGroups.typography}
-								onToggle={() => toggleGroup("typography")}
-								count={0}
-							>
-								<div className="manga-filter-pill-wrap">
-									{typographyOptions.map((opt) => {
-										const fam = opt === "Mono" ? "var(--font-mono)" : opt === "Display" ? "var(--font-display)" : "var(--font-body)";
-										return (
-											<button
-												key={opt}
-												type="button"
-												className={`manga-filter-pill ${typography === opt ? "active" : ""}`}
-												onClick={() => setTypography(opt)}
-											>
-												<span className="font-sample" style={{ fontFamily: fam }}>Aa</span>
-												{opt}
-											</button>
-										);
-									})}
-								</div>
-							</FilterGroup>
 
 							<FilterGroup
 								title="Genres"

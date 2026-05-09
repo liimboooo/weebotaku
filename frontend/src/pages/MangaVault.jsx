@@ -1,606 +1,252 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpen, Search, X, List, LayoutGrid, ChevronDown } from "lucide-react";
+import { BookOpen, Search, X, List, LayoutGrid, ChevronDown, Star, Eye, Filter, SlidersHorizontal, BookMarked, TrendingUp, Sparkles } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Background from "../components/Background";
 import "./MangaVault.css";
 
-const MANGA_LIBRARY = [
-	{
-		id: 1,
-		title: "One Piece",
-		author: "Eiichiro Oda",
-		cover: "/beta-1.jpg",
-		demographic: "Shonen",
-		status: "Ongoing",
-		chapters: 1120,
-		latestChapter: 1080,
-		rating: 9.5,
-		genres: ["Adventure", "Comedy", "Fantasy"],
-		synopsis: "Luffy and the Straw Hat crew sail the Grand Line pursuing the greatest treasure while empires clash.",
-		readProgress: 0.71,
-		readingMode: "Right-to-Left",
-	},
-	{
-		id: 2,
-		title: "Berserk",
-		author: "Kentaro Miura",
-		cover: "/beta-2.jpg",
-		demographic: "Seinen",
-		status: "Hiatus",
-		chapters: 376,
-		latestChapter: 376,
-		rating: 9.6,
-		genres: ["Dark Fantasy", "Action", "Drama"],
-		synopsis: "A lone mercenary battles fate, monsters, and kings in a brutal medieval world soaked in tragedy.",
-		readProgress: 0.38,
-		readingMode: "Right-to-Left",
-	},
-	{
-		id: 3,
-		title: "Jujutsu Kaisen",
-		author: "Gege Akutami",
-		cover: "/beta-3.jpg",
-		demographic: "Shonen",
-		status: "Completed",
-		chapters: 271,
-		latestChapter: 271,
-		rating: 9.0,
-		genres: ["Action", "Supernatural", "Horror"],
-		synopsis: "Sorcerers and curses collide in a modern city where power has a brutal cost.",
-		readProgress: 0.86,
-		readingMode: "Right-to-Left",
-	},
-	{
-		id: 4,
-		title: "Vinland Saga",
-		author: "Makoto Yukimura",
-		cover: "/beta-1.jpg",
-		demographic: "Seinen",
-		status: "Ongoing",
-		chapters: 214,
-		latestChapter: 206,
-		rating: 9.2,
-		genres: ["Historical", "Drama", "Action"],
-		synopsis: "A war-torn Viking era story about revenge, redemption, and the true meaning of freedom.",
-		readProgress: 0.52,
-		readingMode: "Right-to-Left",
-	},
-	{
-		id: 5,
-		title: "Blue Lock",
-		author: "Muneyuki Kaneshiro",
-		cover: "/beta-2.jpg",
-		demographic: "Shonen",
-		status: "Ongoing",
-		chapters: 290,
-		latestChapter: 257,
-		rating: 8.9,
-		genres: ["Sports", "Psychological", "Drama"],
-		synopsis: "Japan's future strikers fight in a ruthless football program engineered to create the ultimate egoist.",
-		readProgress: 0.48,
-		readingMode: "Right-to-Left",
-	},
-	{
-		id: 6,
-		title: "Monster",
-		author: "Naoki Urasawa",
-		cover: "/beta-3.jpg",
-		demographic: "Seinen",
-		status: "Completed",
-		chapters: 162,
-		latestChapter: 162,
-		rating: 9.3,
-		genres: ["Thriller", "Mystery", "Drama"],
-		synopsis: "A brilliant surgeon chases a serial killer whose life he once saved, unraveling a conspiracy of identity.",
-		readProgress: 0.2,
-		readingMode: "Right-to-Left",
-	},
-	{
-		id: 7,
-		title: "Skip and Loafer",
-		author: "Misaki Takamatsu",
-		cover: "/beta-1.jpg",
-		demographic: "Josei",
-		status: "Ongoing",
-		chapters: 67,
-		latestChapter: 62,
-		rating: 8.7,
-		genres: ["Romance", "Slice of Life", "School"],
-		synopsis: "A small-town honors student navigates Tokyo high school life with warmth, awkwardness, and sincerity.",
-		readProgress: 0.12,
-		readingMode: "Right-to-Left",
-	},
-	{
-		id: 8,
-		title: "Nana",
-		author: "Ai Yazawa",
-		cover: "/beta-2.jpg",
-		demographic: "Josei",
-		status: "Hiatus",
-		chapters: 84,
-		latestChapter: 84,
-		rating: 9.1,
-		genres: ["Drama", "Music", "Romance"],
-		synopsis: "Two women named Nana build a fragile friendship while chasing music, love, and identity in Tokyo.",
-		readProgress: 0.63,
-		readingMode: "Right-to-Left",
-	},
-	{
-		id: 9,
-		title: "Yotsuba&!",
-		author: "Kiyohiko Azuma",
-		cover: "/beta-3.jpg",
-		demographic: "Shonen",
-		status: "Ongoing",
-		chapters: 116,
-		latestChapter: 113,
-		rating: 8.8,
-		genres: ["Comedy", "Slice of Life"],
-		synopsis: "A curious child transforms everyday moments into adventure, wonder, and chaos.",
-		readProgress: 0.33,
-		readingMode: "Right-to-Left",
-	},
-	{
-		id: 10,
-		title: "Kingdom",
-		author: "Yasuhisa Hara",
-		cover: "/beta-1.jpg",
-		demographic: "Seinen",
-		status: "Ongoing",
-		chapters: 816,
-		latestChapter: 802,
-		rating: 9.4,
-		genres: ["Historical", "War", "Action"],
-		synopsis: "An orphan soldier rises through ancient China's wars to become a legendary general.",
-		readProgress: 0.58,
-		readingMode: "Right-to-Left",
-	},
-	{
-		id: 11,
-		title: "Fruits Basket",
-		author: "Natsuki Takaya",
-		cover: "/beta-2.jpg",
-		demographic: "Shojo",
-		status: "Completed",
-		chapters: 136,
-		latestChapter: 136,
-		rating: 8.9,
-		genres: ["Romance", "Drama", "Fantasy"],
-		synopsis: "A compassionate girl becomes involved with a family cursed to transform into zodiac spirits.",
-		readProgress: 0.4,
-		readingMode: "Right-to-Left",
-	},
-	{
-		id: 12,
-		title: "Oyasumi Punpun",
-		author: "Inio Asano",
-		cover: "/beta-3.jpg",
-		demographic: "Seinen",
-		status: "Completed",
-		chapters: 147,
-		latestChapter: 147,
-		rating: 9.0,
-		genres: ["Psychological", "Drama", "Slice of Life"],
-		synopsis: "A surreal coming-of-age story tracing one boy's descent through trauma, longing, and alienation.",
-		readProgress: 0.15,
-		readingMode: "Right-to-Left",
-	},
+const MANGA = [
+  { id: 1, title: "One Piece", author: "Eiichiro Oda", cover: "/beta-1.jpg", demo: "Shonen", status: "Ongoing", ch: 1120, last: 1080, rating: 9.5, genres: ["Adventure", "Comedy", "Fantasy"], desc: "Luffy and the Straw Hat crew sail the Grand Line pursuing the greatest treasure.", progress: 0.71 },
+  { id: 2, title: "Berserk", author: "Kentaro Miura", cover: "/beta-2.jpg", demo: "Seinen", status: "Hiatus", ch: 376, last: 376, rating: 9.6, genres: ["Dark Fantasy", "Action", "Drama"], desc: "A lone mercenary battles fate and monsters in a brutal medieval world.", progress: 0.38 },
+  { id: 3, title: "Jujutsu Kaisen", author: "Gege Akutami", cover: "/beta-3.jpg", demo: "Shonen", status: "Completed", ch: 271, last: 271, rating: 9.0, genres: ["Action", "Supernatural", "Horror"], desc: "Sorcerers and curses collide where power has a brutal cost.", progress: 0.86 },
+  { id: 4, title: "Vinland Saga", author: "Makoto Yukimura", cover: "/beta-1.jpg", demo: "Seinen", status: "Ongoing", ch: 214, last: 206, rating: 9.2, genres: ["Historical", "Drama", "Action"], desc: "A Viking saga of revenge, redemption, and the true meaning of freedom.", progress: 0.52 },
+  { id: 5, title: "Blue Lock", author: "Muneyuki Kaneshiro", cover: "/beta-2.jpg", demo: "Shonen", status: "Ongoing", ch: 290, last: 257, rating: 8.9, genres: ["Sports", "Psychological", "Drama"], desc: "Japan's future strikers fight in a ruthless football program.", progress: 0.48 },
+  { id: 6, title: "Monster", author: "Naoki Urasawa", cover: "/beta-3.jpg", demo: "Seinen", status: "Completed", ch: 162, last: 162, rating: 9.3, genres: ["Thriller", "Mystery", "Drama"], desc: "A surgeon chases a serial killer whose life he once saved.", progress: 0.2 },
+  { id: 7, title: "Skip & Loafer", author: "Misaki Takamatsu", cover: "/beta-1.jpg", demo: "Josei", status: "Ongoing", ch: 67, last: 62, rating: 8.7, genres: ["Romance", "Slice of Life", "School"], desc: "A small-town student navigates Tokyo high school life.", progress: 0.12 },
+  { id: 8, title: "Nana", author: "Ai Yazawa", cover: "/beta-2.jpg", demo: "Josei", status: "Hiatus", ch: 84, last: 84, rating: 9.1, genres: ["Drama", "Music", "Romance"], desc: "Two women named Nana build a fragile friendship in Tokyo.", progress: 0.63 },
+  { id: 9, title: "Yotsuba&!", author: "Kiyohiko Azuma", cover: "/beta-3.jpg", demo: "Shonen", status: "Ongoing", ch: 116, last: 113, rating: 8.8, genres: ["Comedy", "Slice of Life"], desc: "A curious child transforms everyday moments into adventure.", progress: 0.33 },
+  { id: 10, title: "Kingdom", author: "Yasuhisa Hara", cover: "/beta-1.jpg", demo: "Seinen", status: "Ongoing", ch: 816, last: 802, rating: 9.4, genres: ["Historical", "War", "Action"], desc: "An orphan soldier rises through ancient China's wars.", progress: 0.58 },
+  { id: 11, title: "Fruits Basket", author: "Natsuki Takaya", cover: "/beta-2.jpg", demo: "Shojo", status: "Completed", ch: 136, last: 136, rating: 8.9, genres: ["Romance", "Drama", "Fantasy"], desc: "A girl becomes involved with a family cursed as zodiac spirits.", progress: 0.4 },
+  { id: 12, title: "Oyasumi Punpun", author: "Inio Asano", cover: "/beta-3.jpg", demo: "Seinen", status: "Completed", ch: 147, last: 147, rating: 9.0, genres: ["Psychological", "Drama"], desc: "A surreal coming-of-age story of trauma and alienation.", progress: 0.15 },
 ];
 
-const TOP_WEEKLY = [
-	{ title: "One Piece", chapter: 1080 },
-	{ title: "Kingdom", chapter: 802 },
-	{ title: "Blue Lock", chapter: 257 },
-	{ title: "Vinland Saga", chapter: 206 },
-	{ title: "Jujutsu Kaisen", chapter: 271 },
-	{ title: "Skip and Loafer", chapter: 62 },
+const demos = ["Shonen", "Seinen", "Shojo", "Josei"];
+const stat = ["Ongoing", "Hiatus", "Completed"];
+const ranges = [
+  { key: "short", label: "1-100" },
+  { key: "mid", label: "101-300" },
+  { key: "long", label: "301-700" },
+  { key: "epic", label: "701+" },
 ];
 
-const chapterRanges = [
-	{ key: "0-100", label: "0-100" },
-	{ key: "101-300", label: "101-300" },
-	{ key: "301-700", label: "301-700" },
-	{ key: "701+", label: "701+" },
-];
-
-const demographics = ["Shonen", "Seinen", "Shojo", "Josei"];
-const statuses = ["Ongoing", "Hiatus", "Completed"];
-
-function chapterRangeMatch(chapters, selectedRange) {
-	if (!selectedRange) return true;
-	if (selectedRange === "0-100") return chapters <= 100;
-	if (selectedRange === "101-300") return chapters >= 101 && chapters <= 300;
-	if (selectedRange === "301-700") return chapters >= 301 && chapters <= 700;
-	return chapters >= 701;
+function matchRange(ch, key) {
+  if (!key) return true;
+  if (key === "short") return ch <= 100;
+  if (key === "mid") return ch >= 101 && ch <= 300;
+  if (key === "long") return ch >= 301 && ch <= 700;
+  return ch >= 701;
 }
 
-function FilterBlock({ title, open, onToggle, children }) {
-	return (
-		<section className="manga-filter-block">
-			<button type="button" className="manga-filter-head" onClick={onToggle} aria-expanded={open}>
-				<span>{title}</span>
-				<ChevronDown size={15} className={`manga-filter-chevron ${open ? "open" : ""}`} />
-			</button>
-			<AnimatePresence initial={false}>
-				{open && (
-					<motion.div
-						className="manga-filter-content"
-						initial={{ height: 0, opacity: 0 }}
-						animate={{ height: "auto", opacity: 1 }}
-						exit={{ height: 0, opacity: 0 }}
-						transition={{ duration: 0.22, ease: "easeOut" }}
-					>
-						<div>{children}</div>
-					</motion.div>
-				)}
-			</AnimatePresence>
-		</section>
-	);
+function FilterGroup({ title, icon, open, onToggle, children, count }) {
+  return (
+    <div className="mv-filter">
+      <button className="mv-filter-trigger" onClick={onToggle} aria-expanded={open}>
+        <span className="mv-filter-label">{icon} {title}</span>
+        <span className="mv-filter-right">
+          {count > 0 && <span className="mv-filter-badge">{count}</span>}
+          <ChevronDown size={14} className={`mv-chevron ${open ? "open" : ""}`} />
+        </span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div className="mv-filter-body" initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}>
+            <div className="mv-filter-inner">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
-function MangaGridCard({ manga, onPreview, isLoggedIn }) {
-	const longPressRef = useRef(null);
-
-	const startLongPress = () => {
-		longPressRef.current = window.setTimeout(() => onPreview(manga), 420);
-	};
-
-	const cancelLongPress = () => {
-		if (longPressRef.current) {
-			window.clearTimeout(longPressRef.current);
-			longPressRef.current = null;
-		}
-	};
-
-	return (
-		<motion.article
-			className="manga-card"
-			layout
-			initial={{ opacity: 0, y: 40 }}
-			animate={{ opacity: 1, y: 0 }}
-			exit={{ opacity: 0, scale: 0.92 }}
-			transition={{ duration: 0.28, ease: "easeOut" }}
-			onDoubleClick={() => onPreview(manga)}
-			onMouseDown={startLongPress}
-			onMouseUp={cancelLongPress}
-			onMouseLeave={cancelLongPress}
-			onTouchStart={startLongPress}
-			onTouchEnd={cancelLongPress}
-		>
-			<div className="manga-card-cover-wrap">
-				<img src={manga.cover} alt={manga.title} className="manga-card-cover" />
-				<span className="manga-chapter-pill">Ch. {manga.latestChapter}</span>
-				<div className="manga-rating-strip">
-					<span>⭐ {manga.rating.toFixed(1)}</span>
-				</div>
-				{isLoggedIn && <div className="manga-progress" style={{ width: `${Math.round(manga.readProgress * 100)}%` }} />}
-			</div>
-			<div className="manga-card-copy">
-				<h3>{manga.title}</h3>
-				<p>{manga.author}</p>
-			</div>
-		</motion.article>
-	);
+function Card({ m, onOpen }) {
+  return (
+    <motion.article className="mv-card" layout onClick={() => onOpen(m)} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}>
+      <div className="mv-cover">
+        <img src={m.cover} alt={m.title} loading="lazy" />
+        <div className="mv-cover-glow" />
+        <div className="mv-cover-gradient" />
+        <span className="mv-ch">#{m.last}</span>
+        <span className="mv-rating"><Star size={10} fill="currentColor" /> {m.rating}</span>
+        <button className="mv-quick-read" onClick={(e) => { e.stopPropagation(); onOpen(m); }}><Eye size={13} /> Read</button>
+      </div>
+      <div className="mv-body">
+        <h3>{m.title}</h3>
+        <p>{m.author}</p>
+        <div className="mv-meta">
+          <span>{m.ch} ch.</span>
+          <span>{m.demo}</span>
+        </div>
+        <div className="mv-progress"><div className="mv-progress-fill" style={{ width: `${m.progress * 100}%` }} /></div>
+      </div>
+    </motion.article>
+  );
 }
 
-function MangaListCard({ manga, onPreview, isLoggedIn }) {
-	return (
-		<motion.article
-			className="manga-list-row"
-			layout
-			initial={{ opacity: 0, y: 40 }}
-			animate={{ opacity: 1, y: 0 }}
-			exit={{ opacity: 0, scale: 0.94 }}
-			transition={{ duration: 0.28, ease: "easeOut" }}
-			onDoubleClick={() => onPreview(manga)}
-		>
-			<img src={manga.cover} alt={manga.title} className="manga-list-cover" />
-			<div className="manga-list-copy">
-				<h3>{manga.title}</h3>
-				<p>{manga.synopsis}</p>
-			</div>
-			<div className="manga-list-meta">
-				<span>Author: {manga.author}</span>
-				<span>Latest: Ch. {manga.latestChapter}</span>
-				<span>Rating: ⭐ {manga.rating.toFixed(1)}</span>
-			</div>
-			{isLoggedIn && <div className="manga-list-progress" style={{ width: `${Math.round(manga.readProgress * 100)}%` }} />}
-		</motion.article>
-	);
+function ListCard({ m, onOpen }) {
+  return (
+    <motion.article className="mv-lrow" layout onClick={() => onOpen(m)} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }}>
+      <img src={m.cover} alt={m.title} className="mv-lcover" />
+      <div className="mv-lbody">
+        <h3>{m.title}</h3>
+        <p>{m.desc}</p>
+        <div className="mv-ltags">{m.genres.slice(0, 3).map(g => <span key={g}>{g}</span>)}</div>
+      </div>
+      <div className="mv-lstats">
+        <span><BookOpen size={12} /> {m.last}/{m.ch}</span>
+        <span><Star size={12} /> {m.rating}</span>
+        <span className={`mv-ldot ${m.status.toLowerCase()}`}>{m.status}</span>
+      </div>
+    </motion.article>
+  );
 }
 
 export default function MangaVault() {
-	const [demographicFilter, setDemographicFilter] = useState([]);
-	const [statusFilter, setStatusFilter] = useState([]);
-	const [readingModeFilter, setReadingModeFilter] = useState(true);
-	const [chapterFilter, setChapterFilter] = useState("");
-	const [search, setSearch] = useState("");
-	const [viewMode, setViewMode] = useState("grid");
-	const [previewTarget, setPreviewTarget] = useState(null);
-	const [heroOffset, setHeroOffset] = useState(0);
-	const [openFilterGroups, setOpenFilterGroups] = useState({
-		demographics: true,
-		status: true,
-		reading: true,
-		chapters: true,
-	});
+  const [demo, setDemo] = useState([]);
+  const [status, setStatus] = useState([]);
+  const [range, setRange] = useState("");
+  const [search, setSearch] = useState("");
+  const [view, setView] = useState("grid");
+  const [preview, setPreview] = useState(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sort, setSort] = useState("rating");
+  const [groups, setGroups] = useState({ demo: true, status: true, ch: true });
 
-	const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return MANGA.filter(m => {
+      if (q && !m.title.toLowerCase().includes(q) && !m.author.toLowerCase().includes(q) && !m.genres.some(g => g.toLowerCase().includes(q))) return false;
+      if (demo.length && !demo.includes(m.demo)) return false;
+      if (status.length && !status.includes(m.status)) return false;
+      if (!matchRange(m.ch, range)) return false;
+      return true;
+    }).sort((a, b) => sort === "rating" ? b.rating - a.rating : sort === "ch" ? b.ch - a.ch : b.id - a.id);
+  }, [search, demo, status, range, sort]);
 
-	useEffect(() => {
-		const onScroll = () => setHeroOffset(window.scrollY * 0.25);
-		window.addEventListener("scroll", onScroll, { passive: true });
-		return () => window.removeEventListener("scroll", onScroll);
-	}, []);
+  const pills = [
+    ...demo.map(v => ({ k: `d:${v}`, l: v, off: () => setDemo(p => p.filter(x => x !== v)) })),
+    ...status.map(v => ({ k: `s:${v}`, l: v, off: () => setStatus(p => p.filter(x => x !== v)) })),
+    ...(range ? [{ k: `r:${range}`, l: `${ranges.find(r => r.key === range)?.label} ch.`, off: () => setRange("") }] : []),
+  ];
+  const count = demo.length + status.length + (range ? 1 : 0);
+  const topManga = [...MANGA].sort((a, b) => b.progress - a.progress).slice(0, 5);
 
-	const filteredManga = useMemo(() => {
-		const query = search.trim().toLowerCase();
-		return MANGA_LIBRARY.filter((manga) => {
-			const queryMatch =
-				query.length === 0 ||
-				manga.title.toLowerCase().includes(query) ||
-				manga.author.toLowerCase().includes(query) ||
-				manga.genres.some((genre) => genre.toLowerCase().includes(query));
+  return (
+    <AnimatedPage>
+      <div className={`mv ${filtersOpen ? "mv-fo" : ""}`}>
+        <Background />
+        <Header />
+        <div className="mv-overlay" onClick={() => setFiltersOpen(false)} />
+        <main className="mv-shell">
+          <section className="mv-hero">
+            <div className="mv-hero-bg" style={{ backgroundImage: `url(${MANGA[0].cover})` }} />
+            <div className="mv-hero-gradient" />
+            <div className="mv-hero-content">
+              <span className="mv-hero-chip"><BookMarked size={13} /> Manga Collection</span>
+              <h1>Discover Manga</h1>
+              <p>Browse hundreds of series, track your progress, and dive into new worlds.</p>
+              <div className="mv-hero-stats">
+                <div><strong>{MANGA.length}</strong><span>Series</span></div>
+                <div><strong>{MANGA.reduce((s, m) => s + m.ch, 0).toLocaleString()}</strong><span>Chapters</span></div>
+                <div><strong>9.1</strong><span>Avg Rating</span></div>
+              </div>
+            </div>
+          </section>
 
-			const demographicMatch =
-				demographicFilter.length === 0 || demographicFilter.includes(manga.demographic);
+          <div className="mv-layout">
+            <aside className="mv-side">
+              <div className="mv-side-head">
+                <h2>Filters</h2>
+                <Filter size={16} />
+              </div>
+              <FilterGroup title="Demographic" icon={<SlidersHorizontal size={14} />} open={groups.demo} onToggle={() => setGroups(p => ({ ...p, demo: !p.demo }))} count={demo.length}>
+                <div className="mv-pills">{demos.map(d => <button key={d} className={`mv-pill ${demo.includes(d) ? "active" : ""}`} onClick={() => setDemo(p => p.includes(d) ? p.filter(x => x !== d) : [...p, d])}>{d}</button>)}</div>
+              </FilterGroup>
+              <FilterGroup title="Status" icon={<SlidersHorizontal size={14} />} open={groups.status} onToggle={() => setGroups(p => ({ ...p, status: !p.status }))} count={status.length}>
+                <div className="mv-pills">{stat.map(s => <button key={s} className={`mv-pill ${status.includes(s) ? "active" : ""}`} onClick={() => setStatus(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s])}>{s}</button>)}</div>
+              </FilterGroup>
+              <FilterGroup title="Length" icon={<SlidersHorizontal size={14} />} open={groups.ch} onToggle={() => setGroups(p => ({ ...p, ch: !p.ch }))} count={range ? 1 : 0}>
+                <div className="mv-pills">{ranges.map(r => <button key={r.key} className={`mv-pill ${range === r.key ? "active" : ""}`} onClick={() => setRange(p => p === r.key ? "" : r.key)}>{r.label}</button>)}</div>
+              </FilterGroup>
+            </aside>
 
-			const statusMatch = statusFilter.length === 0 || statusFilter.includes(manga.status);
+            <section className="mv-main">
+              <div className="mv-toolbar">
+                <button className="mv-filter-btn" onClick={() => setFiltersOpen(true)}><Filter size={16} /></button>
+                <div className="mv-search"><Search size={14} /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search manga, author, genre..." /></div>
+                <div className="mv-sort">
+                  <select value={sort} onChange={e => setSort(e.target.value)}>
+                    <option value="rating">Rating</option>
+                    <option value="ch">Chapters</option>
+                    <option value="recent">New</option>
+                  </select>
+                </div>
+                <div className="mv-toggle">
+                  <button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")}><LayoutGrid size={14} /></button>
+                  <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}><List size={14} /></button>
+                </div>
+              </div>
 
-			const readingMatch = !readingModeFilter || manga.readingMode === "Right-to-Left";
+              {pills.length > 0 && (
+                <div className="mv-pill-row">{pills.map(p => <button key={p.k} className="mv-active-pill" onClick={p.off}>{p.l} <span>x</span></button>)}
+                  <button className="mv-active-pill mv-clear" onClick={() => { setDemo([]); setStatus([]); setRange(""); }}>Clear</button>
+                </div>
+              )}
 
-			const chapterMatch = chapterRangeMatch(manga.chapters, chapterFilter);
+              <div className="mv-summary"><span>{filtered.length} series</span><span>{count > 0 ? `${count} filters` : "No filters"}</span></div>
 
-			return queryMatch && demographicMatch && statusMatch && readingMatch && chapterMatch;
-		});
-	}, [chapterFilter, demographicFilter, readingModeFilter, search, statusFilter]);
+              <AnimatePresence mode="wait">
+                <motion.div key={`${view}-${sort}`} className={view === "grid" ? "mv-grid" : "mv-list"} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <AnimatePresence mode="popLayout">
+                    {filtered.map(m => view === "grid" ? <Card key={m.id} m={m} onOpen={setPreview} /> : <ListCard key={m.id} m={m} onOpen={setPreview} />)}
+                  </AnimatePresence>
+                </motion.div>
+              </AnimatePresence>
 
-	const filterKey = `${demographicFilter.join("|")}-${statusFilter.join("|")}-${readingModeFilter}-${chapterFilter}-${search}-${viewMode}`;
+              {filtered.length === 0 && (
+                <div className="mv-empty">
+                  <BookOpen size={32} />
+                  <h3>No results</h3>
+                  <p>Try adjusting your filters or search.</p>
+                </div>
+              )}
+            </section>
 
-	const heroPanelStyle = {
-		"--manga-hero-1": `url(${process.env.PUBLIC_URL}/beta-1.jpg)`,
-		"--manga-hero-2": `url(${process.env.PUBLIC_URL}/beta-2.jpg)`,
-		"--manga-hero-3": `url(${process.env.PUBLIC_URL}/beta-3.jpg)`,
-	};
+            <aside className="mv-rail">
+              <h3><TrendingUp size={14} /> Top Readers</h3>
+              <div className="mv-rail-list">
+                {topManga.map(m => (
+                  <button key={m.id} className="mv-rail-item" onClick={() => setPreview(m)}>
+                    <img src={m.cover} alt={m.title} />
+                    <div><strong>{m.title}</strong><span>{Math.round(m.progress * 100)}% done</span></div>
+                  </button>
+                ))}
+              </div>
+            </aside>
+          </div>
+        </main>
 
-	const toggleArrayValue = (value, setter) => {
-		setter((current) => (current.includes(value) ? current.filter((item) => item !== value) : [...current, value]));
-	};
+        <Footer />
 
-	const toggleFilterGroup = (group) => {
-		setOpenFilterGroups((current) => ({ ...current, [group]: !current[group] }));
-	};
-
-	return (
-		<AnimatedPage>
-			<div className="manga-vault-page">
-				<Background />
-				<Header />
-
-				<main className="manga-vault-shell">
-					<section className="manga-hero" style={heroPanelStyle}>
-						<div className="manga-hero-parallax" style={{ transform: `translateY(${heroOffset}px)` }} />
-						<div className="manga-hero-overlay" />
-						<div className="manga-hero-copy">
-							<span>Manga of the Week</span>
-							<h1>One Piece</h1>
-							<p>The Egghead incident reaches peak chaos as alliances fracture and a new era starts at sea.</p>
-						</div>
-					</section>
-
-					<section className="manga-main-layout">
-						<aside className="manga-filters">
-							<h2>The Filters</h2>
-
-							<FilterBlock
-								title="Demographics"
-								open={openFilterGroups.demographics}
-								onToggle={() => toggleFilterGroup("demographics")}
-							>
-								<div className="manga-filter-pill-wrap">
-									{demographics.map((demographic) => (
-										<button
-											key={demographic}
-											type="button"
-											className={`manga-filter-pill ${demographicFilter.includes(demographic) ? "active" : ""}`}
-											onClick={() => toggleArrayValue(demographic, setDemographicFilter)}
-										>
-											{demographic}
-										</button>
-									))}
-								</div>
-							</FilterBlock>
-
-							<FilterBlock
-								title="Status"
-								open={openFilterGroups.status}
-								onToggle={() => toggleFilterGroup("status")}
-							>
-								<div className="manga-filter-pill-wrap">
-									{statuses.map((status) => (
-										<button
-											key={status}
-											type="button"
-											className={`manga-filter-pill ${statusFilter.includes(status) ? "active" : ""}`}
-											onClick={() => toggleArrayValue(status, setStatusFilter)}
-										>
-											{status}
-										</button>
-									))}
-								</div>
-							</FilterBlock>
-
-							<FilterBlock
-								title="Reading Mode"
-								open={openFilterGroups.reading}
-								onToggle={() => toggleFilterGroup("reading")}
-							>
-								<label className="manga-mode-toggle">
-									<input
-										type="checkbox"
-										checked={readingModeFilter}
-										onChange={(event) => setReadingModeFilter(event.target.checked)}
-									/>
-									<span>Right-to-Left</span>
-								</label>
-							</FilterBlock>
-
-							<FilterBlock
-								title="Chapters Count"
-								open={openFilterGroups.chapters}
-								onToggle={() => toggleFilterGroup("chapters")}
-							>
-								<div className="manga-filter-pill-wrap">
-									{chapterRanges.map((range) => (
-										<button
-											key={range.key}
-											type="button"
-											className={`manga-filter-pill ${chapterFilter === range.key ? "active" : ""}`}
-											onClick={() => setChapterFilter((current) => (current === range.key ? "" : range.key))}
-										>
-											{range.label}
-										</button>
-									))}
-								</div>
-							</FilterBlock>
-						</aside>
-
-						<section className="manga-archive">
-							<div className="manga-archive-controls">
-								<div className="manga-search-input">
-									<Search size={16} />
-									<input
-										value={search}
-										onChange={(event) => setSearch(event.target.value)}
-										placeholder="Search manga, author, genre"
-										aria-label="Search manga"
-									/>
-								</div>
-
-								<div className="manga-view-switcher">
-									<button
-										type="button"
-										className={viewMode === "grid" ? "active" : ""}
-										onClick={() => setViewMode("grid")}
-									>
-										<LayoutGrid size={15} /> Grid View
-									</button>
-									<button
-										type="button"
-										className={viewMode === "list" ? "active" : ""}
-										onClick={() => setViewMode("list")}
-									>
-										<List size={15} /> List View
-									</button>
-								</div>
-							</div>
-
-							<AnimatePresence mode="wait">
-								<motion.div
-									key={filterKey}
-									className={viewMode === "grid" ? "manga-grid" : "manga-list"}
-									initial={{ opacity: 0, scale: 0.97 }}
-									animate={{ opacity: 1, scale: 1 }}
-									exit={{ opacity: 0, scale: 1.03 }}
-									transition={{ duration: 0.22, ease: "easeOut" }}
-									variants={{
-										hidden: {},
-										show: {
-											transition: {
-												staggerChildren: 0.1,
-											},
-										},
-									}}
-									initial="hidden"
-									animate="show"
-								>
-									<AnimatePresence mode="popLayout">
-										{filteredManga.map((manga) =>
-											viewMode === "grid" ? (
-												<MangaGridCard
-													key={manga.id}
-													manga={manga}
-													onPreview={setPreviewTarget}
-													isLoggedIn={isLoggedIn}
-												/>
-											) : (
-												<MangaListCard
-													key={manga.id}
-													manga={manga}
-													onPreview={setPreviewTarget}
-													isLoggedIn={isLoggedIn}
-												/>
-											)
-										)}
-									</AnimatePresence>
-								</motion.div>
-							</AnimatePresence>
-						</section>
-
-						<aside className="weekly-scroll-sidebar">
-							<h3>Top Weekly Chapters</h3>
-							<div className="weekly-scroll-list">
-								{TOP_WEEKLY.map((entry) => (
-									<article key={entry.title} className="weekly-scroll-item">
-										<div>
-											<strong>{entry.title}</strong>
-											<span>Ch. {entry.chapter}</span>
-										</div>
-										<BookOpen size={14} />
-									</article>
-								))}
-							</div>
-						</aside>
-					</section>
-				</main>
-
-				<Footer />
-
-				<AnimatePresence>
-					{previewTarget && (
-						<>
-							<motion.button
-								type="button"
-								className="manga-preview-backdrop"
-								onClick={() => setPreviewTarget(null)}
-								initial={{ opacity: 0 }}
-								animate={{ opacity: 1 }}
-								exit={{ opacity: 0 }}
-							/>
-							<motion.aside
-								className="manga-preview-drawer"
-								initial={{ x: "100%" }}
-								animate={{ x: 0 }}
-								exit={{ x: "100%" }}
-								transition={{ duration: 0.3, ease: "easeOut" }}
-							>
-								<button
-									type="button"
-									className="manga-preview-close"
-									onClick={() => setPreviewTarget(null)}
-								>
-									<X size={16} />
-								</button>
-
-								<img src={previewTarget.cover} alt={previewTarget.title} className="manga-preview-cover" />
-								<h2>{previewTarget.title}</h2>
-								<p>{previewTarget.synopsis}</p>
-								<div className="manga-preview-genres">
-									{previewTarget.genres.map((genre) => (
-										<span key={genre}>{genre}</span>
-									))}
-								</div>
-								<button type="button" className="manga-preview-primary">
-									Read Chapter 1
-								</button>
-							</motion.aside>
-						</>
-					)}
-				</AnimatePresence>
-			</div>
-		</AnimatedPage>
-	);
+        <AnimatePresence>
+          {preview && (
+            <>
+              <motion.div className="mv-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPreview(null)} />
+              <motion.aside className="mv-drawer" initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}>
+                <button className="mv-drawer-close" onClick={() => setPreview(null)}><X size={16} /></button>
+                <img src={preview.cover} alt={preview.title} className="mv-drawer-img" />
+                <h2>{preview.title}</h2>
+                <p className="mv-drawer-author">by {preview.author}</p>
+                <p className="mv-drawer-text">{preview.desc}</p>
+                <div className="mv-drawer-tags">{preview.genres.map(g => <span key={g}>{g}</span>)}<span>{preview.demo}</span></div>
+                <div className="mv-drawer-stats"><span><BookOpen size={13} /> {preview.ch} chapters</span><span><Star size={13} /> {preview.rating}</span></div>
+                <button className="mv-drawer-btn">Start Reading</button>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+    </AnimatedPage>
+  );
 }
