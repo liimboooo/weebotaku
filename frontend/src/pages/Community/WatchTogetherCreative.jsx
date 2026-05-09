@@ -12,7 +12,7 @@ import {
   Zap 
 } from "lucide-react";
 import AnimatedPage from "../../components/AnimatedPage";
-import Header from "../../components/Header";
+
 import LiveRooms from "../../components/LiveRooms";
 import { activeRooms as mockActiveRooms } from "../../data/animeData";
 import "./WatchTogetherCreative.css";
@@ -153,7 +153,6 @@ export default function WatchTogetherCreative() {
   return (
     <AnimatedPage>
       <div className="watch-room-page">
-        <Header />
 
         <main className="watch-room-shell">
           {!isLive ? (

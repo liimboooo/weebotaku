@@ -14,22 +14,40 @@ function setCache(key, data) {
   cache.set(key, { data, time: Date.now() });
 }
 
-let lastCall = 0;
+let requestQueue = Promise.resolve();
+
+const MIN_INTERVAL = 1100;
+const RETRY_DELAY = 2000;
+const MAX_RETRIES = 2;
+
+function delay(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
 
 async function jikanFetch(endpoint) {
   const cached = getCached(endpoint);
   if (cached) return cached;
 
-  const now = Date.now();
-  const wait = Math.max(0, 1100 - (now - lastCall));
-  if (wait > 0) await new Promise(r => setTimeout(r, wait));
-  lastCall = Date.now();
+  const myTurn = requestQueue.then(async () => {
+    await delay(MIN_INTERVAL);
 
-  const res = await fetch(`${BASE_URL}${endpoint}`);
-  if (!res.ok) throw new Error(`Jikan error: ${res.status}`);
-  const json = await res.json();
-  setCache(endpoint, json);
-  return json;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      const res = await fetch(`${BASE_URL}${endpoint}`);
+      if (res.ok) {
+        const json = await res.json();
+        setCache(endpoint, json);
+        return json;
+      }
+      if (res.status === 429 && attempt < MAX_RETRIES) {
+        await delay(RETRY_DELAY * (attempt + 1));
+        continue;
+      }
+      throw new Error(`Jikan error: ${res.status}`);
+    }
+  });
+
+  requestQueue = myTurn.then(() => {}).catch(() => {});
+  return myTurn;
 }
 
 function mapAnime(a) {

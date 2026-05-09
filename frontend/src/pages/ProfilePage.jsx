@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getAnimeById } from "../data/animeData";
 import { motion, AnimatePresence } from "framer-motion";
 import AnimatedPage from "../components/AnimatedPage";
-import Header from "../components/Header";
+
 import Background from "../components/Background";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -165,7 +165,6 @@ export default function ProfilePage() {
     <AnimatedPage>
       <div className="profile-page">
         <Background />
-        <Header />
 
         <div className="profile-header-section">
           <div className="profile-avatar">

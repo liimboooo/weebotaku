@@ -18,7 +18,6 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  transition: none;
 }
 
 .header.scrolled .header-shell {
@@ -54,6 +53,7 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .search-form:focus-within {
@@ -67,7 +67,7 @@ body {
   justify-content: center;
   color: #666;
   margin-right: 8px;
-  /* transition removed */
+  transition: all 0.4s ease;
 }
 
 .search-form:focus-within .search-icon {
@@ -135,6 +135,7 @@ body {
   font-size: 13px;
   cursor: pointer;
   text-align: left;
+  transition: all 0.2s ease;
 }
 
 .search-trending-pill:hover {
@@ -198,6 +199,7 @@ body {
   cursor: pointer;
   font-size: 16px;
   font-weight: 700;
+  transition: opacity 0.2s ease;
   flex-shrink: 0;
 }
 
@@ -213,6 +215,7 @@ body {
   height: 32px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
 }
 
 .brand:hover .brand-icon {
@@ -242,6 +245,7 @@ body {
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.22s ease;
   white-space: nowrap;
 }
 
@@ -255,13 +259,17 @@ body {
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* .nav-link svg transition removed */
+.nav-link svg {
+  transition: transform 0.3s ease;
+}
 
 .nav-link:hover svg {
   transform: scale(1.1);
 }
 
-/* .nav-chevron transition removed */
+.nav-chevron {
+  transition: transform 0.3s ease;
+}
 
 .nav-link[aria-expanded="true"] .nav-chevron {
   transform: rotate(180deg);
@@ -283,6 +291,7 @@ body {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .more-button:hover {
@@ -316,6 +325,7 @@ body {
   font-size: 13px;
   cursor: pointer;
   text-align: left;
+  transition: all 0.2s ease;
 }
 
 .more-item:hover {
@@ -325,6 +335,7 @@ body {
 
 .more-item svg {
   color: #888;
+  transition: color 0.2s ease;
 }
 
 .more-item:hover svg {
@@ -342,6 +353,7 @@ body {
   background: transparent;
   color: #888;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .icon-button:hover {
@@ -382,6 +394,7 @@ body {
   background: transparent;
   color: #fff;
   cursor: pointer;
+  transition: all 0.3s ease;
   font-size: 13px;
 }
 
@@ -472,6 +485,7 @@ body {
   color: #888;
   cursor: pointer;
   text-align: left;
+  transition: all 0.2s ease;
 }
 
 .explore-item:hover,
@@ -513,6 +527,7 @@ body {
   color: #888;
   cursor: pointer;
   z-index: 10;
+  transition: all 0.3s ease;
 }
 
 .mobile-toggle:hover {
@@ -595,6 +610,7 @@ body {
   cursor: pointer;
   border-radius: 8px;
   text-align: left;
+  transition: all 0.2s ease;
 }
 
 .arena-item:hover {
@@ -810,6 +826,7 @@ body {
   height: 100%;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
+  transition: width 0.3s ease;
 }
 
 .profile-bounty-meta {
@@ -836,6 +853,7 @@ body {
   color: #fff;
   font-size: 11px;
   outline: none;
+  transition: all 0.2s ease;
 }
 
 .profile-status-input:focus {
@@ -852,6 +870,7 @@ body {
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
   white-space: nowrap;
 }
 
@@ -880,6 +899,7 @@ body {
   font-size: 10px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .profile-action-card:hover {
@@ -890,6 +910,7 @@ body {
 
 .profile-action-card svg {
   color: #888;
+  transition: color 0.2s ease;
 }
 
 .profile-action-card:hover svg {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import AnimatedPage from "../components/AnimatedPage";
-import Header from "../components/Header";
+import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchAnimeNews } from "../services/animeNewsApi";
 import { useNavigate } from "react-router-dom";
@@ -109,7 +109,6 @@ export default function News() {
     <AnimatedPage>
       <div className="news-page">
         <Background />
-        <Header />
         <div className="news-container">
           <div className="news-header">
             <div>
@@ -203,14 +202,9 @@ export default function News() {
             </div>
 
             <div className="news-tab-content">
-              {loading ? (
-                <div className="news-loading">
-                  <div className="spinner" />
-                  <span>Loading news...</span>
-                </div>
-              ) : filteredNews.length === 0 ? (
-                <div className="news-empty">No news items found.</div>
-              ) : (
+        {loading ? (
+          <Loader text="Loading news..." />
+        ) : (
                 <motion.div className="news-feed" variants={container} initial="hidden" animate="show">
                   {filteredNews.map((item) => {
                     const config = TYPE_CONFIG[item.type] || { label: item.type, className: "", icon: "" };

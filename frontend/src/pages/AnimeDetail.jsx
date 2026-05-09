@@ -5,7 +5,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ArrowLeft, Play, Bookmark, Heart, Share2, Star, Calendar, Tv, ShieldCheck, User, Bell } from "lucide-react";
 import { getAnimeById, getTrendingAnime } from "../data/animeData";
-import Header from "../components/Header";
+
 import Background from "../components/Background";
 import Reviews from "../components/Reviews";
 import FeaturedAnime from "../components/FeaturedAnime";
@@ -191,7 +191,6 @@ export default function AnimeDetail() {
       <AnimatedPage>
         <div className="anime-detail-page">
           <Background />
-          <Header />
           <div className="detail-error">
             <h2>Anime not found</h2>
             <button onClick={() => navigate(-1)}>Go back</button>
@@ -205,7 +204,6 @@ export default function AnimeDetail() {
     <AnimatedPage>
       <div className="anime-detail-page">
         <Background />
-        <Header />
 
         <div className="detail-hero">
           <img 

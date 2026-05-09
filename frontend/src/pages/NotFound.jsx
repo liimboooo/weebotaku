@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import AnimatedPage from "../components/AnimatedPage";
-import Header from "../components/Header";
+
 import Background from "../components/Background";
 import { Home, Search, BookOpen } from "lucide-react";
 import "./NotFound.css";
@@ -13,7 +13,6 @@ export default function NotFound() {
     <AnimatedPage>
       <div className="nf-page">
         <Background />
-        <Header />
         <div className="nf-container">
           <div className="nf-code">
             <span className="nf-char nf-char-1">4</span>

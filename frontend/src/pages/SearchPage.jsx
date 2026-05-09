@@ -7,7 +7,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import AnimatedPage from "../components/AnimatedPage";
-import Header from "../components/Header";
+import Loader from "../components/Loader";
 import Background from "../components/Background";
 import "./SearchPage.css";
 
@@ -156,7 +156,6 @@ export default function SearchPage() {
     <AnimatedPage>
       <div className="search-page">
         <Background />
-        <Header />
 
         <motion.div 
           className="search-hero"
@@ -315,16 +314,7 @@ export default function SearchPage() {
 
         <div className="results-info">
         {isLoading ? (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="search-loading"
-          >
-            <div className="loading-dots">
-              <span></span><span></span><span></span>
-            </div>
-            Searching for anime...
-          </motion.div>
+          <Loader text="Searching for anime..." />
         ) : (
           <>
             <span>{results.length} anime found</span>

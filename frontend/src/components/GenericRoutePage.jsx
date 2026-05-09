@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import AnimatedPage from "./AnimatedPage";
-import Header from "./Header";
+
 import Background from "./Background";
 import "./GenericRoutePage.css";
 
@@ -30,7 +30,6 @@ export default function GenericRoutePage({
     <AnimatedPage>
       <div className={`generic-route-page ${className}`.trim()}>
         <Background />
-        <Header />
 
         <main className="generic-route-shell">
           <motion.section

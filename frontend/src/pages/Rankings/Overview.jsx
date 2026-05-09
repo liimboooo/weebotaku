@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import AnimatedPage from "../../components/AnimatedPage";
-import Header from "../../components/Header";
+
 import Background from "../../components/Background";
 import "./ArenaShowcase.css";
 
@@ -34,7 +34,6 @@ export default function Overview() {
 		<AnimatedPage>
 			<div className="arena-page">
 				<Background />
-				<Header />
 				<main className="arena-shell">
 					<motion.section className="arena-hero" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: "easeOut" }}>
 						<div className="arena-copy">

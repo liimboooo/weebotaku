@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Star, BookOpen, Eye, Heart, Sparkles, Zap, Library, List, Grid3x3, Loader2, ChevronDown } from "lucide-react";
+import { useLoading } from "../components/LoadingProvider";
+import { Search, X, Star, BookOpen, Eye, Heart, Sparkles, Zap, Library, List, Grid3x3 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
-import Header from "../components/Header";
+import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchTopManga, fetchSearchManga } from "../services/jikanApi";
 import "./MangaVault.css";
@@ -13,6 +14,7 @@ const STATUSES = ["All", "Ongoing", "Completed", "Hiatus"];
 export default function MangaVault() {
   const [allManga, setAllManga] = useState([]);
   const [heroManga, setHeroManga] = useState(null);
+  const { showLoading: showGlobalLoading, hideLoading: hideGlobalLoading } = useLoading();
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
@@ -28,6 +30,8 @@ export default function MangaVault() {
   const sentinelRef = useRef(null);
   const searchRef = useRef(debouncedSearch);
   searchRef.current = debouncedSearch;
+  const loadingRef = useRef(false);
+  const hasLoadedOnce = useRef(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 400);
@@ -39,8 +43,11 @@ export default function MangaVault() {
   }, []);
 
   const loadManga = useCallback(async (p, replace = false) => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     if (replace) setLoading(true);
     else setLoadingMore(true);
+    showGlobalLoading();
     try {
       const q = searchRef.current.trim();
       const result = q
@@ -49,11 +56,14 @@ export default function MangaVault() {
       setAllManga(prev => replace ? result.data : [...prev, ...result.data]);
       setHasMore(result.pagination.has_next_page);
       setPage(p);
+      hasLoadedOnce.current = true;
     } catch (err) {
       console.error("Failed to load manga:", err);
     } finally {
       setLoading(false);
       setLoadingMore(false);
+      loadingRef.current = false;
+      hideGlobalLoading();
     }
   }, []);
 
@@ -65,7 +75,7 @@ export default function MangaVault() {
   }, [debouncedSearch, loadManga]);
 
   useEffect(() => {
-    if (!sentinelRef.current || !hasMore || loadingMore || loading) return;
+    if (!sentinelRef.current || !hasMore || loadingRef.current) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
@@ -106,75 +116,40 @@ export default function MangaVault() {
     <AnimatedPage>
       <div className="mv">
         <Background />
-        <Header />
         <div className="mv-bg-ornament" />
 
         <main className="mv-shell">
-          <motion.section
-            className="mv-hero"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
+          <motion.section className="mv-hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
             <div className="mv-hero-bg" style={topRated?.cover ? { backgroundImage: `url(${topRated.cover})` } : {}} />
             <div className="mv-hero-gradient" />
             <div className="mv-hero-texture" />
             <div className="mv-hero-content">
-              <motion.span
-                className="mv-eyebrow"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-              ><Sparkles size={14} /> MANGA COLLECTION</motion.span>
-              <motion.h1
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35, duration: 0.5 }}
-              >
+              <span className="mv-eyebrow"><Sparkles size={14} /> MANGA COLLECTION</span>
+              <h1>
                 <span className="mv-hero-main">EXPLORE</span>
                 <span className="mv-hero-accent">MANGA</span>
-              </motion.h1>
-              <motion.p
-                className="mv-hero-desc"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-              >
+              </h1>
+              <p className="mv-hero-desc">
                 Browse thousands of series across every genre. Track your reading, discover hidden gems,
                 and build your perfect manga collection.
-              </motion.p>
-              <motion.div
-                className="mv-hero-metrics"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.65, duration: 0.5 }}
-              >
+              </p>
+              <div className="mv-hero-metrics">
                 <div className="mv-metric"><strong>{allManga.length}</strong><span>Series</span></div>
                 <div className="mv-metric"><strong>{totalCh}</strong><span>Chapters</span></div>
                 <div className="mv-metric"><strong>{totalVol}</strong><span>Volumes</span></div>
-              </motion.div>
+              </div>
             </div>
-            <motion.div
-              className="mv-hero-hud"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.8, duration: 0.5 }}
-            >
+            <div className="mv-hero-hud">
               {topRated?.cover && <div className="mv-hud-img"><img src={topRated.cover} alt={topRated.title} /></div>}
               <div className="mv-hud-info">
                 <span className="mv-hud-label">TOP RATED</span>
                 <span className="mv-hud-title">{topRated?.title || "Loading..."}</span>
                 <span className="mv-hud-rating"><Star size={12} fill="currentColor" /> {topRated?.rating?.toFixed(1) || "?"}</span>
               </div>
-            </motion.div>
+            </div>
           </motion.section>
 
-          <motion.section
-            className="mv-controls"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-          >
+          <section className="mv-controls">
             <div className="mv-search-box">
               <Search size={18} className="mv-search-icon" />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search manga..." />
@@ -201,7 +176,7 @@ export default function MangaVault() {
                 </div>
               </div>
             </div>
-          </motion.section>
+          </section>
 
           <section className="mv-grid-section">
             <div className="mv-grid-header">
@@ -210,10 +185,7 @@ export default function MangaVault() {
             </div>
 
             {loading ? (
-              <div className="mv-empty">
-                <Loader2 size={36} className="mv-spin" />
-                <h3>Loading manga...</h3>
-              </div>
+              <Loader text="Loading manga..." />
             ) : (
               <div className={`mv-grid ${view === "list" ? "mv-list" : ""}`}>
                 <AnimatePresence mode="popLayout">
@@ -296,36 +268,23 @@ export default function MangaVault() {
             {!loading && (
               <>
                 {loadingMore && (
-                  <div className="mv-empty" style={{ padding: "24px" }}>
-                    <Loader2 size={24} className="mv-spin" />
-                  </div>
+                  <Loader text="Loading more..." />
                 )}
 
                 {hasMore && !loadingMore && <div ref={sentinelRef} className="mv-sentinel" />}
-
-                {hasMore && (
-                  <div className="mv-load-more-wrap">
-                    <button
-                      className="mv-load-more"
-                      onClick={() => loadManga(page + 1)}
-                      disabled={loadingMore}
-                    >
-                      {loadingMore ? (
-                        <><Loader2 size={16} className="mv-spin" /> Loading...</>
-                      ) : (
-                        <><ChevronDown size={16} /> Load More</>
-                      )}
-                    </button>
-                  </div>
-                )}
               </>
             )}
 
             {!loading && filtered.length === 0 && (
               <div className="mv-empty">
                 <BookOpen size={40} />
-                <h3>No results found</h3>
-                <p>Try adjusting your search or filters.</p>
+                <h3>{hasLoadedOnce.current ? "No results found" : "Could not load"}</h3>
+                <p>{hasLoadedOnce.current ? "Try adjusting your search or filters." : "Check your connection or try refreshing the page."}</p>
+                {!hasLoadedOnce.current && (
+                  <button className="mv-retry-btn" onClick={() => { setAllManga([]); setPage(1); setHasMore(true); loadManga(1, true); }}>
+                    Retry
+                  </button>
+                )}
               </div>
             )}
           </section>

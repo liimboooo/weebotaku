@@ -1,22 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { useLoading } from "../components/LoadingProvider";
 import {
   ChevronDown,
-  Play,
-  Plus,
-  Search,
-  SlidersHorizontal,
-  Star,
-  Sparkles,
   Heart,
   List,
   Grid3x3,
   Library,
-  Loader2,
+  Play,
+  Plus,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  Star,
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
-import Header from "../components/Header";
+import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchTopAnime, fetchSearchAnime, fetchAnimeGenres } from "../services/jikanApi";
 import "./Browse.css";
@@ -144,6 +144,7 @@ export default function Browse() {
 
   const [allAnime, setAllAnime] = useState([]);
   const [heroAnime, setHeroAnime] = useState(null);
+  const { showLoading: showGlobalLoading, hideLoading: hideGlobalLoading } = useLoading();
   const [genres, setGenres] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -164,6 +165,7 @@ export default function Browse() {
   const sentinelRef = useRef(null);
   const mountedRef = useRef(false);
   const loadingRef = useRef(false);
+  const hasLoadedOnce = useRef(false);
 
   useEffect(() => {
     fetchAnimeGenres().then(setGenres).catch(() => {});
@@ -197,6 +199,7 @@ export default function Browse() {
     loadingRef.current = true;
     if (replace) setLoading(true);
     else setLoadingMore(true);
+    showGlobalLoading();
     try {
       const q = searchRef.current.trim();
       const result = q
@@ -205,12 +208,14 @@ export default function Browse() {
       setAllAnime(prev => replace ? result.data : [...prev, ...result.data]);
       setHasMore(result.pagination.has_next_page);
       setPage(p);
+      hasLoadedOnce.current = true;
     } catch (err) {
       console.error("Failed to load anime:", err);
     } finally {
       setLoading(false);
       setLoadingMore(false);
       loadingRef.current = false;
+      hideGlobalLoading();
     }
   }
 
@@ -291,16 +296,10 @@ export default function Browse() {
     <AnimatedPage>
       <div className="br">
         <Background />
-        <Header />
         <div className="br-bg-ornament" />
 
         <main className="br-shell">
-          <motion.section
-            className="br-hero"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
+          <motion.section className="br-hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
             <div className="br-hero-bg">
               {topAnime?.trailerUrl && (
                 <iframe
@@ -314,60 +313,31 @@ export default function Browse() {
             </div>
             <div className="br-hero-gradient" />
             <div className="br-hero-content">
-              <motion.span
-                className="br-eyebrow"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-              ><Sparkles size={14} /> ANIME COLLECTION</motion.span>
-              <motion.h1
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35, duration: 0.5 }}
-              >
+              <span className="br-eyebrow"><Sparkles size={14} /> ANIME COLLECTION</span>
+              <h1>
                 <span className="br-hero-main">EXPLORE</span>
                 <span className="br-hero-accent">ANIME</span>
-              </motion.h1>
-              <motion.p
-                className="br-hero-desc"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-              >
+              </h1>
+              <p className="br-hero-desc">
                 Discover thousands of anime across every genre. Track your watchlist, find your next favorite series, and dive into the community.
-              </motion.p>
-              <motion.div
-                className="br-hero-metrics"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.65, duration: 0.5 }}
-              >
+              </p>
+              <div className="br-hero-metrics">
                 <div className="br-metric"><strong>{allAnime.length}</strong><span>Loaded</span></div>
                 <div className="br-metric"><strong>{totalEpisodes}</strong><span>Episodes</span></div>
                 <div className="br-metric"><strong>{genres.length}</strong><span>Genres</span></div>
-              </motion.div>
+              </div>
             </div>
-            <motion.div
-              className="br-hero-hud"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.8, duration: 0.5 }}
-            >
+            <div className="br-hero-hud">
               {topAnime?.img && <div className="br-hud-img"><img src={topAnime.img} alt={topAnime.name} /></div>}
               <div className="br-hud-info">
                 <span className="br-hud-label">TOP RATED</span>
                 <span className="br-hud-title">{topAnime?.name || "Loading..."}</span>
                 <span className="br-hud-rating"><Star size={12} fill="currentColor" /> {topAnime?.rating?.toFixed(1) || "?"}</span>
               </div>
-            </motion.div>
+            </div>
           </motion.section>
 
-          <motion.div
-            className="br-controls"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-          >
+          <div className="br-controls">
             <div className="br-search">
               <Search size={15} />
               <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search anime..." />
@@ -379,7 +349,7 @@ export default function Browse() {
               <button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")}><Grid3x3 size={14} /></button>
               <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}><List size={14} /></button>
             </div>
-          </motion.div>
+          </div>
 
           <div className="br-filters">
             <FilterDropdown label="Genres" icon={SlidersHorizontal} items={genres} active={activeGenres}>
@@ -422,10 +392,7 @@ export default function Browse() {
           )}
 
           {loading ? (
-            <div className="br-empty">
-              <Loader2 size={36} className="br-spin" />
-              <h3>Loading anime...</h3>
-            </div>
+            <Loader text="Loading anime..." />
           ) : (
             <>
               <div className={`br-grid ${view === "list" ? "br-list" : ""}`}>
@@ -442,34 +409,21 @@ export default function Browse() {
               </div>
 
               {loadingMore && (
-                <div className="br-empty" style={{ padding: "24px" }}>
-                  <Loader2 size={24} className="br-spin" />
-                </div>
+                <Loader text="Loading more..." />
               )}
 
               {hasMore && !loadingMore && <div ref={sentinelRef} className="br-sentinel" />}
 
-              {hasMore && (
-                <div className="br-load-more-wrap">
-                  <button
-                    className="br-load-more"
-                    onClick={() => loadAnime(page + 1)}
-                    disabled={loadingMore}
-                  >
-                    {loadingMore ? (
-                      <><Loader2 size={16} className="br-spin" /> Loading...</>
-                    ) : (
-                      <><ChevronDown size={16} /> Load More</>
-                    )}
-                  </button>
-                </div>
-              )}
-
               {filteredAnime.length === 0 && !loading && (
                 <div className="br-empty">
                   <Library size={36} />
-                  <h3>No matches</h3>
-                  <p>Try clearing a filter or widening your search.</p>
+                  <h3>{hasLoadedOnce.current ? "No matches" : "Could not load"}</h3>
+                  <p>{hasLoadedOnce.current ? "Try clearing a filter or widening your search." : "Check your connection or try refreshing the page."}</p>
+                  {!hasLoadedOnce.current && (
+                    <button className="br-retry-btn" onClick={() => loadAnime(1, true)}>
+                      Retry
+                    </button>
+                  )}
                 </div>
               )}
             </>

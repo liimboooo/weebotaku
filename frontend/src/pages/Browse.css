@@ -761,6 +761,18 @@
 .br-empty svg { color: #555; }
 .br-empty h3 { margin: 0; color: #ddd; }
 .br-empty p { margin: 0; font-size: 0.85rem; }
+.br-retry-btn {
+  margin-top: 8px;
+  padding: 8px 24px;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+.br-retry-btn:hover { background: rgba(255,255,255,0.12); }
 
 /* ─── ANIMATIONS ─── */
 @keyframes br-spin {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAnimeById } from "../data/animeData";
 import { motion, AnimatePresence } from "framer-motion";
-import Header from "../components/Header";
+
 import Background from "../components/Background";
 import { useToast } from "../components/Toast";
 import AnimatedPage from "../components/AnimatedPage";
@@ -95,7 +95,6 @@ export default function WatchlistPage() {
     <AnimatedPage>
       <div className="watchlist-page">
         <Background />
-        <Header />
 
         <div className="watchlist-hero">
           <h1>

@@ -1,8 +1,11 @@
 import AuthPage from "./pages/AuthPage";
 import './App.css';
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { ToastProvider } from "./components/Toast";
 import ScrollToTop from "./components/ScrollToTop";
+import Header from "./components/Header";
+import { LoadingProvider, useLoading } from "./components/LoadingProvider";
 import Home from "./pages/Home";
 import AnimeDetail from "./pages/AnimeDetail";
 import SearchPage from "./pages/SearchPage";
@@ -67,42 +70,63 @@ const routePageMap = {
   ),
 };
 
+function AppLayout() {
+  const location = useLocation();
+  const isAuthPage = location.pathname === "/";
+  const { showLoading, hideLoading } = useLoading();
+
+  useEffect(() => {
+    showLoading();
+    const t = setTimeout(() => hideLoading(), 600);
+    return () => { clearTimeout(t); hideLoading(); };
+  }, [location]);
+
+  return (
+    <>
+      <ScrollToTop />
+      {!isAuthPage && <Header />}
+      <AnimatePresence mode="wait">
+        <Routes>
+          <Route path="/" element={<AuthPage />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/browse/anime" element={<Browse />} />
+          <Route path="/browse/manga" element={<MangaVault />} />
+          <Route path="/watch-together" element={<WatchTogetherCreative />} />
+          <Route path="/watch-together/new" element={<WatchTogetherCreative />} />
+          <Route path="/feeds/amvs" element={<AMVsEdits />} />
+          <Route path="/arena" element={<Rankings />} />
+          <Route path="/arena/overview" element={<Overview />} />
+          <Route path="/rankings/anime" element={<BestAnime />} />
+          <Route path="/rankings/manga" element={<TierLists />} />
+          <Route path="/arena/character-battle" element={<CharacterArena />} />
+          <Route path="/arena/tier-lists" element={<TierLists />} />
+          <Route path="/settings" element={<GenericRoutePage {...routePageMap.settings} />} />
+          <Route path="/help" element={<GenericRoutePage {...routePageMap.help} />} />
+          <Route path="/notifications" element={<GenericRoutePage {...routePageMap.notifications} />} />
+          <Route path="/system/rules" element={<Rules />} />
+          <Route path="/report" element={<Report />} />
+          <Route path="/anime/:id" element={<AnimeDetail />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/news" element={<News />} />
+          <Route path="/watchlist" element={<WatchlistPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/following" element={<Navigate to="/home" replace />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AnimatePresence>
+    </>
+  );
+}
+
 function App() {
   return (
     <ToastProvider>
-      <Router>
-        <ScrollToTop />
-        <AnimatePresence mode="wait">
-          <Routes>
-            <Route path="/" element={<AuthPage />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/browse/anime" element={<Browse />} />
-            <Route path="/browse/manga" element={<MangaVault />} />
-            <Route path="/watch-together" element={<WatchTogetherCreative />} />
-            <Route path="/watch-together/new" element={<WatchTogetherCreative />} />
-            <Route path="/feeds/amvs" element={<AMVsEdits />} />
-            <Route path="/arena" element={<Rankings />} />
-            <Route path="/arena/overview" element={<Overview />} />
-            <Route path="/rankings/anime" element={<BestAnime />} />
-            <Route path="/rankings/manga" element={<TierLists />} />
-            <Route path="/arena/character-battle" element={<CharacterArena />} />
-            <Route path="/arena/tier-lists" element={<TierLists />} />
-            <Route path="/settings" element={<GenericRoutePage {...routePageMap.settings} />} />
-            <Route path="/help" element={<GenericRoutePage {...routePageMap.help} />} />
-            <Route path="/notifications" element={<GenericRoutePage {...routePageMap.notifications} />} />
-            <Route path="/system/rules" element={<Rules />} />
-            <Route path="/report" element={<Report />} />
-            <Route path="/anime/:id" element={<AnimeDetail />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/watchlist" element={<WatchlistPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/history" element={<HistoryPage />} />
-            <Route path="/following" element={<Navigate to="/home" replace />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AnimatePresence>
-      </Router>
+      <LoadingProvider>
+        <Router>
+          <AppLayout />
+        </Router>
+      </LoadingProvider>
     </ToastProvider>
   );
 }

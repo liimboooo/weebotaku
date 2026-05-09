@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAnimeById } from "../data/animeData";
 import { motion, AnimatePresence } from "framer-motion";
-import Header from "../components/Header";
+
 import Background from "../components/Background";
 import { useToast } from "../components/Toast";
 import AnimatedPage from "../components/AnimatedPage";
@@ -101,7 +101,6 @@ export default function HistoryPage() {
     <AnimatedPage>
       <div className="history-page">
         <Background />
-        <Header />
 
         <div className="history-hero">
           <div className="history-header-content">

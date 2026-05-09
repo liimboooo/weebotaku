@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import AnimatedPage from "../../components/AnimatedPage";
-import Header from "../../components/Header";
+
 import Background from "../../components/Background";
 import "./ArenaShowcase.css";
 
@@ -51,7 +51,6 @@ export default function Rankings() {
 		<AnimatedPage>
 			<div className="arena-page">
 				<Background />
-				<Header />
 
 				<main className="arena-shell">
 					<motion.section

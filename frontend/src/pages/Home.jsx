@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import AnimatedPage from "../components/AnimatedPage";
-import Header from "../components/Header";
+
 import Slider from "../components/Slider";
 import FeaturedAnime from "../components/FeaturedAnime";
 import Trending from "../components/Trending";
@@ -196,7 +196,6 @@ export default function Home() {
     <AnimatedPage>
       <div className="home-container">
         <Background />
-        <Header />
 
         {spotlight && (
           <section className="home-spotlight">

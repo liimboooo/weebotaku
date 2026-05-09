@@ -20,7 +20,7 @@ import {
   Share2
 } from "lucide-react";
 import AnimatedPage from "../../components/AnimatedPage";
-import Header from "../../components/Header";
+
 import Background from "../../components/Background";
 import "./AMVsEdits.css";
 
@@ -217,7 +217,6 @@ export default function AMVsEdits() {
     <AnimatedPage>
       <div className="zenith-amv-page">
         <Background />
-        <Header />
 
         <main className="zenith-amv-shell">
           {/* Neural Hero Section */}
