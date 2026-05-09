@@ -186,6 +186,21 @@ export default function AnimeDetail() {
     );
   };
 
+  if (!anime) {
+    return (
+      <AnimatedPage>
+        <div className="anime-detail-page">
+          <Background />
+          <Header />
+          <div className="detail-error">
+            <h2>Anime not found</h2>
+            <button onClick={() => navigate(-1)}>Go back</button>
+          </div>
+        </div>
+      </AnimatedPage>
+    );
+  }
+
   return (
     <AnimatedPage>
       <div className="anime-detail-page">

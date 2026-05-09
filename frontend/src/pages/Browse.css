@@ -37,13 +37,15 @@
   margin-bottom: 24px;
   box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 40px rgba(220,38,38,0.08);
   overflow: hidden;
+  background: #050505;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 
 .br-hero-bg {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  inset: -2px;
+  width: auto;
+  height: auto;
   overflow: hidden;
   z-index: 0;
   background: #050505;
@@ -58,7 +60,9 @@
   min-height: 100%;
   min-width: 177.77vh;
   transform: translate(-50%, -50%) scale(1.1);
-  border: 0;
+  border: none;
+  outline: none;
+  box-shadow: none;
   pointer-events: none;
   user-select: none;
   opacity: 0;

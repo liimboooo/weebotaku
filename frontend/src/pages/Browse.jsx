@@ -308,7 +308,6 @@ export default function Browse() {
                 />
               )}
             </div>
-            <div className="br-hero-poster" />
             <div className="br-hero-gradient" />
             <div className="br-hero-content">
               <span className="br-eyebrow"><Sparkles size={14} /> ANIME COLLECTION</span>

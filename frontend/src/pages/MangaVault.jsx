@@ -9,6 +9,7 @@ import "./MangaVault.css";
 
 const DEMOGRAPHICS = ["All", "Shonen", "Seinen", "Shojo", "Josei"];
 const STATUSES = ["All", "Ongoing", "Completed", "Hiatus"];
+const HERO_VIDEO_ID = "-0Mhu7RSz-c";
 
 export default function MangaVault() {
   const [allManga, setAllManga] = useState([]);
@@ -106,32 +107,37 @@ export default function MangaVault() {
 
         <main className="mv-shell">
           <motion.section className="mv-hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="mv-hero-bg">
+              <iframe
+                className="mv-hero-video"
+                src={`https://www.youtube.com/embed/${HERO_VIDEO_ID}?autoplay=1&mute=1&controls=0&loop=1&playlist=${HERO_VIDEO_ID}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0`}
+                title="Hero Video"
+                allow="autoplay; fullscreen"
+                loading="lazy"
+              />
+            </div>
+            <div className="mv-hero-gradient" />
+            <div className="mv-hero-texture" />
             <div className="mv-hero-content">
-              <span className="mv-eyebrow"><Sparkles size={14} /> Manga Collection</span>
+              <span className="mv-eyebrow"><Sparkles size={14} /> MANGA COLLECTION</span>
               <h1>
-                <span className="mv-hero-title-small">Discover</span>
-                <span className="mv-hero-title-big">Library</span>
+                <span className="mv-hero-main">EXPLORE</span>
+                <span className="mv-hero-accent">MANGA</span>
               </h1>
               <p className="mv-hero-desc">
                 Browse thousands of series across every genre. Track your reading, discover hidden gems,
                 and build your perfect manga collection.
               </p>
-              <div className="mv-hero-actions">
-                <div className="mv-hero-metrics">
-                  <div className="mv-metric"><strong>{allManga.length}</strong><span>Series</span></div>
-                  <div className="mv-metric"><strong>{totalCh}</strong><span>Chapters</span></div>
-                  <div className="mv-metric"><strong>{allGenres}</strong><span>Genres</span></div>
-                </div>
+              <div className="mv-hero-metrics">
+                <div className="mv-metric"><strong>{allManga.length}</strong><span>Series</span></div>
+                <div className="mv-metric"><strong>{totalCh}</strong><span>Chapters</span></div>
+                <div className="mv-metric"><strong>{allGenres}</strong><span>Genres</span></div>
               </div>
             </div>
-            <div className="mv-hero-visual">
-              <div className="mv-hero-orb" />
-              <div className="mv-hero-grid" />
-              <div className="mv-hero-spotlight">
-                <span className="mv-spotlight-label">TOP RATED</span>
-                <span className="mv-spotlight-title">{topRated?.title || "Loading..."}</span>
-                <span className="mv-spotlight-rating"><Star size={12} fill="currentColor" /> {topRated?.rating?.toFixed(1) || "?"}</span>
-              </div>
+            <div className="mv-hero-hud">
+              <span className="mv-hud-label">TOP RATED</span>
+              <span className="mv-hud-title">{topRated?.title || "Loading..."}</span>
+              <span className="mv-hud-rating"><Star size={12} fill="currentColor" /> {topRated?.rating?.toFixed(1) || "?"}</span>
             </div>
           </motion.section>
 
