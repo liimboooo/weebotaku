@@ -250,7 +250,7 @@ export default function Browse() {
     );
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [hasMore, page]);
+  }, [hasMore, loadingMore, loading, page]);
 
   const toggleWishlist = (id) => {
     setWatchlist(p => {
