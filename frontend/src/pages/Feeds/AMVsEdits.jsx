@@ -12,6 +12,7 @@ import {
   Trash2,
   Clock,
   Sparkles,
+  Download,
 } from "lucide-react";
 import AnimatedPage from "../../components/AnimatedPage";
 import { useToast } from "../../components/Toast";
@@ -263,6 +264,20 @@ export default function AMVsEdits() {
     } else {
       setSavedEdits([...savedEdits, id]);
     }
+  };
+
+  const handleDownload = (edit) => {
+    if (!edit.videoUrl) {
+      showToast("Video not available for download", "error");
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = edit.videoUrl;
+    a.download = `${edit.title.replace(/[^a-zA-Z0-9]/g, "_")}.mp4`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast("Download started!", "success");
   };
 
   const handleVideoTime = () => {
@@ -653,6 +668,9 @@ export default function AMVsEdits() {
                           title="Save"
                         >
                           <svg width="17" height="17" viewBox="0 0 24 24" fill={savedEdits.includes(selectedEdit.id) ? "#e50914" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                        </button>
+                        <button className="pin-glass-btn" onClick={() => handleDownload(selectedEdit)} title="Download">
+                          <Download size={17} />
                         </button>
                       </div>
 

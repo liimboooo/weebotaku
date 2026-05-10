@@ -1587,36 +1587,7 @@
     align-items: stretch;
   }
 
-.edits-sort-module {
-  display: flex;
-  gap: 6px;
-}
-
-.edits-sort-btn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  color: #aaa;
-  padding: 7px 18px;
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 0.75rem;
-  font-weight: 600;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-
-.edits-sort-btn:hover {
-  border-color: rgba(229, 9, 20, 0.3);
-  color: #fff;
-}
-
-.edits-sort-btn.active {
-  background: #e50914;
-  border-color: #e50914;
-  color: #fff;
-}
-
-.edits-nav-right {
+  .edits-nav-right {
     width: 100%;
     justify-content: stretch;
   }
@@ -1625,4 +1596,43 @@
     flex: 1;
     width: auto;
   }
+
+  .edits-sort-module {
+    justify-content: center;
+  }
+}
+
+/* ─── Sort Buttons ─── */
+.edits-sort-module {
+  display: flex;
+  gap: 6px;
+}
+
+.edits-sort-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  padding: 7px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  font-family: inherit;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.edits-sort-btn:hover {
+  border-color: rgba(229, 9, 20, 0.3);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.edits-sort-btn.active {
+  background: #e50914;
+  border-color: #e50914;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(229, 9, 20, 0.2);
 }
