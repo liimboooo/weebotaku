@@ -29,7 +29,6 @@ body {
   font-family: var(--font-body);
   line-height: 1.5;
   overflow-x: hidden;
-  will-change: transform;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

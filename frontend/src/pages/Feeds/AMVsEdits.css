@@ -69,8 +69,7 @@
   font-size: clamp(3rem, 5vw, 5rem);
   color: #fff;
   font-weight: 900;
-  font-family: Georgia, serif;
-  font-style: italic;
+  font-family: var(--font-display);
   line-height: 0.9;
 }
 
@@ -316,7 +315,7 @@
   right: 16px;
   display: flex;
   gap: 12px;
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 0.7rem;
   background: rgba(0, 0, 0, 0.8);
   padding: 4px 10px;
@@ -449,8 +448,7 @@
 
 .head-info h2 {
   margin: 4px 0 0;
-  font-family: Georgia, serif;
-  font-style: italic;
+  font-family: var(--font-display);
 }
 
 .live-status {

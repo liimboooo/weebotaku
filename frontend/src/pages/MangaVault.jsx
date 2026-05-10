@@ -6,6 +6,7 @@ import AnimatedPage from "../components/AnimatedPage";
 import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchTopManga, fetchSearchManga } from "../services/jikanApi";
+import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
 import "./MangaVault.css";
 
 const DEMOGRAPHICS = ["All", "Shonen", "Seinen", "Shojo", "Josei"];
@@ -26,7 +27,7 @@ export default function MangaVault() {
   const [sort, setSort] = useState("rating");
   const [view, setView] = useState("grid");
   const [preview, setPreview] = useState(null);
-  const [wishlist, setWishlist] = useState([]);
+  const [wishlist, setWishlist] = useState(loadReadlist());
   const sentinelRef = useRef(null);
   const searchRef = useRef(debouncedSearch);
   searchRef.current = debouncedSearch;
@@ -106,7 +107,13 @@ export default function MangaVault() {
   const topRated = heroManga;
 
   const toggleWishlist = (id) => {
-    setWishlist(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    setWishlist(prev => {
+      if (prev.some(i => i.id === id)) return removeFromReadlist(id);
+      const manga = allManga.find(m => m.id === id);
+      if (!manga) return prev;
+      const item = { id: manga.id, title: manga.title, cover: manga.cover, rating: manga.rating, ch: manga.ch, demo: manga.demo, status: manga.status, author: manga.author };
+      return addToReadlist(item);
+    });
   };
 
   const totalCh = useMemo(() => allManga.reduce((s, m) => s + (m.ch || 0), 0), [allManga]);
@@ -222,8 +229,8 @@ export default function MangaVault() {
                                 <h3>{m.title}</h3>
                                 <span className="mv-card-author">{m.author}</span>
                               </div>
-                              <button className={`mv-wish-btn ${wishlist.includes(m.id) ? "active" : ""}`} onClick={() => toggleWishlist(m.id)}>
-                                <Heart size={14} fill={wishlist.includes(m.id) ? "currentColor" : "none"} />
+                              <button className={`mv-wish-btn ${wishlist.some(i => i.id === m.id) ? "active" : ""}`} onClick={() => toggleWishlist(m.id)}>
+                                <Heart size={14} fill={wishlist.some(i => i.id === m.id) ? "currentColor" : "none"} />
                               </button>
                             </div>
                             <p className="mv-card-desc">{m.desc}</p>
@@ -253,8 +260,8 @@ export default function MangaVault() {
                               <span className={`mv-row-status ${(m.status || "").toLowerCase()}`}>{m.status}</span>
                             </div>
                           </div>
-                          <button className={`mv-row-wish ${wishlist.includes(m.id) ? "active" : ""}`} onClick={() => toggleWishlist(m.id)}>
-                            <Heart size={15} fill={wishlist.includes(m.id) ? "currentColor" : "none"} />
+                          <button className={`mv-row-wish ${wishlist.some(i => i.id === m.id) ? "active" : ""}`} onClick={() => toggleWishlist(m.id)}>
+                            <Heart size={15} fill={wishlist.some(i => i.id === m.id) ? "currentColor" : "none"} />
                           </button>
                           <div className="mv-card-glow" />
                         </>
@@ -340,8 +347,8 @@ export default function MangaVault() {
                       <div className="mv-modal-bar-fill" style={{ width: `${(preview.progress || 0) * 100}%` }} />
                     </div>
                     <button className="mv-modal-btn" onClick={() => toggleWishlist(preview.id)}>
-                      <Heart size={16} fill={wishlist.includes(preview.id) ? "currentColor" : "none"} />
-                      {wishlist.includes(preview.id) ? "In Your List" : "Add to List"}
+                      <Heart size={16} fill={wishlist.some(i => i.id === preview.id) ? "currentColor" : "none"} />
+                      {wishlist.some(i => i.id === preview.id) ? "In Your List" : "Add to List"}
                     </button>
                     <button className="mv-modal-btn mv-modal-btn-primary">Continue Ch. {preview.last}</button>
                   </div>

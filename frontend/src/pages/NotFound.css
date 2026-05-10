@@ -2,7 +2,7 @@
 .nf-container{max-width:600px;margin:0 auto;padding:140px 24px 60px;text-align:center;display:flex;flex-direction:column;align-items:center}
 
 .nf-code{display:flex;gap:8px;margin-bottom:8px}
-.nf-char{font-size:7rem;font-weight:900;line-height:1;font-family:Georgia,serif;font-style:italic}
+.nf-char{font-size:7rem;font-weight:900;line-height:1;font-family:var(--font-display)}
 .nf-char-1{color:#dc2626;animation:nf-float 3s ease-in-out infinite}
 .nf-char-2{color:#fff;animation:nf-float 3s ease-in-out infinite 0.15s}
 .nf-char-3{color:#dc2626;animation:nf-float 3s ease-in-out infinite 0.3s}

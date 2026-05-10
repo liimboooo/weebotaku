@@ -3,22 +3,24 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLoading } from "../components/LoadingProvider";
 import {
+  BookOpen,
   ChevronDown,
   Heart,
   List,
   Grid3x3,
   Library,
   Play,
-  Plus,
   Search,
   SlidersHorizontal,
   Sparkles,
   Star,
+  Zap,
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchTopAnime, fetchSearchAnime, fetchAnimeGenres } from "../services/jikanApi";
+import { loadWatchlist, addToWatchlist, removeFromWatchlist } from "../services/storage";
 import "./Browse.css";
 
 const sortOptions = [
@@ -43,22 +45,6 @@ function getAnimeStatusBucket(anime) {
 
 function getAnimeSeasonLabel(anime) {
   return anime?.season || "Unknown";
-}
-
-function loadWatchlist() {
-  try {
-    return JSON.parse(localStorage.getItem("watchlist") || "[]");
-  } catch {
-    return [];
-  }
-}
-
-function addToWatchlist(anime) {
-  const current = loadWatchlist();
-  if (current.includes(anime.id)) return current;
-  const next = [...current, anime.id];
-  localStorage.setItem("watchlist", JSON.stringify(next));
-  return next;
 }
 
 function FilterDropdown({ label, icon: Icon, items, active, children }) {
@@ -98,44 +84,44 @@ function FilterDropdown({ label, icon: Icon, items, active, children }) {
   );
 }
 
-function AnimeCard({ anime, onOpen, onAdd, wishlist, onWishlist }) {
-  const inWishlist = wishlist.includes(anime.id);
+function AnimeCard({ anime, onOpen, wishlist, onWishlist }) {
+  const inWishlist = wishlist.some(i => i.id === anime.id);
   return (
-    <article className="br-card">
+    <>
       <div className="br-card-thumb" onClick={() => onOpen(anime)}>
-        <img className="br-card-img" src={anime.img} alt={anime.name} loading="lazy" />
+        <img src={anime.img} alt={anime.name} loading="lazy" />
         <div className="br-card-overlay">
-          <div className="br-card-play-icon"><Play size={20} fill="currentColor" /></div>
+          <div className="br-card-play"><Play size={20} fill="currentColor" /></div>
           <div className="br-card-tech">
             <span>{anime.episodes} eps</span>
             <span>{anime.type || "TV"}</span>
           </div>
         </div>
-        <div className="br-card-badge"><Star size={10} fill="currentColor" /> {anime.rating?.toFixed(1)}</div>
-        <button
-          type="button"
-          className={`br-card-wish ${inWishlist ? "active" : ""}`}
-          onClick={(e) => { e.stopPropagation(); onWishlist(anime.id); }}
-        >
-          <Heart size={13} fill={inWishlist ? "currentColor" : "none"} />
-        </button>
+        <div className="br-card-badge">
+          {anime.status === "Ongoing" ? <Zap size={10} /> : null}
+          {anime.status || "Unknown"}
+        </div>
         <div className="br-card-progress" style={{ width: `${Math.round((anime.readProgress || 0) * 100)}%` }} />
       </div>
       <div className="br-card-body">
         <div className="br-card-head">
-          <h3>{anime.name}</h3>
-          <button type="button" className="br-card-add" onClick={(e) => { e.stopPropagation(); onAdd(anime); }}>
-            <Plus size={13} />
+          <div>
+            <h3>{anime.name}</h3>
+            <span className="br-card-studio">{anime.studio}</span>
+          </div>
+          <button className={`br-wish-btn ${inWishlist ? "active" : ""}`} onClick={(e) => { e.stopPropagation(); onWishlist(anime.id); }}>
+            <Heart size={14} fill={inWishlist ? "currentColor" : "none"} />
           </button>
         </div>
-        <p>{anime.studio}</p>
+        <p className="br-card-desc">{anime.synopsis}</p>
         <div className="br-card-foot">
-          <span>{anime.episodes} eps</span>
-          <span>{anime.year}</span>
+          <span className="br-card-rating"><Star size={11} fill="currentColor" /> {anime.rating?.toFixed(1)}</span>
+          <span className="br-card-ch"><Play size={11} /> {anime.episodes} eps</span>
+          {anime.genres?.[0] && <span className="br-card-tag">{anime.genres[0]}</span>}
         </div>
       </div>
       <div className="br-card-glow" />
-    </article>
+    </>
   );
 }
 
@@ -161,7 +147,7 @@ export default function Browse() {
   const [activeStudios, setActiveStudios] = useState([]);
   const [sortBy, setSortBy] = useState("popularity");
   const [view, setView] = useState("grid");
-  const [watchlist, setWatchlist] = useState(() => loadWatchlist());
+  const [watchlist, setWatchlist] = useState(loadWatchlist());
   const sentinelRef = useRef(null);
   const mountedRef = useRef(false);
   const loadingRef = useRef(false);
@@ -266,8 +252,15 @@ export default function Browse() {
     return () => observer.disconnect();
   }, [hasMore, page]);
 
-  const handleQuickAdd = (anime) => setWatchlist(addToWatchlist(anime));
-  const toggleWishlist = (id) => setWatchlist(p => p.includes(id) ? p.filter(i => i !== id) : [...p, id]);
+  const toggleWishlist = (id) => {
+    setWatchlist(p => {
+      if (p.some(i => i.id === id)) return removeFromWatchlist(id);
+      const anime = allAnime.find(a => a.id === id);
+      if (!anime) return p;
+      const item = { id: anime.id, name: anime.name, img: anime.img, rating: anime.rating, episodes: anime.episodes, year: anime.year, genres: anime.genres, status: anime.status };
+      return addToWatchlist(item);
+    });
+  };
   const toggleValue = (setter, value) => setter(c => c.includes(value) ? c.filter(i => i !== value) : [...c, value]);
 
   const activeCount = activeGenres.length + activeFormats.length + activeStatuses.length + activeSeasons.length + activeYears.length + activeStudios.length;
@@ -396,16 +389,26 @@ export default function Browse() {
           ) : (
             <>
               <div className={`br-grid ${view === "list" ? "br-list" : ""}`}>
-                {filteredAnime.map(anime => (
-                  <AnimeCard
-                    key={anime.id}
-                    anime={anime}
-                    onOpen={item => navigate(`/anime/${item.id}`)}
-                    onAdd={handleQuickAdd}
-                    wishlist={watchlist}
-                    onWishlist={toggleWishlist}
-                  />
-                ))}
+                <AnimatePresence mode="popLayout">
+                  {filteredAnime.map((anime, i) => (
+                    <motion.article
+                      key={anime.id}
+                      className="br-card"
+                      layout
+                      initial={{ opacity: 0, scale: 0.92 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.92 }}
+                      transition={{ delay: (i % 12) * 0.025 }}
+                      onClick={() => navigate(`/anime/${anime.id}`)}
+                    >
+                      <AnimeCard
+                        anime={anime}
+                        wishlist={watchlist}
+                        onWishlist={toggleWishlist}
+                      />
+                    </motion.article>
+                  ))}
+                </AnimatePresence>
               </div>
 
               {loadingMore && (

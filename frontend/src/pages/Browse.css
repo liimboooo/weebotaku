@@ -114,8 +114,7 @@
   font-size: clamp(3rem, 6vw, 5rem);
   color: #fff;
   font-weight: 900;
-  font-family: Georgia, serif;
-  font-style: italic;
+  font-family: var(--font-display);
   text-transform: uppercase;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -126,8 +125,7 @@
   font-size: clamp(3rem, 6vw, 5rem);
   color: #dc2626;
   font-weight: 900;
-  font-family: Georgia, serif;
-  font-style: italic;
+  font-family: var(--font-display);
   text-transform: uppercase;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -485,41 +483,45 @@
 /* ─── GRID ─── */
 .br-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
 }
 
 .br-card {
   position: relative;
   background: rgba(18,18,18,0.6);
   border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 18px;
-  animation: br-card-in 0.3s ease-out both;
+  border-radius: 20px;
   overflow: hidden;
   cursor: pointer;
-  transition: border-color 0.3s, transform 0.2s;
+  transition: border-color 0.3s, transform 0.2s, box-shadow 0.3s;
 }
 
 .br-card:hover {
-  border-color: rgba(220,38,38,0.35);
-  transform: translateY(-3px);
+  border-color: #e63636;
+  transform: translateY(-8px);
+  box-shadow: 0 15px 40px rgba(230, 54, 54, 0.3);
 }
 
 .br-card-thumb {
   position: relative;
-  aspect-ratio: 0.74;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   background: #111;
 }
 
-.br-card-img {
+.br-card-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s;
+  transition: transform 0.5s, filter 0.4s;
+  filter: brightness(0.85);
 }
 
-.br-card:hover .br-card-img { transform: scale(1.06); }
+.br-card:hover .br-card-thumb img {
+  transform: scale(1.08);
+  filter: brightness(1);
+}
 
 .br-card-overlay {
   position: absolute;
@@ -533,71 +535,63 @@
 
 .br-card:hover .br-card-overlay { opacity: 1; }
 
-.br-card-play-icon {
+.br-card-play {
+  color: #fff;
   width: 48px;
   height: 48px;
-  border: 2px solid rgba(255,255,255,0.8);
   border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.8);
   display: grid;
   place-items: center;
-  background: rgba(220,38,38,0.8);
-  box-shadow: 0 0 30px rgba(220,38,38,0.4);
-  color: #fff;
+  transition: all 0.3s;
+}
+
+.br-card:hover .br-card-play {
+  background: rgba(220,38,38,0.2);
+  border-color: #dc2626;
 }
 
 .br-card-tech {
   position: absolute;
   bottom: 10px;
-  right: 10px;
+  left: 10px;
   display: flex;
   gap: 6px;
-  font-family: monospace;
-  font-size: 0.6rem;
-  background: rgba(0,0,0,0.8);
+}
+
+.br-card-tech span {
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(6px);
   padding: 3px 8px;
-  border-radius: 5px;
-  color: #ccc;
+  border-radius: 6px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #ddd;
 }
 
 .br-card-badge {
   position: absolute;
   top: 10px;
   left: 10px;
-  background: rgba(220,38,38,0.9);
-  color: #fff;
-  padding: 3px 10px;
-  border-radius: 6px;
-  font-size: 0.6rem;
-  font-weight: 800;
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-.br-card-wish {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  border: 0;
-  background: rgba(0,0,0,0.5);
+.br-card-badge:has(svg) {
+  background: rgba(46,204,113,0.85);
   color: #fff;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0;
-  transition: all 0.2s;
 }
 
-.br-card:hover .br-card-wish { opacity: 1; }
-
-.br-card-wish.active {
-  opacity: 1;
-  color: #dc2626;
-  background: rgba(220,38,38,0.2);
+.br-card-badge:not(:has(svg)) {
+  background: rgba(230,54,54,0.85);
+  color: #fff;
 }
 
 .br-card-progress {
@@ -610,72 +604,108 @@
 }
 
 .br-card-body {
-  padding: 12px 14px 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .br-card-head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 3px;
-  gap: 6px;
+  gap: 8px;
 }
 
 .br-card-head h3 {
   margin: 0;
   font-size: 0.85rem;
-  color: #f0f0f0;
-  line-height: 1.2;
+  color: #fff;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.br-card-add {
-  border: 0;
+.br-card-studio {
+  font-size: 0.75rem;
+  color: #888;
+  display: block;
+  margin-top: 2px;
+}
+
+.br-wish-btn {
+  border: none;
   background: rgba(255,255,255,0.04);
   color: #888;
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: all 0.2s;
   flex-shrink: 0;
-  transition: all 0.15s;
 }
 
-.br-card-add:hover { background: rgba(220,38,38,0.2); color: #ef4444; }
+.br-wish-btn.active {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
+}
 
-.br-card-body p {
-  margin: 0 0 6px;
-  color: #888;
-  font-size: 0.68rem;
-  white-space: nowrap;
+.br-card-desc {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #999;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .br-card-foot {
   display: flex;
-  justify-content: space-between;
-  color: #999;
-  font-size: 0.68rem;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.br-card-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: #ffd700;
   font-weight: 600;
+}
+
+.br-card-ch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: #aaa;
+  font-weight: 600;
+}
+
+.br-card-tag {
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  background: rgba(220,38,38,0.12);
+  color: #ef4444;
 }
 
 .br-card-glow {
   position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70%;
-  height: 2px;
-  background: #dc2626;
-  box-shadow: 0 0 20px #dc2626;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 0%, rgba(230,54,54,0.12), transparent 60%);
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity 0.4s;
 }
 
 .br-card:hover .br-card-glow { opacity: 1; }
@@ -694,7 +724,7 @@
 }
 
 .br-list .br-card-thumb {
-  aspect-ratio: 0.72;
+  aspect-ratio: 1 / 1;
   border-radius: 0;
 }
 
@@ -706,7 +736,6 @@
 }
 
 .br-list .br-card-overlay,
-.br-list .br-card-wish,
 .br-list .br-card-glow { display: none; }
 
 .br-list .br-card:hover { transform: translateY(-1px); }
@@ -784,19 +813,11 @@
 }
 
 @keyframes br-card-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* ─── RESPONSIVE ─── */
-@media (min-width: 700px) {
-  .br-grid { grid-template-columns: repeat(3, 1fr); }
-}
-
-@media (min-width: 1000px) {
-  .br-grid { grid-template-columns: repeat(4, 1fr); }
-}
-
 @media (max-width: 900px) {
   .br-hero {
     min-height: 350px;
