@@ -26,7 +26,7 @@ export default function Categories({ categories }) {
           <div 
             key={cat} 
             className="category-card"
-            onClick={() => navigate(`/search?genre=${cat}`)}
+            onClick={() => navigate(`/search?q=${cat}`)}
           >
             <h3>{cat}</h3>
           </div>

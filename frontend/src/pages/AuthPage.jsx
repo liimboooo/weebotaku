@@ -16,6 +16,9 @@ export default function AuthPage() {
     }
     localStorage.setItem("username", username);
     localStorage.setItem("isLoggedIn", "true");
+    if (!localStorage.getItem("memberSince")) {
+      localStorage.setItem("memberSince", String(new Date().getFullYear()));
+    }
     navigate("/home");
   }
 

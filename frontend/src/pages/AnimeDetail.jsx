@@ -3,9 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { ArrowLeft, Play, Bookmark, Heart, Share2, Star, Calendar, Tv, ShieldCheck, User, Bell } from "lucide-react";
+import { ArrowLeft, Play, Bookmark, Heart, Share2, Tv, ShieldCheck, Bell } from "lucide-react";
 import { getAnimeById, getTrendingAnime } from "../data/animeData";
 
+import { addToWatchlist, removeFromWatchlist, isInWatchlist } from "../services/storage";
 import Background from "../components/Background";
 import Reviews from "../components/Reviews";
 import FeaturedAnime from "../components/FeaturedAnime";
@@ -36,8 +37,7 @@ export default function AnimeDetail() {
   };
 
   useEffect(() => {
-    const storedWatchlist = JSON.parse(localStorage.getItem("watchlist") || "[]");
-    setIsWatchlisted(storedWatchlist.includes(parseInt(id)));
+    setIsWatchlisted(isInWatchlist(parseInt(id)));
 
     const storedFollowing = JSON.parse(localStorage.getItem("followingAnime") || "[]");
     setIsFollowing(storedFollowing.some(f => f.animeId === parseInt(id)));
@@ -94,17 +94,14 @@ export default function AnimeDetail() {
   }, [showPlayer, selectedEp, id]);
 
   const toggleWatchlist = () => {
-    const stored = JSON.parse(localStorage.getItem("watchlist") || "[]");
     const animeId = parseInt(id);
-    let updated;
-    if (stored.includes(animeId)) {
-      updated = stored.filter((wId) => wId !== animeId);
+    if (isInWatchlist(animeId)) {
+      removeFromWatchlist(animeId);
       showToast(`${anime.name} removed from Watchlist!`, "error");
     } else {
-      updated = [...stored, animeId];
+      addToWatchlist(anime);
       showToast(`${anime.name} added to Watchlist!`, "success");
     }
-    localStorage.setItem("watchlist", JSON.stringify(updated));
     setIsWatchlisted(!isWatchlisted);
   };
 
@@ -425,22 +422,22 @@ export default function AnimeDetail() {
           <div className="watch-sources-section">
             <h2>📺 Where to Watch</h2>
             <div className="sources-grid">
-              <a href="#" className="source-btn crunchyroll" target="_blank" rel="noopener noreferrer">
+              <button className="source-btn crunchyroll" onClick={() => showToast("Coming soon!", "info")}>
                 <span className="source-logo">CR</span>
                 <span className="source-name">Crunchyroll</span>
-              </a>
-              <a href="#" className="source-btn netflix" target="_blank" rel="noopener noreferrer">
+              </button>
+              <button className="source-btn netflix" onClick={() => showToast("Coming soon!", "info")}>
                 <span className="source-logo">📺</span>
                 <span className="source-name">Netflix</span>
-              </a>
-              <a href="#" className="source-btn hulu" target="_blank" rel="noopener noreferrer">
+              </button>
+              <button className="source-btn hulu" onClick={() => showToast("Coming soon!", "info")}>
                 <span className="source-logo">H</span>
                 <span className="source-name">Hulu</span>
-              </a>
-              <a href="#" className="source-btn hidive" target="_blank" rel="noopener noreferrer">
+              </button>
+              <button className="source-btn hidive" onClick={() => showToast("Coming soon!", "info")}>
                 <span className="source-logo">HD</span>
                 <span className="source-name">HiDive</span>
-              </a>
+              </button>
             </div>
           </div>
 

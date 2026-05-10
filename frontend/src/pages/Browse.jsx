@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLoading } from "../components/LoadingProvider";
@@ -84,12 +84,13 @@ function FilterDropdown({ label, icon: Icon, items, active, children }) {
   );
 }
 
-function AnimeCard({ anime, onOpen, wishlist, onWishlist }) {
+function AnimeCard({ anime, wishlist, onWishlist }) {
   const inWishlist = wishlist.some(i => i.id === anime.id);
+  const [imgErr, setImgErr] = useState(false);
   return (
     <>
-      <div className="br-card-thumb" onClick={() => onOpen(anime)}>
-        <img src={anime.img} alt={anime.name} loading="lazy" />
+      <div className="br-card-thumb">
+        {imgErr ? <div className="br-card-img-fallback">{anime.name?.[0] || "?"}</div> : <img src={anime.img} alt={anime.name} loading="lazy" onError={() => setImgErr(true)} />}
         <div className="br-card-overlay">
           <div className="br-card-play"><Play size={20} fill="currentColor" /></div>
           <div className="br-card-tech">
@@ -149,7 +150,6 @@ export default function Browse() {
   const [view, setView] = useState("grid");
   const [watchlist, setWatchlist] = useState(loadWatchlist());
   const sentinelRef = useRef(null);
-  const mountedRef = useRef(false);
   const loadingRef = useRef(false);
   const hasLoadedOnce = useRef(false);
 
@@ -163,24 +163,10 @@ export default function Browse() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    loadAnime(1, true);
-  }, []);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (!mountedRef.current) { mountedRef.current = true; return; }
-    setAllAnime([]);
-    setPage(1);
-    setHasMore(true);
-    loadAnime(1, true);
-  }, [debouncedSearch]);
-
   const searchRef = useRef("");
   searchRef.current = debouncedSearch;
 
-  async function loadAnime(p, replace = false) {
+  const loadAnime = useCallback(async (p, replace = false) => {
     if (loadingRef.current) return;
     loadingRef.current = true;
     if (replace) setLoading(true);
@@ -203,7 +189,14 @@ export default function Browse() {
       loadingRef.current = false;
       hideGlobalLoading();
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    setAllAnime([]);
+    setPage(1);
+    setHasMore(true);
+    loadAnime(1, true);
+  }, [debouncedSearch, loadAnime]);
 
   const allStudios = useMemo(() =>
     Array.from(new Set(allAnime.map(a => a.studio).filter(Boolean))).sort(),
@@ -250,7 +243,7 @@ export default function Browse() {
     );
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [hasMore, loadingMore, loading, page]);
+  }, [hasMore, loadingMore, loading, loadAnime, page]);
 
   const toggleWishlist = (id) => {
     setWatchlist(p => {
@@ -293,7 +286,7 @@ export default function Browse() {
 
         <main className="br-shell">
           <motion.section className="br-hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="br-hero-bg">
+            <div className="br-hero-bg" style={topAnime?.img ? { backgroundImage: `url(${topAnime.img})` } : {}}>
               {topAnime?.trailerUrl && (
                 <iframe
                   className="br-hero-video"

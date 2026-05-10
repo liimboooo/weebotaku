@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAnimeById } from "../data/animeData";
 import { motion, AnimatePresence } from "framer-motion";
+import { loadWatchlist } from "../services/storage";
 import AnimatedPage from "../components/AnimatedPage";
 
 import Background from "../components/Background";
@@ -61,7 +62,7 @@ export default function ProfilePage() {
       setAvatar(storedAvatar);
       setAvatarPreview(storedAvatar);
     }
-    const storedW = JSON.parse(localStorage.getItem("watchlist") || "[]");
+    const storedW = loadWatchlist();
     setWatchlist(storedW);
     const storedL = JSON.parse(localStorage.getItem("likedAnime") || "[]");
     setLiked(storedL);
@@ -69,7 +70,7 @@ export default function ProfilePage() {
     setRated(storedR);
   }, []);
 
-  const watchlistAnime = watchlist.map((id) => getAnimeById(id)).filter(Boolean);
+  const watchlistAnime = watchlist.map((item) => getAnimeById(item.id)).filter(Boolean);
   const likedAnime = liked.map((id) => getAnimeById(id)).filter(Boolean);
 
   const totalEpisodes = watchlistAnime.reduce((sum, a) => sum + a.episodes, 0);
@@ -127,8 +128,9 @@ export default function ProfilePage() {
 
   const navigateWithViewTransition = (anime, event) => {
     if (document.startViewTransition) {
-      const x = event.clientX;
-      const y = event.clientY;
+      const rect = event.currentTarget.getBoundingClientRect();
+      const x = event.clientX || rect.left + rect.width / 2;
+      const y = event.clientY || rect.top + rect.height / 2;
       const img = event.currentTarget.querySelector("img");
       const title = event.currentTarget.querySelector("h4");
 
@@ -166,48 +168,34 @@ export default function ProfilePage() {
       <div className="profile-page">
         <Background />
 
-        <div className="profile-header-section">
-          <div className="profile-avatar">
-            <div className="avatar-circle">
-              {avatarPreview || avatar ? <img src={avatarPreview || avatar} alt={username} /> : <span>{username.charAt(0).toUpperCase()}</span>}
+        {/* ─── Profile Hero / Cover ─── */}
+        <div className={`profile-hero ${editing ? "is-editing" : ""}`}>
+          <div className="profile-cover-bg" style={watchlistAnime[0] ? { backgroundImage: `url(${watchlistAnime[0].img})` } : {}} />
+          <div className="profile-cover-content">
+            <div className="profile-avatar-section">
+              <div className="profile-avatar">
+                <div className="avatar-circle">
+                  {avatarPreview || avatar ? <img src={avatarPreview || avatar} alt={username} /> : <span>{username.charAt(0).toUpperCase()}</span>}
+                </div>
+                <div className="avatar-ring"></div>
+              </div>
             </div>
-            <div className="avatar-ring"></div>
-          </div>
-          <div className="profile-info">
+
             {editing ? (
               <div className="profile-edit-form">
-                <input value={username} onChange={(e) => setUsername(e.target.value)} />
+                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
                 <div className="avatar-upload-row">
                   <label className="avatar-upload-btn">
                     Choose avatar from files
-                    <input
-                      type="file"
-                      accept="image/*"
-                      hidden
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                          const result = String(reader.result || "");
-                          setAvatar(result);
-                          setAvatarPreview(result);
-                        };
-                        reader.readAsDataURL(file);
-                      }}
-                    />
+                    <input type="file" accept="image/*" hidden onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => { const r = String(reader.result || ""); setAvatar(r); setAvatarPreview(r); };
+                      reader.readAsDataURL(file);
+                    }} />
                   </label>
-                  <button
-                    type="button"
-                    className="clear-avatar-btn"
-                    onClick={() => {
-                      setAvatar("");
-                      setAvatarPreview("");
-                      localStorage.removeItem("userAvatar");
-                    }}
-                  >
-                    Remove avatar
-                  </button>
+                  <button type="button" className="clear-avatar-btn" onClick={() => { setAvatar(""); setAvatarPreview(""); localStorage.removeItem("userAvatar"); }}>Remove avatar</button>
                 </div>
                 <div className="edit-actions">
                   <button onClick={() => {
@@ -216,54 +204,41 @@ export default function ProfilePage() {
                     window.dispatchEvent(new Event('profile-avatar-updated'));
                     setEditing(false);
                   }} className="save-btn">Save</button>
-                  <button onClick={() => { setEditing(false); const storedUser = localStorage.getItem('username'); if (storedUser) setUsername(storedUser); const storedAvatar = localStorage.getItem('userAvatar'); setAvatar(storedAvatar || ''); setAvatarPreview(storedAvatar || ''); }} className="cancel-btn">Cancel</button>
+                  <button onClick={() => { setEditing(false); const su = localStorage.getItem('username'); if (su) setUsername(su); const sa = localStorage.getItem('userAvatar'); setAvatar(sa || ''); setAvatarPreview(sa || ''); }} className="cancel-btn">Cancel</button>
                 </div>
               </div>
             ) : (
-              <>
+              <div className="profile-info">
                 <h1>{username}</h1>
-                <p className="member-since">Member since 2026</p>
+                <p className="member-since">Member since {localStorage.getItem("memberSince") || new Date().getFullYear()}</p>
                 <div className="profile-badges">
-                  <span className="badge">🎌 Anime Lover</span>
-                  {watchlist.length >= 5 && <span className="badge">📚 Collector</span>}
-                  {watchlist.length >= 10 && <span className="badge">🔥 Hardcore Fan</span>}
+                  <span className="badge">Anime Lover</span>
+                  {watchlist.length >= 5 && <span className="badge">Collector</span>}
+                  {watchlist.length >= 10 && <span className="badge">Hardcore Fan</span>}
                 </div>
-                <div style={{ marginTop: 12 }}>
-                  <button className="edit-profile-btn" onClick={() => setEditing(true)}>Edit Profile</button>
-                </div>
-              </>
+                <button className="edit-profile-btn" onClick={() => setEditing(true)}>Edit Profile</button>
+              </div>
             )}
           </div>
-        </div>
 
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon">
-              <ion-icon name="bookmark"></ion-icon>
+          {/* ─── Stats row inside hero ─── */}
+          <div className="profile-stats-row">
+            <div className="profile-stat">
+              <strong>{watchlist.length}</strong>
+              <span>Watchlist</span>
             </div>
-            <div className="stat-value">{watchlist.length}</div>
-            <div className="stat-label">Watchlist</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">
-              <ion-icon name="film-outline"></ion-icon>
+            <div className="profile-stat">
+              <strong>{totalEpisodes.toLocaleString()}</strong>
+              <span>Episodes</span>
             </div>
-            <div className="stat-value">{totalEpisodes.toLocaleString()}</div>
-            <div className="stat-label">Total Episodes</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">
-              <ion-icon name="star"></ion-icon>
+            <div className="profile-stat">
+              <strong>{avgRating}</strong>
+              <span>Avg Rating</span>
             </div>
-            <div className="stat-value">{avgRating}</div>
-            <div className="stat-label">Avg. Rating</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon">
-              <ion-icon name="heart"></ion-icon>
+            <div className="profile-stat">
+              <strong>{likedAnime.length}</strong>
+              <span>Liked</span>
             </div>
-            <div className="stat-value">{likedAnime.length}</div>
-            <div className="stat-label">Liked Anime</div>
           </div>
         </div>
 
@@ -320,6 +295,9 @@ export default function ProfilePage() {
                       }}
                       whileTap={{ scale: 0.98 }}
                       onClick={(event) => navigateWithViewTransition(anime, event)}
+                      onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigateWithViewTransition(anime, event); } }}
+                      role="button"
+                      tabIndex={0}
                     >
                       <img src={anime.img} alt={anime.name} />
                       <div>
@@ -352,6 +330,9 @@ export default function ProfilePage() {
                         }}
                         whileTap={{ scale: 0.98 }}
                         onClick={(event) => navigateWithViewTransition(anime, event)}
+                        onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigateWithViewTransition(anime, event); } }}
+                        role="button"
+                        tabIndex={0}
                       >
                         <img src={anime.img} alt={anime.name} />
                         <div>
@@ -410,6 +391,7 @@ export default function ProfilePage() {
                       variants={tabItemVariants}
                       whileHover={{ y: -8 }}
                       onClick={(event) => navigateWithViewTransition(anime, event)}
+                      onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigateWithViewTransition(anime, event); } }}
                       role="button"
                       tabIndex={0}
                     >

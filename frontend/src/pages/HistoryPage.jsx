@@ -185,19 +185,6 @@ export default function HistoryPage() {
               })}
             </AnimatePresence>
           </motion.div>
-        ) : history.length > 0 ? (
-          <motion.div
-            className="history-empty"
-            initial={{ opacity: 0, scale: 0.96, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.45, ease: "easeOut" }}
-          >
-            <div className="empty-icon-wrap">
-              <ion-icon name="time-outline"></ion-icon>
-            </div>
-            <h3>No History</h3>
-            <p>Try watching something and it will appear here.</p>
-          </motion.div>
         ) : (
           <motion.div
             className="history-empty"

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Play, Bookmark, Star, Calendar } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { addToWatchlist, removeFromWatchlist, isInWatchlist, loadWatchlist } from "../services/storage";
 import { useToast } from "./Toast";
 import { getAnimeType } from "../data/animeData";
 import "./FeaturedAnime.css";
@@ -65,7 +66,7 @@ export default function FeaturedAnime({ animeList }) {
   const [watchlist, setWatchlist] = useState([]);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("watchlist") || "[]");
+    const stored = loadWatchlist().map(i => i.id);
     setWatchlist(stored);
   }, []);
 
@@ -74,16 +75,15 @@ export default function FeaturedAnime({ animeList }) {
   const toggleWatchlist = (e, anime) => {
     e.stopPropagation();
     const animeId = anime.id;
-    let updated;
-    if (watchlist.includes(animeId)) {
-      updated = watchlist.filter(id => id !== animeId);
+    if (isInWatchlist(animeId)) {
+      removeFromWatchlist(animeId);
+      setWatchlist(prev => prev.filter(id => id !== animeId));
       showToast(`${anime.name} removed from Watchlist`, "error");
     } else {
-      updated = [...watchlist, animeId];
+      addToWatchlist(anime);
+      setWatchlist(prev => [...prev, animeId]);
       showToast(`${anime.name} added to Watchlist`, "success");
     }
-    localStorage.setItem("watchlist", JSON.stringify(updated));
-    setWatchlist(updated);
   };
 
   const handleMouseMove = useCallback(throttle((e, card) => {

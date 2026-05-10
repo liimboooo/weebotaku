@@ -677,7 +677,7 @@ export default function Header() {"use strict";
                     <Bookmark size={16} />
                     <span>Watchlist</span>
                   </button>
-                  <button className="profile-action-card profile-action-card--danger" onClick={() => { localStorage.clear(); navigateTo('/home'); }}>
+                  <button className="profile-action-card profile-action-card--danger" onClick={() => { localStorage.removeItem('username'); localStorage.removeItem('isLoggedIn'); localStorage.removeItem('userAvatar'); localStorage.removeItem('userStatusMessage'); localStorage.removeItem('userEpisodesWatched'); localStorage.removeItem('userCurrentStreak'); localStorage.removeItem('userBountyValue'); localStorage.removeItem('userUnclaimedRewards'); navigateTo('/home'); }}>
                     <LogOut size={16} />
                     <span>Sign Out</span>
                   </button>

@@ -1,27 +1,25 @@
 function migrateOldWatchlist() {
-  const old = localStorage.getItem("watchlist");
+  const old = localStorage.getItem("animewatchlist");
   if (old) {
     try {
       const parsed = JSON.parse(old);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const hasObjects = typeof parsed[0] === "object";
-        const migrated = hasObjects ? parsed : [];
-        if (migrated.length > 0) localStorage.setItem("animewatchlist", JSON.stringify(migrated));
+        localStorage.setItem("watchlist", old);
       }
     } catch {}
-    localStorage.removeItem("watchlist");
+    localStorage.removeItem("animewatchlist");
   }
 }
 migrateOldWatchlist();
 
 export function loadWatchlist() {
   try {
-    return JSON.parse(localStorage.getItem("animewatchlist") || "[]");
+    return JSON.parse(localStorage.getItem("watchlist") || "[]");
   } catch { return []; }
 }
 
 export function saveWatchlist(list) {
-  localStorage.setItem("animewatchlist", JSON.stringify(list));
+  localStorage.setItem("watchlist", JSON.stringify(list));
 }
 
 export function addToWatchlist(item) {
