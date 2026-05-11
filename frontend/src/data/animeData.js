@@ -2,6 +2,7 @@ export const animeDatabase = {
   1: {
     id: 1,
     name: "Naruto",
+    type: "TV",
     img: "/beta-1.jpg",
     rating: 8.8,
     votes: 2540,
@@ -28,6 +29,7 @@ export const animeDatabase = {
   2: {
     id: 2,
     name: "One Piece",
+    type: "TV",
     img: "/beta-2.jpg",
     rating: 9.1,
     votes: 3120,
@@ -51,6 +53,7 @@ export const animeDatabase = {
   3: {
     id: 3,
     name: "Demon Slayer",
+    type: "TV",
     img: "/beta-3.jpg",
     rating: 8.9,
     votes: 2890,
@@ -80,6 +83,7 @@ export const animeDatabase = {
   4: {
     id: 4,
     name: "Attack on Titan",
+    type: "TV",
     img: "/beta-1.jpg",
     rating: 9.0,
     votes: 3540,
@@ -110,6 +114,7 @@ export const animeDatabase = {
   5: {
     id: 5,
     name: "Bleach",
+    type: "TV",
     img: "/beta-2.jpg",
     rating: 8.7,
     votes: 2210,
@@ -133,6 +138,7 @@ export const animeDatabase = {
   6: {
     id: 6,
     name: "Jujutsu Kaisen",
+    type: "TV",
     img: "/beta-3.jpg",
     rating: 8.95,
     votes: 2780,
@@ -156,6 +162,7 @@ export const animeDatabase = {
   7: {
     id: 7,
     name: "My Hero Academia",
+    type: "TV",
     img: "/beta-1.jpg",
     rating: 8.5,
     votes: 2100,
@@ -179,6 +186,7 @@ export const animeDatabase = {
   8: {
     id: 8,
     name: "Steins;Gate",
+    type: "TV",
     img: "/beta-2.jpg",
     rating: 9.2,
     votes: 2950,
@@ -201,6 +209,7 @@ export const animeDatabase = {
   9: {
     id: 9,
     name: "Fullmetal Alchemist",
+    type: "TV",
     img: "/beta-3.jpg",
     rating: 9.15,
     votes: 3200,
@@ -223,6 +232,7 @@ export const animeDatabase = {
   10: {
     id: 10,
     name: "Death Note",
+    type: "TV",
     img: "/beta-1.jpg",
     rating: 9.0,
     votes: 3400,
@@ -245,6 +255,7 @@ export const animeDatabase = {
   11: {
     id: 11,
     name: "Hunter x Hunter",
+    type: "TV",
     img: "/beta-2.jpg",
     rating: 9.1,
     votes: 2800,
@@ -267,6 +278,7 @@ export const animeDatabase = {
   12: {
     id: 12,
     name: "Spy x Family",
+    type: "TV",
     img: "/beta-3.jpg",
     rating: 8.6,
     votes: 2400,

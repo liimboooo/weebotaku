@@ -7,6 +7,8 @@ import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchTopManga, fetchSearchManga } from "../services/jikanApi";
 import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
+import { searchManga as mdSearch, getMangaChapters } from "../services/mangaApi";
+import MangaReader from "./Feeds/MangaReader";
 import "./MangaVault.css";
 
 const DEMOGRAPHICS = ["All", "Shonen", "Seinen", "Shojo", "Josei"];
@@ -103,6 +105,31 @@ export default function MangaVault() {
         return 0;
       });
   }, [allManga, demo, status, sort]);
+
+  const [readerManga, setReaderManga] = useState(null);
+  const [readerChapters, setReaderChapters] = useState([]);
+  const [readerChapter, setReaderChapter] = useState(null);
+  const [readerOpen, setReaderOpen] = useState(false);
+  const [chapterLoading, setChapterLoading] = useState(false);
+
+  const openReader = async (manga) => {
+    setChapterLoading(true);
+    try {
+      const results = await mdSearch(manga.title);
+      if (results.length === 0) { alert("Manga not found on MangaDex."); return; }
+      const md = results[0];
+      const chapters = await getMangaChapters(md.id);
+      if (chapters.length === 0) { alert("No readable chapters found."); return; }
+      setReaderManga(md);
+      setReaderChapters(chapters);
+      setReaderChapter(chapters[0]);
+      setReaderOpen(true);
+    } catch (e) {
+      alert("Failed to load manga from MangaDex.");
+    } finally {
+      setChapterLoading(false);
+    }
+  };
 
   const topRated = heroManga;
 
@@ -350,13 +377,24 @@ export default function MangaVault() {
                       <Heart size={16} fill={wishlist.some(i => i.id === preview.id) ? "currentColor" : "none"} />
                       {wishlist.some(i => i.id === preview.id) ? "In Your List" : "Add to List"}
                     </button>
-                    <button className="mv-modal-btn mv-modal-btn-primary">Continue Ch. {preview.last}</button>
+                    <button className="mv-modal-btn mv-modal-btn-primary" onClick={() => openReader(preview)} disabled={chapterLoading}>
+                      {chapterLoading ? "Searching..." : "Read Online"}
+                    </button>
                   </div>
                 </div>
               </motion.div>
             </div>
           )}
         </AnimatePresence>
+
+        {readerOpen && (
+          <MangaReader
+            manga={readerManga}
+            chapters={readerChapters}
+            initialChapter={readerChapter}
+            onClose={() => setReaderOpen(false)}
+          />
+        )}
       </div>
     </AnimatedPage>
   );

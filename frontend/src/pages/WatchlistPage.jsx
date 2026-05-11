@@ -14,9 +14,16 @@ export default function WatchlistPage() {
   const [animeList, setAnimeList] = useState([]);
   const [mangaList, setMangaList] = useState([]);
 
-  useEffect(() => {
+  const refresh = () => {
     setAnimeList(loadWatchlist());
     setMangaList(loadReadlist());
+  };
+
+  useEffect(() => {
+    refresh();
+    const handler = () => refresh();
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
   }, []);
 
   const removeAnime = (id) => {
@@ -25,6 +32,17 @@ export default function WatchlistPage() {
 
   const removeManga = (id) => {
     setMangaList(removeFromReadlist(id));
+  };
+
+  const getProgress = (id) => {
+    const history = JSON.parse(localStorage.getItem("watchHistory") || "[]");
+    const entry = history.find(h => h.animeId === id);
+    return entry ? entry.episode : 0;
+  };
+
+  const getMangaProgress = (id) => {
+    const progress = JSON.parse(localStorage.getItem("mangaProgress") || "{}");
+    return progress[id] || 0;
   };
 
   const activeList = tab === "anime" ? animeList : mangaList;
@@ -106,8 +124,12 @@ export default function WatchlistPage() {
                               <div className="wl-card-play"><Play size={20} fill="currentColor" /></div>
                               <div className="wl-card-tech">
                                 <span>{anime.episodes} eps</span>
+                                {getProgress(anime.id) > 0 && <span>Ep {getProgress(anime.id)}</span>}
                               </div>
                             </div>
+                            {getProgress(anime.id) > 0 && (
+                              <div className="wl-card-progress" style={{ width: `${(getProgress(anime.id) / (anime.episodes || 1)) * 100}%` }} />
+                            )}
                             <span className={`wl-badge ${(anime.status || "").toLowerCase()}`}>{anime.status || "Unknown"}</span>
                             <button
                               className="wl-card-wish active"
@@ -169,8 +191,12 @@ export default function WatchlistPage() {
                               <div className="wl-card-play"><Play size={20} fill="currentColor" /></div>
                               <div className="wl-card-tech">
                                 <span>{manga.ch} ch</span>
+                                {getMangaProgress(manga.id) > 0 && <span>Ch {getMangaProgress(manga.id)}</span>}
                               </div>
                             </div>
+                            {getMangaProgress(manga.id) > 0 && (
+                              <div className="wl-card-progress" style={{ width: `${(getMangaProgress(manga.id) / (manga.ch || 1)) * 100}%` }} />
+                            )}
                             <span className={`wl-badge ${(manga.status || "").toLowerCase()}`}>{manga.status || "Unknown"}</span>
                             <button
                               className="wl-card-wish active"

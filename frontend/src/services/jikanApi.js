@@ -53,7 +53,7 @@ async function jikanFetch(endpoint) {
 function mapAnime(a) {
   return {
     id: a.mal_id,
-    name: a.title,
+    name: a.title_english || a.title,
     img: a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || "",
     rating: a.score || 0,
     votes: a.scored_by || 0,

@@ -1,51 +1,17 @@
-.custom-cursor-dot {
+.custom-cursor {
   position: fixed;
-  width: 8px;
-  height: 8px;
-  background-color: #e63636;
+  top: -8px;
+  left: -8px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
+  background: rgba(230, 54, 54, 0.3);
   pointer-events: none;
-  z-index: 9999;
-  transform: translate(-50%, -50%);
-  transition: width 0.3s ease, height 0.3s ease, background-color 0.3s ease;
+  z-index: 99999;
+  transition: width 0.2s, height 0.2s, background 0.2s;
+  mix-blend-mode: difference;
 }
 
-.custom-cursor-outline {
-  position: fixed;
-  width: 40px;
-  height: 40px;
-  border: 2px solid rgba(230, 54, 54, 0.5);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9998;
-  transform: translate(-50%, -50%);
-  transition: width 0.3s ease, height 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
-}
-
-.custom-cursor-dot.hovering {
-  width: 12px;
-  height: 12px;
-  background-color: #fff;
-}
-
-.custom-cursor-outline.hovering {
-  width: 60px;
-  height: 60px;
-  border-color: rgba(230, 54, 54, 0.8);
-  background-color: rgba(230, 54, 54, 0.1);
-}
-
-.custom-cursor-dot.active {
-  transform: translate(-50%, -50%) scale(0.5);
-}
-
-.custom-cursor-outline.active {
-  transform: translate(-50%, -50%) scale(1.2);
-  border-color: #e63636;
-}
-
-@media (max-width: 1024px) {
-  .custom-cursor-dot, .custom-cursor-outline {
-    display: none;
-  }
+@media (hover: none) {
+  .custom-cursor { display: none; }
 }

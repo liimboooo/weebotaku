@@ -1,26 +1,22 @@
+import React from "react";
 import { motion } from "framer-motion";
 
-const animations = {
-  initial: { opacity: 0, y: 20 },
+const pageVariants = {
+  initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 },
+  exit: { opacity: 0, y: -12 },
 };
 
-const AnimatedPage = ({ children }) => {
+export default function AnimatedPage({ children }) {
   return (
     <motion.div
-      variants={animations}
+      variants={pageVariants}
       initial="initial"
       animate="animate"
       exit="exit"
-      // Faster duration for better performance
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      // GPU acceleration
-      style={{ transform: "translateZ(0)" }}
+      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.div>
   );
-};
-
-export default AnimatedPage;
+}

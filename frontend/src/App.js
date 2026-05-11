@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import Header from "./components/Header";
+import ToastContainer from "./components/Toast";
 import { LoadingProvider, useLoading } from "./components/LoadingProvider";
 import Home from "./pages/Home";
 import AnimeDetail from "./pages/AnimeDetail";
@@ -57,16 +58,7 @@ const routePageMap = {
       { title: "Report a bug", description: "Log layout issues, playback problems, or broken links.", meta: "Fast track" },
     ]
   ),
-  notifications: simplePage(
-    "Inbox",
-    "Notifications",
-    "A single place for watch reminders, new comments, room invites, and moderation notices.",
-    [
-      { title: "Episode alerts", description: "Know when an ongoing series is ready for the next watch.", meta: "Priority" },
-      { title: "Community updates", description: "See likes, replies, and mentions from the community feed.", meta: "Social" },
-      { title: "Watch room invites", description: "Jump straight into active rooms without hunting for the link.", meta: "Live" },
-    ]
-  ),
+
 };
 
 function AppLayout() {
@@ -84,6 +76,7 @@ function AppLayout() {
     <>
       <ScrollToTop />
       {!isAuthPage && <Header />}
+      <ToastContainer />
       <AnimatePresence mode="wait">
         <Routes>
           <Route path="/" element={<AuthPage />} />
@@ -101,7 +94,6 @@ function AppLayout() {
           <Route path="/arena/tier-lists" element={<TierLists />} />
           <Route path="/settings" element={<GenericRoutePage {...routePageMap.settings} />} />
           <Route path="/help" element={<GenericRoutePage {...routePageMap.help} />} />
-          <Route path="/notifications" element={<GenericRoutePage {...routePageMap.notifications} />} />
           <Route path="/system/rules" element={<Rules />} />
           <Route path="/report" element={<Report />} />
           <Route path="/anime/:id" element={<AnimeDetail />} />

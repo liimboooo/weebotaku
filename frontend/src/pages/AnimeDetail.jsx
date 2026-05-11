@@ -3,10 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { ArrowLeft, Play, Bookmark, Heart, Share2, Tv, ShieldCheck, Bell } from "lucide-react";
+import { ArrowLeft, Play, Bookmark, Heart, Share2, Tv, ShieldCheck, Bell, Sparkles, Star } from "lucide-react";
 import { getAnimeById, getTrendingAnime } from "../data/animeData";
+import { fetchAnimeById as jikanFetchAnime } from "../services/jikanApi";
 
 import { addToWatchlist, removeFromWatchlist, isInWatchlist } from "../services/storage";
+import { addNotification } from "../services/notificationService";
+import { searchAnime as anipubSearch } from "../services/animeApi";
+import AnimeWatch from "./Feeds/AnimeWatch";
 import Background from "../components/Background";
 import Reviews from "../components/Reviews";
 import FeaturedAnime from "../components/FeaturedAnime";
@@ -23,8 +27,19 @@ export default function AnimeDetail() {
   const [isLiked, setIsLiked] = useState(false);
   const [userRating, setUserRating] = useState(0);
   const [isCinemaMode, setIsCinemaMode] = useState(false);
+  const [watchAnime, setWatchAnime] = useState(null);
+  const [watchLoading, setWatchLoading] = useState(false);
+  const [jikanAnime, setJikanAnime] = useState(null);
+  const [bgLoaded, setBgLoaded] = useState(false);
 
-  const anime = getAnimeById(parseInt(id));
+  const staticAnime = getAnimeById(parseInt(id));
+  const anime = jikanAnime || staticAnime;
+
+  useEffect(() => {
+    if (!staticAnime) {
+      jikanFetchAnime(parseInt(id)).then(setJikanAnime).catch(() => {});
+    }
+  }, [id, staticAnime]);
 
   // Related anime (same genres)
   const getRelatedAnime = () => {
@@ -95,8 +110,10 @@ export default function AnimeDetail() {
     const animeId = parseInt(id);
     if (isInWatchlist(animeId)) {
       removeFromWatchlist(animeId);
+      addNotification({ title: "Removed from Watchlist", body: anime.name, type: "save" });
     } else {
       addToWatchlist(anime);
+      addNotification({ title: "Added to Watchlist", body: anime.name, type: "save" });
     }
     setIsWatchlisted(!isWatchlisted);
   };
@@ -109,6 +126,7 @@ export default function AnimeDetail() {
       updated = stored.filter((lId) => lId !== animeId);
     } else {
       updated = [...stored, animeId];
+      addNotification({ title: "Liked", body: anime.name, type: "follow" });
     }
     localStorage.setItem("likedAnime", JSON.stringify(updated));
     setIsLiked(!isLiked);
@@ -116,15 +134,11 @@ export default function AnimeDetail() {
 
   const toggleFollowing = () => {
     const stored = JSON.parse(localStorage.getItem("followingAnime") || "[]");
-    const storedNotifications = JSON.parse(localStorage.getItem("notifications") || "[]");
     const animeId = parseInt(id);
     let updated;
     if (isFollowing) {
       updated = stored.filter((f) => f.animeId !== animeId);
-      const cleanedNotifications = storedNotifications.filter(
-        (notification) => notification.animeId !== animeId || notification.type !== "follow"
-      );
-      localStorage.setItem("notifications", JSON.stringify(cleanedNotifications));
+      addNotification({ title: "Unfollowed", body: anime.name, type: "follow" });
     } else {
       updated = [...stored, {
         animeId: animeId,
@@ -134,17 +148,7 @@ export default function AnimeDetail() {
         unreadUpdates: 0,
         lastUpdate: Date.now()
       }];
-      const nextNotifications = [
-        {
-          id: `follow-${animeId}`,
-          text: `Following ${anime.name}`,
-          animeId,
-          read: false,
-          type: "follow",
-        },
-        ...storedNotifications.filter((notification) => notification.animeId !== animeId || notification.type !== "follow"),
-      ];
-      localStorage.setItem("notifications", JSON.stringify(nextNotifications));
+      addNotification({ title: "Following", body: anime.name, type: "follow" });
     }
     localStorage.setItem("followingAnime", JSON.stringify(updated));
     setIsFollowing(!isFollowing);
@@ -175,6 +179,18 @@ export default function AnimeDetail() {
   };
 
   if (!anime) {
+    if (!staticAnime && jikanAnime === null) {
+      return (
+        <AnimatedPage>
+          <div className="anime-detail-page">
+            <Background />
+            <div className="detail-loading" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: '#888' }}>
+              <p>Loading anime details...</p>
+            </div>
+          </div>
+        </AnimatedPage>
+      );
+    }
     return (
       <AnimatedPage>
         <div className="anime-detail-page">
@@ -190,267 +206,154 @@ export default function AnimeDetail() {
 
   return (
     <AnimatedPage>
-      <div className="anime-detail-page">
+      <div className="ad">
         <Background />
+        <div className="ad-bg-ornament" />
 
-        <div className="detail-hero">
-          <img 
-            src={anime.img} 
-            alt={anime.name} 
-            className="hero-bg" 
-            style={{ viewTransitionName: `anime-card-${id}` }}
-          />
-          <div className="hero-overlay">
-            <button
-              className="back-btn"
-              onClick={() => {
-                if (document.startViewTransition) {
-                  document.startViewTransition(() => navigate(-1));
-                } else {
-                  navigate(-1);
-                }
-              }}
-            >
-              <ArrowLeft size={20} /> Back
-            </button>
-          </div>
-        </div>
-
-      <div className={`detail-container ${isCinemaMode ? 'cinema-mode' : ''}`}>
-        <div className="detail-poster">
-          <img
-            src={anime.img}
-            alt={anime.name}
-          />
-          <div className="poster-badge">
-            <span className={`status-badge ${anime.status.toLowerCase()}`}>
-              {anime.status}
-            </span>
-          </div>
-        </div>
-
-        <div className="detail-content">
-          <h1
-            className="anime-title"
-            style={{ viewTransitionName: `anime-title-${id}` }}
-          >
-            {anime.name}
-          </h1>
-
-          <div className="detail-rating">
-            <div className="global-rating">
-              <div className="stars">{renderStars(anime.rating)}</div>
-              <span className="rating-value">{anime.rating}/10</span>
-              <span className="votes">({anime.votes.toLocaleString()} votes)</span>
-            </div>
-
-            <div className="user-rating-box">
-              <p>Your Rating:</p>
-              <div className="user-stars">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                  <span
-                    key={num}
-                    className={`user-star ${userRating >= num ? 'active' : ''}`}
-                    onClick={() => handleRate(num)}
-                  >
-                    ★
-                  </span>
-                ))}
-                <span className="user-rating-val">{userRating > 0 ? `${userRating}/10` : 'Not Rated'}</span>
+        <main className="ad-shell">
+          <motion.section className="ad-hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
+            <div className={`ad-hero-bg ${bgLoaded ? "loaded" : "loading"}`} style={{ backgroundImage: `url(${anime.img})` }} />
+            <img src={anime.img} alt="" style={{ display: "none" }} onLoad={() => setBgLoaded(true)} />
+            <div className="ad-hero-gradient" />
+            <div className="ad-hero-content">
+              <button className="ad-back-btn" onClick={() => navigate(-1)}>
+                <ArrowLeft size={18} /> Back
+              </button>
+              <span className="ad-eyebrow"><Sparkles size={14} /> ANIME DETAIL</span>
+              <h1>
+                <span className="ad-hero-main">{anime.name}</span>
+              </h1>
+              <p className="ad-hero-desc">{anime.synopsis}</p>
+              <div className="ad-hero-metrics">
+                <div className="ad-metric"><strong>{anime.episodes || "?"}</strong><span>Episodes</span></div>
+                <div className="ad-metric"><strong>{anime.rating?.toFixed(1) || "?"}</strong><span>Rating</span></div>
+                <div className="ad-metric"><strong>{anime.year || "?"}</strong><span>Year</span></div>
+                <div className="ad-metric"><strong>{anime.studio || "?"}</strong><span>Studio</span></div>
               </div>
             </div>
-          </div>
-
-          <div className="anime-meta">
-            <div className="meta-item">
-              <span className="meta-label">Year</span>
-              <span className="meta-value">{anime.year}</span>
+            <div className="ad-hero-hud">
+              <div className="ad-hud-img"><img src={anime.img} alt={anime.name} /></div>
+              <div className="ad-hud-info">
+                <span className="ad-hud-label">{anime.status || "Unknown"}</span>
+                <span className="ad-hud-title">{anime.name}</span>
+                <span className="ad-hud-rating"><Star size={12} fill="currentColor" /> {anime.rating?.toFixed(1) || "?"}</span>
+              </div>
             </div>
-            <div className="meta-item">
-              <span className="meta-label">Episodes</span>
-              <span className="meta-value">{anime.episodes}</span>
-            </div>
-            <div className="meta-item">
-              <span className="meta-label">Season</span>
-              <span className="meta-value">{anime.season}</span>
-            </div>
-            <div className="meta-item">
-              <span className="meta-label">Studio</span>
-              <span className="meta-value">{anime.studio}</span>
-            </div>
-          </div>
+          </motion.section>
 
-          <div className="genres">
-            {anime.genres.map((genre) => (
-              <span key={genre} className="genre-tag">
-                {genre}
-              </span>
-            ))}
-          </div>
-
-          <div className="synopsis">
-            <h2>Synopsis</h2>
-            <p>{anime.synopsis}</p>
-          </div>
-
-            <div className="action-buttons">
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="btn btn-primary" 
-                onClick={() => setShowPlayer(true)}
-              >
-                <Play size={18} fill="white" /> Watch Now
-              </motion.button>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`btn btn-secondary ${isWatchlisted ? "active" : ""}`}
-                onClick={toggleWatchlist}
-              >
-                <Bookmark size={18} fill={isWatchlisted ? "white" : "none"} />
-                {isWatchlisted ? "In Watchlist" : "Add to Watchlist"}
-              </motion.button>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`btn btn-secondary ${isFollowing ? "active" : ""}`}
-                onClick={toggleFollowing}
-              >
-                <Bell size={18} fill={isFollowing ? "white" : "none"} />
-                {isFollowing ? "Following" : "Follow"}
-              </motion.button>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={`btn btn-secondary ${isLiked ? "active" : ""}`}
-                onClick={toggleLiked}
-              >
-                <Heart size={18} fill={isLiked ? "#e63636" : "none"} color={isLiked ? "#e63636" : "currentColor"} />
-              </motion.button>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="btn btn-secondary"
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                }}
-              >
-                <Share2 size={18} /> Share
-              </motion.button>
-            </div>
-
-          <AnimatePresence>
-            {showPlayer && (
-              <motion.div 
-                className={`player-section ${isCinemaMode ? 'cinema' : ''}`}
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                transition={{ type: "spring", duration: 0.6, bounce: 0.3 }}
-              >
-                <div className="player-header">
-                  <h2>Now Watching: Episode {selectedEp}</h2>
-                  <div className="ep-controls">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className={`cinema-toggle ${isCinemaMode ? 'active' : ''}`}
-                      onClick={() => setIsCinemaMode(!isCinemaMode)}
-                      title="Cinema Mode"
-                    >
-                      {isCinemaMode ? <ShieldCheck size={18} /> : <Tv size={18} />}
-                    </motion.button>
-                    <select
-                      value={selectedEp}
-                      onChange={(e) => setSelectedEp(e.target.value)}
-                      className="ep-selector"
-                    >
-                      {[...Array(anime.episodes)].map((_, i) => (
-                        <option key={i + 1} value={i + 1}>Episode {i + 1}</option>
+          <section className="ad-body">
+            <div className="ad-body-grid">
+              <div className="ad-body-left">
+                <div className="ad-poster">
+                  <img src={anime.img} alt={anime.name} />
+                </div>
+              </div>
+              <div className="ad-body-right">
+                <div className="ad-rating-section">
+                  <div className="ad-global-rating">
+                    <div className="ad-stars">{renderStars(anime.rating)}</div>
+                    <span className="ad-rating-value">{anime.rating}/10</span>
+                    <span className="ad-votes">({anime.votes?.toLocaleString() || 0} votes)</span>
+                  </div>
+                  <div className="ad-user-rating">
+                    <span className="ad-user-rating-label">Your Rating:</span>
+                    <div className="ad-user-stars">
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                        <span
+                          key={num}
+                          className={`ad-user-star ${userRating >= num ? "active" : ""}`}
+                          onClick={() => handleRate(num)}
+                        >★</span>
                       ))}
-                    </select>
-                    <motion.button 
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="close-player" 
-                      onClick={() => setShowPlayer(false)}
-                    >
-                      Close
-                    </motion.button>
+                      <span className="ad-user-rating-val">{userRating > 0 ? `${userRating}/10` : ""}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="video-container">
-                  <iframe
-                    src={`https://vidsrcme.ru/embed/tv?imdb=${anime.imdbId}&season=1&episode=${selectedEp}`}
-                    style={{ width: "100%", height: "100%" }}
-                    frameBorder="0"
-                    referrerPolicy="origin"
-                    allowFullScreen
-                    title="Video Player"
-                  ></iframe>
+
+                <div className="ad-meta-grid">
+                  <div className="ad-meta-item"><span className="ad-meta-label">Season</span><span className="ad-meta-value">{anime.season}</span></div>
+                  <div className="ad-meta-item"><span className="ad-meta-label">Episodes</span><span className="ad-meta-value">{anime.episodes}</span></div>
+                  <div className="ad-meta-item"><span className="ad-meta-label">Year</span><span className="ad-meta-value">{anime.year}</span></div>
+                  <div className="ad-meta-item"><span className="ad-meta-label">Studio</span><span className="ad-meta-value">{anime.studio}</span></div>
                 </div>
-              </motion.div>
+
+                <div className="ad-genres">
+                  {anime.genres?.map((genre) => (
+                    <span key={genre} className="ad-genre-tag">{genre}</span>
+                  ))}
+                </div>
+
+                <div className="ad-synopsis">
+                  <h3>Synopsis</h3>
+                  <p>{anime.synopsis}</p>
+                </div>
+
+                <div className="ad-actions">
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="ad-btn ad-btn-primary" onClick={async () => {
+                    if (watchAnime) { setShowPlayer(true); return; }
+                    setWatchLoading(true);
+                    try {
+                      const results = await anipubSearch(anime.name);
+                      if (results.length > 0) {
+                        setWatchAnime({ id: results[0].Id, title: results[0].Name });
+                        setShowPlayer(true);
+                        addNotification({ title: "Now Playing", body: anime.name, type: "watch" });
+                      } else { alert("No streaming source found."); }
+                    } catch (e) { alert("Failed to find streaming source."); }
+                    finally { setWatchLoading(false); }
+                  }} disabled={watchLoading}>
+                    <Play size={18} fill="currentColor" /> {watchLoading ? "Searching..." : "Watch Now"}
+                  </motion.button>
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`ad-btn ad-btn-secondary ${isWatchlisted ? "active" : ""}`} onClick={toggleWatchlist}>
+                    <Bookmark size={18} fill={isWatchlisted ? "currentColor" : "none"} /> {isWatchlisted ? "Saved" : "Save"}
+                  </motion.button>
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`ad-btn ad-btn-secondary ${isFollowing ? "active" : ""}`} onClick={toggleFollowing}>
+                    <Bell size={18} fill={isFollowing ? "currentColor" : "none"} /> {isFollowing ? "Following" : "Follow"}
+                  </motion.button>
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`ad-btn ad-btn-secondary ${isLiked ? "active" : ""}`} onClick={toggleLiked}>
+                    <Heart size={18} fill={isLiked ? "#e63636" : "none"} color={isLiked ? "#e63636" : "currentColor"} />
+                  </motion.button>
+                  <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="ad-btn ad-btn-icon" onClick={() => navigator.clipboard.writeText(window.location.href)}>
+                    <Share2 size={16} />
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+
+            {showPlayer && watchAnime && (
+              <AnimeWatch anime={watchAnime} onClose={() => setShowPlayer(false)} />
             )}
-          </AnimatePresence>
 
-          <div className="additional-info">
-            <div className="info-box">
-              <h3>Director</h3>
-              <p>{anime.director}</p>
+            <div className="ad-watch-sources">
+              <h3>Where to Watch</h3>
+              <div className="ad-sources-grid">
+                <button className="ad-source-btn crunchyroll"><span className="ad-source-logo">CR</span><span className="ad-source-name">Crunchyroll</span></button>
+                <button className="ad-source-btn netflix"><span className="ad-source-logo">N</span><span className="ad-source-name">Netflix</span></button>
+                <button className="ad-source-btn hulu"><span className="ad-source-logo">H</span><span className="ad-source-name">Hulu</span></button>
+                <button className="ad-source-btn hidive"><span className="ad-source-logo">HD</span><span className="ad-source-name">HiDive</span></button>
+              </div>
             </div>
-            <div className="info-box">
-              <h3>Studio</h3>
-              <p>{anime.studio}</p>
+
+            {anime.director && (
+              <div className="ad-extra">
+                <div className="ad-extra-item"><span className="ad-extra-label">Director</span><span className="ad-extra-value">{anime.director}</span></div>
+                <div className="ad-extra-item"><span className="ad-extra-label">Studio</span><span className="ad-extra-value">{anime.studio}</span></div>
+              </div>
+            )}
+
+            <Reviews animeId={anime.id} selectedEp={selectedEp} />
+
+            <div className="ad-recommendations">
+              <h3>Related Anime</h3>
+              <FeaturedAnime animeList={getRelatedAnime()} title="Based on your interest" />
             </div>
-          </div>
 
-          <div className="watch-sources-section">
-            <h2>📺 Where to Watch</h2>
-            <div className="sources-grid">
-              <button className="source-btn crunchyroll">
-                <span className="source-logo">CR</span>
-                <span className="source-name">Crunchyroll</span>
-              </button>
-              <button className="source-btn netflix">
-                <span className="source-logo">📺</span>
-                <span className="source-name">Netflix</span>
-              </button>
-              <button className="source-btn hulu">
-                <span className="source-logo">H</span>
-                <span className="source-name">Hulu</span>
-              </button>
-              <button className="source-btn hidive">
-                <span className="source-logo">HD</span>
-                <span className="source-name">HiDive</span>
-              </button>
+            <div className="ad-recommendations">
+              <FeaturedAnime animeList={getTrendingAnime().filter(a => a.id !== parseInt(id))} title="People Also Watched" />
             </div>
-          </div>
-
-          <Reviews animeId={anime.id} selectedEp={selectedEp} />
-        </div>
+          </section>
+        </main>
       </div>
-
-      <div className="recommendations-container">
-        <h2 className="section-header">🎌 Related Anime</h2>
-        <FeaturedAnime 
-          animeList={getRelatedAnime()} 
-          title="Based on your interest" 
-        />
-      </div>
-
-      <div className="recommendations-container">
-        <FeaturedAnime 
-          animeList={getTrendingAnime().filter(a => a.id !== parseInt(id))} 
-          title="People Also Watched" 
-        />
-      </div>
-
-    </div>
     </AnimatedPage>
   );
 }

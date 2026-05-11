@@ -1,54 +1,40 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { getTrendingAnime } from "../data/animeData";
+import { motion } from "framer-motion";
+import { TrendingUp } from "lucide-react";
 import "./Trending.css";
 
 export default function Trending() {
   const navigate = useNavigate();
-  const trendingAnime = getTrendingAnime();
 
-  const renderStars = (rating) => {
-    const fullStars = Math.floor(rating / 2);
-    const hasHalf = rating % 2 >= 1;
-    const emptyStars = 5 - fullStars - (hasHalf ? 1 : 0);
-
-    return (
-      <>
-        {[...Array(fullStars)].map((_, i) => (
-          <span key={`full-${i}`} className="star full">★</span>
-        ))}
-        {hasHalf && <span className="star half">★</span>}
-        {[...Array(emptyStars)].map((_, i) => (
-          <span key={`empty-${i}`} className="star empty">★</span>
-        ))}
-      </>
-    );
-  };
+  const trendingItems = [
+    { id: 2, name: "One Piece", img: "/beta-2.jpg", rating: 9.1 },
+    { id: 6, name: "Jujutsu Kaisen", img: "/beta-3.jpg", rating: 8.95 },
+    { id: 4, name: "Attack on Titan", img: "/beta-1.jpg", rating: 9.0 },
+    { id: 12, name: "Spy x Family", img: "/beta-3.jpg", rating: 8.6 },
+  ];
 
   return (
-    <section className="trending-section">
-      <h2>🔥 Trending Now</h2>
-      <div className="trending-grid">
-        {trendingAnime.map((anime, index) => (
-          <div
-            className="trending-card"
-            key={anime.id}
-            onClick={() => navigate(`/anime/${anime.id}`)}
-          >
-            <div className="trend-rank">#{index + 1}</div>
-            <div className="trend-badge">{anime.trend}</div>
-            <img src={anime.img} alt={anime.name} />
-            <div className="trending-info">
-              <h3>{anime.name}</h3>
-              <div className="trending-rating">
-                <div className="stars">{renderStars(anime.rating)}</div>
-                <span>{anime.rating}/10</span>
-              </div>
-              <p className="trend-votes">{anime.votes.toLocaleString()} votes</p>
-            </div>
+    <div className="trending-row">
+      {trendingItems.map((item, i) => (
+        <motion.div
+          key={item.id}
+          className="trending-card"
+          onClick={() => navigate(`/anime/${item.id}`)}
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: i * 0.08 }}
+          whileHover={{ y: -6, scale: 1.02 }}
+        >
+          <div className="trending-rank">#{i + 1}</div>
+          <img src={item.img} alt={item.name} />
+          <div className="trending-info">
+            <h4>{item.name}</h4>
+            <span><TrendingUp size={12} color="#e63636" /> {item.rating}</span>
           </div>
-        ))}
-      </div>
-    </section>
+        </motion.div>
+      ))}
+    </div>
   );
 }

@@ -1,40 +1,62 @@
-import React, { useEffect } from "react";
-import "particles.js";
+import React, { useEffect, useRef } from "react";
 
 export default function Background() {
+  const canvasRef = useRef(null);
+
   useEffect(() => {
-    if (window.particlesJS) {
-      window.particlesJS("particles-js", {
-        particles: {
-          number: { value: 25, density: { enable: true, value_area: 1500 } }, // Reduced from 60
-          color: { value: "#e63636" },
-          shape: { type: "circle" },
-          opacity: { value: 0.1 }, // Reduced from 0.15
-          size: { value: 2, random: true }, // Reduced from 3
-          line_linked: { enable: false },
-          move: { enable: true, speed: 0.15, direction: "none", random: true }, // Reduced speed
-        },
-        retina_detect: false,
-        interactivity: { enable: false }, // Disable mouse interaction
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let animId;
+    let particles = [];
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const count = Math.min(40, Math.floor((canvas.width * canvas.height) / 30000));
+    particles = Array.from({ length: count }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      r: Math.random() * 1.5 + 0.5,
+    }));
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.06)";
+        ctx.fill();
       });
-    }
+      animId = requestAnimationFrame(draw);
+    };
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener("resize", resize);
+    };
   }, []);
 
   return (
-    <div
-      id="particles-js"
-      className="animated-bg"
+    <canvas
+      ref={canvasRef}
       style={{
         position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        zIndex: -1,
-        pointerEvents: "none"
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: "none",
       }}
-    >
-      <div className="bg-gradient-overlay"></div>
-    </div>
+    />
   );
 }

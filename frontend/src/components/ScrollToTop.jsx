@@ -1,34 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { ChevronUp } from "lucide-react";
 import "./ScrollToTop.css";
 
 export default function ScrollToTop() {
-  const [isVisible, setIsVisible] = useState(false);
+  const [visible, setVisible] = React.useState(false);
 
-  useEffect(() => {
-    const toggleVisibility = () => {
-      if (window.pageYOffset > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
-    };
-
-    window.addEventListener("scroll", toggleVisibility);
-    return () => window.removeEventListener("scroll", toggleVisibility);
+  React.useEffect(() => {
+    const handler = () => setVisible(window.scrollY > 400);
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-  };
-
-  if (!isVisible) return null;
+  const scroll = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
-    <button className="scroll-to-top" onClick={scrollToTop} aria-label="Scroll to top">
-      <ion-icon name="arrow-up-outline"></ion-icon>
+    <button
+      className={`scroll-to-top ${visible ? "visible" : ""}`}
+      onClick={scroll}
+      aria-label="Scroll to top"
+    >
+      <ChevronUp size={20} />
     </button>
   );
 }

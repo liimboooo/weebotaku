@@ -1,162 +1,122 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAnimeById } from "../data/animeData";
 import { motion, AnimatePresence } from "framer-motion";
+import { getAnimeById, activeRooms } from "../data/animeData";
 import { loadWatchlist } from "../services/storage";
 import AnimatedPage from "../components/AnimatedPage";
-
 import Background from "../components/Background";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
+import Slider from "../components/Slider";
+import { Bookmark, Heart, Star, Clock, PenLine, LogOut, Settings, Eye, Film, Users, Video, Sparkles } from "lucide-react";
 import "./ProfilePage.css";
 
-const listContainerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const tabPanelVariants = {
-  hidden: { opacity: 0, y: 12 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: [0.22, 1, 0.36, 1],
-      staggerChildren: 0.1,
-    },
-  },
-  exit: { opacity: 0, y: -8, transition: { duration: 0.28, ease: [0.4, 0, 0.2, 1] } },
-};
-
-const tabItemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 100, damping: 12 },
-  },
-};
+const tabs = [
+  { key: "overview", label: "Overview", icon: Eye },
+  { key: "watchlist", label: "Watchlist", icon: Bookmark },
+  { key: "ratings", label: "Ratings", icon: Star },
+  { key: "activity", label: "Activity", icon: Clock },
+  { key: "community", label: "Community", icon: Users },
+];
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const [username, setUsername] = useState("Anime Fan");
   const [avatar, setAvatar] = useState("");
   const [avatarPreview, setAvatarPreview] = useState("");
+  const [statusMsg, setStatusMsg] = useState("Watching anime...");
   const [editing, setEditing] = useState(false);
+  const [editingStatus, setEditingStatus] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
   const [watchlist, setWatchlist] = useState([]);
   const [liked, setLiked] = useState([]);
   const [rated, setRated] = useState({});
-  const [activeTab, setActiveTab] = useState("liked");
+  const [history, setHistory] = useState([]);
 
-  useEffect(() => {
+  const loadProfileData = () => {
     const storedUser = localStorage.getItem("username");
     if (storedUser) setUsername(storedUser);
     const storedAvatar = localStorage.getItem("userAvatar");
-    if (storedAvatar) {
-      setAvatar(storedAvatar);
-      setAvatarPreview(storedAvatar);
-    }
-    const storedW = loadWatchlist();
-    setWatchlist(storedW);
+    if (storedAvatar) { setAvatar(storedAvatar); setAvatarPreview(storedAvatar); }
+    const storedStatus = localStorage.getItem("userStatusMessage");
+    if (storedStatus) setStatusMsg(storedStatus);
+    setWatchlist(loadWatchlist());
     const storedL = JSON.parse(localStorage.getItem("likedAnime") || "[]");
     setLiked(storedL);
     const storedR = JSON.parse(localStorage.getItem("userRatings") || "{}");
     setRated(storedR);
+    const storedH = JSON.parse(localStorage.getItem("watchHistory") || "[]");
+    setHistory(storedH.slice(0, 10));
+  };
+
+  useEffect(() => {
+    loadProfileData();
+    window.addEventListener("storage", loadProfileData);
+    window.addEventListener("profile-avatar-updated", loadProfileData);
+    window.addEventListener("user-status-updated", loadProfileData);
+    return () => {
+      window.removeEventListener("storage", loadProfileData);
+      window.removeEventListener("profile-avatar-updated", loadProfileData);
+      window.removeEventListener("user-status-updated", loadProfileData);
+    };
   }, []);
 
   const watchlistAnime = watchlist.map((item) => getAnimeById(item.id)).filter(Boolean);
   const likedAnime = liked.map((id) => getAnimeById(id)).filter(Boolean);
-
-  const totalEpisodes = watchlistAnime.reduce((sum, a) => sum + a.episodes, 0);
+  const allHistory = JSON.parse(localStorage.getItem("watchHistory") || "[]");
+  const episodesWatched = allHistory.length;
+  const totalEpisodes = watchlistAnime.reduce((s, a) => s + a.episodes, 0);
   const avgRating = watchlistAnime.length
-    ? (watchlistAnime.reduce((sum, a) => sum + a.rating, 0) / watchlistAnime.length).toFixed(1)
-    : 0;
+    ? (watchlistAnime.reduce((s, a) => s + a.rating, 0) / watchlistAnime.length).toFixed(1)
+    : "—";
 
   const favoriteGenres = {};
-  watchlistAnime.forEach((a) =>
-    a.genres.forEach((g) => {
-      favoriteGenres[g] = (favoriteGenres[g] || 0) + 1;
-    })
-  );
-  const topGenres = Object.entries(favoriteGenres)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+  watchlistAnime.forEach((a) => a.genres?.forEach((g) => { favoriteGenres[g] = (favoriteGenres[g] || 0) + 1; }));
+  const topGenres = Object.entries(favoriteGenres).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-  const filteredLikedAnime = likedAnime;
-  const filteredRatedAnime = Object.entries(rated)
+  const ratedAnime = Object.entries(rated)
     .map(([id, rating]) => {
       const anime = getAnimeById(parseInt(id));
       return anime ? { anime, rating } : null;
     })
     .filter(Boolean);
-  const filteredActivityAnime = watchlistAnime.slice(0, 6);
 
-  useGSAP(() => {
-    const selectorByTab = {
-      liked: ".recent-item",
-      rated: ".recent-item",
-      genres: ".genre-bar-item",
-      activity: ".activity-item",
+  const allStats = [
+    { label: "Watchlist", value: watchlist.length, icon: Bookmark },
+    { label: "Episodes", value: totalEpisodes.toLocaleString(), icon: Film },
+    { label: "Avg Rating", value: avgRating, icon: Star },
+    { label: "Liked", value: likedAnime.length, icon: Heart },
+    { label: "Watched", value: episodesWatched, icon: Eye },
+  ];
+
+  const saveProfile = () => {
+    localStorage.setItem("username", username);
+    if (avatar) localStorage.setItem("userAvatar", avatar);
+    window.dispatchEvent(new Event("profile-avatar-updated"));
+    setEditing(false);
+  };
+
+  const handleAvatarUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const r = String(reader.result || "");
+      setAvatar(r);
+      setAvatarPreview(r);
     };
+    reader.readAsDataURL(file);
+  };
 
-    const selector = selectorByTab[activeTab];
-    const items = gsap.utils.toArray(selector);
-
-    if (!items.length) return;
-
-    gsap.fromTo(
-      items,
-      { y: 24, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        duration: 0.35,
-        ease: "power2.out",
-        stagger: 0.08,
-        overwrite: true,
-      }
-    );
-  }, {
-    dependencies: [activeTab, likedAnime.length, Object.keys(rated).length, watchlistAnime.length, topGenres.length],
-  });
-
-  const navigateWithViewTransition = (anime, event) => {
+  const navigateToAnime = (anime, event) => {
     if (document.startViewTransition) {
-      const rect = event.currentTarget.getBoundingClientRect();
-      const x = event.clientX || rect.left + rect.width / 2;
-      const y = event.clientY || rect.top + rect.height / 2;
-      const img = event.currentTarget.querySelector("img");
-      const title = event.currentTarget.querySelector("h4");
-
-      document.querySelectorAll(".recent-item img, .recent-item h4").forEach((el) => {
-        el.style.viewTransitionName = "";
-      });
-
-      if (img) img.style.viewTransitionName = `anime-card-${anime.id}`;
-      if (title) title.style.viewTransitionName = `anime-title-${anime.id}`;
-
-      document.startViewTransition(() => {
-        navigate(`/anime/${anime.id}`);
-      }).ready.then(() => {
-        gsap.fromTo(
-          document.documentElement,
-          {
-            "--reveal-radius": "0%",
-            "--reveal-x": `${x}px`,
-            "--reveal-y": `${y}px`,
-          },
-          {
-            "--reveal-radius": "110%",
-            duration: 1,
-            ease: "expo.inOut",
-          }
-        );
+      const x = event.clientX || event.currentTarget.getBoundingClientRect().left + 50;
+      const y = event.clientY || event.currentTarget.getBoundingClientRect().top + 50;
+      document.startViewTransition(() => navigate(`/anime/${anime.id}`)).ready.then(() => {
+        document.documentElement.style.setProperty("--reveal-radius", "0%");
+        document.documentElement.style.setProperty("--reveal-x", `${x}px`);
+        document.documentElement.style.setProperty("--reveal-y", `${y}px`);
+        requestAnimationFrame(() => {
+          document.documentElement.style.setProperty("--reveal-radius", "110%");
+        });
       });
     } else {
       navigate(`/anime/${anime.id}`);
@@ -168,252 +128,372 @@ export default function ProfilePage() {
       <div className="profile-page">
         <Background />
 
-        {/* ─── Profile Hero / Cover ─── */}
-        <div className={`profile-hero ${editing ? "is-editing" : ""}`}>
-          <div className="profile-cover-bg" style={watchlistAnime[0] ? { backgroundImage: `url(${watchlistAnime[0].img})` } : {}} />
-          <div className="profile-cover-content">
-            <div className="profile-avatar-section">
-              <div className="profile-avatar">
-                <div className="avatar-circle">
-                  {avatarPreview || avatar ? <img src={avatarPreview || avatar} alt={username} /> : <span>{username.charAt(0).toUpperCase()}</span>}
-                </div>
-                <div className="avatar-ring"></div>
+        <div className="profile-hero">
+          <div className="profile-hero-bg" />
+          <div className="profile-hero-content">
+            <div className="profile-avatar-wrap">
+              <div className="profile-avatar-circle">
+                {avatarPreview || avatar ? (
+                  <img src={avatarPreview || avatar} alt={username} />
+                ) : (
+                  <span>{username.charAt(0).toUpperCase()}</span>
+                )}
               </div>
+              <div className="profile-avatar-ring" />
             </div>
 
             {editing ? (
-              <div className="profile-edit-form">
-                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
-                <div className="avatar-upload-row">
-                  <label className="avatar-upload-btn">
-                    Choose avatar from files
-                    <input type="file" accept="image/*" hidden onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = () => { const r = String(reader.result || ""); setAvatar(r); setAvatarPreview(r); };
-                      reader.readAsDataURL(file);
-                    }} />
+              <div className="profile-edit-area">
+                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="profile-input" />
+                <div className="profile-edit-row">
+                  <label className="profile-btn profile-btn-secondary">
+                    Choose Avatar
+                    <input type="file" accept="image/*" hidden onChange={handleAvatarUpload} />
                   </label>
-                  <button type="button" className="clear-avatar-btn" onClick={() => { setAvatar(""); setAvatarPreview(""); localStorage.removeItem("userAvatar"); }}>Remove avatar</button>
+                  {avatar && <button className="profile-btn profile-btn-ghost" onClick={() => { setAvatar(""); setAvatarPreview(""); localStorage.removeItem("userAvatar"); }}>Remove</button>}
                 </div>
-                <div className="edit-actions">
-                  <button onClick={() => {
-                    localStorage.setItem('username', username);
-                    if (avatar) localStorage.setItem('userAvatar', avatar); else localStorage.removeItem('userAvatar');
-                    window.dispatchEvent(new Event('profile-avatar-updated'));
-                    setEditing(false);
-                  }} className="save-btn">Save</button>
-                  <button onClick={() => { setEditing(false); const su = localStorage.getItem('username'); if (su) setUsername(su); const sa = localStorage.getItem('userAvatar'); setAvatar(sa || ''); setAvatarPreview(sa || ''); }} className="cancel-btn">Cancel</button>
+                <div className="profile-edit-row">
+                  <button className="profile-btn profile-btn-primary" onClick={saveProfile}>Save</button>
+                  <button className="profile-btn profile-btn-ghost" onClick={() => { setEditing(false); setUsername(localStorage.getItem("username") || "Anime Fan"); setAvatar(localStorage.getItem("userAvatar") || ""); setAvatarPreview(localStorage.getItem("userAvatar") || ""); }}>Cancel</button>
                 </div>
               </div>
             ) : (
-              <div className="profile-info">
-                <h1>{username}</h1>
-                <p className="member-since">Member since {localStorage.getItem("memberSince") || new Date().getFullYear()}</p>
-                <div className="profile-badges">
-                  <span className="badge">Anime Lover</span>
-                  {watchlist.length >= 5 && <span className="badge">Collector</span>}
-                  {watchlist.length >= 10 && <span className="badge">Hardcore Fan</span>}
+              <div className="profile-info-area">
+                <h1 className="profile-name">{username}</h1>
+                <div className="profile-status-row">
+                  {editingStatus ? (
+                    <div className="profile-status-edit-row">
+                      <input
+                        value={statusMsg}
+                        onChange={(e) => setStatusMsg(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            localStorage.setItem("userStatusMessage", statusMsg);
+                            window.dispatchEvent(new Event("user-status-updated"));
+                            setEditingStatus(false);
+                          }
+                          if (e.key === "Escape") {
+                            setStatusMsg(localStorage.getItem("userStatusMessage") || "Watching anime...");
+                            setEditingStatus(false);
+                          }
+                        }}
+                        className="profile-input profile-input-inline"
+                        placeholder="What are you watching?"
+                        autoFocus
+                      />
+                    </div>
+                  ) : (
+                    <button className="profile-status-btn" onClick={() => setEditingStatus(true)}>
+                      <PenLine size={12} /> {statusMsg}
+                    </button>
+                  )}
                 </div>
-                <button className="edit-profile-btn" onClick={() => setEditing(true)}>Edit Profile</button>
+                <div className="profile-badges-row">
+                  <span className="profile-badge">Member since {localStorage.getItem("memberSince") || new Date().getFullYear()}</span>
+                  {watchlist.length >= 5 && <span className="profile-badge profile-badge-accent">Collector</span>}
+                  {watchlist.length >= 10 && <span className="profile-badge profile-badge-accent">Hardcore Fan</span>}
+                  {episodesWatched >= 30 && <span className="profile-badge profile-badge-accent">On Fire</span>}
+                </div>
+                <div className="profile-actions-row">
+                  <button className="profile-edit-trigger" onClick={() => setEditing(true)}><Settings size={14} /> Edit Profile</button>
+                  <button className="profile-logout-trigger" onClick={() => {
+                    localStorage.removeItem("username");
+                    localStorage.removeItem("isLoggedIn");
+                    localStorage.removeItem("userAvatar");
+                    localStorage.removeItem("userStatusMessage");
+                    navigate("/");
+                  }}><LogOut size={14} /> Sign Out</button>
+                </div>
               </div>
             )}
           </div>
 
-          {/* ─── Stats row inside hero ─── */}
-          <div className="profile-stats-row">
-            <div className="profile-stat">
-              <strong>{watchlist.length}</strong>
-              <span>Watchlist</span>
-            </div>
-            <div className="profile-stat">
-              <strong>{totalEpisodes.toLocaleString()}</strong>
-              <span>Episodes</span>
-            </div>
-            <div className="profile-stat">
-              <strong>{avgRating}</strong>
-              <span>Avg Rating</span>
-            </div>
-            <div className="profile-stat">
-              <strong>{likedAnime.length}</strong>
-              <span>Liked</span>
-            </div>
+          <div className="profile-stats-bar">
+            {allStats.map((stat) => (
+              <div key={stat.label} className="profile-stat-item">
+                <stat.icon size={14} />
+                <strong>{stat.value}</strong>
+                <span>{stat.label}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* genre filter removed per user preference */}
+        <Slider sliderData={watchlistAnime.length > 0 ? [...new Map(watchlistAnime.map(a => [a.id, a])).values()].slice(0, 10) : []} />
 
         <div className="profile-tabs">
-          {[
-            ["liked", "Liked"],
-            ["rated", "Rated"],
-            ["genres", "Genres"],
-            ["activity", "Activity"],
-          ].map(([tabKey, label]) => (
+          {tabs.map(({ key, label, icon: Icon }) => (
             <button
-              key={tabKey}
-              className={`tab-btn ${activeTab === tabKey ? "active" : ""}`}
-              onClick={() => setActiveTab(tabKey)}
-              style={{ position: "relative" }}
+              key={key}
+              className={`profile-tab ${activeTab === key ? "active" : ""}`}
+              onClick={() => setActiveTab(key)}
             >
-              {activeTab === tabKey && (
-                <motion.div
-                  layoutId="active-pill"
-                  className="active-pill-bg"
-                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                />
-              )}
-              <span style={{ position: "relative", zIndex: 1 }}>{label}</span>
+              <Icon size={16} />
+              <span>{label}</span>
+              {activeTab === key && <motion.div className="profile-tab-active" layoutId="tab-indicator" />}
             </button>
           ))}
         </div>
 
         <AnimatePresence mode="wait">
           <motion.div
-            className="tab-content"
             key={activeTab}
-            variants={tabPanelVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
+            className="profile-tab-content"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25 }}
           >
-            {activeTab === "liked" && (
-            <div className="liked-tab">
-              <h3>❤️ Anime You Love</h3>
-              {filteredLikedAnime.length > 0 ? (
-                <motion.div className="recent-list" variants={listContainerVariants}>
-                  {filteredLikedAnime.map((anime) => (
-                    <motion.div
-                      className="recent-item"
-                      key={anime.id}
-                      variants={tabItemVariants}
-                      whileHover={{
-                        y: -10,
-                        boxShadow: "0 18px 40px rgba(230, 54, 54, 0.16)",
-                        borderColor: "rgba(230, 54, 54, 0.22)",
-                      }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={(event) => navigateWithViewTransition(anime, event)}
-                      onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigateWithViewTransition(anime, event); } }}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      <img src={anime.img} alt={anime.name} />
-                      <div>
-                        <h4>{anime.name}</h4>
-                        <span>★ {anime.rating}</span>
+            {activeTab === "overview" && (
+              <div className="tab-panel">
+                <div className="overview-grid">
+                  <div className="overview-card overview-card--genres">
+                    <h3>Top Genres</h3>
+                    {topGenres.length > 0 ? (
+                      <div className="genre-bars">
+                        {topGenres.map(([genre, count]) => (
+                          <div key={genre} className="genre-bar">
+                            <div className="genre-bar-label">
+                              <span>{genre}</span>
+                              <span>{count}</span>
+                            </div>
+                            <div className="genre-bar-track">
+                              <div className="genre-bar-fill" style={{ width: `${(count / topGenres[0][1]) * 100}%` }} />
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              ) : (
-                <p className="empty-tab-msg">You haven't liked any anime yet.</p>
-              )}
-            </div>
-          )}
+                    ) : (
+                      <p className="empty-msg">Add anime to see genre stats</p>
+                    )}
+                  </div>
+                  <div className="overview-card overview-card--quick">
+                    <h3>Quick Links</h3>
+                    <div className="quick-links">
+                      <button onClick={() => navigate("/watchlist")}><Bookmark size={16} /> Watchlist</button>
+                      <button onClick={() => navigate("/history")}><Clock size={16} /> History</button>
+                      <button onClick={() => navigate("/browse/anime")}><Film size={16} /> Browse</button>
+                    </div>
+                  </div>
+                  <div className="overview-card overview-card--recent">
+                    <h3>Recently Added</h3>
+                    {watchlistAnime.length > 0 ? (
+                      <div className="recent-mini-list">
+                        {watchlistAnime.slice(0, 4).map((a) => (
+                          <div key={a.id} className="recent-mini-item" onClick={() => navigate(`/anime/${a.id}`)}>
+                            <img src={a.img} alt={a.name} />
+                            <div>
+                              <strong>{a.name}</strong>
+                              <span>{a.rating}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : <p className="empty-msg">No anime in watchlist</p>}
+                  </div>
+                </div>
+              </div>
+            )}
 
-          {activeTab === "rated" && (
-            <div className="rated-tab">
-              <h3>⭐ Your Ratings</h3>
-              {filteredRatedAnime.length > 0 ? (
-                <motion.div className="recent-list" variants={listContainerVariants}>
-                  {filteredRatedAnime.map(({ anime, rating }) => (
+            {activeTab === "watchlist" && (
+              <div className="tab-panel">
+                <h3>Your Watchlist ({watchlistAnime.length})</h3>
+                {watchlistAnime.length > 0 ? (
+                  <div className="list-grid">
+                    {watchlistAnime.map((anime, i) => (
                       <motion.div
-                        className="recent-item"
                         key={anime.id}
-                        variants={tabItemVariants}
-                        whileHover={{
-                          y: -10,
-                          boxShadow: "0 18px 40px rgba(230, 54, 54, 0.16)",
-                          borderColor: "rgba(230, 54, 54, 0.22)",
-                        }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={(event) => navigateWithViewTransition(anime, event)}
-                        onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigateWithViewTransition(anime, event); } }}
-                        role="button"
-                        tabIndex={0}
+                        className="list-item"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        onClick={(e) => navigateToAnime(anime, e)}
                       >
                         <img src={anime.img} alt={anime.name} />
-                        <div>
+                        <div className="list-item-info">
                           <h4>{anime.name}</h4>
-                          <span className="user-score">Your Score: {rating}/10</span>
+                          <div className="list-item-meta">
+                            <span><Star size={12} /> {anime.rating}</span>
+                            <span>{anime.episodes} EP</span>
+                            <span className={`status-dot ${anime.status?.toLowerCase()}`}>{anime.status}</span>
+                          </div>
+                          {anime.genres && (
+                            <div className="list-item-genres">
+                              {anime.genres.slice(0, 2).map((g) => <span key={g}>{g}</span>)}
+                            </div>
+                          )}
                         </div>
                       </motion.div>
-                  ))}
-                </motion.div>
-              ) : (
-                <p className="empty-tab-msg">You haven't rated any anime yet.</p>
-              )}
-            </div>
-          )}
-
-          {activeTab === "genres" && (
-            <div className="genres-tab">
-              <h3>Your top genres based on your watchlist</h3>
-              {topGenres.length > 0 ? (
-                <motion.div className="genre-bars" variants={listContainerVariants}>
-                  {topGenres.map(([genre, count]) => (
-                    <motion.div
-                      className="genre-bar-item"
-                      key={genre}
-                      variants={tabItemVariants}
-                      whileHover={{ y: -6 }}
-                    >
-                      <div className="genre-bar-label">
-                        <span>{genre}</span>
-                        <span>{count} anime</span>
-                      </div>
-                      <div className="genre-bar-track">
-                        <div
-                          className="genre-bar-fill"
-                          style={{ width: `${(count / topGenres[0][1]) * 100}%` }}
-                        ></div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              ) : (
-                <p className="empty-tab-msg">Add anime to your watchlist to see genre stats!</p>
-              )}
-            </div>
-          )}
-
-          {activeTab === "activity" && (
-            <div className="activity-tab">
-              <h3>Recent Activity</h3>
-              <motion.div className="activity-timeline" variants={listContainerVariants}>
-                {filteredActivityAnime.length > 0 ? (
-                  filteredActivityAnime.map((anime) => (
-                    <motion.div
-                      className="activity-item"
-                      key={anime.id}
-                      variants={tabItemVariants}
-                      whileHover={{ y: -8 }}
-                      onClick={(event) => navigateWithViewTransition(anime, event)}
-                      onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigateWithViewTransition(anime, event); } }}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      <div className="activity-dot"></div>
-                      <div className="activity-content">
-                        <p>
-                          Added <strong>{anime.name}</strong> to watchlist
-                        </p>
-                        <span className="activity-time">Recently</span>
-                      </div>
-                    </motion.div>
-                  ))
+                    ))}
+                  </div>
                 ) : (
-                  <p className="empty-tab-msg">Your watchlist activity will appear here.</p>
+                  <div className="empty-state">
+                    <Bookmark size={40} />
+                    <p>Your watchlist is empty</p>
+                    <button className="profile-btn profile-btn-primary" onClick={() => navigate("/browse/anime")}>Browse Anime</button>
+                  </div>
                 )}
-              </motion.div>
-            </div>
-          )}
+              </div>
+            )}
+
+            {activeTab === "ratings" && (
+              <div className="tab-panel">
+                <h3>Your Ratings ({ratedAnime.length})</h3>
+                {ratedAnime.length > 0 ? (
+                  <div className="list-grid">
+                    {ratedAnime.map(({ anime, rating }, i) => (
+                      <motion.div
+                        key={anime.id}
+                        className="list-item"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        onClick={(e) => navigateToAnime(anime, e)}
+                      >
+                        <img src={anime.img} alt={anime.name} />
+                        <div className="list-item-info">
+                          <h4>{anime.name}</h4>
+                          <div className="list-item-meta">
+                            <span className="rating-value"><Star size={12} fill="#ffd700" color="#ffd700" /> {rating}/10</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-state">
+                    <Star size={40} />
+                    <p>You haven't rated any anime yet</p>
+                    <button className="profile-btn profile-btn-primary" onClick={() => navigate("/browse/anime")}>Start Rating</button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "activity" && (
+              <div className="tab-panel">
+                <h3>Recent Activity</h3>
+                {history.length > 0 ? (
+                  <div className="activity-timeline">
+                    {history.map((item, i) => {
+                      const anime = getAnimeById(item.animeId);
+                      if (!anime) return null;
+                      return (
+                        <motion.div
+                          key={item.timestamp}
+                          className="activity-item"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          onClick={() => navigate(`/anime/${anime.id}`)}
+                        >
+                          <div className="activity-dot" />
+                          <img src={anime.img} alt={anime.name} />
+                          <div className="activity-body">
+                            <strong>{anime.name}</strong>
+                            <span>Episode {item.episode}</span>
+                            <span className="activity-time">{formatTimeAgo(item.timestamp)}</span>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="empty-state">
+                    <Clock size={40} />
+                    <p>No watch history yet</p>
+                    <button className="profile-btn profile-btn-primary" onClick={() => navigate("/browse/anime")}>Start Watching</button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "community" && (
+              <div className="tab-panel">
+                <div className="community-grid">
+                  <div className="community-section community-rooms">
+                    <div className="community-section-header">
+                      <Users size={14} />
+                      <h3>Live Rooms</h3>
+                      <span className="community-badge">LIVE</span>
+                    </div>
+                    <div className="rooms-grid">
+                      {activeRooms.map((room) => (
+                        <motion.div
+                          key={room.id}
+                          className="room-card"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          onClick={() => navigate("/watch-together")}
+                        >
+                          <div className="room-card-thumb">
+                            <img src={room.thumbnail} alt={room.name} />
+                            <div className="room-card-overlay">
+                              <span className="room-mode-tag">{room.mode}</span>
+                              <div className="room-viewers">
+                                <Eye size={10} />
+                                <span>{(room.viewers / 1000).toFixed(1)}K</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="room-card-body">
+                            <h4>{room.name}</h4>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="community-section community-edits">
+                    <div className="community-section-header">
+                      <Sparkles size={14} />
+                      <h3>AMVs & Edits</h3>
+                    </div>
+                    <div className="edits-content">
+                      <div className="edits-hero" onClick={() => navigate("/feeds/amvs")}>
+                        <Video size={32} />
+                        <div>
+                          <strong>Explore Fan Creations</strong>
+                          <span>AMVs, edits, and tributes from the community</span>
+                        </div>
+                      </div>
+                      <div className="edits-stats">
+                        <div className="edits-stat">
+                          <strong>{likedAnime.length * 3 + 12}</strong>
+                          <span>Edits</span>
+                        </div>
+                        <div className="edits-stat">
+                          <strong>{likedAnime.length + 5}</strong>
+                          <span>Creators</span>
+                        </div>
+                        <div className="edits-stat">
+                          <strong>{episodesWatched * 2 + 45}K</strong>
+                          <span>Views</span>
+                        </div>
+                      </div>
+                      <button className="profile-btn profile-btn-primary" onClick={() => navigate("/feeds/amvs")}>
+                        <Sparkles size={14} /> Browse Edits
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
-
       </div>
     </AnimatedPage>
   );
+}
+
+function formatTimeAgo(ts) {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return `${Math.floor(days / 7)}w ago`;
 }

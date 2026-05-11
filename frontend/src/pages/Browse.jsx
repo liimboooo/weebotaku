@@ -21,6 +21,9 @@ import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchTopAnime, fetchSearchAnime, fetchAnimeGenres } from "../services/jikanApi";
 import { loadWatchlist, addToWatchlist, removeFromWatchlist } from "../services/storage";
+import { addNotification } from "../services/notificationService";
+import { searchAnime as anipubSearch } from "../services/animeApi";
+import AnimeWatch from "./Feeds/AnimeWatch";
 import "./Browse.css";
 
 const sortOptions = [
@@ -84,7 +87,7 @@ function FilterDropdown({ label, icon: Icon, items, active, children }) {
   );
 }
 
-function AnimeCard({ anime, wishlist, onWishlist }) {
+function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchLoading }) {
   const inWishlist = wishlist.some(i => i.id === anime.id);
   const [imgErr, setImgErr] = useState(false);
   return (
@@ -92,7 +95,9 @@ function AnimeCard({ anime, wishlist, onWishlist }) {
       <div className="br-card-thumb">
         {imgErr ? <div className="br-card-img-fallback">{anime.name?.[0] || "?"}</div> : <img src={anime.img} alt={anime.name} loading="lazy" onError={() => setImgErr(true)} />}
         <div className="br-card-overlay">
-          <div className="br-card-play"><Play size={20} fill="currentColor" /></div>
+          <button className="br-card-play" onClick={(e) => { e.stopPropagation(); onWatch(anime); }} disabled={watchLoading}>
+            <Play size={20} fill="currentColor" />
+          </button>
           <div className="br-card-tech">
             <span>{anime.episodes} eps</span>
             <span>{anime.type || "TV"}</span>
@@ -149,6 +154,8 @@ export default function Browse() {
   const [sortBy, setSortBy] = useState("popularity");
   const [view, setView] = useState("grid");
   const [watchlist, setWatchlist] = useState(loadWatchlist());
+  const [watchAnime, setWatchAnime] = useState(null);
+  const [watchLoading, setWatchLoading] = useState(false);
   const sentinelRef = useRef(null);
   const loadingRef = useRef(false);
   const hasLoadedOnce = useRef(false);
@@ -245,12 +252,30 @@ export default function Browse() {
     return () => observer.disconnect();
   }, [hasMore, loadingMore, loading, loadAnime, page]);
 
+  const openWatch = async (anime) => {
+    setWatchLoading(true);
+    try {
+      const results = await anipubSearch(anime.name);
+      if (results.length === 0) { alert("Anime not found on AniPub."); return; }
+      setWatchAnime({ id: results[0].Id, title: results[0].Name, image: results[0].Image });
+      addNotification({ title: "Now Playing", body: anime.name, type: "watch" });
+    } catch (e) {
+      alert("Failed to find streaming source.");
+    } finally {
+      setWatchLoading(false);
+    }
+  };
+
   const toggleWishlist = (id) => {
     setWatchlist(p => {
-      if (p.some(i => i.id === id)) return removeFromWatchlist(id);
+      if (p.some(i => i.id === id)) {
+        addNotification({ title: "Removed from Watchlist", type: "save" });
+        return removeFromWatchlist(id);
+      }
       const anime = allAnime.find(a => a.id === id);
       if (!anime) return p;
       const item = { id: anime.id, name: anime.name, img: anime.img, rating: anime.rating, episodes: anime.episodes, year: anime.year, genres: anime.genres, status: anime.status };
+      addNotification({ title: "Added to Watchlist", body: anime.name, type: "save" });
       return addToWatchlist(item);
     });
   };
@@ -398,6 +423,8 @@ export default function Browse() {
                         anime={anime}
                         wishlist={watchlist}
                         onWishlist={toggleWishlist}
+                        onWatch={openWatch}
+                        watchLoading={watchLoading}
                       />
                     </motion.article>
                   ))}
@@ -426,6 +453,12 @@ export default function Browse() {
           )}
         </main>
 
+        {watchAnime && (
+          <AnimeWatch
+            anime={watchAnime}
+            onClose={() => setWatchAnime(null)}
+          />
+        )}
       </div>
     </AnimatedPage>
   );

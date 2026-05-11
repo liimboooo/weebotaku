@@ -94,7 +94,7 @@ const TodaySchedulePreview = () => {
         </motion.div>
         <div className="section-cta-row">
           <p>{today} schedule preview</p>
-          <button className="section-cta" onClick={() => navigate("/schedule")}>Open schedule</button>
+          <button className="section-cta" onClick={() => navigate("/browse/anime")}>Browse all</button>
         </div>
       </div>
       <div className="schedule-preview-grid">

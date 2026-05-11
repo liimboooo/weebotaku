@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 import LoadingBar from "./LoadingBar";
 
 const LoadingContext = createContext();
@@ -8,15 +8,15 @@ export function useLoading() {
 }
 
 export function LoadingProvider({ children }) {
-  const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  const showLoading = useCallback(() => setCount(c => c + 1), []);
-  const hideLoading = useCallback(() => setCount(c => Math.max(0, c - 1)), []);
+  const showLoading = useCallback(() => setLoading(true), []);
+  const hideLoading = useCallback(() => setLoading(false), []);
 
   return (
-    <LoadingContext.Provider value={{ loading: count > 0, showLoading, hideLoading }}>
-      <LoadingBar show={count > 0} />
+    <LoadingContext.Provider value={{ loading, showLoading, hideLoading }}>
       {children}
+      <LoadingBar visible={loading} />
     </LoadingContext.Provider>
   );
 }

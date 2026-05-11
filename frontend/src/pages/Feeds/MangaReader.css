@@ -1,0 +1,238 @@
+.reader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reader-shell {
+  width: 100%;
+  height: 100%;
+  background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.reader-header {
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  height: 56px;
+  background: #111;
+  border-bottom: 1px solid #222;
+  flex-shrink: 0;
+}
+
+.reader-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all .2s;
+}
+
+.reader-back-btn:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.08);
+}
+
+.reader-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: transparent;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reader-close-btn:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+
+.reader-title {
+  flex: 1;
+  text-align: center;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 16px;
+}
+
+.reader-header-spacer {
+  width: 100px;
+}
+
+.reader-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.reader-controls-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  flex-shrink: 0;
+}
+
+.reader-ch-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reader-ch-nav button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid #333;
+  color: #ccc;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all .2s;
+}
+
+.reader-ch-nav button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.reader-ch-nav button:not(:disabled):hover {
+  background: rgba(229,9,20,0.15);
+  border-color: #e50914;
+  color: #fff;
+}
+
+.reader-ch-nav span {
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.reader-pages {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.reader-page-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  cursor: pointer;
+  user-select: none;
+}
+
+.reader-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #888;
+  font-size: 14px;
+}
+
+.reader-spinner {
+  animation: reader-spin 1s linear infinite;
+}
+
+@keyframes reader-spin {
+  to { transform: rotate(360deg); }
+}
+
+.reader-error {
+  color: #e50914;
+  font-size: 15px;
+}
+
+.reader-controls-bottom {
+  padding: 8px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.reader-page-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reader-page-nav button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid #333;
+  color: #ccc;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.reader-page-nav button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.reader-page-nav button:not(:disabled):hover {
+  background: rgba(229,9,20,0.15);
+  border-color: #e50914;
+  color: #fff;
+}
+
+.reader-page-nav span {
+  color: #aaa;
+  font-size: 13px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.reader-progress-bar {
+  width: 100%;
+  max-width: 400px;
+  height: 3px;
+  background: #222;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.reader-progress-fill {
+  height: 100%;
+  background: #e50914;
+  border-radius: 2px;
+  transition: width .2s;
+}

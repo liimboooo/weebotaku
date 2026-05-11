@@ -12,31 +12,19 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.05 // Reduced from 0.08
-    }
+    transition: { staggerChildren: 0.05 }
   }
 };
 
 const itemVariants = {
   hidden: { y: 20, opacity: 0, scale: 0.95 },
   visible: {
-    y: 0,
-    opacity: 1,
-    scale: 1,
-    transition: {
-      type: "tween", // Changed from spring for better performance
-      duration: 0.3
-    }
+    y: 0, opacity: 1, scale: 1,
+    transition: { type: "tween", duration: 0.3 }
   },
   exit: {
-    y: -20,
-    opacity: 0,
-    scale: 0.95,
-    transition: {
-      type: "tween",
-      duration: 0.25
-    }
+    y: -20, opacity: 0, scale: 0.95,
+    transition: { type: "tween", duration: 0.25 }
   }
 };
 
@@ -47,7 +35,6 @@ const isAiringToday = (anime) => {
 
 const hasNextEpisode = (anime) => anime.status === "Ongoing" && anime.nextEpDate && anime.nextEpDate !== "Ended";
 
-// Throttle function to limit animation calls
 const throttle = (func, limit) => {
   let inThrottle;
   return function (...args) {
@@ -56,7 +43,7 @@ const throttle = (func, limit) => {
       inThrottle = true;
       setTimeout(() => inThrottle = false, limit);
     }
-  }
+  };
 };
 
 export default function FeaturedAnime({ animeList }) {
@@ -83,31 +70,22 @@ export default function FeaturedAnime({ animeList }) {
   };
 
   const handleMouseMove = useCallback(throttle((e, card) => {
-    // Performance check: skip if reduced motion is preferred
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
     const { clientX, clientY, currentTarget } = e;
     const { left, top, width, height } = currentTarget.getBoundingClientRect();
     const x = (clientX - left) / width - 0.5;
     const y = (clientY - top) / height - 0.5;
-
     gsap.to(currentTarget, {
-      rotateY: x * 12,
-      rotateX: -y * 12,
-      transformPerspective: 1200,
-      ease: "power2.out",
-      duration: 0.5,
-      overwrite: true
+      rotateY: x * 12, rotateX: -y * 12,
+      transformPerspective: 1200, ease: "power2.out",
+      duration: 0.5, overwrite: true
     });
   }, 50), [watchlist]);
 
   const handleMouseLeave = useCallback((e) => {
     gsap.to(e.currentTarget, {
-      rotateY: 0,
-      rotateX: 0,
-      ease: "power2.out",
-      duration: 0.5,
-      overwrite: true
+      rotateY: 0, rotateX: 0,
+      ease: "power2.out", duration: 0.5, overwrite: true
     });
   }, []);
 
@@ -129,55 +107,9 @@ export default function FeaturedAnime({ animeList }) {
               exit="exit"
               onMouseMove={(e) => handleMouseMove(e, anime)}
               onMouseLeave={handleMouseLeave}
-              whileHover={{
-                y: -12,
-                transition: { duration: 0.3, ease: "easeOut" }
-              }}
+              whileHover={{ y: -12, transition: { duration: 0.3, ease: "easeOut" } }}
               whileTap={{ scale: 0.97 }}
-              onClick={(e) => {
-                const x = e.clientX;
-                const y = e.clientY;
-
-                if (document.startViewTransition) {
-                  const img = e.currentTarget.querySelector('img');
-                  const title = e.currentTarget.querySelector('h3');
-
-                  document.querySelectorAll('.anime-card img, .anime-card h3').forEach(el => {
-                    el.style.viewTransitionName = '';
-                  });
-
-                  if (img) img.style.viewTransitionName = `anime-card-${anime.id}`;
-                  if (title) title.style.viewTransitionName = `anime-title-${anime.id}`;
-
-                  const transition = document.startViewTransition(() => {
-                    navigate(`/anime/${anime.id}`);
-                  });
-
-                  transition.ready.then(() => {
-                    const endRadius = Math.hypot(
-                      Math.max(x, window.innerWidth - x),
-                      Math.max(y, window.innerHeight - y)
-                    );
-
-                    // GSAP Circle Reveal with smoother easing
-                    gsap.fromTo(
-                      document.documentElement,
-                      {
-                        '--reveal-radius': '0%',
-                        '--reveal-x': `${x}px`,
-                        '--reveal-y': `${y}px`,
-                      },
-                      {
-                        '--reveal-radius': '110%',
-                        duration: 0.8,
-                        ease: "power3.inOut",
-                      }
-                    );
-                  });
-                } else {
-                  navigate(`/anime/${anime.id}`);
-                }
-              }}
+              onClick={() => navigate(`/anime/${anime.id}`)}
             >
               <div className="card-img-wrapper">
                 <img src={anime.img} alt={anime.name} />
@@ -198,9 +130,7 @@ export default function FeaturedAnime({ animeList }) {
                 </button>
                 <div className="card-badges">
                   <div className="badges-left">
-                    <span className="badge type">
-                      {getAnimeType(anime)}
-                    </span>
+                    <span className="badge type">{getAnimeType(anime)}</span>
                     {anime.rating && (
                       <span className="badge rating">
                         <Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating}
@@ -208,13 +138,9 @@ export default function FeaturedAnime({ animeList }) {
                     )}
                   </div>
                   <div className="badges-right">
-                    {isAiringToday(anime) && (
-                      <span className="badge airing-today">New Ep</span>
-                    )}
+                    {isAiringToday(anime) && <span className="badge airing-today">New Ep</span>}
                     {!isAiringToday(anime) && hasNextEpisode(anime) && (
-                      <span className="badge next-ep">
-                        <Calendar size={10} /> Next Ep
-                      </span>
+                      <span className="badge next-ep"><Calendar size={10} /> Next Ep</span>
                     )}
                     {anime.episodes && <span className="badge eps">{anime.episodes} EP</span>}
                   </div>
