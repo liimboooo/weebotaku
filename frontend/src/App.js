@@ -2,7 +2,6 @@ import AuthPage from "./pages/AuthPage";
 import './App.css';
 import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import { ToastProvider } from "./components/Toast";
 import ScrollToTop from "./components/ScrollToTop";
 import Header from "./components/Header";
 import { LoadingProvider, useLoading } from "./components/LoadingProvider";
@@ -121,13 +120,11 @@ function AppLayout() {
 
 function App() {
   return (
-    <ToastProvider>
-      <LoadingProvider>
-        <Router>
-          <AppLayout />
-        </Router>
-      </LoadingProvider>
-    </ToastProvider>
+    <LoadingProvider>
+      <Router>
+        <AppLayout />
+      </Router>
+    </LoadingProvider>
   );
 }
 

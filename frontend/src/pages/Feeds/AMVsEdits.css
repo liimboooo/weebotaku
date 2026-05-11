@@ -13,7 +13,6 @@
   min-height: 500px;
   max-height: 700px;
   overflow: hidden;
-  background: #0a0a0a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,11 +20,8 @@
 
 .edits-hero-bg {
   position: absolute;
-  inset: -2px;
-  width: auto;
-  height: auto;
+  inset: 0;
   overflow: hidden;
-  z-index: 0;
   will-change: transform;
 }
 
@@ -37,38 +33,24 @@
   height: 56.25vw;
   min-height: 100%;
   min-width: 177.77vh;
-  transform: translate(-50%, -50%) scale(1.1);
+  transform: translate(-50%, -50%);
+  z-index: 1;
   border: none;
   outline: none;
-  box-shadow: none;
   pointer-events: none;
   user-select: none;
-  object-fit: cover;
-  filter: brightness(0.45) blur(3px);
-  opacity: 0;
-  animation: edits-video-fadein 1.5s ease forwards;
-  animation-delay: 0.3s;
-}
-
-@keyframes edits-video-fadein {
-  to { opacity: 1; }
 }
 
 .edits-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(10,10,10,0.5) 0%,
-    rgba(10,10,10,0.3) 50%,
-    rgba(10,10,10,0.7) 100%
-  );
-  z-index: 1;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,1) 100%);
 }
 
 .edits-hero-content {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;

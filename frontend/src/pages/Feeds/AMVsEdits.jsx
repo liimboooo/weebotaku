@@ -15,11 +15,10 @@ import {
   Download,
 } from "lucide-react";
 import AnimatedPage from "../../components/AnimatedPage";
-import { useToast } from "../../components/Toast";
 
 import "./AMVsEdits.css";
 
-const SAMPLE_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+const HERO_VIDEO_ID = "-Ek_MAxM6cY";
 
 const allAnimeTitles = [
   "Jujutsu Kaisen", "One Piece", "Attack on Titan", "Demon Slayer",
@@ -151,8 +150,6 @@ export default function AMVsEdits() {
   const viewedSet = useRef(new Set());
   const masonryRef = useRef(null);
   const heroBgRef = useRef(null);
-  const { showToast } = useToast();
-
   // Load metadata from localStorage + hydrate videos & covers from IndexedDB
   useEffect(() => {
     (async () => {
@@ -255,7 +252,6 @@ export default function AMVsEdits() {
     navigator.clipboard.writeText(
       `${edit.title} by ${edit.creator} - ${window.location.origin}/feeds/amvs`
     );
-    showToast("Link copied to clipboard!", "success");
   };
 
   const handleSave = (id) => {
@@ -267,17 +263,13 @@ export default function AMVsEdits() {
   };
 
   const handleDownload = (edit) => {
-    if (!edit.videoUrl) {
-      showToast("Video not available for download", "error");
-      return;
-    }
+    if (!edit.videoUrl) return;
     const a = document.createElement("a");
     a.href = edit.videoUrl;
     a.download = `${edit.title.replace(/[^a-zA-Z0-9]/g, "_")}.mp4`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    showToast("Download started!", "success");
   };
 
   const handleVideoTime = () => {
@@ -339,10 +331,7 @@ export default function AMVsEdits() {
     e.preventDefault();
     if (!newTitle || !videoFile) return;
     const finalDuration = trimEnd - trimStart;
-    if (finalDuration > 40) {
-      showToast("Video must be 40 seconds or less", "error");
-      return;
-    }
+    if (finalDuration > 40) return;
     setSubmitting(true);
     const id = Date.now();
     await storeVideo(id, videoFile);
@@ -370,7 +359,6 @@ export default function AMVsEdits() {
     };
     setEdits([newEdit, ...edits]);
     resetUpload();
-    showToast("Edit uploaded!", "success");
   };
 
   const resetUpload = () => {
@@ -410,7 +398,6 @@ export default function AMVsEdits() {
     setEdits(edits.map(e => e.id === selectedEdit.id ? { ...e, comments: e.comments + 1 } : e));
     setSelectedEdit(prev => prev ? { ...prev, comments: prev.comments + 1 } : prev);
     setCommentText("");
-    showToast("Comment posted!", "success");
   };
 
   const handleDeleteComment = (cid) => {
@@ -424,14 +411,12 @@ export default function AMVsEdits() {
   };
 
   const handleDeleteEdit = async (id) => {
-    if (!window.confirm("Delete this edit permanently?")) return;
     const db = await openVideoDB();
     const tx = db.transaction(["videos", "covers"], "readwrite");
     tx.objectStore("videos").delete(id);
     tx.objectStore("covers").delete(id);
     setEdits(edits.filter(e => e.id !== id));
     setSelectedEdit(null);
-    showToast("Edit deleted", "success");
   };
 
   return (
@@ -443,15 +428,13 @@ export default function AMVsEdits() {
         <>        
         {/* Hero Section */}
         <section className="edits-hero">
-          <div className="edits-hero-bg" ref={heroBgRef}>
-            <video
+          <div ref={heroBgRef} className="edits-hero-bg">
+            <iframe
               className="edits-hero-video"
-              src={SAMPLE_VIDEO}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
+              src={`https://www.youtube.com/embed/${HERO_VIDEO_ID}?autoplay=1&loop=1&mute=1&controls=0&showinfo=0&playlist=${HERO_VIDEO_ID}&modestbranding=1&rel=0&vq=hd1080`}
+              frameBorder="0"
+              allow="autoplay; encrypted-media"
+              title="hero-bg"
             />
             <div className="edits-hero-overlay" />
           </div>

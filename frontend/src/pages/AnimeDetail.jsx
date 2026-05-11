@@ -11,13 +11,11 @@ import Background from "../components/Background";
 import Reviews from "../components/Reviews";
 import FeaturedAnime from "../components/FeaturedAnime";
 import AnimatedPage from "../components/AnimatedPage";
-import { useToast } from "../components/Toast";
 import "./AnimeDetail.css";
 
 export default function AnimeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { showToast } = useToast();
   const [isWatchlisted, setIsWatchlisted] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
@@ -97,10 +95,8 @@ export default function AnimeDetail() {
     const animeId = parseInt(id);
     if (isInWatchlist(animeId)) {
       removeFromWatchlist(animeId);
-      showToast(`${anime.name} removed from Watchlist!`, "error");
     } else {
       addToWatchlist(anime);
-      showToast(`${anime.name} added to Watchlist!`, "success");
     }
     setIsWatchlisted(!isWatchlisted);
   };
@@ -111,10 +107,8 @@ export default function AnimeDetail() {
     let updated;
     if (stored.includes(animeId)) {
       updated = stored.filter((lId) => lId !== animeId);
-      showToast(`Removed ${anime.name} from Liked`, "error");
     } else {
       updated = [...stored, animeId];
-      showToast(`You liked ${anime.name}! ❤️`, "success");
     }
     localStorage.setItem("likedAnime", JSON.stringify(updated));
     setIsLiked(!isLiked);
@@ -131,7 +125,6 @@ export default function AnimeDetail() {
         (notification) => notification.animeId !== animeId || notification.type !== "follow"
       );
       localStorage.setItem("notifications", JSON.stringify(cleanedNotifications));
-      showToast(`Unfollowed ${anime.name}`, "error");
     } else {
       updated = [...stored, {
         animeId: animeId,
@@ -152,7 +145,6 @@ export default function AnimeDetail() {
         ...storedNotifications.filter((notification) => notification.animeId !== animeId || notification.type !== "follow"),
       ];
       localStorage.setItem("notifications", JSON.stringify(nextNotifications));
-      showToast(`Following ${anime.name}! 🔔`, "success");
     }
     localStorage.setItem("followingAnime", JSON.stringify(updated));
     setIsFollowing(!isFollowing);
@@ -163,7 +155,6 @@ export default function AnimeDetail() {
     storedRatings[id] = rating;
     localStorage.setItem("userRatings", JSON.stringify(storedRatings));
     setUserRating(rating);
-    showToast(`You rated ${anime.name} ${rating}/10!`, "success");
   };
 
   const renderStars = (rating) => {
@@ -347,7 +338,6 @@ export default function AnimeDetail() {
                 className="btn btn-secondary"
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
-                  showToast("Link copied to clipboard!", "success");
                 }}
               >
                 <Share2 size={18} /> Share
@@ -422,19 +412,19 @@ export default function AnimeDetail() {
           <div className="watch-sources-section">
             <h2>📺 Where to Watch</h2>
             <div className="sources-grid">
-              <button className="source-btn crunchyroll" onClick={() => showToast("Coming soon!", "info")}>
+              <button className="source-btn crunchyroll">
                 <span className="source-logo">CR</span>
                 <span className="source-name">Crunchyroll</span>
               </button>
-              <button className="source-btn netflix" onClick={() => showToast("Coming soon!", "info")}>
+              <button className="source-btn netflix">
                 <span className="source-logo">📺</span>
                 <span className="source-name">Netflix</span>
               </button>
-              <button className="source-btn hulu" onClick={() => showToast("Coming soon!", "info")}>
+              <button className="source-btn hulu">
                 <span className="source-logo">H</span>
                 <span className="source-name">Hulu</span>
               </button>
-              <button className="source-btn hidive" onClick={() => showToast("Coming soon!", "info")}>
+              <button className="source-btn hidive">
                 <span className="source-logo">HD</span>
                 <span className="source-name">HiDive</span>
               </button>

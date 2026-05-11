@@ -4,7 +4,6 @@ import { getAnimeById } from "../data/animeData";
 import { motion, AnimatePresence } from "framer-motion";
 
 import Background from "../components/Background";
-import { useToast } from "../components/Toast";
 import AnimatedPage from "../components/AnimatedPage";
 
 import "./HistoryPage.css";
@@ -43,7 +42,6 @@ const itemVariants = {
 
 export default function HistoryPage() {
   const navigate = useNavigate();
-  const { showToast } = useToast();
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
@@ -54,14 +52,12 @@ export default function HistoryPage() {
   const clearHistory = () => {
     localStorage.removeItem("watchHistory");
     setHistory([]);
-    showToast("Watch history cleared", "success");
   };
 
   const removeHistoryItem = (timestamp) => {
     const updated = history.filter((h) => h.timestamp !== timestamp);
     localStorage.setItem("watchHistory", JSON.stringify(updated));
     setHistory(updated);
-    showToast("Item removed from history", "success");
   };
 
   const filteredHistory = history;

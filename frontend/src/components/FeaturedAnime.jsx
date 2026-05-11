@@ -5,7 +5,6 @@ import { Play, Bookmark, Star, Calendar } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { addToWatchlist, removeFromWatchlist, isInWatchlist, loadWatchlist } from "../services/storage";
-import { useToast } from "./Toast";
 import { getAnimeType } from "../data/animeData";
 import "./FeaturedAnime.css";
 
@@ -62,7 +61,6 @@ const throttle = (func, limit) => {
 
 export default function FeaturedAnime({ animeList }) {
   const navigate = useNavigate();
-  const { showToast } = useToast();
   const [watchlist, setWatchlist] = useState([]);
 
   useEffect(() => {
@@ -78,11 +76,9 @@ export default function FeaturedAnime({ animeList }) {
     if (isInWatchlist(animeId)) {
       removeFromWatchlist(animeId);
       setWatchlist(prev => prev.filter(id => id !== animeId));
-      showToast(`${anime.name} removed from Watchlist`, "error");
     } else {
       addToWatchlist(anime);
       setWatchlist(prev => [...prev, animeId]);
-      showToast(`${anime.name} added to Watchlist`, "success");
     }
   };
 
