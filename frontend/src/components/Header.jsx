@@ -40,6 +40,10 @@ export default function Header() {
   const [searchTrendingFocused, setSearchTrendingFocused] = useState(false);
   const [trendingData, setTrendingData] = useState([]);
   const [trendingLoading, setTrendingLoading] = useState(false);
+  const [recentSearches, setRecentSearches] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("recentSearches") || "[]"); }
+    catch { return []; }
+  });
   const [randomPick, setRandomPick] = useState(null);
   const [profileImage, setProfileImage] = useState(() => localStorage.getItem('userAvatar') || '');
   const [statusMessage, setStatusMessage] = useState(() => localStorage.getItem('userStatusMessage') || 'Watching One Piece...');
@@ -48,6 +52,7 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifList, setNotifList] = useState(getNotifications());
+  const [previewOpen, setPreviewOpen] = useState(false);
   const notifRef = useRef(null);
   const notifCount = notifList.filter(n => !n.read).length;
 
@@ -229,9 +234,12 @@ export default function Header() {
     setNotifOpen(false);
   };
 
-  const handleSearch = () => {
-    const query = searchTerm.trim();
+  const handleSearch = (term) => {
+    const query = (term || searchTerm).trim();
     if (!query) return;
+    const next = [query, ...recentSearches.filter(s => s !== query)].slice(0, 8);
+    setRecentSearches(next);
+    localStorage.setItem("recentSearches", JSON.stringify(next));
     navigateTo(`/search?q=${encodeURIComponent(query)}`);
   };
 
@@ -431,7 +439,7 @@ export default function Header() {
           </nav>
         </div>
 
-        <form className="search-form" onSubmit={(event) => { event.preventDefault(); handleSearch(); }}>
+        <form className="search-form" onSubmit={(event) => { event.preventDefault(); handleSearch(searchTerm); }}>
           <span className="search-icon"><Search size={16} /></span>
           <input
             value={searchTerm}
@@ -443,6 +451,25 @@ export default function Header() {
           />
           {searchTrendingFocused && (
             <div className="search-trending">
+              {recentSearches.length > 0 && (
+                <>
+                  <div className="search-trending-header">Recent Searches</div>
+                  <div className="search-trending-pills">
+                    {recentSearches.map((s) => (
+                      <button key={s} className="search-trending-pill"
+                        onMouseDown={(e) => { e.preventDefault(); setSearchTerm(s); handleSearch(s); }}>
+                        <span>{s}</span>
+                        <span className="recent-remove" onClick={(e) => {
+                          e.stopPropagation();
+                          const next = recentSearches.filter(r => r !== s);
+                          setRecentSearches(next);
+                          localStorage.setItem("recentSearches", JSON.stringify(next));
+                        }}>✕</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
               <div className="search-trending-header">Trending Now</div>
               <div className="search-trending-pills">
                 {trendingLoading ? (
@@ -455,7 +482,7 @@ export default function Header() {
                     const label = anime.name && anime.name.length > 28 ? anime.name.slice(0, 26) + '...' : (anime.name || 'Unknown');
                     return (
                       <button key={anime.id} className="search-trending-pill"
-                        onClick={() => { setSearchTerm(anime.name); handleSearch(); }}>
+                        onMouseDown={(e) => { e.preventDefault(); setSearchTerm(anime.name); handleSearch(anime.name); }}>
                         <span>{label}</span>
                         <span className={`trending-indicator ${t.cls}`}>{t.arrow} {t.value}</span>
                       </button>
@@ -512,7 +539,7 @@ export default function Header() {
               aria-expanded={profileOpen} aria-haspopup="true">
               <span className="profile-avatar-shell" style={{ '--xp-progress': `${rankState.progress}%` }}>
                 {profileImage ? (
-                  <img src={profileImage} alt={username} className="profile-avatar" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                  <img src={profileImage} alt={username} className="profile-avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }} />
                 ) : (
                   <span className="profile-avatar">{username.charAt(0).toUpperCase()}</span>
                 )}
@@ -529,7 +556,7 @@ export default function Header() {
                   <div className="profile-mini-summary">
                     <span className="profile-avatar-shell profile-avatar-shell--compact" style={{ '--xp-progress': `${rankState.progress}%` }}>
                       {profileImage ? (
-                        <img src={profileImage} alt={username} className="profile-avatar--compact" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                        <img src={profileImage} alt={username} className="profile-avatar--compact" style={{ width: '100%', height: '100%', borderRadius: '50%', cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }} />
                       ) : (
                         <span className="profile-avatar--compact">{username.charAt(0).toUpperCase()}</span>
                       )}
@@ -608,6 +635,13 @@ export default function Header() {
           </div>
         )}
       </div>
+
+      {previewOpen && profileImage && (
+        <div className="profile-preview-overlay" onClick={() => setPreviewOpen(false)}>
+          <button className="profile-preview-close" onClick={() => setPreviewOpen(false)}>✕</button>
+          <img src={profileImage} alt={username} className="profile-preview-img" />
+        </div>
+      )}
     </header>
   );
 }

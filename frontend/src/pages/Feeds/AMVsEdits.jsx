@@ -8,7 +8,6 @@ import {
   Pause,
   X,
   Plus,
-  Search,
   Trash2,
   Clock,
   Sparkles,
@@ -140,7 +139,6 @@ export default function AMVsEdits() {
   const [selectedEdit, setSelectedEdit] = useState(null);
   const [likedEdits, setLikedEdits] = useState(() => loadFromStorage(LIKED_KEY, []));
   const [savedEdits, setSavedEdits] = useState(() => loadFromStorage(SAVED_KEY, []));
-  const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("new");
   const [videoPlaying, setVideoPlaying] = useState(false);
   const [videoStarted, setVideoStarted] = useState(false);
@@ -198,13 +196,6 @@ export default function AMVsEdits() {
     setVideoHover(false);
   }, [selectedEdit?.id]);
 
-  // Scroll masonry to top when filter or search changes
-  useEffect(() => {
-    if (masonryRef.current) {
-      masonryRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [searchQuery]);
-
   // Parallax effect on hero background
   useEffect(() => {
     const handleScroll = () => {
@@ -217,13 +208,7 @@ export default function AMVsEdits() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const filteredEdits = edits.filter(e => {
-    const matchesSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.anime.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.creator.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      e.hashtags.some(h => h.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesSearch;
-  }).sort((a, b) => {
+  const filteredEdits = edits.sort((a, b) => {
     if (sortBy === "new") return b.timestamp - a.timestamp;
     if (sortBy === "old") return a.timestamp - b.timestamp;
     if (sortBy === "popular") return b.likes - a.likes;
@@ -467,21 +452,7 @@ export default function AMVsEdits() {
                 </button>
               ))}
             </div>
-            <div className="edits-nav-right">
-              <div className="edits-nav-search">
-                <Search size={15} />
-                <input
-                  placeholder="Search edits, anime, creators..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                {searchQuery && (
-                  <button className="edits-search-clear" onClick={() => setSearchQuery("")}>
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
+
           </div>
         </div>
 

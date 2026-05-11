@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Clock, Flame, PlayCircle, RefreshCw, Shuffle, Sparkles, Swords, TrendingUp, Users, Video, Zap } from "lucide-react";
+import { Clock, PlayCircle, RefreshCw, Sparkles, TrendingUp, Users } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import AnimatedPage from "../components/AnimatedPage";
 
 import Slider from "../components/Slider";
-import FeaturedAnime from "../components/FeaturedAnime";
-import Trending from "../components/Trending";
 import LiveRooms from "../components/LiveRooms";
-import NewEpisodes from "../components/NewEpisodes";
 import Categories from "../components/Categories";
 import Background from "../components/Background";
-import { getFeaturedAnime, getAllGenres, getTrendingAnime, getNewEpisodes, getLatestAnime, getSeasonPicks, getAiringTodayAnime, getAnimeById } from "../data/animeData";
+import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres } from "../services/jikanApi";
 import { fetchRandomQuote, fetchWaifuImage } from "../services/communityApi";
 import "./Home.css";
 
@@ -23,13 +20,36 @@ gsap.registerPlugin(ScrollTrigger);
 const ContinueWatching = () => {
   const navigate = useNavigate();
   const [history, setHistory] = useState([]);
+  const [animeMap, setAnimeMap] = useState({});
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("watchHistory") || "[]");
-    setHistory(stored.slice(0, 4));
+    const recent = stored.slice(0, 4);
+    setHistory(recent);
+    recent.forEach(async (item) => {
+      if (!animeMap[item.animeId]) {
+        try {
+          const res = await fetch(`https://api.jikan.moe/v4/anime/${item.animeId}`);
+          const json = await res.json();
+          if (json.data) {
+            setAnimeMap(prev => ({
+              ...prev,
+              [item.animeId]: {
+                id: json.data.mal_id,
+                name: json.data.title_english || json.data.title,
+                img: json.data.images?.jpg?.large_image_url || json.data.images?.jpg?.image_url || "",
+              }
+            }));
+          }
+        } catch {}
+      }
+    });
   }, []);
 
   if (history.length === 0) return null;
+
+  const validItems = history.filter(item => animeMap[item.animeId]);
+  if (validItems.length === 0) return null;
 
   return (
     <div className="continue-watching-section">
@@ -46,9 +66,8 @@ const ContinueWatching = () => {
         <p>Resume your journey where you left off</p>
       </div>
       <div className="history-grid">
-        {history.map((item) => {
-          const anime = getAnimeById(item.animeId);
-          if (!anime) return null;
+        {validItems.map((item) => {
+          const anime = animeMap[item.animeId];
           return (
             <div
               key={item.animeId}
@@ -73,54 +92,47 @@ const ContinueWatching = () => {
   );
 };
 
-const TodaySchedulePreview = () => {
-  const navigate = useNavigate();
-  const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
-  const items = getAiringTodayAnime().slice(0, 4);
-
-  if (items.length === 0) return null;
-
-  return (
-    <section className="schedule-preview-section">
-      <div className="section-title schedule-preview-head">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          className="title-with-icon"
-        >
-          <Clock color="#e63636" size={24} />
-          <h2>Today on Air</h2>
-        </motion.div>
-        <div className="section-cta-row">
-          <p>{today} schedule preview</p>
-          <button className="section-cta" onClick={() => navigate("/browse/anime")}>Browse all</button>
-        </div>
-      </div>
-      <div className="schedule-preview-grid">
-        {items.map((anime) => (
-          <div className="schedule-preview-card" key={anime.id} onClick={() => navigate(`/anime/${anime.id}`)}>
-            <img src={anime.img} alt={anime.name} />
-            <div className="schedule-preview-content">
-              <div className="schedule-preview-topline">
-                <span className="preview-status">Live</span>
-                <span className="preview-time">Ep {anime.currentEp + 1}</span>
-              </div>
-              <h3>{anime.name}</h3>
-              <p>{anime.description}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-};
-
 export default function Home() {
   const navigate = useNavigate();
+  const [spotlight, setSpotlight] = useState(null);
+  const [seasonPicks, setSeasonPicks] = useState([]);
+  const [trendingList, setTrendingList] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [decorImg, setDecorImg] = useState(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const [topAir, topAll, seasonal, genres] = await Promise.allSettled([
+          fetchTopAnime(1, "airing"),
+          fetchTopAnime(1, ""),
+          fetchSeasonalAnime(),
+          fetchAnimeGenres(),
+        ]);
+
+        if (topAir.status === "fulfilled" && topAir.value.data.length > 0) {
+          setSpotlight(topAir.value.data[0]);
+        }
+
+        if (topAll.status === "fulfilled") {
+          setTrendingList(topAll.value.data.filter(a => a.id !== spotlight?.id).slice(0, 15));
+        }
+
+        if (seasonal.status === "fulfilled") {
+          setSeasonPicks(seasonal.value.data.slice(0, 10));
+        }
+
+        if (genres.status === "fulfilled") {
+          setCategories(genres.value);
+        }
+      } catch {}
+      setLoading(false);
+    }
+    load();
+  }, []);
 
   useEffect(() => {
     fetchRandomQuote().then(setQuote).catch(() => {});
@@ -132,52 +144,7 @@ export default function Home() {
     fetchRandomQuote().then(q => { setQuote(q); setQuoteLoading(false); }).catch(() => setQuoteLoading(false));
   };
 
-  const featuredAnime = getFeaturedAnime();
-  const categories = getAllGenres();
-  const seasonPicks = getSeasonPicks();
-  const latestAnime = getLatestAnime();
-  const spotlight = featuredAnime[0];
-  const quickLinks = [
-    { label: "Trending", icon: TrendingUp, target: "trending" },
-    { label: "Live Rooms", icon: Video, target: "live-rooms" },
-    { label: "New Episodes", icon: Zap, target: "episodes" },
-    { label: "Season Picks", icon: Users, target: "season" },
-    { label: "Arena", icon: Swords, target: "arena-pulse" },
-  ];
-
-  const arenaPulse = [
-    {
-      label: "Live battles",
-      title: "Vote where the crowd is leaning.",
-      description: "Jump straight into the matchup board and push the energy forward.",
-      target: "/arena/character-battle",
-      accent: "VS",
-    },
-    {
-      label: "Arena overview",
-      title: "Read the temperature before you jump in.",
-      description: "A compact pulse check for what is trending, moving, and climbing.",
-      target: "/arena/overview",
-      accent: "LIVE",
-    },
-    {
-      label: "Tier lists",
-      title: "Browse the strongest titles with cleaner structure.",
-      description: "Less clutter, more hierarchy, and a faster way to find the top lanes.",
-      target: "/arena/tier-lists",
-      accent: "TOP",
-    },
-  ];
-
-  const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
   useGSAP(() => {
-    // Section titles reveal - faster
     gsap.utils.toArray(".section-title").forEach((title) => {
       gsap.from(title, {
         scrollTrigger: {
@@ -197,172 +164,109 @@ export default function Home() {
       <div className="home-container">
         <Background />
 
-        {spotlight && (
-          <section className="home-spotlight">
-            <div className="home-spotlight-copy">
-              <div className="spotlight-kicker">
-                <Sparkles size={14} /> Featured now
-              </div>
-              <h1>{spotlight.name}</h1>
-              <p>{spotlight.synopsis}</p>
-              <div className="spotlight-meta">
-                <span>{spotlight.status}</span>
-                <span>{spotlight.year}</span>
-                <span>{spotlight.episodes} episodes</span>
-                <span>{spotlight.studio}</span>
-              </div>
-              <div className="spotlight-actions">
-                <button className="spotlight-primary-btn" onClick={() => navigate(`/anime/${spotlight.id}`)}>
-                  <PlayCircle size={18} /> Watch now
-                </button>
-                <button className="spotlight-secondary-btn" onClick={() => scrollToSection("season-picks") }>
-                  Explore picks <ArrowRight size={16} />
-                </button>
-              </div>
-              <div className="spotlight-microcopy">
-                <span>Curated every session</span>
-                <span>Best viewed full-screen</span>
-              </div>
-              {quote && (
-                <div className="spotlight-quote">
-                  <p className="spotlight-quote-text">"{quote.quote}"</p>
-                  <div className="spotlight-quote-attribution">
-                    <span className="spotlight-quote-char">{quote.character}</span>
-                    <span className="spotlight-quote-dash">—</span>
-                    <span className="spotlight-quote-anime">{quote.anime}</span>
-                    <button className="spotlight-quote-refresh" onClick={refreshQuote} disabled={quoteLoading}>
-                      <RefreshCw size={12} />
+        {loading ? (
+          <div className="home-loading" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: '#666' }}>
+            <p>Loading...</p>
+          </div>
+        ) : (
+          <>
+            {spotlight && (
+              <section className="home-spotlight">
+                <div className="home-spotlight-copy">
+                  <div className="spotlight-kicker">
+                    <Sparkles size={14} /> Featured now
+                  </div>
+                  <h1>{spotlight.name}</h1>
+                  <p>{spotlight.synopsis}</p>
+                  <div className="spotlight-meta">
+                    <span>{spotlight.status}</span>
+                    <span>{spotlight.year}</span>
+                    <span>{spotlight.episodes} episodes</span>
+                    <span>{spotlight.studio}</span>
+                  </div>
+                  <div className="spotlight-actions">
+                    <button className="spotlight-primary-btn" onClick={() => navigate(`/anime/${spotlight.id}`)}>
+                      <PlayCircle size={18} /> Watch now
                     </button>
                   </div>
+                  <div className="spotlight-microcopy">
+                    <span>Curated every session</span>
+                    <span>Best viewed full-screen</span>
+                  </div>
+                  {quote && (
+                    <div className="spotlight-quote">
+                      <p className="spotlight-quote-text">"{quote.quote}"</p>
+                      <div className="spotlight-quote-attribution">
+                        <span className="spotlight-quote-char">{quote.character}</span>
+                        <span className="spotlight-quote-dash">—</span>
+                        <span className="spotlight-quote-anime">{quote.anime}</span>
+                        <button className="spotlight-quote-refresh" onClick={refreshQuote} disabled={quoteLoading}>
+                          <RefreshCw size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+                <div className="home-spotlight-art" onClick={() => navigate(`/anime/${spotlight.id}`)}>
+                  <img src={spotlight.img} alt={spotlight.name} />
+                  <div className="home-spotlight-art-glow" />
+                  <div className="home-spotlight-art-panel">
+                    <span>Featured story</span>
+                    <strong>{spotlight.name}</strong>
+                    <p>Tap in for the full watch page, then jump back into the arena flow.</p>
+                  </div>
+                  {decorImg && (
+                    <img src={decorImg} alt="" className="spotlight-decor-char" />
+                  )}
+                </div>
+              </section>
+            )}
+
+            {trendingList.length > 0 && (
+              <>
+                <div className="section-title">
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    className="title-with-icon"
+                  >
+                    <TrendingUp color="#e63636" size={24} />
+                    <h2>Trending Now</h2>
+                  </motion.div>
+                  <p>The most watched anime this week</p>
+                </div>
+                <Slider sliderData={trendingList} />
+              </>
+            )}
+
+            <ContinueWatching />
+
+            {seasonPicks.length > 0 && (
+              <>
+                <div className="section-title">
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    className="title-with-icon"
+                  >
+                    <Users color="#e63636" size={24} />
+                    <h2>Season Picks</h2>
+                  </motion.div>
+                  <p>Top ongoing anime worth following right now</p>
+                </div>
+                <Slider sliderData={seasonPicks} />
+              </>
+            )}
+
+            <div id="live-rooms">
+              <LiveRooms />
             </div>
-            <div className="home-spotlight-art" onClick={() => navigate(`/anime/${spotlight.id}`)}>
-              <img src={spotlight.img} alt={spotlight.name} />
-              <div className="home-spotlight-art-glow" />
-              <div className="home-spotlight-art-panel">
-                <span>Featured story</span>
-                <strong>{spotlight.name}</strong>
-                <p>Tap in for the full watch page, then jump back into the arena flow.</p>
-              </div>
-              {decorImg && (
-                <img src={decorImg} alt="" className="spotlight-decor-char" />
-              )}
-            </div>
-          </section>
+
+            {categories.length > 0 && <Categories categories={categories} />}
+          </>
         )}
-
-        <div className="home-quick-links">
-          {quickLinks.map((link) => (
-            <button key={link.target} className="quick-link-card" onClick={() => scrollToSection(link.target)}>
-              <link.icon size={18} />
-              <span>{link.label}</span>
-            </button>
-          ))}
-        </div>
-
-        <section id="arena-pulse" className="home-arena-pulse">
-          <div className="section-title arena-pulse-head">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="title-with-icon"
-            >
-              <Swords color="#e63636" size={24} />
-              <h2>Arena Pulse</h2>
-            </motion.div>
-            <p>Fast routes into the loudest part of the site</p>
-          </div>
-
-          <div className="arena-pulse-grid">
-            {arenaPulse.map((card, index) => (
-              <motion.button
-                key={card.label}
-                type="button"
-                className="arena-pulse-card"
-                onClick={() => navigate(card.target)}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.08 }}
-              >
-                <span className="arena-pulse-card-chip">{card.accent}</span>
-                <small>{card.label}</small>
-                <h3>{card.title}</h3>
-                <p>{card.description}</p>
-              </motion.button>
-            ))}
-          </div>
-        </section>
-
-        <Slider sliderData={featuredAnime} />
-
-        <ContinueWatching />
-
-        <div id="season-picks" className="section-title">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="title-with-icon"
-          >
-            <Users color="#e63636" size={24} />
-            <h2>Season Picks</h2>
-          </motion.div>
-          <p>Top ongoing anime worth following right now</p>
-        </div>
-        <FeaturedAnime animeList={seasonPicks} />
-
-        <div id="trending" className="section-title">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="title-with-icon"
-          >
-            <TrendingUp color="#e63636" size={24} />
-            <h2>Trending Now</h2>
-          </motion.div>
-          <p>The most watched anime this week</p>
-        </div>
-        <Trending />
-
-        <div id="live-rooms">
-          <LiveRooms />
-        </div>
-
-        <div id="episodes" className="section-title">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="title-with-icon"
-          >
-            <Zap color="#e63636" size={24} />
-            <h2>New Episodes</h2>
-          </motion.div>
-          <p>Recently updated</p>
-        </div>
-        <NewEpisodes />
-
-        <div id="latest" className="section-title">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="title-with-icon"
-          >
-            <Shuffle color="#e63636" size={24} />
-            <h2>Latest Added</h2>
-          </motion.div>
-          <p>Fresh arrivals in the catalog</p>
-        </div>
-        <FeaturedAnime animeList={latestAnime} />
-
-        <TodaySchedulePreview />
-
-        <Categories categories={categories} />
       </div>
     </AnimatedPage>
   );

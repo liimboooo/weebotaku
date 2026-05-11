@@ -144,6 +144,24 @@ body {
   color: #fff;
 }
 
+.recent-remove {
+  color: #555;
+  font-size: 12px;
+  padding: 0 2px 0 8px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.recent-remove:hover {
+  color: #e63636;
+}
+
+.search-trending-pills + .search-trending-header {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 .search-trending-skeleton {
   height: 42px;
   border-radius: 10px;
@@ -354,8 +372,8 @@ body {
 .profile-button:hover { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.15); }
 
 .profile-avatar-shell {
-  width: 40px;
-  height: 40px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -365,19 +383,19 @@ body {
 }
 
 .profile-avatar {
-  width: 36px;
-  height: 36px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: #1a1a1a;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ccc;
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
 }
 
-.profile-avatar-shell--compact { width: 20px; height: 20px; }
+.profile-avatar-shell--compact { width: 32px; height: 32px; }
 
 .profile-copy {
   display: flex;

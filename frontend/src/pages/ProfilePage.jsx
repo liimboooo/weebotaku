@@ -5,7 +5,6 @@ import { getAnimeById, activeRooms } from "../data/animeData";
 import { loadWatchlist } from "../services/storage";
 import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
-import Slider from "../components/Slider";
 import { Bookmark, Heart, Star, Clock, PenLine, LogOut, Settings, Eye, Film, Users, Video, Sparkles } from "lucide-react";
 import "./ProfilePage.css";
 
@@ -30,6 +29,7 @@ export default function ProfilePage() {
   const [liked, setLiked] = useState([]);
   const [rated, setRated] = useState({});
   const [history, setHistory] = useState([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const loadProfileData = () => {
     const storedUser = localStorage.getItem("username");
@@ -46,18 +46,6 @@ export default function ProfilePage() {
     const storedH = JSON.parse(localStorage.getItem("watchHistory") || "[]");
     setHistory(storedH.slice(0, 10));
   };
-
-  useEffect(() => {
-    loadProfileData();
-    window.addEventListener("storage", loadProfileData);
-    window.addEventListener("profile-avatar-updated", loadProfileData);
-    window.addEventListener("user-status-updated", loadProfileData);
-    return () => {
-      window.removeEventListener("storage", loadProfileData);
-      window.removeEventListener("profile-avatar-updated", loadProfileData);
-      window.removeEventListener("user-status-updated", loadProfileData);
-    };
-  }, []);
 
   const watchlistAnime = watchlist.map((item) => getAnimeById(item.id)).filter(Boolean);
   const likedAnime = liked.map((id) => getAnimeById(id)).filter(Boolean);
@@ -89,10 +77,39 @@ export default function ProfilePage() {
 
   const saveProfile = () => {
     localStorage.setItem("username", username);
-    if (avatar) localStorage.setItem("userAvatar", avatar);
+    if (avatar) {
+      try {
+        const existing = localStorage.getItem("userAvatar");
+        if (existing && existing.length > 10000) localStorage.removeItem("userAvatar");
+        localStorage.setItem("userAvatar", avatar);
+      } catch (e) {
+        // quota exceeded — clear old avatar and retry
+        localStorage.removeItem("userAvatar");
+        try { localStorage.setItem("userAvatar", avatar); } catch {}
+      }
+    }
     window.dispatchEvent(new Event("profile-avatar-updated"));
     setEditing(false);
   };
+
+  useEffect(() => {
+    const keys = ["userAvatar", "amv_edits", "amv_liked", "amv_saved"];
+    keys.forEach(k => {
+      try {
+        const v = localStorage.getItem(k);
+        if (v && v.length > 100000) localStorage.removeItem(k);
+      } catch {}
+    });
+    loadProfileData();
+    window.addEventListener("storage", loadProfileData);
+    window.addEventListener("profile-avatar-updated", loadProfileData);
+    window.addEventListener("user-status-updated", loadProfileData);
+    return () => {
+      window.removeEventListener("storage", loadProfileData);
+      window.removeEventListener("profile-avatar-updated", loadProfileData);
+      window.removeEventListener("user-status-updated", loadProfileData);
+    };
+  }, []);
 
   const handleAvatarUpload = (e) => {
     const file = e.target.files?.[0];
@@ -104,6 +121,28 @@ export default function ProfilePage() {
       setAvatarPreview(r);
     };
     reader.readAsDataURL(file);
+  };
+
+  const generateAvatar = async () => {
+    const apis = [
+      "https://nekos.best/api/v2/neko",
+      "https://nekos.best/api/v2/husbando",
+      "https://api.waifu.pics/sfw/waifu",
+    ].sort(() => Math.random() - 0.5);
+    for (const api of apis) {
+      try {
+        const res = await fetch(api);
+        const json = await res.json();
+        let url = null;
+        if (json.url) url = json.url;
+        else if (json.results?.[0]?.url) url = json.results[0].url;
+        if (url) {
+          setAvatar(url);
+          setAvatarPreview(url);
+          return;
+        }
+      } catch {}
+    }
   };
 
   const navigateToAnime = (anime, event) => {
@@ -131,7 +170,7 @@ export default function ProfilePage() {
         <div className="profile-hero">
           <div className="profile-hero-bg" />
           <div className="profile-hero-content">
-            <div className="profile-avatar-wrap">
+            <div className="profile-avatar-wrap" onClick={() => (avatarPreview || avatar) && setPreviewOpen(true)} style={{ cursor: (avatarPreview || avatar) ? "pointer" : "default" }}>
               <div className="profile-avatar-circle">
                 {avatarPreview || avatar ? (
                   <img src={avatarPreview || avatar} alt={username} />
@@ -139,7 +178,6 @@ export default function ProfilePage() {
                   <span>{username.charAt(0).toUpperCase()}</span>
                 )}
               </div>
-              <div className="profile-avatar-ring" />
             </div>
 
             {editing ? (
@@ -150,6 +188,7 @@ export default function ProfilePage() {
                     Choose Avatar
                     <input type="file" accept="image/*" hidden onChange={handleAvatarUpload} />
                   </label>
+                  <button className="profile-btn profile-btn-secondary" onClick={generateAvatar}>Generate</button>
                   {avatar && <button className="profile-btn profile-btn-ghost" onClick={() => { setAvatar(""); setAvatarPreview(""); localStorage.removeItem("userAvatar"); }}>Remove</button>}
                 </div>
                 <div className="profile-edit-row">
@@ -218,8 +257,6 @@ export default function ProfilePage() {
             ))}
           </div>
         </div>
-
-        <Slider sliderData={watchlistAnime.length > 0 ? [...new Map(watchlistAnime.map(a => [a.id, a])).values()].slice(0, 10) : []} />
 
         <div className="profile-tabs">
           {tabs.map(({ key, label, icon: Icon }) => (
@@ -481,6 +518,13 @@ export default function ProfilePage() {
             )}
           </motion.div>
         </AnimatePresence>
+
+        {previewOpen && (avatarPreview || avatar) && (
+          <div className="profile-preview-overlay" onClick={() => setPreviewOpen(false)}>
+            <button className="profile-preview-close" onClick={() => setPreviewOpen(false)}>✕</button>
+            <img src={avatarPreview || avatar} alt={username} className="profile-preview-img" />
+          </div>
+        )}
       </div>
     </AnimatedPage>
   );

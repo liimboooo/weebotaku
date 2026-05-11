@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ArrowLeft, Play, Bookmark, Heart, Share2, Tv, ShieldCheck, Bell, Sparkles, Star } from "lucide-react";
-import { getAnimeById, getTrendingAnime } from "../data/animeData";
+import { getAnimeById, getAllAnime } from "../data/animeData";
 import { fetchAnimeById as jikanFetchAnime } from "../services/jikanApi";
 
 import { addToWatchlist, removeFromWatchlist, isInWatchlist } from "../services/storage";
@@ -13,7 +13,6 @@ import { searchAnime as anipubSearch } from "../services/animeApi";
 import AnimeWatch from "./Feeds/AnimeWatch";
 import Background from "../components/Background";
 import Reviews from "../components/Reviews";
-import FeaturedAnime from "../components/FeaturedAnime";
 import AnimatedPage from "../components/AnimatedPage";
 import "./AnimeDetail.css";
 
@@ -41,11 +40,17 @@ export default function AnimeDetail() {
     }
   }, [id, staticAnime]);
 
-  // Related anime (same genres)
+  // Related anime (same genres, ranked by overlap + rating)
   const getRelatedAnime = () => {
-    const allAnime = getTrendingAnime();
+    const allAnime = getAllAnime();
     return allAnime
-      .filter(a => a.id !== parseInt(id) && a.genres.some(g => anime?.genres.includes(g)))
+      .filter(a => a.id !== parseInt(id))
+      .map(a => ({
+        ...a,
+        _overlap: anime ? a.genres.filter(g => anime.genres.includes(g)).length : 0,
+      }))
+      .filter(a => a._overlap > 0)
+      .sort((a, b) => b._overlap - a._overlap || b.rating - a.rating)
       .slice(0, 6);
   };
 
@@ -324,16 +329,6 @@ export default function AnimeDetail() {
               <AnimeWatch anime={watchAnime} onClose={() => setShowPlayer(false)} />
             )}
 
-            <div className="ad-watch-sources">
-              <h3>Where to Watch</h3>
-              <div className="ad-sources-grid">
-                <button className="ad-source-btn crunchyroll"><span className="ad-source-logo">CR</span><span className="ad-source-name">Crunchyroll</span></button>
-                <button className="ad-source-btn netflix"><span className="ad-source-logo">N</span><span className="ad-source-name">Netflix</span></button>
-                <button className="ad-source-btn hulu"><span className="ad-source-logo">H</span><span className="ad-source-name">Hulu</span></button>
-                <button className="ad-source-btn hidive"><span className="ad-source-logo">HD</span><span className="ad-source-name">HiDive</span></button>
-              </div>
-            </div>
-
             {anime.director && (
               <div className="ad-extra">
                 <div className="ad-extra-item"><span className="ad-extra-label">Director</span><span className="ad-extra-value">{anime.director}</span></div>
@@ -342,15 +337,6 @@ export default function AnimeDetail() {
             )}
 
             <Reviews animeId={anime.id} selectedEp={selectedEp} />
-
-            <div className="ad-recommendations">
-              <h3>Related Anime</h3>
-              <FeaturedAnime animeList={getRelatedAnime()} title="Based on your interest" />
-            </div>
-
-            <div className="ad-recommendations">
-              <FeaturedAnime animeList={getTrendingAnime().filter(a => a.id !== parseInt(id))} title="People Also Watched" />
-            </div>
           </section>
         </main>
       </div>
