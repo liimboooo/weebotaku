@@ -1,4 +1,4 @@
-import React from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 
 const pageVariants = {
@@ -8,6 +8,10 @@ const pageVariants = {
 };
 
 export default function AnimatedPage({ children }) {
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
+
   return (
     <motion.div
       variants={pageVariants}

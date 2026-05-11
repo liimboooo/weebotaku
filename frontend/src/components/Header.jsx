@@ -21,8 +21,6 @@ import {
   Video,
   X,
 } from 'lucide-react';
-import { getAllAnime } from '../data/animeData';
-import { fetchTopAnime } from '../services/jikanApi';
 import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications } from '../services/notificationService';
 import './Header.css';
 
@@ -37,14 +35,6 @@ export default function Header() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchTrendingFocused, setSearchTrendingFocused] = useState(false);
-  const [trendingData, setTrendingData] = useState([]);
-  const [trendingLoading, setTrendingLoading] = useState(false);
-  const [recentSearches, setRecentSearches] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("recentSearches") || "[]"); }
-    catch { return []; }
-  });
-  const [randomPick, setRandomPick] = useState(null);
   const [profileImage, setProfileImage] = useState(() => localStorage.getItem('userAvatar') || '');
   const [statusMessage, setStatusMessage] = useState(() => localStorage.getItem('userStatusMessage') || 'Watching One Piece...');
   const [isEditingStatus, setIsEditingStatus] = useState(false);
@@ -72,11 +62,10 @@ export default function Header() {
   const arenaRef = useRef(null);
   const profileRef = useRef(null);
   const moreDropdownRef = useRef(null);
-  const navRef = useRef(null);
-  const randomTimeoutRef = useRef(null);
   const statusInputRef = useRef(null);
   const statusSaveTimeoutRef = useRef(null);
   const headerPanelRef = useRef(null);
+  const searchRef = useRef(null);
 
   const username = localStorage.getItem('username') || 'zabi';
   const episodesWatched = Number(localStorage.getItem('userEpisodesWatched') || 128);
@@ -131,17 +120,6 @@ export default function Header() {
     []
   );
 
-  useEffect(() => {
-    setTrendingLoading(true);
-    fetchTopAnime(1, "airing").then(r => {
-      setTrendingData(r.data.slice(0, 5));
-    }).catch(() => {
-      setTrendingData([]);
-    }).finally(() => {
-      setTrendingLoading(false);
-    });
-  }, []);
-
   function formatTimeAgo(ts) {
     const diff = Date.now() - ts;
     const mins = Math.floor(diff / 60000);
@@ -152,19 +130,6 @@ export default function Header() {
     const days = Math.floor(hrs / 24);
     if (days < 7) return `${days}d ago`;
     return `${Math.floor(days / 7)}w ago`;
-  }
-
-  function getTrend(item) {
-    const score = item.rating || 0;
-    if (score > 8.0) {
-      const num = 50 + (item.id % 200);
-      return { arrow: '↑', value: `+${num}`, cls: 'up' };
-    } else if (score >= 7.5) {
-      return { arrow: '→', value: `${10 + (item.id % 40)}`, cls: 'neutral' };
-    } else {
-      const num = 10 + (item.id % 50);
-      return { arrow: '↓', value: `-${num}`, cls: 'down' };
-    }
   }
 
   useEffect(() => {
@@ -179,9 +144,17 @@ export default function Header() {
     document.addEventListener('click', closeOnClickOutside);
     const onScroll = () => setIsScrolled(window.scrollY > 8);
     window.addEventListener('scroll', onScroll, { passive: true });
+    const onKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('click', closeOnClickOutside);
       window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('keydown', onKeyDown);
     };
   }, []);
 
@@ -237,19 +210,10 @@ export default function Header() {
   const handleSearch = (term) => {
     const query = (term || searchTerm).trim();
     if (!query) return;
-    const next = [query, ...recentSearches.filter(s => s !== query)].slice(0, 8);
-    setRecentSearches(next);
+    const recent = JSON.parse(localStorage.getItem("recentSearches") || "[]");
+    const next = [query, ...recent.filter(s => s !== query)].slice(0, 8);
     localStorage.setItem("recentSearches", JSON.stringify(next));
     navigateTo(`/search?q=${encodeURIComponent(query)}`);
-  };
-
-  const pickRandomAnime = () => {
-    const allAnime = getAllAnime();
-    if (!allAnime.length) return;
-    const item = allAnime[Math.floor(Math.random() * allAnime.length)];
-    setRandomPick(item);
-    clearTimeout(randomTimeoutRef.current);
-    randomTimeoutRef.current = setTimeout(() => setRandomPick(null), 4000);
   };
 
   useEffect(() => {
@@ -442,62 +406,15 @@ export default function Header() {
         <form className="search-form" onSubmit={(event) => { event.preventDefault(); handleSearch(searchTerm); }}>
           <span className="search-icon"><Search size={16} /></span>
           <input
+            ref={searchRef}
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            onFocus={() => setSearchTrendingFocused(true)}
-            onBlur={() => setTimeout(() => setSearchTrendingFocused(false), 150)}
-            placeholder="Search anime..."
+            placeholder="Search anime...  (Ctrl+K)"
             aria-label="Search anime"
           />
-          {searchTrendingFocused && (
-            <div className="search-trending">
-              {recentSearches.length > 0 && (
-                <>
-                  <div className="search-trending-header">Recent Searches</div>
-                  <div className="search-trending-pills">
-                    {recentSearches.map((s) => (
-                      <button key={s} className="search-trending-pill"
-                        onMouseDown={(e) => { e.preventDefault(); setSearchTerm(s); handleSearch(s); }}>
-                        <span>{s}</span>
-                        <span className="recent-remove" onClick={(e) => {
-                          e.stopPropagation();
-                          const next = recentSearches.filter(r => r !== s);
-                          setRecentSearches(next);
-                          localStorage.setItem("recentSearches", JSON.stringify(next));
-                        }}>✕</span>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-              <div className="search-trending-header">Trending Now</div>
-              <div className="search-trending-pills">
-                {trendingLoading ? (
-                  [1,2,3,4,5].map(i => <div key={i} className="search-trending-skeleton" />)
-                ) : trendingData.length === 0 ? (
-                  <div className="search-trending-empty">No trending data</div>
-                ) : (
-                  trendingData.map((anime) => {
-                    const t = getTrend(anime);
-                    const label = anime.name && anime.name.length > 28 ? anime.name.slice(0, 26) + '...' : (anime.name || 'Unknown');
-                    return (
-                      <button key={anime.id} className="search-trending-pill"
-                        onMouseDown={(e) => { e.preventDefault(); setSearchTerm(anime.name); handleSearch(anime.name); }}>
-                        <span>{label}</span>
-                        <span className={`trending-indicator ${t.cls}`}>{t.arrow} {t.value}</span>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          )}
         </form>
 
         <div className="header-actions">
-          <button className="icon-button" onClick={pickRandomAnime} title="Random anime">
-            🎲
-          </button>
 
           <div className="notif-dropdown-container" ref={notifRef}>
             <button className={`icon-button${notifCount > 0 ? " badge" : ""}`} data-badge={notifCount > 0 ? notifCount : undefined} onClick={() => setNotifOpen(v => !v)} title="Notifications">
@@ -622,18 +539,6 @@ export default function Header() {
             )}
           </div>
         </div>
-
-        {randomPick && (
-          <div className="feeds-dropdown" style={{ right: 18, left: 'auto', top: 'calc(100% + 10px)', minWidth: '280px' }}>
-            <button className="feeds-item" onClick={() => navigateTo(`/anime/${randomPick.id}`)}>
-              <span className="feeds-item-icon">🎲</span>
-              <div>
-                <span className="feeds-item-label">Random pick: {randomPick.name}</span>
-                <span className="feeds-item-description">Open the anime details page</span>
-              </div>
-            </button>
-          </div>
-        )}
       </div>
 
       {previewOpen && profileImage && (

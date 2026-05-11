@@ -13,27 +13,48 @@ async function mdFetch(path) {
   return res.json();
 }
 
+function cleanTitle(title) {
+  return title.replace(/\s*\([^)]*\)/g, "").replace(/[^\w\s-]/g, "").trim();
+}
+
+function mangaTitleVariants(title) {
+  const clean = cleanTitle(title);
+  const variants = [
+    title,
+    clean,
+    title.split(":")[0].trim(),
+    title.split("(")[0].trim(),
+    title.replace(/\s+[-\u2013]\s+.*/, "").trim(),
+    title.replace(/'/g, ""),
+  ];
+  return [...new Set(variants.filter(s => s && s.length > 2))];
+}
+
 export async function searchManga(query) {
-  const q = encodeURIComponent(query);
-  const json = await mdFetch(`/manga?title=${q}&limit=20&order[relevance]=desc&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&includes[]=cover_art`);
-  return json.data.map(m => {
-    const coverRel = m.relationships.find(r => r.type === "cover_art");
-    const coverFile = coverRel?.attributes?.fileName;
-    const title = m.attributes.title?.en || Object.values(m.attributes.title || {})[0] || "Unknown";
-    return {
-      id: m.id,
-      title,
-      altTitles: m.attributes.altTitles || [],
-      description: m.attributes.description?.en || "",
-      coverUrl: coverFile ? `https://uploads.mangadex.org/covers/${m.id}/${coverFile}.256.jpg` : null,
-      status: m.attributes.status || "unknown",
-      year: m.attributes.year,
-      tags: m.attributes.tags?.map(t => t.attributes.name.en) || [],
-      originalLanguage: m.attributes.originalLanguage,
-      availableLanguages: m.attributes.availableTranslatedLanguages || [],
-      author: m.relationships.find(r => r.type === "author")?.attributes?.name || "Unknown",
-    };
-  });
+  for (const q of mangaTitleVariants(query)) {
+    const json = await mdFetch(`/manga?title=${encodeURIComponent(q)}&limit=5&order[relevance]=desc&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&includes[]=cover_art`);
+    if (json.data.length > 0) {
+      return json.data.map(m => {
+        const coverRel = m.relationships.find(r => r.type === "cover_art");
+        const coverFile = coverRel?.attributes?.fileName;
+        const title = m.attributes.title?.en || Object.values(m.attributes.title || {})[0] || "Unknown";
+        return {
+          id: m.id,
+          title,
+          altTitles: m.attributes.altTitles || [],
+          description: m.attributes.description?.en || "",
+          coverUrl: coverFile ? `https://uploads.mangadex.org/covers/${m.id}/${coverFile}.256.jpg` : null,
+          status: m.attributes.status || "unknown",
+          year: m.attributes.year,
+          tags: m.attributes.tags?.map(t => t.attributes.name.en) || [],
+          originalLanguage: m.attributes.originalLanguage,
+          availableLanguages: m.attributes.availableTranslatedLanguages || [],
+          author: m.relationships.find(r => r.type === "author")?.attributes?.name || "Unknown",
+        };
+      });
+    }
+  }
+  return [];
 }
 
 export async function getMangaChapters(mangaId, lang = "en") {
@@ -51,10 +72,11 @@ export async function getMangaChapters(mangaId, lang = "en") {
     }));
 }
 
-export async function getChapterPages(chapterId, quality = "data-saver") {
+export async function getChapterPages(chapterId) {
   const json = await mdFetch(`/at-home/server/${chapterId}`);
   const base = json.baseUrl;
   const hash = json.chapter.hash;
+  const quality = json.chapter["data-saver"]?.length > 0 ? "data-saver" : "data";
   const files = json.chapter[quality];
   return files.map(f => `${base}/${quality}/${hash}/${f}`);
 }

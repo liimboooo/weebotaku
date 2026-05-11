@@ -9,7 +9,7 @@ import { fetchAnimeById as jikanFetchAnime } from "../services/jikanApi";
 
 import { addToWatchlist, removeFromWatchlist, isInWatchlist } from "../services/storage";
 import { addNotification } from "../services/notificationService";
-import { searchAnime as anipubSearch } from "../services/animeApi";
+import { findStreamingSource } from "../services/animeApi";
 import AnimeWatch from "./Feeds/AnimeWatch";
 import Background from "../components/Background";
 import Reviews from "../components/Reviews";
@@ -28,6 +28,7 @@ export default function AnimeDetail() {
   const [isCinemaMode, setIsCinemaMode] = useState(false);
   const [watchAnime, setWatchAnime] = useState(null);
   const [watchLoading, setWatchLoading] = useState(false);
+  const [watcherror, setWatchError] = useState("");
   const [jikanAnime, setJikanAnime] = useState(null);
   const [bgLoaded, setBgLoaded] = useState(false);
 
@@ -295,20 +296,22 @@ export default function AnimeDetail() {
 
                 <div className="ad-actions">
                   <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="ad-btn ad-btn-primary" onClick={async () => {
+                    setWatchError("");
                     if (watchAnime) { setShowPlayer(true); return; }
                     setWatchLoading(true);
                     try {
-                      const results = await anipubSearch(anime.name);
-                      if (results.length > 0) {
-                        setWatchAnime({ id: results[0].Id, title: results[0].Name });
+                      const src = await findStreamingSource(anime.name);
+                      if (src) {
+                        setWatchAnime(src);
                         setShowPlayer(true);
                         addNotification({ title: "Now Playing", body: anime.name, type: "watch" });
-                      } else { alert("No streaming source found."); }
-                    } catch (e) { alert("Failed to find streaming source."); }
+                      } else { setWatchError("No streaming source found for this title."); }
+                    } catch (e) { setWatchError("Failed to find streaming source."); }
                     finally { setWatchLoading(false); }
                   }} disabled={watchLoading}>
                     <Play size={18} fill="currentColor" /> {watchLoading ? "Searching..." : "Watch Now"}
                   </motion.button>
+                  {watcherror && <p className="ad-error-msg">{watcherror}</p>}
                   <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`ad-btn ad-btn-secondary ${isWatchlisted ? "active" : ""}`} onClick={toggleWatchlist}>
                     <Bookmark size={18} fill={isWatchlisted ? "currentColor" : "none"} /> {isWatchlisted ? "Saved" : "Save"}
                   </motion.button>

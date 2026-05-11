@@ -756,7 +756,6 @@ body {
   .header-shell { padding: 8px 12px; gap: 8px; }
   .mobile-toggle { display: inline-flex; }
   .header-panel {
-    display: none;
     position: fixed;
     top: 56px;
     left: 0;
@@ -767,8 +766,16 @@ body {
     padding: 12px;
     gap: 12px;
     z-index: 999;
+    transform: translateY(-8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.25s ease, opacity 0.25s ease;
   }
-  .header-panel.open { display: flex; }
+  .header-panel.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
   .search-form { max-width: none; margin: 0; }
   .header-actions { justify-content: space-around; }
   .profile-button { width: 100%; justify-content: center; }

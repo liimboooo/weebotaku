@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, X, Loader } from "lucide-react";
-import { getAnimeEpisodes, getAnimeInfo } from "../../services/animeApi";
+import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls } from "../../services/animeApi";
 import "./AnimeWatch.css";
 
 export default function AnimeWatch({ anime, onClose }) {
-  const [info, setInfo] = useState(null);
   const [episodes, setEpisodes] = useState([]);
   const [epIndex, setEpIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [streamLoading, setStreamLoading] = useState(false);
+  const [servers, setServers] = useState([]);
+  const [serverIndex, setServerIndex] = useState(0);
+  const [streamUrl, setStreamUrl] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -15,26 +18,62 @@ export default function AnimeWatch({ anime, onClose }) {
       setLoading(true);
       setError("");
       try {
-        const results = await getAnimeEpisodes(anime.id);
-        if (results.length === 0) {
+        let eps = [];
+        if (anime.source === "anitaku") {
+          eps = await getAnitakuEpisodes(anime.slug);
+        } else {
+          eps = await getAnimeEpisodes(anime.id);
+        }
+        if (eps.length === 0) {
           setError("No streaming links available.");
           return;
         }
-        setEpisodes(results);
-        let anilistId = null;
-        try {
-          const meta = await getAnimeInfo(anime.id);
-          setInfo(meta);
-        } catch (e) {}
-      } catch (e) {
+        setEpisodes(eps);
+        setEpIndex(0);
+      } catch {
         setError("Failed to load episodes.");
       } finally {
         setLoading(false);
       }
     })();
-  }, [anime.id]);
+  }, [anime.id, anime.slug, anime.source]);
 
   const episode = episodes[epIndex];
+
+  useEffect(() => {
+    if (!episode) return;
+    if (anime.source === "anitaku") {
+      (async () => {
+        setError("");
+        setStreamLoading(true);
+        setStreamUrl("");
+        setServers([]);
+        setServerIndex(0);
+        try {
+          const urls = await getAnitakuStreamUrls(episode.url);
+          if (urls.length > 0) {
+            setServers(urls);
+            setStreamUrl(urls[0].url);
+          } else {
+            setError("No video servers found.");
+          }
+        } catch {
+          setError("Failed to load stream.");
+        } finally {
+          setStreamLoading(false);
+        }
+      })();
+    } else {
+      setStreamUrl(episode.url);
+    }
+  }, [episode, anime.source]);
+
+  const switchServer = (idx) => {
+    if (servers[idx]) {
+      setServerIndex(idx);
+      setStreamUrl(servers[idx].url);
+    }
+  };
 
   const goPrev = () => setEpIndex(i => Math.max(0, i - 1));
   const goNext = () => setEpIndex(i => Math.min(episodes.length - 1, i + 1));
@@ -45,11 +84,11 @@ export default function AnimeWatch({ anime, onClose }) {
         <header className="watch-header">
           <div className="watch-header-left">
             <button className="watch-back-btn" onClick={onClose}>
-              <ChevronLeft size={22} /> {anime.title || "Back"}
+              <ChevronLeft size={22} /> Back
             </button>
           </div>
           <div className="watch-header-center">
-            {episode && <span className="watch-title">Episode {episode.episode}</span>}
+            {episode && <span className="watch-title">{anime.title} — Episode {episode.episode}</span>}
           </div>
           <div className="watch-header-right">
             <button className="watch-close-btn" onClick={onClose}>
@@ -62,20 +101,32 @@ export default function AnimeWatch({ anime, onClose }) {
           {loading && (
             <div className="watch-loading">
               <Loader size={32} className="watch-spinner" />
-              <p>Loading stream...</p>
+              <p>Loading episodes...</p>
             </div>
           )}
           {error && <div className="watch-error">{error}</div>}
-          {!loading && !error && episode && (
+          {!loading && !error && streamUrl && !streamLoading && (
             <div className="watch-player-wrap">
               <iframe
-                key={episode.url}
+                key={`${episode.episode}-${serverIndex}`}
                 className="watch-player"
-                src={episode.url}
+                src={streamUrl}
                 title={`Episode ${episode.episode}`}
                 allow="autoplay; fullscreen; encrypted-media"
                 allowFullScreen
               />
+            </div>
+          )}
+          {!loading && !error && streamLoading && (
+            <div className="watch-loading">
+              <Loader size={32} className="watch-spinner" />
+              <p>Loading stream...</p>
+            </div>
+          )}
+          {!loading && !error && !streamLoading && !streamUrl && episode && (
+            <div className="watch-loading">
+              <Loader size={32} className="watch-spinner" />
+              <p>Preparing stream...</p>
             </div>
           )}
         </div>
@@ -101,6 +152,19 @@ export default function AnimeWatch({ anime, onClose }) {
               Next <ChevronRight size={18} />
             </button>
           </div>
+          {servers.length > 1 && (
+            <div className="watch-servers">
+              {servers.map((s, i) => (
+                <button
+                  key={i}
+                  className={`watch-server-btn ${i === serverIndex ? "active" : ""}`}
+                  onClick={() => switchServer(i)}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )}
         </footer>
       </div>
     </div>

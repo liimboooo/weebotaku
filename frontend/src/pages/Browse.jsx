@@ -22,7 +22,7 @@ import Background from "../components/Background";
 import { fetchTopAnime, fetchSearchAnime, fetchAnimeGenres } from "../services/jikanApi";
 import { loadWatchlist, addToWatchlist, removeFromWatchlist } from "../services/storage";
 import { addNotification } from "../services/notificationService";
-import { searchAnime as anipubSearch } from "../services/animeApi";
+import { findStreamingSource } from "../services/animeApi";
 import AnimeWatch from "./Feeds/AnimeWatch";
 import "./Browse.css";
 
@@ -255,12 +255,12 @@ export default function Browse() {
   const openWatch = async (anime) => {
     setWatchLoading(true);
     try {
-      const results = await anipubSearch(anime.name);
-      if (results.length === 0) { alert("Anime not found on AniPub."); return; }
-      setWatchAnime({ id: results[0].Id, title: results[0].Name, image: results[0].Image });
+      const src = await findStreamingSource(anime.name);
+      if (!src) { addNotification({ title: "Not Available", body: "No streaming source for this title.", type: "error" }); return; }
+      setWatchAnime(src);
       addNotification({ title: "Now Playing", body: anime.name, type: "watch" });
     } catch (e) {
-      alert("Failed to find streaming source.");
+      addNotification({ title: "Stream Error", body: "Failed to find streaming source.", type: "error" });
     } finally {
       setWatchLoading(false);
     }

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, Star, Tv, Calendar, Sparkles, RotateCcw } from "lucide-react";
+import { Calendar, Heart, Play, RotateCcw, Search, Sparkles, Star, TrendingUp, Clock, Tv, Zap } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import AnimatedPage from "../components/AnimatedPage";
 import Loader from "../components/Loader";
 import Background from "../components/Background";
-import { fetchSearchAnime, fetchAnimeGenres } from "../services/jikanApi";
+import { fetchSearchAnime, fetchTopAnime, fetchAnimeGenres } from "../services/jikanApi";
+import { addToWatchlist, removeFromWatchlist, loadWatchlist } from "../services/storage";
 import "./SearchPage.css";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -24,12 +25,21 @@ export default function SearchPage() {
   const [activeStatus, setActiveStatus] = useState("All");
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [trendingData, setTrendingData] = useState([]);
+  const [trendingLoading, setTrendingLoading] = useState(false);
+  const [recentSearches, setRecentSearches] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("recentSearches") || "[]"); }
+    catch { return []; }
+  });
 
   const types = ["All", "TV", "Movie", "Special", "OVA", "ONA"];
   const statuses = ["All", "Ongoing", "Completed"];
 
   useEffect(() => {
     fetchAnimeGenres().then(setGenres).catch(() => {});
+    fetchTopAnime(1, "airing").then(r => {
+      setTrendingData(r.data.slice(0, 8));
+    }).catch(() => {}).finally(() => setTrendingLoading(false));
   }, []);
 
   // If there's a query in URL, fetch on mount
@@ -83,6 +93,32 @@ export default function SearchPage() {
 
   const hasActiveFilters = activeGenre || activeType !== "All" || activeStatus !== "All";
 
+  const removeRecent = (term) => {
+    const next = recentSearches.filter(s => s !== term);
+    setRecentSearches(next);
+    localStorage.setItem("recentSearches", JSON.stringify(next));
+  };
+
+  const searchFromPill = (term) => {
+    const next = [term, ...recentSearches.filter(s => s !== term)].slice(0, 8);
+    setRecentSearches(next);
+    localStorage.setItem("recentSearches", JSON.stringify(next));
+    navigate(`/search?q=${encodeURIComponent(term)}`);
+  };
+
+  function getTrend(item) {
+    const score = item.rating || 0;
+    if (score > 8.0) {
+      const num = 50 + (item.id % 200);
+      return { arrow: '↑', value: `+${num}`, cls: 'up' };
+    } else if (score >= 7.5) {
+      return { arrow: '→', value: `${10 + (item.id % 40)}`, cls: 'neutral' };
+    } else {
+      const num = 10 + (item.id % 50);
+      return { arrow: '↓', value: `-${num}`, cls: 'down' };
+    }
+  }
+
   useGSAP(() => {
     ScrollTrigger.batch(".search-result-card", {
       onEnter: (elements) => {
@@ -93,19 +129,6 @@ export default function SearchPage() {
       once: true
     });
   }, { dependencies: [results] });
-
-  const renderStars = (rating) => {
-    const fullStars = Math.floor(rating / 2);
-    const hasHalf = rating % 2 >= 1;
-    const emptyStars = 5 - fullStars - (hasHalf ? 1 : 0);
-    return (
-      <>
-        {[...Array(fullStars)].map((_, i) => (<span key={`f-${i}`} className="star full">★</span>))}
-        {hasHalf && <span className="star half">★</span>}
-        {[...Array(emptyStars)].map((_, i) => (<span key={`e-${i}`} className="star empty">★</span>))}
-      </>
-    );
-  };
 
   return (
     <AnimatedPage>
@@ -124,6 +147,47 @@ export default function SearchPage() {
               : "Jump in — pick a genre or search from the header"}
           </motion.p>
         </div>
+
+        {!searchParams.get("q") && (
+          <div className="search-discovery">
+            {recentSearches.length > 0 && (
+              <div className="sd-section">
+                <div className="sd-header">
+                  <Clock size={16} /> Recent Searches
+                </div>
+                <div className="sd-pills">
+                  {recentSearches.map((s) => (
+                    <button key={s} className="sd-pill" onClick={() => searchFromPill(s)}>
+                      <span>{s}</span>
+                      <span className="sd-pill-remove" onClick={(e) => { e.stopPropagation(); removeRecent(s); }}>✕</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="sd-section">
+              <div className="sd-header">
+                <TrendingUp size={16} /> Trending Now
+              </div>
+              <div className="sd-pills">
+                {trendingLoading ? (
+                  [1,2,3,4,5,6,7,8].map(i => <div key={i} className="sd-skeleton" />)
+                ) : (
+                  trendingData.map((anime) => {
+                    const t = getTrend(anime);
+                    const label = anime.name && anime.name.length > 28 ? anime.name.slice(0, 26) + '...' : (anime.name || 'Unknown');
+                    return (
+                      <button key={anime.id} className="sd-pill" onClick={() => searchFromPill(anime.name)}>
+                        <span>{label}</span>
+                        <span className={`trending-indicator ${t.cls}`}>{t.arrow} {t.value}</span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="genre-filter">
           {genres.map((genre) => (
@@ -171,48 +235,59 @@ export default function SearchPage() {
 
         {results.length > 0 ? (
           <>
-            <motion.div className="search-results-grid"
-              initial="hidden" animate="visible"
+            <div className="sr-grid"
               key={activeGenre + activeType + activeStatus}
             >
-              {results.map((anime) => (
-                <motion.div className="search-result-card" key={anime.id}
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 100, damping: 12 }}
-                  whileHover={{ y: -10, boxShadow: "0 20px 40px rgba(230, 54, 54, 0.4)", borderColor: "#e63636" }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => navigate(`/anime/${anime.id}`)}
-                >
-                  <div className="result-img-wrap">
-                    <img src={anime.img} alt={anime.name} loading="lazy" />
-                    <div className="result-overlay">
-                      <div className="result-badges">
-                        <span className="result-badge type">{anime.type || "TV"}</span>
-                        <span className={`result-badge status ${(anime.status || "").toLowerCase()}`}>{anime.status}</span>
+              {results.map((anime) => {
+                const wishlist = loadWatchlist();
+                const inList = wishlist.some(i => i.id === anime.id);
+                return (
+                  <motion.div className="sr-card" key={anime.id}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 100, damping: 12 }}
+                    whileHover={{ y: -8 }}
+                    onClick={() => navigate(`/anime/${anime.id}`)}
+                  >
+                    <div className="sr-card-thumb">
+                      <img src={anime.img} alt={anime.name} loading="lazy" />
+                      <div className="sr-card-overlay">
+                        <button className="sr-card-play" onClick={(e) => { e.stopPropagation(); navigate(`/anime/${anime.id}`); }}>
+                          <Play size={20} fill="currentColor" />
+                        </button>
+                        <div className="sr-card-tech">
+                          <span>{anime.episodes} eps</span>
+                          <span>{anime.type || "TV"}</span>
+                        </div>
+                      </div>
+                      <div className="sr-card-badge">
+                        {anime.status === "Ongoing" && <Zap size={10} />}
+                        {anime.status || "Unknown"}
+                      </div>
+                      <div className="sr-card-progress" style={{ width: `${Math.round((anime.readProgress || 0) * 100)}%` }} />
+                    </div>
+                    <div className="sr-card-body">
+                      <div className="sr-card-head">
+                        <h3>{anime.name}</h3>
+                        <button className={`sr-wish-btn ${inList ? "active" : ""}`} onClick={(e) => {
+                          e.stopPropagation();
+                          if (inList) { removeFromWatchlist(anime.id); } else { addToWatchlist(anime); }
+                        }}>
+                          <Heart size={12} fill={inList ? "currentColor" : "none"} />
+                        </button>
+                      </div>
+                      <p className="sr-card-desc">{anime.synopsis || ""}</p>
+                      <div className="sr-card-foot">
+                        <span className="sr-card-rating"><Star size={10} fill="currentColor" /> {anime.rating?.toFixed(1)}</span>
+                        <span className="sr-card-ch"><Play size={10} /> {anime.episodes} eps</span>
+                        {anime.genres?.[0] && <span className="sr-card-tag">{anime.genres[0]}</span>}
                       </div>
                     </div>
-                  </div>
-                  <div className="result-content">
-                    <h3>{anime.name}</h3>
-                    <div className="result-meta">
-                      <Calendar size={12} /><span>{anime.year}</span><span>•</span>
-                      <Tv size={12} /><span>{anime.episodes} eps</span>
-                    </div>
-                    <div className="result-rating">
-                      <div className="stars">{renderStars(anime.rating)}</div>
-                      <span className="rating-val">{anime.rating}</span>
-                    </div>
-                    <div className="result-genres">
-                      {anime.genres?.slice(0, 2).map((g) => (
-                        <span key={g} className="mini-genre">{g}</span>
-                      ))}
-                    </div>
-                    <p className="result-desc">{anime.synopsis?.slice(0, 120) || ""}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
+                    <div className="sr-card-glow" />
+                  </motion.div>
+                );
+              })}
+            </div>
           </>
         ) : !isLoading && hasSearched ? (
           <motion.div className="no-results" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>

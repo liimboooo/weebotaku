@@ -77,7 +77,7 @@ const ContinueWatching = () => {
               <div className="mini-img-wrap">
                 <img src={anime.img} alt={anime.name} />
                 <div className="mini-overlay">
-                  <ion-icon name="play"></ion-icon>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 </div>
               </div>
               <div className="mini-info">

@@ -1,8 +1,80 @@
-import React, { useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, Play, Star, Zap } from "lucide-react";
+import { addToWatchlist, removeFromWatchlist, loadWatchlist } from "../services/storage";
 import "./Slider.css";
+
+function SliderCard({ item, onClick }) {
+  const [loaded, setLoaded] = useState(false);
+  const [imgErr, setImgErr] = useState(false);
+  const [wishlist, setWishlist] = useState(() => loadWatchlist());
+  const inWishlist = wishlist.some(i => i.id === item.id);
+
+  const toggleWishlist = (e) => {
+    e.stopPropagation();
+    if (inWishlist) {
+      removeFromWatchlist(item.id);
+      setWishlist(loadWatchlist());
+    } else {
+      addToWatchlist(item);
+      setWishlist(loadWatchlist());
+    }
+  };
+
+  return (
+    <motion.div
+      className="slider-card"
+      onClick={onClick}
+      whileHover={{ y: -6 }}
+      transition={{ type: "spring", stiffness: 300 }}
+    >
+      <div className="slider-card-thumb">
+        {!loaded && <div className="slider-card-skeleton" />}
+        {imgErr ? (
+          <div className="slider-card-img-fallback">{item.name?.[0] || "?"}</div>
+        ) : (
+          <img
+            src={item.img}
+            alt={item.name}
+            onLoad={() => setLoaded(true)}
+            onError={() => setImgErr(true)}
+            style={{ opacity: loaded ? 1 : 0 }}
+          />
+        )}
+        <div className="slider-card-overlay">
+          <button className="slider-card-play" onClick={(e) => { e.stopPropagation(); onClick(); }}>
+            <Play size={20} fill="currentColor" />
+          </button>
+          <div className="slider-card-tech">
+            <span>{item.episodes} eps</span>
+            <span>{item.type || "TV"}</span>
+          </div>
+        </div>
+        <div className="slider-card-badge">
+          {item.status === "Ongoing" && <Zap size={10} />}
+          {item.status || "Unknown"}
+        </div>
+        <div className="slider-card-progress" style={{ width: `${Math.round((item.readProgress || 0) * 100)}%` }} />
+      </div>
+      <div className="slider-card-body">
+        <div className="slider-card-head">
+          <h3>{item.name}</h3>
+          <button className={`slider-wish-btn ${inWishlist ? "active" : ""}`} onClick={toggleWishlist}>
+            <Heart size={12} fill={inWishlist ? "currentColor" : "none"} />
+          </button>
+        </div>
+        <p className="slider-card-desc">{item.synopsis || ""}</p>
+        <div className="slider-card-foot">
+          <span className="slider-card-rating"><Star size={10} fill="currentColor" /> {item.rating?.toFixed(1)}</span>
+          <span className="slider-card-ch"><Play size={10} /> {item.episodes} eps</span>
+          {item.genres?.[0] && <span className="slider-card-tag">{item.genres[0]}</span>}
+        </div>
+      </div>
+      <div className="slider-card-glow" />
+    </motion.div>
+  );
+}
 
 export default function Slider({ sliderData }) {
   const navigate = useNavigate();
@@ -10,7 +82,7 @@ export default function Slider({ sliderData }) {
 
   const scroll = (dir) => {
     if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: dir * 320, behavior: "smooth" });
+      scrollRef.current.scrollBy({ left: dir * 340, behavior: "smooth" });
     }
   };
 
@@ -27,25 +99,7 @@ export default function Slider({ sliderData }) {
       </div>
       <div className="slider-track" ref={scrollRef}>
         {sliderData.map((item) => (
-          <motion.div
-            key={item.id}
-            className="slider-card"
-            onClick={() => navigate(`/anime/${item.id}`)}
-            whileHover={{ y: -8, scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <div className="slider-card-img">
-              <img src={item.img} alt={item.name} />
-              <div className="slider-card-overlay" />
-            </div>
-            <div className="slider-card-info">
-              <h3>{item.name}</h3>
-              <div className="slider-card-meta">
-                <span><Star size={12} fill="#ffd700" color="#ffd700" /> {item.rating}</span>
-                <span>{item.year}</span>
-              </div>
-            </div>
-          </motion.div>
+          <SliderCard key={item.id} item={item} onClick={() => navigate(`/anime/${item.id}`)} />
         ))}
       </div>
     </section>

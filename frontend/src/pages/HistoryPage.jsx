@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAnimeById } from "../data/animeData";
 import { motion, AnimatePresence } from "framer-motion";
+import { Clock, Trash2, PlayCircle, X, Compass } from "lucide-react";
+import { getAnimeById } from "../data/animeData";
 
 import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
@@ -101,13 +102,13 @@ export default function HistoryPage() {
         <div className="history-hero">
           <div className="history-header-content">
             <h1>
-              <ion-icon name="time-outline"></ion-icon> Watch History
+              <Clock size={24} /> Watch History
             </h1>
             <p>Pick up right where you left off</p>
           </div>
           {history.length > 0 && (
             <button className="clear-history-btn" onClick={clearHistory}>
-              <ion-icon name="trash-outline"></ion-icon> Clear History
+              <Trash2 size={16} /> Clear History
             </button>
           )}
         </div>
@@ -151,7 +152,7 @@ export default function HistoryPage() {
                     <div className="history-img-wrap">
                       <img src={anime.img} alt={anime.name} />
                       <div className="play-overlay">
-                        <ion-icon name="play-circle"></ion-icon>
+                        <PlayCircle size={28} />
                       </div>
                     </div>
                     <div className="history-details">
@@ -174,7 +175,7 @@ export default function HistoryPage() {
                         removeHistoryItem(item.timestamp);
                       }}
                     >
-                      <ion-icon name="close-outline"></ion-icon>
+                      <X size={16} />
                     </button>
                   </motion.div>
                 );
@@ -189,12 +190,12 @@ export default function HistoryPage() {
             transition={{ duration: 0.45, ease: "easeOut" }}
           >
             <div className="empty-icon-wrap">
-              <ion-icon name="time-outline"></ion-icon>
+              <Clock size={32} />
             </div>
             <h3>No Watch History</h3>
             <p>You haven't watched any anime recently. Start watching now!</p>
             <button className="browse-btn" onClick={() => navigate("/home") }>
-              <ion-icon name="compass-outline"></ion-icon>
+              <Compass size={16} />
               Discover Anime
             </button>
           </motion.div>
