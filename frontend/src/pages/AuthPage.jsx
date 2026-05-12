@@ -2,6 +2,8 @@ import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthForm from "../components/AuthForm";
 import AuthImage from "../components/AuthImage";
+import authService from "../services/authService";
+import { syncFromBackend } from "../services/storage";
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -27,14 +29,39 @@ export default function AuthPage() {
     }
 
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
 
-    localStorage.setItem("username", u);
-    localStorage.setItem("isLoggedIn", "true");
-    if (!localStorage.getItem("memberSince")) {
-      localStorage.setItem("memberSince", String(new Date().getFullYear()));
+    try {
+      let response;
+      if (mode === "register") {
+        response = await authService.register(u, e, p, p);
+      } else {
+        response = await authService.login(u, p);
+      }
+
+      if (response.success) {
+        // Also set localStorage keys the frontend components still read
+        localStorage.setItem("username", response.user.username);
+        localStorage.setItem("isLoggedIn", "true");
+        if (!localStorage.getItem("memberSince")) {
+          localStorage.setItem("memberSince", String(response.user.memberSince || new Date().getFullYear()));
+        }
+        if (response.user.avatar) {
+          localStorage.setItem("userAvatar", response.user.avatar);
+        }
+        if (response.user.statusMessage) {
+          localStorage.setItem("userStatusMessage", response.user.statusMessage);
+        }
+        // Sync user data from backend (fire and forget)
+        syncFromBackend().catch(() => {});
+        navigate("/home");
+      } else {
+        setError(response.message || "Something went wrong");
+      }
+    } catch (err) {
+      setError(err.message || "Connection error. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    navigate("/home");
   }, [username, email, password, mode, navigate]);
 
   const switchMode = useCallback(() => {

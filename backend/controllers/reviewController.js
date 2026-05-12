@@ -1,0 +1,125 @@
+const Review = require('../models/Review');
+
+// @route   POST /api/reviews
+// @access  Private
+exports.createReview = async (req, res) => {
+  try {
+    const { animeId, mangaId, rating, title, content, isSpoiler } = req.body;
+
+    if (!rating || !title || !content) {
+      return res.status(400).json({ success: false, message: 'Please provide rating, title, and content' });
+    }
+
+    if (!animeId && !mangaId) {
+      return res.status(400).json({ success: false, message: 'Please provide animeId or mangaId' });
+    }
+
+    // Check for existing review
+    const query = { user: req.user.id };
+    if (animeId) query.animeId = animeId;
+    if (mangaId) query.mangaId = mangaId;
+
+    const existing = await Review.findOne(query);
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'You already reviewed this' });
+    }
+
+    const review = await Review.create({
+      user: req.user.id,
+      animeId: animeId || null,
+      mangaId: mangaId || null,
+      rating,
+      title,
+      content,
+      isSpoiler: isSpoiler || false,
+    });
+
+    await review.populate('user', 'username avatar');
+
+    res.status(201).json({ success: true, data: review });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ success: false, message: 'You already reviewed this' });
+    }
+    console.error('CreateReview error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   GET /api/reviews/:type/:id
+// @access  Public
+exports.getReviews = async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const query = type === 'anime' ? { animeId: parseInt(id) } : { mangaId: id };
+
+    const [reviews, total] = await Promise.all([
+      Review.find(query)
+        .populate('user', 'username avatar')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Review.countDocuments(query),
+    ]);
+
+    res.json({
+      success: true,
+      data: reviews,
+      page,
+      pages: Math.ceil(total / limit),
+      total,
+    });
+  } catch (error) {
+    console.error('GetReviews error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/reviews/:id/like
+// @access  Private
+exports.likeReview = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) {
+      return res.status(404).json({ success: false, message: 'Review not found' });
+    }
+
+    const idx = review.likes.indexOf(req.user.id);
+    if (idx > -1) {
+      review.likes.splice(idx, 1);
+    } else {
+      review.likes.push(req.user.id);
+    }
+
+    await review.save();
+    res.json({ success: true, data: review, liked: idx === -1 });
+  } catch (error) {
+    console.error('LikeReview error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   DELETE /api/reviews/:id
+// @access  Private
+exports.deleteReview = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) {
+      return res.status(404).json({ success: false, message: 'Review not found' });
+    }
+
+    if (review.user.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    await review.deleteOne();
+    res.json({ success: true, message: 'Review deleted' });
+  } catch (error) {
+    console.error('DeleteReview error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};

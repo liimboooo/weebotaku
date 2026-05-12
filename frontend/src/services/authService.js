@@ -17,9 +17,9 @@ class AuthService {
     return response;
   }
 
-  async login(email, password) {
+  async login(username, password) {
     const response = await api.post('/auth/login', {
-      email,
+      username,
       password,
     }, { auth: false });
 
@@ -35,18 +35,26 @@ class AuthService {
     return api.get('/auth/me');
   }
 
-  async updateProfile(username, bio, avatar) {
-    return api.put('/auth/updateprofile', {
-      username,
-      bio,
-      avatar,
-    });
+  async updateProfile(data) {
+    const response = await api.put('/auth/updateprofile', data);
+    if (response.success && response.user) {
+      localStorage.setItem('user', JSON.stringify(response.user));
+    }
+    return response;
   }
 
   async logout() {
+    try {
+      await api.get('/auth/logout');
+    } catch {
+      // Server might be down, still clear local state
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    return api.get('/auth/logout');
+    localStorage.removeItem('username');
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userAvatar');
+    localStorage.removeItem('userStatusMessage');
   }
 
   getCurrentUser() {

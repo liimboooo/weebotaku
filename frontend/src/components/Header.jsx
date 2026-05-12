@@ -22,6 +22,7 @@ import {
   X,
 } from 'lucide-react';
 import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications } from '../services/notificationService';
+import authService from '../services/authService';
 import './Header.css';
 
 export default function Header() {
@@ -531,7 +532,7 @@ export default function Header() {
                 <div className="profile-actions-grid">
                   <button className="profile-action-card" onClick={() => navigateTo('/profile')}><Settings size={16} /> <span>Profile</span></button>
                   <button className="profile-action-card" onClick={() => navigateTo('/watchlist')}><Bookmark size={16} /> <span>Watchlist</span></button>
-                  <button className="profile-action-card profile-action-card--danger" onClick={() => { localStorage.removeItem('username'); localStorage.removeItem('isLoggedIn'); localStorage.removeItem('userAvatar'); localStorage.removeItem('userStatusMessage'); localStorage.removeItem('userEpisodesWatched'); localStorage.removeItem('userCurrentStreak'); localStorage.removeItem('userBountyValue'); localStorage.removeItem('userUnclaimedRewards'); navigateTo('/home'); }}>
+                  <button className="profile-action-card profile-action-card--danger" onClick={async () => { await authService.logout(); navigateTo('/'); }}>
                     <LogOut size={16} /> <span>Sign Out</span>
                   </button>
                 </div>

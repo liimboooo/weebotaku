@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAnimeById, activeRooms } from "../data/animeData";
 import { loadWatchlist } from "../services/storage";
+import authService from "../services/authService";
 import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
 import { Bookmark, Heart, Star, Clock, PenLine, LogOut, Settings, Eye, Film, Users, Video, Sparkles } from "lucide-react";
@@ -75,7 +76,7 @@ export default function ProfilePage() {
     { label: "Watched", value: episodesWatched, icon: Eye },
   ];
 
-  const saveProfile = () => {
+  const saveProfile = async () => {
     localStorage.setItem("username", username);
     if (avatar) {
       try {
@@ -88,6 +89,10 @@ export default function ProfilePage() {
         try { localStorage.setItem("userAvatar", avatar); } catch {}
       }
     }
+    // Sync to backend
+    try {
+      await authService.updateProfile({ username, avatar, bio: statusMsg });
+    } catch {}
     window.dispatchEvent(new Event("profile-avatar-updated"));
     setEditing(false);
   };
@@ -235,11 +240,8 @@ export default function ProfilePage() {
                 </div>
                 <div className="profile-actions-row">
                   <button className="profile-edit-trigger" onClick={() => setEditing(true)}><Settings size={14} /> Edit Profile</button>
-                  <button className="profile-logout-trigger" onClick={() => {
-                    localStorage.removeItem("username");
-                    localStorage.removeItem("isLoggedIn");
-                    localStorage.removeItem("userAvatar");
-                    localStorage.removeItem("userStatusMessage");
+                  <button className="profile-logout-trigger" onClick={async () => {
+                    await authService.logout();
                     navigate("/");
                   }}><LogOut size={14} /> Sign Out</button>
                 </div>

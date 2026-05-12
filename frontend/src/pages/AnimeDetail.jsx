@@ -7,7 +7,7 @@ import { ArrowLeft, Play, Bookmark, Heart, Share2, Tv, ShieldCheck, Bell, Sparkl
 import { getAnimeById, getAllAnime } from "../data/animeData";
 import { fetchAnimeById as jikanFetchAnime } from "../services/jikanApi";
 
-import { addToWatchlist, removeFromWatchlist, isInWatchlist } from "../services/storage";
+import { addToWatchlist, removeFromWatchlist, isInWatchlist, rateAnime as syncRateAnime, toggleLikeAnime, addToWatchHistory } from "../services/storage";
 import { addNotification } from "../services/notificationService";
 import { findStreamingSource } from "../services/animeApi";
 import AnimeWatch from "./Feeds/AnimeWatch";
@@ -109,6 +109,8 @@ export default function AnimeDetail() {
 
       const filteredHistory = storedHistory.filter(item => item.animeId !== parseInt(id));
       localStorage.setItem("watchHistory", JSON.stringify([newItem, ...filteredHistory].slice(0, 50)));
+      // Sync to backend
+      addToWatchHistory(parseInt(id), selectedEp, anime?.name, anime?.img);
     }
   }, [showPlayer, selectedEp, id]);
 
@@ -136,6 +138,8 @@ export default function AnimeDetail() {
     }
     localStorage.setItem("likedAnime", JSON.stringify(updated));
     setIsLiked(!isLiked);
+    // Sync to backend
+    toggleLikeAnime(parseInt(id));
   };
 
   const toggleFollowing = () => {
@@ -165,6 +169,8 @@ export default function AnimeDetail() {
     storedRatings[id] = rating;
     localStorage.setItem("userRatings", JSON.stringify(storedRatings));
     setUserRating(rating);
+    // Sync to backend
+    syncRateAnime(id, rating);
   };
 
   const renderStars = (rating) => {

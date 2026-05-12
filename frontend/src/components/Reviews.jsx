@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, Send } from "lucide-react";
+import reviewService from "../services/reviewService";
 import "./Reviews.css";
 
 export default function Reviews({ animeId, selectedEp }) {
@@ -10,18 +11,67 @@ export default function Reviews({ animeId, selectedEp }) {
     } catch { return []; }
   });
   const [newReview, setNewReview] = useState("");
+  const [backendReviews, setBackendReviews] = useState([]);
 
-  const addReview = () => {
+  // Fetch reviews from backend on mount
+  useEffect(() => {
+    reviewService.getReviews("anime", animeId)
+      .then(res => {
+        if (res?.data?.length > 0) {
+          setBackendReviews(res.data);
+        }
+      })
+      .catch(() => {});
+  }, [animeId]);
+
+  // Merge local + backend reviews (backend first, then local)
+  const allReviews = [
+    ...backendReviews.map(r => ({
+      id: r._id,
+      text: r.content,
+      title: r.title,
+      user: r.user?.username || "Unknown",
+      avatar: r.user?.avatar || "",
+      time: new Date(r.createdAt).getTime(),
+      rating: r.rating,
+      likes: r.likes?.length || 0,
+      isBackend: true,
+    })),
+    ...reviews.filter(r => !backendReviews.some(br => br.content === r.text)),
+  ];
+
+  const addReview = async () => {
     if (!newReview.trim()) return;
+    const username = localStorage.getItem("username") || "Anime Fan";
+
+    // Add locally first for instant feedback
     const review = {
       id: Date.now(),
       text: newReview,
-      user: localStorage.getItem("username") || "Anime Fan",
+      user: username,
       time: Date.now(),
     };
     const updated = [review, ...reviews];
     setReviews(updated);
     localStorage.setItem(`reviews-${animeId}`, JSON.stringify(updated));
+
+    // Sync to backend
+    try {
+      await reviewService.createReview(
+        animeId,
+        null,
+        8, // default rating
+        newReview.slice(0, 50),
+        newReview,
+        false
+      );
+      // Refresh from backend
+      const res = await reviewService.getReviews("anime", animeId);
+      if (res?.data) setBackendReviews(res.data);
+    } catch {
+      // Keep local-only review if backend fails
+    }
+
     setNewReview("");
   };
 
@@ -40,10 +90,10 @@ export default function Reviews({ animeId, selectedEp }) {
       </div>
 
       <div className="reviews-list">
-        {reviews.length === 0 ? (
+        {allReviews.length === 0 ? (
           <p className="reviews-empty">No reviews yet. Be the first!</p>
         ) : (
-          reviews.map((r) => (
+          allReviews.map((r) => (
             <motion.div
               key={r.id}
               className="review-item"
@@ -51,14 +101,22 @@ export default function Reviews({ animeId, selectedEp }) {
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="review-avatar">
-                {r.user.charAt(0).toUpperCase()}
+                {r.avatar ? (
+                  <img src={r.avatar} alt={r.user} style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+                ) : (
+                  r.user.charAt(0).toUpperCase()
+                )}
               </div>
               <div className="review-body">
                 <div className="review-head">
                   <strong>{r.user}</strong>
+                  {r.rating && <span className="review-rating"><Star size={10} fill="#ffd700" color="#ffd700" /> {r.rating}/10</span>}
                   <span>{formatTimeAgo(r.time)}</span>
                 </div>
                 <p>{r.text}</p>
+                {r.isBackend && r.likes > 0 && (
+                  <span className="review-likes">❤️ {r.likes}</span>
+                )}
               </div>
             </motion.div>
           ))

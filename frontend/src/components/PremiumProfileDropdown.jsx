@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import authService from '../services/authService';
 import './PremiumProfileDropdown.css';
 
 export default function PremiumProfileDropdown() {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const username = localStorage.getItem('username') || 'load C';
   const episodesWatched = Number(localStorage.getItem('userEpisodesWatched') || 128);
   const currentStreak = Number(localStorage.getItem('userCurrentStreak') || 12);
   const bountyValue = Number(localStorage.getItem('userBountyValue') || 1500000000);
-  const rankState = calculateRank(bountyValue);
 
-  const calculateRank = (bounty) => {
+  function calculateRank(bounty) {
     const rankTrack = [
       { name: 'Rookie', min: 0, max: 100000000 },
       { name: 'Veteran', min: 100000000, max: 500000000 },
@@ -24,7 +26,9 @@ export default function PremiumProfileDropdown() {
     const progress = next ? Math.max(0, Math.min(100, ((bounty - current.min) / span) * 100)) : 100;
     const remaining = next ? Math.max(0, next.max - bounty) : 0;
     return { current, next, progress, remaining, isMaxed: !next };
-  };
+  }
+
+  const rankState = calculateRank(bountyValue);
 
   return (
     <div className="premium-profile-dropdown-wrapper">
@@ -109,16 +113,9 @@ export default function PremiumProfileDropdown() {
 
           <div className="premium-divider"></div>
 
-          <button className="premium-logout-btn" onClick={() => {
-            localStorage.removeItem('username');
-            localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('userAvatar');
-            localStorage.removeItem('userStatusMessage');
-            localStorage.removeItem('userEpisodesWatched');
-            localStorage.removeItem('userCurrentStreak');
-            localStorage.removeItem('userBountyValue');
-            localStorage.removeItem('userUnclaimedRewards');
-            // navigate to home
+          <button className="premium-logout-btn" onClick={async () => {
+            await authService.logout();
+            navigate('/');
           }}>
             <span className="premium-logout-icon">🚪</span>
             <span className="premium-logout-text">Sign Out</span>
