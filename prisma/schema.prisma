@@ -1,0 +1,441 @@
+// This is your Prisma schema file.
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ USER MODEL ============
+model User {
+  id                    String     @id @default(cuid())
+  email                 String     @unique
+  name                  String?
+  image                 String?    // Avatar URL from Cloudinary/S3
+  bio                   String?    @db.Text
+  
+  // OAuth
+  emailVerified         DateTime?
+  accounts              Account[]
+  sessions              Session[]
+  
+  // Bounty & Gamification
+  bountyRank            String     @default("Bronze") // Bronze, Silver, Gold, Platinum, Diamond, INFINITE
+  totalBounty           BigInt     @default(0) // Calculated from formula
+  totalLikes            Int        @default(0)
+  totalComments         Int        @default(0)
+  totalUploads          Int        @default(0)
+  dailyLoginStreak      Int        @default(0)
+  lastLoginDate         DateTime?
+  lastLoginDay          String?    // YYYY-MM-DD for streak calculation
+  
+  // Streak System
+  currentStreak         Int        @default(0)
+  longestStreak         Int        @default(0)
+  lastActivityDate      DateTime   @default(now())
+  streakFrozenUntil     DateTime?  // Optional: Freeze streak for premium users
+  isOnline              Boolean    @default(false)
+  
+  // User metrics
+  totalViews            Int        @default(0)
+  totalEditsCreated     Int        @default(0)
+  totalEditsWatched     Int        @default(0)
+  followerCount         Int        @default(0)
+  followingCount        Int        @default(0)
+  
+  // Activity tracking for trending algorithm
+  lastEditUploadTime    DateTime?
+  recentActivity        Int        @default(0) // Likes + comments in last 24h
+  activityScore         Float      @default(0) // For trending calculation
+  
+  // Settings
+  isPrivate             Boolean    @default(false)
+  allowComments         Boolean    @default(true)
+  receiveNotifications  Boolean    @default(true)
+  theme                 String     @default("dark") // dark, light
+  
+  // Relations
+  edits                 Edit[]
+  likes                 Like[]
+  comments              Comment[]
+  watchlist             Watchlist[]
+  followers             Follows[] @relation("follower")
+  following             Follows[] @relation("following")
+  notifications         Notification[]
+  achievements          Achievement[]
+  
+  // Metadata
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+  deletedAt             DateTime?
+  
+  @@index([email])
+  @@index([createdAt])
+  @@index([bountyRank])
+  @@index([totalBounty])
+  @@index([totalEditsCreated])
+  @@index([activityScore])
+  @@fulltext([name, bio])
+}
+
+// ============ AUTHENTICATION MODELS ============
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============ EDIT/VIDEO MODEL ============
+model Edit {
+  id                String     @id @default(cuid())
+  title             String     @db.VarChar(255)
+  description       String?    @db.Text
+  videoUrl          String     @db.Text // Cloudinary/S3 URL
+  videoPublicId     String?    // For Cloudinary
+  thumbnailUrl      String?    @db.Text
+  animatedGif       String?    @db.Text // Auto-generated GIF URL
+  
+  // Metadata
+  duration          Int        // in seconds
+  resolution        String     @default("1080p") // 720p, 1080p, 4K
+  fileSize          Int        // in bytes
+  
+  // Video Processing
+  processingStatus  String     @default("pending") // pending, processing, completed, failed
+  transcodedVersions Json?     // { "480p": url, "720p": url, "1080p": url }
+  hlsManifestUrl    String?    @db.Text // HLS streaming manifest
+  dashManifestUrl   String?    @db.Text // DASH streaming manifest
+  
+  // Creator
+  creatorId         String
+  creator           User       @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  
+  // Content
+  tags              String[]   // #Cinematic, #AMV, #Emotional, etc.
+  categories        Category[]
+  
+  // Metrics
+  viewCount         Int        @default(0)
+  likeCount         Int        @default(0)
+  commentCount      Int        @default(0)
+  shareCount        Int        @default(0)
+  
+  // Trending algorithm data
+  lastHourViews     Int        @default(0)
+  lastHourLikes     Int        @default(0)
+  lastHourComments  Int        @default(0)
+  trendingScore     Float      @default(0)
+  lastScoredAt      DateTime   @default(now())
+  
+  // Content control
+  isPublished       Boolean    @default(true)
+  isPinned          Boolean    @default(false)
+  isFeatured        Boolean    @default(false)
+  
+  // Relations
+  likes             Like[]
+  comments          Comment[]
+  watchlistItems    Watchlist[]
+  views             View[]
+  
+  // Metadata
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  deletedAt         DateTime?
+  
+  @@index([creatorId])
+  @@index([createdAt])
+  @@index([viewCount])
+  @@index([likeCount])
+  @@index([trendingScore])
+  @@index([isPublished])
+  @@index([processingStatus])
+  @@fulltext([title, description, tags])
+}
+
+// ============ CATEGORY/GENRE MODEL ============
+model Category {
+  id                String     @id @default(cuid())
+  name              String     @unique
+  slug              String     @unique
+  description       String?    @db.Text
+  icon              String?    // Icon URL
+  color             String?    // Hex color for UI
+  order             Int        @default(0)
+  
+  // Relations
+  edits             Edit[]
+  
+  @@index([slug])
+  @@index([order])
+}
+
+// ============ INTERACTION MODELS ============
+model Like {
+  id                String     @id @default(cuid())
+  userId            String
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  editId            String
+  edit              Edit       @relation(fields: [editId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime   @default(now())
+  
+  @@unique([userId, editId])
+  @@index([userId])
+  @@index([editId])
+  @@index([createdAt])
+}
+
+model Comment {
+  id                String     @id @default(cuid())
+  content           String     @db.Text
+  
+  userId            String
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  editId            String
+  edit              Edit       @relation(fields: [editId], references: [id], onDelete: Cascade)
+  
+  // Replies
+  parentId          String?
+  parent            Comment?   @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies           Comment[]  @relation("CommentReplies")
+  
+  // Moderation
+  isApproved        Boolean    @default(true)
+  isPinned          Boolean    @default(false)
+  
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  deletedAt         DateTime?
+  
+  @@index([userId])
+  @@index([editId])
+  @@index([createdAt])
+  @@index([parentId])
+}
+
+model Watchlist {
+  id                String     @id @default(cuid())
+  userId            String
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  editId            String
+  edit              Edit       @relation(fields: [editId], references: [id], onDelete: Cascade)
+  
+  status            String     @default("watching") // watching, completed, planned, dropped
+  progress          Int        @default(0) // percentage watched
+  addedAt           DateTime   @default(now())
+  completedAt       DateTime?
+  
+  @@unique([userId, editId])
+  @@index([userId])
+  @@index([editId])
+  @@index([status])
+}
+
+model View {
+  id                String     @id @default(cuid())
+  editId            String
+  edit              Edit       @relation(fields: [editId], references: [id], onDelete: Cascade)
+  
+  viewerIp          String?
+  viewerUserAgent   String?
+  referrer          String?
+  duration          Int?       // How long they watched (seconds)
+  
+  createdAt         DateTime   @default(now())
+  
+  @@index([editId])
+  @@index([createdAt])
+}
+
+// ============ SOCIAL MODELS ============
+model Follows {
+  id                String     @id @default(cuid())
+  followerId        String
+  follower          User       @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  
+  followingId       String
+  following         User       @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime   @default(now())
+  
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+// ============ NOTIFICATION MODEL ============
+model Notification {
+  id                String     @id @default(cuid())
+  userId            String
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type              String     // like, comment, follow, mention, featured, milestone
+  title             String
+  message           String     @db.Text
+  relatedUserId     String?
+  relatedEditId     String?
+  actionUrl         String?    // Deep link to related content
+  
+  isRead            Boolean    @default(false)
+  readAt            DateTime?
+  
+  createdAt         DateTime   @default(now())
+  
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ============ ACTIVITY LOG MODEL ============
+model ActivityLog {
+  id                String     @id @default(cuid())
+  userId            String
+  
+  action            String     // upload, like, comment, follow, milestone
+  actionType        String     // bounty_update, rank_change, streak, etc.
+  relatedEditId     String?
+  relatedUserId     String?
+  
+  metadata          Json?      // Additional data as JSON
+  
+  createdAt         DateTime   @default(now())
+  
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ============ REAL-TIME FEED MODEL ============
+model GlobalActivityFeed {
+  id                String     @id @default(cuid())
+  userId            String
+  
+  action            String     // new_upload, like, comment, follow
+  editId            String?
+  editTitle         String?
+  creatorName       String?
+  
+  metadata          Json?      // Flexible data storage
+  
+  createdAt         DateTime   @default(now())
+  
+  @@index([createdAt])
+  @@index([action])
+}
+
+// ============ ANALYTICS MODEL ============
+model Analytics {
+  id                String     @id @default(cuid())
+  editId            String     @unique
+  
+  dailyViews        Int[]      // Array of daily view counts
+  dailyLikes        Int[]      // Array of daily like counts
+  topCountries      String[]   // Array of country codes
+  topReferrers      String[]   // Array of referrer URLs
+  avgWatchDuration  Int        // in seconds
+  
+  lastUpdated       DateTime   @default(now()) @updatedAt
+}
+
+// ============ BOUNTY/ACHIEVEMENT MODEL ============
+model Achievement {
+  id                String     @id @default(cuid())
+  name              String     @unique
+  description       String     @db.Text
+  icon              String?    // Icon URL
+  requirement       String     // JSON string of requirements
+  rewardPoints      Int        @default(100)
+  
+  // Relations to users who earned this achievement
+  userAchievements  UserAchievement[]
+  
+  createdAt         DateTime   @default(now())
+}
+
+// ============ USER ACHIEVEMENT MODEL ============
+model UserAchievement {
+  id                String     @id @default(cuid())
+  userId            String
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  achievementId     String
+  achievement       Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  
+  earnedAt          DateTime   @default(now())
+  
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([achievementId])
+}
+
+// ============ REPORT MODEL ============
+model Report {
+  id                String     @id @default(cuid())
+  reportedEditId    String?
+  reportedUserId    String?
+  reportedCommentId String?
+  
+  reporterId        String
+  
+  reason            String     // harassment, copyright, inappropriate, spam, other
+  description       String?    @db.Text
+  status            String     @default("pending") // pending, investigating, resolved, dismissed
+  
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============ BANNED USERS MODEL ============
+model BannedUser {
+  id                String     @id @default(cuid())
+  userId            String     @unique
+  reason            String
+  bannedAt          DateTime   @default(now())
+  bannedUntil       DateTime?
+  bannedBy          String?
+}

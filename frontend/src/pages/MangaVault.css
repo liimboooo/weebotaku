@@ -217,8 +217,8 @@
 /* ─── CONTROLS ─── */
 .mv-controls {
   display: flex;
-  gap: 16px;
-  margin-bottom: 32px;
+  gap: 12px;
+  margin-bottom: 24px;
   align-items: flex-start;
 }
 
@@ -271,52 +271,150 @@
 .mv-controls-right {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   flex: 1;
 }
 
-.mv-pills {
+/* ─── FILTER DROPDOWNS ─── */
+.mv-filters {
   display: flex;
-  align-items: center;
   gap: 6px;
-  background: rgba(255,255,255,0.02);
-  padding: 5px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.06);
-  width: fit-content;
   flex-wrap: wrap;
 }
 
-.mv-pill {
-  padding: 8px 18px;
-  border-radius: 10px;
-  border: none;
-  background: none;
-  color: #888;
-  font-weight: 700;
-  font-size: 0.75rem;
+.mv-drop {
+  position: relative;
+}
+
+.mv-drop-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  color: #999;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   white-space: nowrap;
 }
 
-.mv-pill.active {
-  background: rgba(220, 38, 38, 0.15);
+.mv-drop-btn:hover {
+  border-color: rgba(255,255,255,0.14);
+  color: #ddd;
+  background: rgba(255,255,255,0.05);
+}
+
+.mv-drop-btn.has-active {
+  border-color: rgba(220,38,38,0.35);
+  color: #efefef;
+  background: rgba(220,38,38,0.08);
+}
+
+.mv-drop-btn svg { color: #888; flex-shrink: 0; }
+
+.mv-drop-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #dc2626;
   color: #fff;
-  box-shadow: 0 0 20px rgba(220,38,38,0.08);
+  border-radius: 99px;
+  font-size: 0.6rem;
+  font-weight: 800;
 }
 
-.mv-pill:hover:not(.active) {
+.mv-drop-chevron {
+  transition: transform 0.2s;
+  color: #666;
+  margin-left: 2px;
+}
+
+.mv-drop-chevron.open { transform: rotate(180deg); }
+
+.mv-drop-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  min-width: 180px;
+  max-width: 260px;
+  padding: 8px;
+  background: #141414;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+
+.mv-drop-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.mv-chip {
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
   color: #bbb;
-  background: rgba(255,255,255,0.04);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s;
 }
 
-.mv-pill-divider {
-  width: 1px;
-  height: 24px;
-  background: rgba(255,255,255,0.08);
-  margin: 0 4px;
+.mv-chip:hover {
+  border-color: rgba(220,38,38,0.25);
+  background: rgba(220,38,38,0.08);
+  color: #fff;
 }
+
+.mv-chip.active {
+  border-color: rgba(220,38,38,0.35);
+  background: rgba(220,38,38,0.15);
+  color: #fff;
+}
+
+/* ─── ACTIVE FILTER PILLS ─── */
+.mv-active-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mv-active-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(220,38,38,0.25);
+  background: rgba(220,38,38,0.1);
+  color: #efefef;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.mv-active-pill:hover { background: rgba(220,38,38,0.18); }
+
+.mv-active-pill span { color: #ef4444; font-size: 0.85rem; line-height: 1; }
+
+.mv-active-pill-clear {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.07);
+  color: #999;
+}
+
+.mv-active-pill-clear:hover { background: rgba(255,255,255,0.06); color: #ddd; }
 
 .mv-utils {
   display: flex;
@@ -383,6 +481,22 @@
   font-size: 0.75rem;
   color: #888;
   font-weight: 600;
+}
+
+.mv-summary {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mv-count-active {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(220,38,38,0.1);
+  border: 1px solid rgba(220,38,38,0.2);
+  color: #ef4444;
+  font-size: 0.65rem;
+  font-weight: 700;
 }
 
 /* ─── GRID ─── */
@@ -1003,7 +1117,8 @@
   .mv-controls { flex-direction: column; }
   .mv-search-box { width: 100%; }
   .mv-controls-right { width: 100%; }
-  .mv-pills { width: 100%; justify-content: center; }
+  .mv-filters { width: 100%; justify-content: center; }
+  .mv-active-pills { justify-content: center; }
   .mv-utils { justify-content: center; }
 }
 
@@ -1029,7 +1144,8 @@
   .mv-hero { min-height: 300px; max-height: 420px; }
   .mv-hero-content { padding: 24px; }
   .mv-hero-hud { bottom: 16px; right: 16px; padding: 10px 16px; }
-  .mv-pills { gap: 4px; padding: 4px; }
-  .mv-pill { padding: 6px 12px; font-size: 0.7rem; }
+  .mv-filters { gap: 4px; }
+  .mv-drop-btn { padding: 6px 9px; font-size: 0.68rem; }
+  .mv-drop-panel { min-width: 160px; }
   .mv-modal-overlay { padding: 16px; }
 }

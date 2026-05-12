@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLoading } from "../components/LoadingProvider";
-import { Search, X, Star, BookOpen, Eye, Heart, Sparkles, Zap, Library, List, Grid3x3 } from "lucide-react";
+import { Search, X, Star, BookOpen, Eye, Heart, Sparkles, Zap, Library, List, Grid3x3, Users, Activity, ChevronDown, SlidersHorizontal } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Loader from "../components/Loader";
 import Background from "../components/Background";
@@ -11,8 +11,45 @@ import { searchManga as mdSearch, getMangaChapters } from "../services/mangaApi"
 import MangaReader from "./Feeds/MangaReader";
 import "./MangaVault.css";
 
-const DEMOGRAPHICS = ["All", "Shonen", "Seinen", "Shojo", "Josei"];
-const STATUSES = ["All", "Ongoing", "Completed", "Hiatus"];
+const DEMOGRAPHICS = ["Shonen", "Seinen", "Shojo", "Josei"];
+const STATUSES = ["Ongoing", "Completed", "Hiatus"];
+
+function FilterDropdown({ label, icon: Icon, items, active, children }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div className="mv-drop" ref={ref}>
+      <button className={`mv-drop-btn ${active.length > 0 ? "has-active" : ""}`} onClick={() => setOpen(!open)}>
+        <Icon size={14} />
+        {label}
+        {active.length > 0 && <span className="mv-drop-count">{active.length}</span>}
+        <ChevronDown size={12} className={`mv-drop-chevron ${open ? "open" : ""}`} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="mv-drop-panel"
+            initial={{ opacity: 0, y: -6, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+            transition={{ duration: 0.15 }}
+          >
+            <div className="mv-drop-items">
+              {items.map((item) => typeof children === "function" ? children(item) : item)}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function MangaVault() {
   const [allManga, setAllManga] = useState([]);
@@ -24,8 +61,8 @@ export default function MangaVault() {
   const [hasMore, setHasMore] = useState(true);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [demo, setDemo] = useState("All");
-  const [status, setStatus] = useState("All");
+  const [activeDemo, setActiveDemo] = useState([]);
+  const [activeStatus, setActiveStatus] = useState([]);
   const [sort, setSort] = useState("rating");
   const [view, setView] = useState("grid");
   const [preview, setPreview] = useState(null);
@@ -94,8 +131,8 @@ export default function MangaVault() {
   const filtered = useMemo(() => {
     return allManga
       .filter(m => {
-        if (demo !== "All" && m.demo !== demo) return false;
-        if (status !== "All" && m.status !== status) return false;
+        if (activeDemo.length && !activeDemo.includes(m.demo)) return false;
+        if (activeStatus.length && !activeStatus.includes(m.status)) return false;
         return true;
       })
       .sort((a, b) => {
@@ -104,7 +141,7 @@ export default function MangaVault() {
         if (sort === "title") return (a.title || "").localeCompare(b.title || "");
         return 0;
       });
-  }, [allManga, demo, status, sort]);
+  }, [allManga, activeDemo, activeStatus, sort]);
 
   const [readerManga, setReaderManga] = useState(null);
   const [readerChapters, setReaderChapters] = useState([]);
@@ -145,6 +182,19 @@ export default function MangaVault() {
 
   const totalCh = useMemo(() => allManga.reduce((s, m) => s + (m.ch || 0), 0), [allManga]);
   const totalVol = useMemo(() => allManga.reduce((s, m) => s + (m.volumes || 0), 0), [allManga]);
+
+  const toggleValue = (setter, value) => setter(c => c.includes(value) ? c.filter(i => i !== value) : [...c, value]);
+
+  const activeCount = activeDemo.length + activeStatus.length;
+
+  const selectedPills = [
+    ...activeDemo.map(v => ({ key: `d:${v}`, label: v, remove: () => setActiveDemo(c => c.filter(i => i !== v)) })),
+    ...activeStatus.map(v => ({ key: `s:${v}`, label: v, remove: () => setActiveStatus(c => c.filter(i => i !== v)) })),
+  ];
+
+  const renderChip = (value, active, onClick) => (
+    <button key={value} type="button" className={`mv-chip ${active ? "active" : ""}`} onClick={onClick}>{value}</button>
+  );
 
   return (
     <AnimatedPage>
@@ -189,15 +239,26 @@ export default function MangaVault() {
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search manga..." />
             </div>
             <div className="mv-controls-right">
-              <div className="mv-pills">
-                {DEMOGRAPHICS.map(d => (
-                  <button key={d} className={`mv-pill ${demo === d ? "active" : ""}`} onClick={() => setDemo(d)}>{d}</button>
-                ))}
-                <div className="mv-pill-divider" />
-                {STATUSES.map(s => (
-                  <button key={s} className={`mv-pill ${status === s ? "active" : ""}`} onClick={() => setStatus(s)}>{s}</button>
-                ))}
+              <div className="mv-filters">
+                <FilterDropdown label="Demographic" icon={Users} items={DEMOGRAPHICS} active={activeDemo}>
+                  {(item) => renderChip(item, activeDemo.includes(item), () => toggleValue(setActiveDemo, item))}
+                </FilterDropdown>
+                <FilterDropdown label="Status" icon={Activity} items={STATUSES} active={activeStatus}>
+                  {(item) => renderChip(item, activeStatus.includes(item), () => toggleValue(setActiveStatus, item))}
+                </FilterDropdown>
               </div>
+              {selectedPills.length > 0 && (
+                <div className="mv-active-pills">
+                  {selectedPills.map(p => (
+                    <button key={p.key} type="button" className="mv-active-pill" onClick={p.remove}>
+                      {p.label} <span>×</span>
+                    </button>
+                  ))}
+                  <button type="button" className="mv-active-pill mv-active-pill-clear" onClick={() => { setActiveDemo([]); setActiveStatus([]); }}>
+                    Clear all
+                  </button>
+                </div>
+              )}
               <div className="mv-utils">
                 <select value={sort} onChange={e => setSort(e.target.value)}>
                   <option value="rating">Rating</option>
@@ -215,7 +276,10 @@ export default function MangaVault() {
           <section className="mv-grid-section">
             <div className="mv-grid-header">
               <h2><Library size={18} /> Browse All</h2>
-              <span className="mv-count">{filtered.length} series found</span>
+              <div className="mv-summary">
+                <span className="mv-count">{filtered.length} series found</span>
+                {activeCount > 0 && <span className="mv-count-active">{activeCount} active</span>}
+              </div>
             </div>
 
             {loading ? (

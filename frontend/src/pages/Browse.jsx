@@ -3,8 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLoading } from "../components/LoadingProvider";
 import {
+  Activity,
   BookOpen,
+  Building2,
+  Calendar,
   ChevronDown,
+  Film,
+  Hash,
   Heart,
   List,
   Grid3x3,
@@ -14,6 +19,8 @@ import {
   SlidersHorizontal,
   Sparkles,
   Star,
+  Tag,
+  X,
   Zap,
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
@@ -50,8 +57,9 @@ function getAnimeSeasonLabel(anime) {
   return anime?.season || "Unknown";
 }
 
-function FilterDropdown({ label, icon: Icon, items, active, children }) {
+function FilterDropdown({ label, icon: Icon, items, active, children, searchable }) {
   const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
   const ref = useRef(null);
 
   useEffect(() => {
@@ -59,6 +67,14 @@ function FilterDropdown({ label, icon: Icon, items, active, children }) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  useEffect(() => {
+    if (!open) setQ("");
+  }, [open]);
+
+  const filtered = searchable && q
+    ? items.filter(i => typeof i === "string" && i.toLowerCase().includes(q.toLowerCase()))
+    : items;
 
   return (
     <div className="br-drop" ref={ref}>
@@ -77,9 +93,17 @@ function FilterDropdown({ label, icon: Icon, items, active, children }) {
             exit={{ opacity: 0, y: -6, scale: 0.96 }}
             transition={{ duration: 0.15 }}
           >
+            {searchable && (
+              <div className="br-drop-search">
+                <Search size={12} />
+                <input value={q} onChange={e => setQ(e.target.value)} placeholder={`Search ${label.toLowerCase()}...`} autoFocus />
+                {q && <button className="br-drop-search-clear" onClick={() => setQ("")}><X size={12} /></button>}
+              </div>
+            )}
             <div className="br-drop-items">
-              {items.map((item) => typeof children === "function" ? children(item) : item)}
+              {filtered.map((item) => typeof children === "function" ? children(item) : item)}
             </div>
+            {filtered.length === 0 && <div className="br-drop-empty">No matches</div>}
           </motion.div>
         )}
       </AnimatePresence>
@@ -363,22 +387,22 @@ export default function Browse() {
           </div>
 
           <div className="br-filters">
-            <FilterDropdown label="Genres" icon={SlidersHorizontal} items={genres} active={activeGenres}>
+            <FilterDropdown label="Genres" icon={Tag} items={genres} active={activeGenres} searchable>
               {(item) => renderChip(item, activeGenres.includes(item), () => toggleValue(setActiveGenres, item))}
             </FilterDropdown>
-            <FilterDropdown label="Format" icon={SlidersHorizontal} items={formatOptions} active={activeFormats}>
+            <FilterDropdown label="Format" icon={Film} items={formatOptions} active={activeFormats}>
               {(item) => renderChip(item, activeFormats.includes(item), () => toggleValue(setActiveFormats, item))}
             </FilterDropdown>
-            <FilterDropdown label="Status" icon={SlidersHorizontal} items={statusOptions.map(s => s.value)} active={activeStatuses}>
+            <FilterDropdown label="Status" icon={Activity} items={statusOptions.map(s => s.value)} active={activeStatuses}>
               {(item) => renderChip(item, activeStatuses.includes(item), () => toggleValue(setActiveStatuses, item))}
             </FilterDropdown>
-            <FilterDropdown label="Season" icon={SlidersHorizontal} items={allSeasons} active={activeSeasons}>
+            <FilterDropdown label="Season" icon={Calendar} items={allSeasons} active={activeSeasons}>
               {(item) => renderChip(item, activeSeasons.includes(item), () => toggleValue(setActiveSeasons, item))}
             </FilterDropdown>
-            <FilterDropdown label="Year" icon={SlidersHorizontal} items={allYears} active={activeYears}>
+            <FilterDropdown label="Year" icon={Hash} items={allYears} active={activeYears}>
               {(item) => renderChip(String(item), activeYears.includes(String(item)), () => toggleValue(setActiveYears, String(item)))}
             </FilterDropdown>
-            <FilterDropdown label="Studio" icon={SlidersHorizontal} items={allStudios} active={activeStudios}>
+            <FilterDropdown label="Studio" icon={Building2} items={allStudios} active={activeStudios}>
               {(item) => renderChip(item, activeStudios.includes(item), () => toggleValue(setActiveStudios, item))}
             </FilterDropdown>
           </div>

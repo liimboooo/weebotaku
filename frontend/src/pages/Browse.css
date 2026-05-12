@@ -325,6 +325,10 @@
   gap: 6px;
   margin-bottom: 14px;
   flex-wrap: wrap;
+  padding: 10px 14px;
+  background: rgba(13,13,15,0.5);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 14px;
 }
 
 .br-drop {
@@ -334,13 +338,13 @@
 .br-drop-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
+  gap: 5px;
+  padding: 7px 12px;
   border: 1px solid rgba(255,255,255,0.06);
   background: rgba(255,255,255,0.02);
   color: #999;
-  border-radius: 10px;
-  font-size: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
@@ -348,13 +352,13 @@
 }
 
 .br-drop-btn:hover {
-  border-color: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.14);
   color: #ddd;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.05);
 }
 
 .br-drop-btn.has-active {
-  border-color: rgba(220,38,38,0.3);
+  border-color: rgba(220,38,38,0.35);
   color: #efefef;
   background: rgba(220,38,38,0.08);
 }
@@ -388,28 +392,79 @@
   top: calc(100% + 6px);
   left: 0;
   z-index: 20;
-  min-width: 240px;
-  max-width: 340px;
-  padding: 12px;
+  min-width: 220px;
+  max-width: 320px;
+  max-height: 320px;
+  padding: 8px;
   background: #141414;
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 14px;
+  border-radius: 12px;
   box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
 }
+
+.br-drop-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.br-drop-search svg { color: #666; flex-shrink: 0; }
+
+.br-drop-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.br-drop-search input::placeholder { color: rgba(255,255,255,0.3); }
+
+.br-drop-search-clear {
+  border: none;
+  background: none;
+  color: #888;
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+}
+
+.br-drop-search-clear:hover { color: #fff; }
 
 .br-drop-items {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 4px;
+  overflow-y: auto;
+  padding: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.06) transparent;
+}
+
+.br-drop-empty {
+  padding: 16px;
+  text-align: center;
+  color: #666;
+  font-size: 0.72rem;
 }
 
 .br-chip {
   border: 1px solid rgba(255,255,255,0.06);
   background: rgba(255,255,255,0.03);
   color: #bbb;
-  padding: 6px 11px;
-  border-radius: 8px;
-  font-size: 0.72rem;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.7rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.12s;
@@ -839,8 +894,9 @@
   }
   .br-hero-content { padding: 40px; }
   .br-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .br-filters { gap: 4px; }
-  .br-drop-btn { padding: 6px 10px; font-size: 0.7rem; }
+  .br-filters { gap: 4px; padding: 8px 10px; }
+  .br-drop-btn { padding: 6px 9px; font-size: 0.68rem; }
+  .br-drop-panel { min-width: 200px; max-width: 280px; }
   .br-hero-hud { bottom: 20px; right: 20px; }
 }
 
@@ -851,6 +907,6 @@
   .br-controls { flex-wrap: wrap; }
   .br-controls select { flex: 1; min-width: 0; }
   .br-grid { grid-template-columns: 1fr; }
-  .br-drop-panel { min-width: 200px; left: -40px; }
+  .br-drop-panel { min-width: 200px; max-width: 280px; left: -40px; }
   .br-hero-hud { bottom: 16px; right: 16px; padding: 10px 16px; }
 }
