@@ -30,9 +30,14 @@ class ApiClient {
       ...options,
     };
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+
     try {
-      const response = await fetch(url, config);
-      
+      const response = await fetch(url, { ...config, signal: controller.signal });
+
+      clearTimeout(timeout);
+
       if (response.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -40,13 +45,17 @@ class ApiClient {
       }
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'API request failed');
       }
 
       return data;
     } catch (error) {
+      clearTimeout(timeout);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out. Server might be waking up, please try again.');
+      }
       console.error('API Error:', error);
       throw error;
     }
