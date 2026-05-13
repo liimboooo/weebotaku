@@ -1,0 +1,10 @@
+node_modules/
+.env
+.env.local
+.env.production.local
+build/
+dist/
+*.log
+.DS_Store
+*.mp4
+Recording*.mp4

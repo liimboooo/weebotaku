@@ -26,7 +26,7 @@ function SliderCard({ item, onClick }) {
     <motion.div
       className="slider-card"
       onClick={onClick}
-      whileHover={{ y: -6 }}
+      whileHover={{ boxShadow: "0 16px 48px rgba(230,54,54,0.12)" }}
       transition={{ type: "spring", stiffness: 300 }}
     >
       <div className="slider-card-thumb">
@@ -76,7 +76,7 @@ function SliderCard({ item, onClick }) {
   );
 }
 
-export default function Slider({ sliderData }) {
+export default function Slider({ sliderData, noHeader }) {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
 
@@ -90,13 +90,15 @@ export default function Slider({ sliderData }) {
 
   return (
     <section className="slider-section">
-      <div className="slider-header">
-        <h2>Featured Collection</h2>
-        <div className="slider-arrows">
-          <button onClick={() => scroll(-1)}><ChevronLeft size={18} /></button>
-          <button onClick={() => scroll(1)}><ChevronRight size={18} /></button>
+      {!noHeader && (
+        <div className="slider-header">
+          <h2>Featured Collection</h2>
+          <div className="slider-arrows">
+            <button onClick={() => scroll(-1)}><ChevronLeft size={18} /></button>
+            <button onClick={() => scroll(1)}><ChevronRight size={18} /></button>
+          </div>
         </div>
-      </div>
+      )}
       <div className="slider-track" ref={scrollRef}>
         {sliderData.map((item) => (
           <SliderCard key={item.id} item={item} onClick={() => navigate(`/anime/${item.id}`)} />
