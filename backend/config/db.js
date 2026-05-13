@@ -1,45 +1,29 @@
 const mongoose = require('mongoose');
 
+let cached = global.mongoose;
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
 const connectDB = async () => {
-  try {
-    // Try connecting to the configured MongoDB URI first
-    const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/animewch';
-    
-    try {
-      const conn = await mongoose.connect(uri, {
-        serverSelectionTimeoutMS: 3000,
-      });
-      console.log(`✅ MongoDB connected: ${conn.connection.host}`);
-      return;
-    } catch (directError) {
-      console.log('⚠️  Could not connect to local MongoDB, starting in-memory database...');
-    }
+  if (cached.conn) return cached.conn;
 
-    // Fallback: use mongodb-memory-server for zero-config development
-    const { MongoMemoryServer } = require('mongodb-memory-server');
-    const mongod = await MongoMemoryServer.create({
-      instance: {
-        launchTimeout: 60000,
-      },
-    });
-    const memUri = mongod.getUri();
-    const conn = await mongoose.connect(memUri);
-    console.log(`✅ MongoDB Memory Server running at: ${conn.connection.host}`);
-    console.log('📌 Note: Data will be lost on server restart. Install MongoDB for persistence.');
+  const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/animewch';
 
-    // Cleanup on exit
-    process.on('SIGINT', async () => {
-      await mongod.stop();
-      process.exit(0);
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 10000,
+    }).then(m => {
+      console.log(`✅ MongoDB connected: ${m.connection.host}`);
+      return m;
+    }).catch(err => {
+      cached.promise = null;
+      throw err;
     });
-    process.on('SIGTERM', async () => {
-      await mongod.stop();
-      process.exit(0);
-    });
-  } catch (error) {
-    console.error(`❌ MongoDB connection error: ${error.message}`);
-    process.exit(1);
   }
+
+  cached.conn = await cached.promise;
+  return cached.conn;
 };
 
 module.exports = connectDB;

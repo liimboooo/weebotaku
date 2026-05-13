@@ -28,10 +28,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Proxy: trending (top anime)
+// Proxy: trending (currently airing, sorted by score)
 router.get('/trending', async (req, res) => {
   try {
-    const data = await jikanFetch('/top/anime?filter=airing&limit=20');
+    const data = await jikanFetch('/anime?status=airing&order_by=score&sort=desc&limit=20');
     res.json({ success: true, data: data.data });
   } catch (error) {
     console.error('Trending error:', error);
