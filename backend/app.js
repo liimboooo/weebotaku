@@ -7,7 +7,7 @@ const app = express();
 // ─── Middleware ───────────────────────────────────────────
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',')
-  : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+  : ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://liimboooo-animewch.vercel.app'];
 
 app.use(cors({
   origin: allowedOrigins,
@@ -41,6 +41,7 @@ app.use('/api/anime', require('./routes/anime'));
 app.use('/api/manga', require('./routes/manga'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/community', require('./routes/community'));
+app.use('/api/news', require('./routes/news'));
 
 // Health check
 app.get('/api/health', (req, res) => {
