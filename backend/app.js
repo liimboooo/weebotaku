@@ -5,13 +5,19 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 
 // ─── Middleware ───────────────────────────────────────────
-const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(',')
-  : ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://liimboooo-animewch.vercel.app'];
+const rawOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean)
+  : [];
+
+const corsOrigin = rawOrigins.includes('*')
+  ? '*'
+  : rawOrigins.length > 0
+    ? rawOrigins
+    : ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://liimboooo-animewch.vercel.app'];
 
 app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
+  origin: corsOrigin,
+  credentials: corsOrigin !== '*',
 }));
 
 app.use(express.json({ limit: '10mb' }));
