@@ -2,7 +2,6 @@ import AuthPage from "./pages/AuthPage";
 import './App.css';
 import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import ScrollToTop from "./components/ScrollToTop";
 import Header from "./components/Header";
 import ToastContainer from "./components/Toast";
@@ -112,16 +111,12 @@ function AppLayout() {
 }
 
 function App() {
-  const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-
   return (
-    <GoogleOAuthProvider clientId={clientId || ''}>
-      <LoadingProvider>
-        <Router>
-          <AppLayout />
-        </Router>
-      </LoadingProvider>
-    </GoogleOAuthProvider>
+    <LoadingProvider>
+      <Router>
+        <AppLayout />
+      </Router>
+    </LoadingProvider>
   );
 }
 

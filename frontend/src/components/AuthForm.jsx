@@ -1,9 +1,46 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, Mail, User, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
-import { GoogleLogin } from "@react-oauth/google";
+
+const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 export default function AuthForm({ type, username, email, password, setUsername, setEmail, setPassword, onSubmit, onModeChange, error, loading, onGoogleSuccess, onGoogleError }) {
   const [showPw, setShowPw] = useState(false);
+  const btnRef = useRef(null);
+  const rendered = useRef(false);
+
+  useEffect(() => {
+    if (!CLIENT_ID || CLIENT_ID === 'your_google_client_id_here') return;
+    if (rendered.current) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    const interval = setInterval(() => {
+      if (window.google?.accounts?.id) {
+        clearInterval(interval);
+        rendered.current = true;
+        window.google.accounts.id.initialize({
+          client_id: CLIENT_ID,
+          callback: (res) => {
+            if (res.credential) onGoogleSuccess?.(res.credential);
+            else onGoogleError?.("Google sign-in failed");
+          },
+        });
+        if (btnRef.current) {
+          window.google.accounts.id.renderButton(btnRef.current, {
+            theme: 'outline',
+            size: 'large',
+            shape: 'rectangular',
+            text: 'continue_with',
+          });
+        }
+      }
+    }, 200);
+    return () => { clearInterval(interval); }
+  }, [onGoogleSuccess, onGoogleError]);
 
   return (
     <div className="auth-card" key={type}>
@@ -78,22 +115,16 @@ export default function AuthForm({ type, username, email, password, setUsername,
         </div>
       </form>
 
-      <div className="auth-divider">
-        <span className="auth-divider-line" />
-        <span className="auth-divider-text">or</span>
-        <span className="auth-divider-line" />
-      </div>
-
-      <div className="google-wrapper">
-        <GoogleLogin
-          onSuccess={(res) => onGoogleSuccess?.(res.credential)}
-          onError={() => onGoogleError?.("Google sign-in failed")}
-          size="large"
-          shape="rectangular"
-          theme="outline"
-          text="continue_with"
-        />
-      </div>
+      {CLIENT_ID && CLIENT_ID !== 'your_google_client_id_here' && (
+        <>
+          <div className="auth-divider">
+            <span className="auth-divider-line" />
+            <span className="auth-divider-text">or</span>
+            <span className="auth-divider-line" />
+          </div>
+          <div className="google-wrapper" ref={btnRef} />
+        </>
+      )}
 
       <div className="auth-toggle">
         {type === "login" ? "Don't have an account? " : "Already have an account? "}
