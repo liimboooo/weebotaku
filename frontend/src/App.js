@@ -23,10 +23,9 @@ import NotFound from "./pages/NotFound";
 import AMVsEdits from "./pages/Feeds/AMVsEdits";
 import WatchTogetherCreative from "./pages/Community/WatchTogetherCreative";
 import Rankings from "./pages/Rankings/Rankings";
-import Overview from "./pages/Rankings/Overview";
-import CharacterArena from "./pages/Rankings/CharacterArena";
 import BestAnime from "./pages/Rankings/BestAnime";
 import TierLists from "./pages/Rankings/TierLists";
+import TierListView from "./pages/Rankings/TierListView";
 import Rules from "./pages/System/Rules";
 import Report from "./pages/System/Report";
 
@@ -87,11 +86,10 @@ function AppLayout() {
           <Route path="/watch-together/new" element={<WatchTogetherCreative />} />
           <Route path="/feeds/amvs" element={<AMVsEdits />} />
           <Route path="/arena" element={<Rankings />} />
-          <Route path="/arena/overview" element={<Overview />} />
           <Route path="/rankings/anime" element={<BestAnime />} />
           <Route path="/rankings/manga" element={<TierLists />} />
-          <Route path="/arena/character-battle" element={<CharacterArena />} />
           <Route path="/arena/tier-lists" element={<TierLists />} />
+          <Route path="/arena/tier-lists/:id" element={<TierListView />} />
           <Route path="/settings" element={<GenericRoutePage {...routePageMap.settings} />} />
           <Route path="/help" element={<GenericRoutePage {...routePageMap.help} />} />
           <Route path="/system/rules" element={<Rules />} />

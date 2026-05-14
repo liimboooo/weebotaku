@@ -6,7 +6,6 @@ import {
   Bookmark,
   ChevronDown,
   LogOut,
-  Flame,
   PenLine,
   Globe,
   Menu,
@@ -16,7 +15,6 @@ import {
   Settings,
   Star,
   Swords,
-  Trophy,
   Users,
   Video,
   X,
@@ -70,8 +68,6 @@ export default function Header() {
 
   const username = localStorage.getItem('username') || 'zabi';
   const episodesWatched = Number(localStorage.getItem('userEpisodesWatched') || 128);
-  const currentStreak = Number(localStorage.getItem('userCurrentStreak') || 12);
-  const bountyValue = Number(localStorage.getItem('userBountyValue') || 1500000000);
   const hasUnclaimedRewards = localStorage.getItem('userUnclaimedRewards') === 'true';
 
   const feedItems = useMemo(
@@ -94,32 +90,7 @@ export default function Header() {
     []
   );
 
-  const battleArenaData = useMemo(
-    () => ({
-      character: {
-        left: { name: 'Luffy', anime: 'One Piece', icon: '🏴‍☠️' },
-        right: { name: 'Naruto', anime: 'Naruto', icon: '🍃' },
-        leftVotes: 5230,
-        rightVotes: 4892,
-      },
-      animeOfWeek: {
-        title: 'Jujutsu Kaisen vs Attack on Titan',
-        endsIn: '2 days',
-      },
-      isLive: true,
-    }),
-    []
-  );
 
-  const hallOfFameLinks = useMemo(
-    () => [
-      { label: 'Arena Hub', path: '/arena', icon: '⚔️' },
-      { label: 'Arena Overview', path: '/arena/overview', icon: '📡' },
-      { label: 'Top 100 Anime', path: '/rankings/anime', icon: '🏆' },
-      { label: 'Top 100 Manga', path: '/rankings/manga', icon: '📚' },
-    ],
-    []
-  );
 
   function formatTimeAgo(ts) {
     const diff = Date.now() - ts;
@@ -158,26 +129,6 @@ export default function Header() {
       document.removeEventListener('keydown', onKeyDown);
     };
   }, []);
-
-  const rankTrack = useMemo(
-    () => [
-      { name: 'Rookie', min: 0, max: 100000000 },
-      { name: 'Veteran', min: 100000000, max: 500000000 },
-      { name: 'Legend', min: 500000000, max: 1500000000 },
-      { name: 'Infinite', min: 1500000000, max: Infinity },
-    ],
-    []
-  );
-
-  const rankState = useMemo(() => {
-    const current = [...rankTrack].reverse().find((entry) => bountyValue >= entry.min) || rankTrack[0];
-    const currentIndex = rankTrack.findIndex((entry) => entry.name === current.name);
-    const next = rankTrack[currentIndex + 1] || null;
-    const span = next ? next.max - current.min : 0;
-    const progress = next ? Math.max(0, Math.min(100, ((bountyValue - current.min) / span) * 100)) : 100;
-    const remaining = next ? Math.max(0, next.max - bountyValue) : 0;
-    return { current, next, progress, remaining, isMaxed: !next };
-  }, [rankTrack, bountyValue]);
 
   useEffect(() => {
     const syncAvatar = () => setProfileImage(localStorage.getItem('userAvatar') || '');
@@ -345,38 +296,11 @@ export default function Header() {
                   <div className="arena-mega-menu-glow" />
                   <div className="arena-grid">
                     <div className="arena-column">
-                      <div className="column-header"><Trophy size={14} /> Rankings</div>
-                      <div className="column-items">
-                        {hallOfFameLinks.map((link, idx) => (
-                          <motion.button key={link.path} className="arena-item" onClick={() => navigateTo(link.path)}
-                            initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.06 }}>
-                            <span className="arena-item-icon">{link.icon}</span>
-                            <span className="arena-item-label">{link.label}</span>
-                          </motion.button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="arena-column">
-                      <div className="column-header"><Swords size={14} /> Live Battles</div>
-                      <div className="column-items">
-                        <motion.button className="arena-item battle-item-live" onClick={() => navigateTo('/arena/character-battle')}
-                          initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.12 }}>
-                          <span className="vs-badge">VS</span>
-                          <div className="battle-content">
-                            <div className="battle-title">{battleArenaData.character.left.name} vs {battleArenaData.character.right.name}</div>
-                            <div className="battle-subtitle">
-                              <span className="live-indicator"><span className="live-pulse" /> LIVE NOW</span>
-                            </div>
-                          </div>
-                        </motion.button>
-                      </div>
-                    </div>
-                    <div className="arena-column">
-                      <div className="column-header"><Star size={14} /> Tier Lists</div>
+                      <div className="column-header"><Star size={14} /> Community Tiers</div>
                       <div className="column-items">
                         <button className="arena-item" onClick={() => navigateTo('/arena/tier-lists')}>
                           <span className="arena-item-icon">📊</span>
-                          <span className="arena-item-label">Community Tiers</span>
+                          <span className="arena-item-label">View Tier Lists</span>
                         </button>
                       </div>
                     </div>
@@ -455,7 +379,7 @@ export default function Header() {
           <div className="profile-dropdown-container" ref={profileRef}>
             <button className="profile-button" onClick={() => setProfileOpen((value) => !value)}
               aria-expanded={profileOpen} aria-haspopup="true">
-              <span className="profile-avatar-shell" style={{ '--xp-progress': `${rankState.progress}%` }}>
+              <span className="profile-avatar-shell">
                 {profileImage ? (
                   <img src={profileImage} alt={username} className="profile-avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }} />
                 ) : (
@@ -472,7 +396,7 @@ export default function Header() {
                 <div className="profile-mini-card-glow" />
                 <div className="profile-mini-card-header">
                   <div className="profile-mini-summary">
-                    <span className="profile-avatar-shell profile-avatar-shell--compact" style={{ '--xp-progress': `${rankState.progress}%` }}>
+                    <span className="profile-avatar-shell profile-avatar-shell--compact">
                       {profileImage ? (
                         <img src={profileImage} alt={username} className="profile-avatar--compact" style={{ width: '100%', height: '100%', borderRadius: '50%', cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }} />
                       ) : (
@@ -494,23 +418,6 @@ export default function Header() {
                   <div className="profile-stat-card">
                     <span className="profile-stat-value">{episodesWatched}</span>
                     <span className="profile-stat-label">Episodes</span>
-                  </div>
-                  <div className="profile-stat-card">
-                    <span className="profile-stat-value"><Flame size={14} /> {currentStreak}</span>
-                    <span className="profile-stat-label">Streak</span>
-                  </div>
-                </div>
-                <div className="profile-bounty-section">
-                  <div className="profile-bounty-title">Bounty Rank: <strong>{rankState.current.name}</strong></div>
-                  <div className="profile-bounty-value">
-                    <span className="bounty-icon">🎯</span>
-                    <span className="bounty-amount">฿{(bountyValue / 1000000000).toFixed(1)}B</span>
-                  </div>
-                  <div className="profile-bounty-bar">
-                    <div className="profile-bounty-bar-fill" style={{ width: `${rankState.progress}%` }} />
-                  </div>
-                  <div className="profile-bounty-meta">
-                    {rankState.next ? <span>฿{(rankState.remaining / 1000000000).toFixed(1)}B to {rankState.next.name}</span> : <span>🏆 Infinite Bounty!</span>}
                   </div>
                 </div>
                 <div className="profile-status-edit">

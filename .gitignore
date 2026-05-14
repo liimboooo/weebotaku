@@ -8,3 +8,5 @@ dist/
 .DS_Store
 *.mp4
 Recording*.mp4
+
+.vercel

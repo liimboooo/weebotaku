@@ -1,0 +1,380 @@
+/* ─── Tier Lists Page ─────────────────────────────── */
+.tierlists-page {
+  min-height: 100vh;
+  position: relative;
+  padding-top: 64px;
+}
+
+.tierlists-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px 80px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Toast ───────────────────────────────────────── */
+.tier-toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(16, 185, 129, 0.95);
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 9999;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+  animation: tierToastIn 0.3s ease;
+}
+
+@keyframes tierToastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ─── Header ──────────────────────────────────────── */
+.tierlists-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.tierlists-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tierlists-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.tierlists-title-input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  padding: 4px 0;
+  min-width: 240px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.tierlists-title-input:focus {
+  border-bottom-color: rgba(255, 255, 255, 0.3);
+}
+
+.tierlists-title-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.tierlists-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tierlists-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.tierlists-stat-divider {
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tierlists-visibility {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tierlists-visibility:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tierlists-visibility.public { color: #4dabf7; border-color: rgba(77, 171, 247, 0.2); }
+.tierlists-visibility.private { color: #fcc419; border-color: rgba(252, 196, 25, 0.2); }
+
+.tierlists-save-btn,
+.tierlists-reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tierlists-save-btn {
+  background: linear-gradient(135deg, #e63636, #ff6b6b);
+  color: #fff;
+}
+
+.tierlists-save-btn:hover:not(:disabled) { box-shadow: 0 4px 16px rgba(230, 54, 54, 0.35); transform: translateY(-1px); }
+.tierlists-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.tierlists-reset-btn {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tierlists-reset-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+/* ─── Login Banner ────────────────────────────────── */
+.tierlists-login-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.tierlists-login-banner button {
+  margin-left: auto;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  background: linear-gradient(135deg, #e63636, #ff6b6b);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tierlists-login-banner button:hover { box-shadow: 0 2px 10px rgba(230, 54, 54, 0.3); }
+
+/* ─── Board ───────────────────────────────────────── */
+.tierlists-board {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ─── Tier Row ────────────────────────────────────── */
+.tier-row {
+  display: flex;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-height: 80px;
+  transition: all 0.2s;
+}
+
+.tier-row--hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.04);
+}
+
+.tier-row--unranked {
+  background: rgba(255, 255, 255, 0.02);
+  border-style: dashed;
+}
+
+.tier-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  min-height: 80px;
+  flex-shrink: 0;
+}
+
+.tier-label span {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.tier-items {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+  align-content: flex-start;
+  min-height: 80px;
+  transition: background 0.2s;
+}
+
+.tier-placeholder {
+  color: rgba(255, 255, 255, 0.15);
+  font-size: 13px;
+  padding: 8px;
+  font-style: italic;
+}
+
+/* ─── Unranked Section ────────────────────────────── */
+.tierlists-unranked-section {
+  margin-top: 12px;
+}
+
+.tierlists-unranked-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tierlists-unranked-count {
+  color: rgba(255, 255, 255, 0.2);
+  font-weight: 400;
+}
+
+/* ─── Card ────────────────────────────────────────── */
+.tier-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: grab;
+  transition: all 0.15s;
+  user-select: none;
+  width: auto;
+  max-width: 200px;
+  touch-action: none;
+}
+
+.tier-card:hover {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.tier-card--dragging {
+  opacity: 0.4;
+}
+
+.tier-card-overlay {
+  pointer-events: none;
+}
+
+.tier-card-image {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tier-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tier-card-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tier-card-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tier-card-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.tier-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.tier-card-rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: #ffd700;
+}
+
+.tier-card-studio {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Responsive ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .tierlists-shell { padding: 16px 10px 60px; }
+  .tierlists-header { flex-direction: column; }
+  .tierlists-header-right { width: 100%; justify-content: flex-start; }
+  .tierlists-title-input { font-size: 20px; min-width: 160px; width: 100%; }
+  .tier-label { width: 40px; }
+  .tier-label span { font-size: 15px; }
+  .tier-card { max-width: 160px; }
+  .tier-card-name { max-width: 90px; }
+}
+
+@media (max-width: 480px) {
+  .tier-card { max-width: 140px; padding: 3px 8px 3px 3px; }
+  .tier-card-image { width: 30px; height: 30px; }
+  .tier-card-name { font-size: 11px; max-width: 70px; }
+}

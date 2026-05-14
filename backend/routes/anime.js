@@ -67,6 +67,28 @@ router.post('/:id/rate', protect, rateAnime);
 router.get('/liked', protect, getLikedAnime);
 router.post('/:id/like', protect, likeAnime);
 
+// Proxy: characters
+router.get('/:id/characters', async (req, res) => {
+  try {
+    const data = await jikanFetch(`/anime/${req.params.id}/characters`);
+    res.json({ success: true, data: data.data });
+  } catch (error) {
+    console.error('Characters error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch characters' });
+  }
+});
+
+// Proxy: recommendations
+router.get('/:id/recommendations', async (req, res) => {
+  try {
+    const data = await jikanFetch(`/anime/${req.params.id}/recommendations`);
+    res.json({ success: true, data: data.data });
+  } catch (error) {
+    console.error('Recommendations error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch recommendations' });
+  }
+});
+
 // Proxy: anime by ID (must be last — catches all other GET /:id)
 router.get('/:id', async (req, res) => {
   try {

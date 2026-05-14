@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getAnimeById, activeRooms } from "../data/animeData";
 import { loadWatchlist } from "../services/storage";
 import authService from "../services/authService";
+import * as tierlistService from "../services/tierlistService";
 import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
-import { Bookmark, Heart, Star, Clock, PenLine, LogOut, Settings, Eye, Film, Users, Video, Sparkles } from "lucide-react";
+import { Bookmark, Heart, Star, Clock, PenLine, LogOut, Settings, Eye, Film, Users, Video, Sparkles, Layers } from "lucide-react";
 import "./ProfilePage.css";
 
 const tabs = [
@@ -14,6 +15,7 @@ const tabs = [
   { key: "watchlist", label: "Watchlist", icon: Bookmark },
   { key: "ratings", label: "Ratings", icon: Star },
   { key: "activity", label: "Activity", icon: Clock },
+  { key: "tierlists", label: "Tier Lists", icon: Layers },
   { key: "community", label: "Community", icon: Users },
 ];
 
@@ -30,7 +32,20 @@ export default function ProfilePage() {
   const [liked, setLiked] = useState([]);
   const [rated, setRated] = useState({});
   const [history, setHistory] = useState([]);
+  const [tierLists, setTierLists] = useState([]);
+  const [tierListsLoading, setTierListsLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+
+  const loadTierLists = async () => {
+    const user = authService.getCurrentUser();
+    if (!user?.id) return;
+    setTierListsLoading(true);
+    try {
+      const res = await tierlistService.getUserTierLists(user.id);
+      if (res.success) setTierLists(res.data);
+    } catch { /* ignore */ }
+    setTierListsLoading(false);
+  };
 
   const loadProfileData = () => {
     const storedUser = localStorage.getItem("username");
@@ -106,6 +121,7 @@ export default function ProfilePage() {
       } catch {}
     });
     loadProfileData();
+    loadTierLists();
     window.addEventListener("storage", loadProfileData);
     window.addEventListener("profile-avatar-updated", loadProfileData);
     window.addEventListener("user-status-updated", loadProfileData);
@@ -442,6 +458,63 @@ export default function ProfilePage() {
                     <Clock size={40} />
                     <p>No watch history yet</p>
                     <button className="profile-btn profile-btn-primary" onClick={() => navigate("/browse/anime")}>Start Watching</button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "tierlists" && (
+              <div className="tab-panel">
+                <h3>Tier Lists ({tierLists.length})</h3>
+                {tierListsLoading ? (
+                  <div className="empty-state">
+                    <p style={{ color: 'rgba(255,255,255,0.4)' }}>Loading tier lists...</p>
+                  </div>
+                ) : tierLists.length > 0 ? (
+                  <div className="tierlists-profile-grid">
+                    {tierLists.map((list, i) => {
+                      const ranked = Object.values(list.tiers || {}).reduce((s, arr) => s + (arr?.length || 0), 0);
+                      return (
+                        <motion.div
+                          key={list._id}
+                          className="tierlist-profile-card"
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                          onClick={() => navigate(`/arena/tier-lists/${list._id}`)}
+                        >
+                          <div className="tierlist-profile-card-header">
+                            <h4>{list.title}</h4>
+                            {list.isPublic ? (
+                              <span className="tierlist-profile-badge public">Public</span>
+                            ) : (
+                              <span className="tierlist-profile-badge private">Private</span>
+                            )}
+                          </div>
+                          <div className="tierlist-profile-card-meta">
+                            <span>{ranked} ranked items</span>
+                            <span>{new Date(list.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <div className="tierlist-profile-card-tiers">
+                            {Object.entries(list.tiers || {}).map(([tier, items]) =>
+                              items?.length > 0 ? (
+                                <span key={tier} className="tierlist-profile-tier-pill" data-tier={tier}>
+                                  {tier.toUpperCase()}: {items.length}
+                                </span>
+                              ) : null
+                            )}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="empty-state">
+                    <Layers size={40} />
+                    <p>No tier lists yet</p>
+                    <button className="profile-btn profile-btn-primary" onClick={() => navigate("/arena/tier-lists")}>
+                      Create Tier List
+                    </button>
                   </div>
                 )}
               </div>

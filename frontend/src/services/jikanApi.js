@@ -128,6 +128,32 @@ export async function fetchAnimeById(id) {
   return mapAnime(json.data);
 }
 
+export async function fetchAnimeCharacters(id) {
+  const json = await jikanFetch(`/anime/${id}/characters`);
+  return json.data.slice(0, 10).map(c => ({
+    id: c.character.mal_id,
+    name: c.character.name,
+    image: c.character.images?.jpg?.image_url || "",
+    role: c.role,
+    voiceActor: c.voice_actors?.[0] ? {
+      name: c.voice_actors[0].person.name,
+      image: c.voice_actors[0].person.images?.jpg?.image_url || "",
+      lang: c.voice_actors[0].language,
+    } : null,
+  }));
+}
+
+export async function fetchAnimeRecommendations(id) {
+  const json = await jikanFetch(`/anime/${id}/recommendations`);
+  return json.data.slice(0, 8).map(r => ({
+    id: r.entry.mal_id,
+    name: r.entry.title,
+    image: r.entry.images?.jpg?.image_url || "",
+    url: r.url,
+    votes: r.votes || 0,
+  }));
+}
+
 export async function fetchTopManga(page = 1) {
   const json = await jikanFetch(`/top/manga?page=${page}`);
   return {

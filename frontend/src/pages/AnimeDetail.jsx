@@ -5,7 +5,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ArrowLeft, Play, Bookmark, Heart, Share2, Tv, ShieldCheck, Bell, Sparkles, Star } from "lucide-react";
 import { getAnimeById, getAllAnime } from "../data/animeData";
-import { fetchAnimeById as jikanFetchAnime } from "../services/jikanApi";
+import { fetchAnimeById as jikanFetchAnime, fetchAnimeCharacters, fetchAnimeRecommendations } from "../services/jikanApi";
 
 import { addToWatchlist, removeFromWatchlist, isInWatchlist, rateAnime as syncRateAnime, toggleLikeAnime, addToWatchHistory } from "../services/storage";
 import { addNotification } from "../services/notificationService";
@@ -30,6 +30,9 @@ export default function AnimeDetail() {
   const [watchLoading, setWatchLoading] = useState(false);
   const [watcherror, setWatchError] = useState("");
   const [jikanAnime, setJikanAnime] = useState(null);
+  const [characters, setCharacters] = useState(null);
+  const [recommendations, setRecommendations] = useState(null);
+  const [showTrailer, setShowTrailer] = useState(false);
   const [bgLoaded, setBgLoaded] = useState(false);
 
   const staticAnime = getAnimeById(parseInt(id));
@@ -39,6 +42,8 @@ export default function AnimeDetail() {
     if (!staticAnime) {
       jikanFetchAnime(parseInt(id)).then(setJikanAnime).catch(() => {});
     }
+    fetchAnimeCharacters(parseInt(id)).then(setCharacters).catch(() => {});
+    fetchAnimeRecommendations(parseInt(id)).then(setRecommendations).catch(() => {});
   }, [id, staticAnime]);
 
   // Related anime (same genres, ranked by overlap + rating)
@@ -301,6 +306,11 @@ export default function AnimeDetail() {
                 </div>
 
                 <div className="ad-actions">
+                  {(anime.trailerUrl || anime.trailer?.embed_url) && (
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="ad-btn ad-btn-trailer" onClick={() => setShowTrailer(true)}>
+                      ▶ Trailer
+                    </motion.button>
+                  )}
                   <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="ad-btn ad-btn-primary" onClick={async () => {
                     setWatchError("");
                     if (watchAnime) { setShowPlayer(true); return; }
@@ -345,7 +355,57 @@ export default function AnimeDetail() {
               </div>
             )}
 
+            {characters && characters.length > 0 && (
+              <section className="ad-section">
+                <h3 className="ad-section-title">Characters</h3>
+                <div className="ad-characters-grid">
+                  {characters.map(c => (
+                    <div key={c.id} className="ad-character-card">
+                      <img src={c.image || "/placeholder.svg"} alt={c.name} className="ad-character-img" />
+                      <div className="ad-character-info">
+                        <span className="ad-character-name">{c.name}</span>
+                        <span className="ad-character-role">{c.role}</span>
+                        {c.voiceActor && (
+                          <span className="ad-character-va">VA: {c.voiceActor.name}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {recommendations && recommendations.length > 0 && (
+              <section className="ad-section">
+                <h3 className="ad-section-title">Recommendations</h3>
+                <div className="ad-recommendations-grid">
+                  {recommendations.map(r => (
+                    <div key={r.id} className="ad-recommendation-card" onClick={() => { window.scrollTo(0, 0); navigate(`/anime/${r.id}`); }}>
+                      <img src={r.image || "/placeholder.svg"} alt={r.name} />
+                      <span className="ad-recommendation-name">{r.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             <Reviews animeId={anime.id} selectedEp={selectedEp} />
+
+            {showTrailer && (anime.trailerUrl || anime.trailer?.embed_url) && (
+              <div className="ad-trailer-overlay" onClick={() => setShowTrailer(false)}>
+                <div className="ad-trailer-modal" onClick={e => e.stopPropagation()}>
+                  <button className="ad-trailer-close" onClick={() => setShowTrailer(false)}>✕</button>
+                  <div className="ad-trailer-embed">
+                    <iframe
+                      src={anime.trailerUrl || anime.trailer.embed_url}
+                      title="Trailer"
+                      allowFullScreen
+                      allow="autoplay; encrypted-media"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
         </main>
       </div>

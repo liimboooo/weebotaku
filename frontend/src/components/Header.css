@@ -219,9 +219,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
   transition: all 0.2s ease;
 }
@@ -229,8 +229,8 @@ body {
 .brand:hover .brand-icon { background: rgba(255, 255, 255, 0.12); }
 
 .brand-logo {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
 }
 
@@ -483,7 +483,7 @@ body {
   top: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  width: 680px;
+  width: 240px;
   border-radius: 12px;
   background: rgba(10, 10, 12, 0.95);
   backdrop-filter: blur(15px);
@@ -498,7 +498,7 @@ body {
 
 .arena-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 
@@ -734,7 +734,7 @@ body {
   .header-shell { gap: 12px; }
   .search-form { max-width: 300px; margin: 0 12px; }
   .more-button { display: inline-flex; }
-  .arena-mega-menu { left: -80px; width: 640px; transform: none; }
+  .arena-mega-menu { left: 50%; transform: translateX(-50%); }
 }
 
 @media (max-width: 960px) {

@@ -8,28 +8,6 @@ export default function PremiumProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const username = localStorage.getItem('username') || 'load C';
   const episodesWatched = Number(localStorage.getItem('userEpisodesWatched') || 128);
-  const currentStreak = Number(localStorage.getItem('userCurrentStreak') || 12);
-  const bountyValue = Number(localStorage.getItem('userBountyValue') || 1500000000);
-
-  function calculateRank(bounty) {
-    const rankTrack = [
-      { name: 'Rookie', min: 0, max: 100000000 },
-      { name: 'Veteran', min: 100000000, max: 500000000 },
-      { name: 'Legend', min: 500000000, max: 1500000000 },
-      { name: 'Infinite', min: 1500000000, max: Infinity },
-    ];
-
-    const current = [...rankTrack].reverse().find((entry) => bounty >= entry.min) || rankTrack[0];
-    const currentIndex = rankTrack.findIndex((entry) => entry.name === current.name);
-    const next = rankTrack[currentIndex + 1] || null;
-    const span = next ? next.max - current.min : 0;
-    const progress = next ? Math.max(0, Math.min(100, ((bounty - current.min) / span) * 100)) : 100;
-    const remaining = next ? Math.max(0, next.max - bounty) : 0;
-    return { current, next, progress, remaining, isMaxed: !next };
-  }
-
-  const rankState = calculateRank(bountyValue);
-
   return (
     <div className="premium-profile-dropdown-wrapper">
       <button 
@@ -50,7 +28,6 @@ export default function PremiumProfileDropdown() {
         </div>
         <div className="premium-profile-info">
           <div className="premium-username">{username}</div>
-          <div className="premium-rank-title">{rankState.current.name}</div>
         </div>
         <span className="premium-dropdown-chevron">▼</span>
       </button>
@@ -71,11 +48,6 @@ export default function PremiumProfileDropdown() {
             </div>
             <div className="premium-profile-details">
               <div className="premium-username-large">{username}</div>
-              <div className="premium-rank-title-large">{rankState.current.name}</div>
-              <div className="premium-bounty-value">
-                <span className="bounty-icon">🎯</span>
-                <span className="bounty-amount">฿{(bountyValue / 1000000000).toFixed(1)}B</span>
-              </div>
             </div>
           </div>
 
@@ -85,13 +57,6 @@ export default function PremiumProfileDropdown() {
               <div className="premium-stat-info">
                 <div className="premium-stat-value">{episodesWatched}</div>
                 <div className="premium-stat-label">Episodes Watched</div>
-              </div>
-            </div>
-            <div className="premium-stat-card">
-              <div className="premium-stat-icon">🔥</div>
-              <div className="premium-stat-info">
-                <div className="premium-stat-value">{currentStreak}</div>
-                <div className="premium-stat-label">Day Streak</div>
               </div>
             </div>
           </div>

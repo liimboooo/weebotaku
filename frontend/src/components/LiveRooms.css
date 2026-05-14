@@ -82,3 +82,38 @@
   align-items: center;
   gap: 4px;
 }
+
+.live-room-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.live-room-img-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(230,54,54,0.1), rgba(0,0,0,0.4));
+  color: rgba(255,255,255,0.15);
+}
+
+.section-title-icon {
+  color: #e63636;
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.live-rooms-loading,
+.live-rooms-empty {
+  text-align: center;
+  padding: 32px;
+  color: rgba(255,255,255,0.3);
+  font-size: 14px;
+  border: 1px dashed rgba(255,255,255,0.06);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.02);
+}

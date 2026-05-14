@@ -39,6 +39,29 @@ module.exports = async (req, res) => {
     return;
   }
 
+  if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    const ctype = (req.headers['content-type'] || '').toLowerCase();
+    if (ctype.includes('application/json') || ctype.includes('application/x-www-form-urlencoded')) {
+      try {
+        const data = await new Promise((resolve) => {
+          let raw = '';
+          req.on('data', (chunk) => { raw += chunk; });
+          req.on('end', () => resolve(raw));
+        });
+        if (data) {
+          if (ctype.includes('application/json')) {
+            req.body = JSON.parse(data);
+          } else {
+            req.body = Object.fromEntries(new URLSearchParams(data));
+          }
+          req._body = true;
+        }
+      } catch (e) {
+        console.error('Body parse error:', e.message);
+      }
+    }
+  }
+
   if (!serverReady) {
     try {
       await connectDB();

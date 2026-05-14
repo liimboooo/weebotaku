@@ -4,6 +4,8 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // ─── Middleware ───────────────────────────────────────────
 const rawOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean)
@@ -48,6 +50,8 @@ app.use('/api/manga', require('./routes/manga'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/community', require('./routes/community'));
 app.use('/api/news', require('./routes/news'));
+app.use('/api/tierlists', require('./routes/tierlists'));
+app.use('/api/rooms', require('./routes/rooms'));
 
 // Health check
 app.get('/api/health', (req, res) => {

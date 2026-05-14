@@ -17,7 +17,6 @@ export default function BestAnime() {
 			]}
 			actions={[
 				{ label: "Open browse", to: "/browse/anime" },
-				{ label: "View battles", to: "/arena/character-battle", variant: "secondary" },
 			]}
 			sections={[
 				{

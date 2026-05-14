@@ -1001,3 +1001,87 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* ─── Tier List Profile Cards ────────────────────── */
+.tierlists-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.tierlist-profile-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tierlist-profile-card:hover {
+  border-color: var(--red);
+  box-shadow: 0 4px 20px var(--red-glow);
+  transform: translateY(-2px);
+}
+
+.tierlist-profile-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.tierlist-profile-card-header h4 {
+  font-size: 15px;
+  color: #fff;
+  margin: 0;
+}
+
+.tierlist-profile-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tierlist-profile-badge.public {
+  background: rgba(77, 171, 247, 0.1);
+  color: #4dabf7;
+}
+
+.tierlist-profile-badge.private {
+  background: rgba(252, 196, 25, 0.1);
+  color: #fcc419;
+}
+
+.tierlist-profile-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+
+.tierlist-profile-card-tiers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tierlist-profile-tier-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: #fff;
+}
+
+.tierlist-profile-tier-pill[data-tier="s"] { background: #ff4444; }
+.tierlist-profile-tier-pill[data-tier="a"] { background: #ff8c00; }
+.tierlist-profile-tier-pill[data-tier="b"] { background: #ffd700; color: #000; }
+.tierlist-profile-tier-pill[data-tier="c"] { background: #4dabf7; }
+.tierlist-profile-tier-pill[data-tier="d"] { background: #868e96; }

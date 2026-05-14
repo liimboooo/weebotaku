@@ -520,6 +520,77 @@ input[type="range"]::-webkit-slider-thumb {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── New additions for LiveKit integration ─────── */
+.zenith-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.zenith-refresh-btn {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 24px;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.zenith-refresh-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.video-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.video-placeholder p {
+  font-size: 0.85rem;
+  max-width: 300px;
+  text-align: center;
+}
+
+.livekit-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(0, 150, 255, 0.15);
+  color: #4dabf7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chat-empty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.8rem;
+  padding: 40px 20px;
+}
+
+.field-hint {
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.7rem;
+}
+
 @media (max-width: 1000px) {
   .stage-grid {
     grid-template-columns: 1fr;
