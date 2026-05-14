@@ -15,7 +15,7 @@ const corsOrigin = rawOrigins.includes('*')
   ? '*'
   : rawOrigins.length > 0
     ? rawOrigins
-    : ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://liimboooo-animewch.vercel.app'];
+    : ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://liimboooo-animewch.vercel.app', 'https://frontend-beryl-theta-14.vercel.app'];
 
 app.use(cors({
   origin: corsOrigin,

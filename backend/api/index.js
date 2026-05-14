@@ -13,7 +13,7 @@ const setCorsHeaders = (req, res) => {
   if (!origin) return;
 
   const isAllowed = rawOrigins.length === 0
-    ? ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://liimboooo-animewch.vercel.app'].includes(origin)
+    ? ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://liimboooo-animewch.vercel.app', 'https://frontend-beryl-theta-14.vercel.app'].includes(origin)
     : rawOrigins.includes('*') || rawOrigins.includes(origin);
 
   if (isAllowed) {
