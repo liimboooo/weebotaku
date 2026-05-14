@@ -90,6 +90,7 @@ function AppLayout() {
           <Route path="/rankings/manga" element={<TierLists />} />
           <Route path="/arena/tier-lists" element={<TierLists />} />
           <Route path="/arena/tier-lists/:id" element={<TierListView />} />
+          <Route path="/tierlist/:id" element={<TierListView />} />
           <Route path="/settings" element={<GenericRoutePage {...routePageMap.settings} />} />
           <Route path="/help" element={<GenericRoutePage {...routePageMap.help} />} />
           <Route path="/system/rules" element={<Rules />} />
@@ -99,6 +100,7 @@ function AppLayout() {
           <Route path="/news" element={<News />} />
           <Route path="/watchlist" element={<WatchlistPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/:username" element={<ProfilePage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/following" element={<Navigate to="/home" replace />} />
           <Route path="*" element={<NotFound />} />

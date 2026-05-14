@@ -11,7 +11,12 @@ export async function updateTierList(id, data) {
 }
 
 export async function getUserTierLists(userId) {
-  const res = await api.get(`/tierlists/user/${userId}`, { auth: false });
+  const res = await api.get(`/tierlists/user/${userId}`);
+  return res.data;
+}
+
+export async function getUserTierListsByUsername(username) {
+  const res = await api.get(`/tierlists/by-username/${username}`, { auth: false });
   return res.data;
 }
 

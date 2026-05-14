@@ -60,6 +60,30 @@ exports.getUserTierLists = async (req, res) => {
   }
 };
 
+// @route   GET /api/tierlists/by-username/:username
+// @access  Public
+exports.getUserTierListsByUsername = async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const query = { user: user._id, isPublic: true };
+
+    const tierLists = await TierList.find(query)
+      .populate('user', 'username avatar')
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, data: tierLists });
+  } catch (error) {
+    console.error('GetUserTierListsByUsername error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // @route   GET /api/tierlists/community
 // @access  Public
 exports.getCommunityTierLists = async (req, res) => {

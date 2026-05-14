@@ -57,6 +57,11 @@ class AuthService {
     localStorage.removeItem('userStatusMessage');
   }
 
+  async getUserByUsername(username) {
+    const response = await api.get(`/auth/by-username/${username}`, { auth: false });
+    return response;
+  }
+
   getCurrentUser() {
     const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;

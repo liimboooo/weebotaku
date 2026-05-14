@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Star, Calendar, Globe, Lock } from 'lucide-react';
 import * as tierlistService from '../../services/tierlistService';
 import AnimatedPage from '../../components/AnimatedPage';
@@ -106,7 +106,7 @@ export default function TierListView() {
             <button className="tierlists-back-btn" onClick={() => navigate(-1)}>
               <ArrowLeft size={16} />
             </button>
-            <div className="tierlists-view-user">
+            <Link to={`/profile/${user.username}`} className="tierlists-view-user" style={{ textDecoration: 'none' }}>
               {user.avatar ? (
                 <img src={user.avatar} alt={user.username} className="tierlists-view-avatar" />
               ) : (
@@ -116,13 +116,14 @@ export default function TierListView() {
               )}
               <div>
                 <span className="tierlists-view-username">{user.username || 'Unknown'}</span>
+                <span className="hud-clearance-badge" style={{ marginTop: 4 }}>Level {((user.username?.length || 0) % 5) + 1} Operator</span>
                 <span className="tierlists-view-title">{list.title}</span>
               </div>
-            </div>
+            </Link>
             <div className="tierlists-view-meta">
               <span><Calendar size={13} /> {new Date(list.createdAt).toLocaleDateString()}</span>
-              <span>{list.isPublic ? <Globe size={13} /> : <Lock size={13} />} {list.isPublic ? 'Public' : 'Private'}</span>
-              <span>{rankedCount} ranked / {allItems} total</span>
+              <span>{list.isPublic ? <Globe size={13} /> : <Lock size={13} />} {list.isPublic ? 'PUBLIC' : 'CLASSIFIED'}</span>
+              <span>{rankedCount} RANKED / {allItems} TOTAL</span>
             </div>
           </div>
 

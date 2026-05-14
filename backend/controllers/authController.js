@@ -132,6 +132,21 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
+// @route   GET /api/auth/by-username/:username
+// @access  Public
+exports.getUserByUsername = async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.username });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.json({ success: true, user: user.toPublic() });
+  } catch (error) {
+    console.error('GetUserByUsername error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // @route   GET /api/auth/logout
 // @access  Private
 exports.logout = async (req, res) => {

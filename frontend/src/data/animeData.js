@@ -300,41 +300,6 @@ export const animeDatabase = {
   },
 };
 
-export const activeRooms = [
-  {
-    id: 1,
-    mode: "private",
-    name: "Jujutsu Kaisen Night Room",
-    thumbnail: "/beta-1.jpg",
-    viewers: 4821,
-    sourceUrl: "https://www.youtube-nocookie.com/embed/2h4BaMph4L0?autoplay=1&rel=0&modestbranding=1",
-  },
-  {
-    id: 2,
-    mode: "global",
-    name: "One Piece Watch Tower",
-    thumbnail: "/beta-2.jpg",
-    viewers: 6912,
-    sourceUrl: "https://www.youtube-nocookie.com/embed/MCb13lbVGE0?autoplay=1&rel=0&modestbranding=1",
-  },
-  {
-    id: 3,
-    mode: "private",
-    name: "Solo Night Session",
-    thumbnail: "/beta-3.jpg",
-    viewers: 1380,
-    sourceUrl: "https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ?autoplay=1&rel=0&modestbranding=1",
-  },
-  {
-    id: 4,
-    mode: "global",
-    name: "Global Premiere Feed",
-    thumbnail: "/beta-1.jpg",
-    viewers: 8055,
-    sourceUrl: "https://player.vimeo.com/video/76979871?autoplay=1&muted=1",
-  },
-];
-
 export const getAllAnime = () => Object.values(animeDatabase);
 export const getAnimeById = (id) => animeDatabase[id];
 export const getAnimeType = (anime) => anime?.type || "TV";

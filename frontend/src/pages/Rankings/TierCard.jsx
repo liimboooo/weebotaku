@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { Star } from 'lucide-react';
 
 export default function TierCard({ id, item, isDragOverlay = false }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
   const {
     attributes,
     listeners,
@@ -13,45 +15,49 @@ export default function TierCard({ id, item, isDragOverlay = false }) {
   } = useDraggable({ id: id || item.id, data: { item } });
 
   const style = isDragOverlay
-    ? { opacity: 0.9, transform: 'scale(1.05)', zIndex: 9999 }
+    ? {
+        opacity: 0.95,
+        transform: 'scale(1.08) rotate(-2deg)',
+        zIndex: 9999,
+        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+      }
     : transform
-      ? { transform: CSS.Translate.toString(transform), opacity: isDragging ? 0.4 : 1 }
+      ? { transform: CSS.Translate.toString(transform), opacity: isDragging ? 0.3 : 1 }
       : undefined;
+
+  const genres = item.genres?.slice(0, 2) || [];
 
   const card = (
     <div
       ref={isDragOverlay ? undefined : setNodeRef}
-      className={`tier-card ${isDragging ? 'tier-card--dragging' : ''}`}
+      className={`tier-card ${isDragging ? 'tier-card--dragging' : ''} ${imgLoaded ? 'tier-card--loaded' : ''}`}
       style={style}
       {...(isDragOverlay ? {} : { ...listeners, ...attributes })}
     >
-      <div className="tier-card-image">
-        {item.image ? (
-          <img src={item.image} alt={item.name} draggable={false} />
+      <div className={`tier-card-image ${!imgLoaded && !imgError ? 'tier-card-image--loading' : ''}`}>
+        {item.image && !imgError ? (
+          <img
+            src={item.image}
+            alt=""
+            draggable={false}
+            onLoad={() => setImgLoaded(true)}
+            onError={() => setImgError(true)}
+          />
         ) : (
-          <div className="tier-card-fallback">{item.name.charAt(0)}</div>
+          <div className="tier-card-fallback">{item.name?.charAt(0) || '?'}</div>
         )}
-      </div>
-      <div className="tier-card-body">
-        <span className="tier-card-name">{item.name}</span>
-        <div className="tier-card-meta">
-          {item.rating > 0 && (
-            <span className="tier-card-rating">
-              <Star size={10} />
-              {item.rating.toFixed(1)}
-            </span>
-          )}
-          {item.studio && (
-            <span className="tier-card-studio">{item.studio}</span>
-          )}
-        </div>
+        {genres.length > 0 && (
+          <div className="tier-card-genres">
+            {genres.join(' · ')}
+          </div>
+        )}
       </div>
     </div>
   );
 
   if (isDragOverlay) {
     return (
-      <div className="tier-card-overlay" style={{ transform: 'scale(1.05)', zIndex: 9999 }}>
+      <div className="tier-card-overlay">
         {card}
       </div>
     );

@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   createTierList,
   getUserTierLists,
+  getUserTierListsByUsername,
   getCommunityTierLists,
   getTierListById,
   updateTierList,
@@ -12,6 +13,7 @@ const { protect } = require('../middleware/auth');
 
 router.post('/', protect, createTierList);
 router.get('/user/:userId', getUserTierLists);
+router.get('/by-username/:username', getUserTierListsByUsername);
 router.get('/community', getCommunityTierLists);
 router.get('/:id', getTierListById);
 router.put('/:id', protect, updateTierList);

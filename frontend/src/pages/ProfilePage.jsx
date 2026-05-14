@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { getAnimeById, activeRooms } from "../data/animeData";
+import { getAnimeById } from "../data/animeData";
 import { loadWatchlist } from "../services/storage";
 import authService from "../services/authService";
 import * as tierlistService from "../services/tierlistService";
@@ -21,6 +21,10 @@ const tabs = [
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const { username: profileUsername } = useParams();
+  const currentUser = authService.getCurrentUser();
+  const isRemoteProfile = profileUsername && profileUsername !== currentUser?.username;
+
   const [username, setUsername] = useState("Anime Fan");
   const [avatar, setAvatar] = useState("");
   const [avatarPreview, setAvatarPreview] = useState("");
@@ -35,19 +39,26 @@ export default function ProfilePage() {
   const [tierLists, setTierLists] = useState([]);
   const [tierListsLoading, setTierListsLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [remoteUser, setRemoteUser] = useState(null);
 
   const loadTierLists = async () => {
-    const user = authService.getCurrentUser();
-    if (!user?.id) return;
     setTierListsLoading(true);
     try {
-      const res = await tierlistService.getUserTierLists(user.id);
-      if (res.success) setTierLists(res.data);
+      if (isRemoteProfile) {
+        const res = await tierlistService.getUserTierListsByUsername(profileUsername);
+        if (res.success) setTierLists(res.data);
+      } else {
+        const user = authService.getCurrentUser();
+        if (!user?.id) { setTierListsLoading(false); return; }
+        const res = await tierlistService.getUserTierLists(user.id);
+        if (res.success) setTierLists(res.data);
+      }
     } catch { /* ignore */ }
     setTierListsLoading(false);
   };
 
   const loadProfileData = () => {
+    if (isRemoteProfile) return;
     const storedUser = localStorage.getItem("username");
     if (storedUser) setUsername(storedUser);
     const storedAvatar = localStorage.getItem("userAvatar");
@@ -83,13 +94,17 @@ export default function ProfilePage() {
     })
     .filter(Boolean);
 
-  const allStats = [
-    { label: "Watchlist", value: watchlist.length, icon: Bookmark },
-    { label: "Episodes", value: totalEpisodes.toLocaleString(), icon: Film },
-    { label: "Avg Rating", value: avgRating, icon: Star },
-    { label: "Liked", value: likedAnime.length, icon: Heart },
-    { label: "Watched", value: episodesWatched, icon: Eye },
-  ];
+  const allStats = isRemoteProfile
+    ? [
+        { label: "Tier Lists", value: tierLists.length, icon: Layers },
+      ]
+    : [
+        { label: "Watchlist", value: watchlist.length, icon: Bookmark },
+        { label: "Episodes", value: totalEpisodes.toLocaleString(), icon: Film },
+        { label: "Avg Rating", value: avgRating, icon: Star },
+        { label: "Liked", value: likedAnime.length, icon: Heart },
+        { label: "Watched", value: episodesWatched, icon: Eye },
+      ];
 
   const saveProfile = async () => {
     localStorage.setItem("username", username);
@@ -113,24 +128,40 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    const keys = ["userAvatar", "amv_edits", "amv_liked", "amv_saved"];
-    keys.forEach(k => {
-      try {
-        const v = localStorage.getItem(k);
-        if (v && v.length > 100000) localStorage.removeItem(k);
-      } catch {}
-    });
-    loadProfileData();
-    loadTierLists();
-    window.addEventListener("storage", loadProfileData);
-    window.addEventListener("profile-avatar-updated", loadProfileData);
-    window.addEventListener("user-status-updated", loadProfileData);
-    return () => {
-      window.removeEventListener("storage", loadProfileData);
-      window.removeEventListener("profile-avatar-updated", loadProfileData);
-      window.removeEventListener("user-status-updated", loadProfileData);
-    };
-  }, []);
+    if (isRemoteProfile) {
+      (async () => {
+        try {
+          const res = await authService.getUserByUsername(profileUsername);
+          if (res.success && res.user) {
+            setRemoteUser(res.user);
+            setUsername(res.user.username);
+            setAvatar(res.user.avatar || '');
+            setAvatarPreview(res.user.avatar || '');
+            setStatusMsg(res.user.statusMessage || '');
+          }
+        } catch { /* ignore */ }
+      })();
+      loadTierLists();
+    } else {
+      const keys = ["userAvatar", "amv_edits", "amv_liked", "amv_saved"];
+      keys.forEach(k => {
+        try {
+          const v = localStorage.getItem(k);
+          if (v && v.length > 100000) localStorage.removeItem(k);
+        } catch {}
+      });
+      loadProfileData();
+      loadTierLists();
+      window.addEventListener("storage", loadProfileData);
+      window.addEventListener("profile-avatar-updated", loadProfileData);
+      window.addEventListener("user-status-updated", loadProfileData);
+      return () => {
+        window.removeEventListener("storage", loadProfileData);
+        window.removeEventListener("profile-avatar-updated", loadProfileData);
+        window.removeEventListener("user-status-updated", loadProfileData);
+      };
+    }
+  }, [profileUsername]);
 
   const handleAvatarUpload = (e) => {
     const file = e.target.files?.[0];
@@ -221,7 +252,9 @@ export default function ProfilePage() {
               <div className="profile-info-area">
                 <h1 className="profile-name">{username}</h1>
                 <div className="profile-status-row">
-                  {editingStatus ? (
+                  {isRemoteProfile ? (
+                    <span className="profile-status-text">{statusMsg}</span>
+                  ) : editingStatus ? (
                     <div className="profile-status-edit-row">
                       <input
                         value={statusMsg}
@@ -249,18 +282,23 @@ export default function ProfilePage() {
                   )}
                 </div>
                 <div className="profile-badges-row">
-                  <span className="profile-badge">Member since {localStorage.getItem("memberSince") || new Date().getFullYear()}</span>
-                  {watchlist.length >= 5 && <span className="profile-badge profile-badge-accent">Collector</span>}
-                  {watchlist.length >= 10 && <span className="profile-badge profile-badge-accent">Hardcore Fan</span>}
-                  {episodesWatched >= 30 && <span className="profile-badge profile-badge-accent">On Fire</span>}
+                  <span className="profile-badge">Member since {remoteUser?.memberSince || localStorage.getItem("memberSince") || new Date().getFullYear()}</span>
+                  {isRemoteProfile && (
+                    <span className="hud-clearance-badge">Level {((username?.length || 0) % 5) + 1} Operator</span>
+                  )}
+                  {!isRemoteProfile && watchlist.length >= 5 && <span className="profile-badge profile-badge-accent">Collector</span>}
+                  {!isRemoteProfile && watchlist.length >= 10 && <span className="profile-badge profile-badge-accent">Hardcore Fan</span>}
+                  {!isRemoteProfile && episodesWatched >= 30 && <span className="profile-badge profile-badge-accent">On Fire</span>}
                 </div>
-                <div className="profile-actions-row">
-                  <button className="profile-edit-trigger" onClick={() => setEditing(true)}><Settings size={14} /> Edit Profile</button>
-                  <button className="profile-logout-trigger" onClick={async () => {
-                    await authService.logout();
-                    navigate("/");
-                  }}><LogOut size={14} /> Sign Out</button>
-                </div>
+                {!isRemoteProfile && (
+                  <div className="profile-actions-row">
+                    <button className="profile-edit-trigger" onClick={() => setEditing(true)}><Settings size={14} /> Edit Profile</button>
+                    <button className="profile-logout-trigger" onClick={async () => {
+                      await authService.logout();
+                      navigate("/");
+                    }}><LogOut size={14} /> Sign Out</button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -523,39 +561,6 @@ export default function ProfilePage() {
             {activeTab === "community" && (
               <div className="tab-panel">
                 <div className="community-grid">
-                  <div className="community-section community-rooms">
-                    <div className="community-section-header">
-                      <Users size={14} />
-                      <h3>Live Rooms</h3>
-                      <span className="community-badge">LIVE</span>
-                    </div>
-                    <div className="rooms-grid">
-                      {activeRooms.map((room) => (
-                        <motion.div
-                          key={room.id}
-                          className="room-card"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          onClick={() => navigate("/watch-together")}
-                        >
-                          <div className="room-card-thumb">
-                            <img src={room.thumbnail} alt={room.name} />
-                            <div className="room-card-overlay">
-                              <span className="room-mode-tag">{room.mode}</span>
-                              <div className="room-viewers">
-                                <Eye size={10} />
-                                <span>{(room.viewers / 1000).toFixed(1)}K</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="room-card-body">
-                            <h4>{room.name}</h4>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-
                   <div className="community-section community-edits">
                     <div className="community-section-header">
                       <Sparkles size={14} />
