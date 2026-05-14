@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const { OAuth2Client } = require('google-auth-library');
 
 // @route   POST /api/auth/register
 // @access  Public
@@ -14,7 +15,6 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Passwords do not match' });
     }
 
-    // Check for existing user
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
       const field = existingUser.email === email ? 'email' : 'username';
@@ -48,7 +48,6 @@ exports.login = async (req, res) => {
   try {
     const { email, password, username } = req.body;
 
-    // Allow login with either email or username
     const loginField = email || username;
     if (!loginField || !password) {
       return res.status(400).json({ success: false, message: 'Please provide credentials' });
@@ -83,6 +82,67 @@ exports.login = async (req, res) => {
   }
 };
 
+// @route   POST /api/auth/google
+// @access  Public
+exports.googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ success: false, message: 'Missing Google credential' });
+    }
+
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      return res.status(500).json({ success: false, message: 'Google OAuth not configured' });
+    }
+
+    const client = new OAuth2Client(clientId);
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: clientId,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture, sub } = payload;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Google account has no email' });
+    }
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      let username = (name || email.split('@')[0])
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, '')
+        .slice(0, 20) || `user${sub.slice(0, 8)}`;
+
+      const existing = await User.findOne({ username });
+      if (existing) {
+        username = `${username}${Math.floor(Math.random() * 10000)}`;
+      }
+
+      user = await User.create({
+        username,
+        email,
+        password: `google_${sub}_${Math.random().toString(36).slice(2)}`,
+        avatar: picture || '',
+      });
+    }
+
+    const token = user.getSignedJwtToken();
+
+    res.json({
+      success: true,
+      token,
+      user: user.toPublic(),
+    });
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(500).json({ success: false, message: 'Google authentication failed' });
+  }
+};
+
 // @route   GET /api/auth/me
 // @access  Private
 exports.getMe = async (req, res) => {
@@ -103,7 +163,6 @@ exports.updateProfile = async (req, res) => {
     const updateFields = {};
 
     if (username !== undefined) {
-      // Check if username is taken by another user
       if (username !== req.user.username) {
         const existing = await User.findOne({ username });
         if (existing) {

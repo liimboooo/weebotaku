@@ -14,6 +14,22 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const onAuthSuccess = useCallback((response) => {
+    localStorage.setItem("username", response.user.username);
+    localStorage.setItem("isLoggedIn", "true");
+    if (!localStorage.getItem("memberSince")) {
+      localStorage.setItem("memberSince", String(response.user.memberSince || new Date().getFullYear()));
+    }
+    if (response.user.avatar) {
+      localStorage.setItem("userAvatar", response.user.avatar);
+    }
+    if (response.user.statusMessage) {
+      localStorage.setItem("userStatusMessage", response.user.statusMessage);
+    }
+    syncFromBackend().catch(() => {});
+    navigate("/home");
+  }, [navigate]);
+
   const handleSubmit = useCallback(async () => {
     const u = username.trim();
     const p = password.trim();
@@ -31,29 +47,12 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      let response;
-      if (mode === "register") {
-        response = await authService.register(u, e, p, p);
-      } else {
-        response = await authService.login(u, p);
-      }
+      const response = mode === "register"
+        ? await authService.register(u, e, p, p)
+        : await authService.login(u, p);
 
       if (response.success) {
-        // Also set localStorage keys the frontend components still read
-        localStorage.setItem("username", response.user.username);
-        localStorage.setItem("isLoggedIn", "true");
-        if (!localStorage.getItem("memberSince")) {
-          localStorage.setItem("memberSince", String(response.user.memberSince || new Date().getFullYear()));
-        }
-        if (response.user.avatar) {
-          localStorage.setItem("userAvatar", response.user.avatar);
-        }
-        if (response.user.statusMessage) {
-          localStorage.setItem("userStatusMessage", response.user.statusMessage);
-        }
-        // Sync user data from backend (fire and forget)
-        syncFromBackend().catch(() => {});
-        navigate("/home");
+        onAuthSuccess(response);
       } else {
         setError(response.message || "Something went wrong");
       }
@@ -62,7 +61,24 @@ export default function AuthPage() {
     } finally {
       setLoading(false);
     }
-  }, [username, email, password, mode, navigate]);
+  }, [username, email, password, mode, navigate, onAuthSuccess]);
+
+  const handleGoogleSuccess = useCallback(async (credential) => {
+    setError("");
+    setLoading(true);
+    try {
+      const response = await authService.googleLogin(credential);
+      if (response.success) {
+        onAuthSuccess(response);
+      } else {
+        setError(response.message || "Google sign-in failed");
+      }
+    } catch (err) {
+      setError(err.message || "Connection error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [onAuthSuccess]);
 
   const switchMode = useCallback(() => {
     setMode(m => m === "login" ? "register" : "login");
@@ -88,6 +104,8 @@ export default function AuthPage() {
         onModeChange={switchMode}
         error={error}
         loading={loading}
+        onGoogleSuccess={handleGoogleSuccess}
+        onGoogleError={(msg) => setError(msg)}
       />
       <AuthImage />
     </div>

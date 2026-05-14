@@ -62,6 +62,17 @@ class AuthService {
     return response;
   }
 
+  async googleLogin(credential) {
+    const response = await api.post('/auth/google', { credential }, { auth: false });
+
+    if (response.success) {
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+    }
+
+    return response;
+  }
+
   getCurrentUser() {
     const user = localStorage.getItem('user');
     return user ? JSON.parse(user) : null;
