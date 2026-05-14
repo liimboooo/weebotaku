@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Sparkles, Mail, User, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
 
-const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '952361732795-in2ha0ljhjadc2q9g4ib2hpd41jrbjn4.apps.googleusercontent.com';
 
 export default function AuthForm({ type, username, email, password, setUsername, setEmail, setPassword, onSubmit, onModeChange, error, loading, onGoogleSuccess, onGoogleError }) {
   const [showPw, setShowPw] = useState(false);
