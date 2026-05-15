@@ -63,7 +63,7 @@ export default function HistoryPage() {
 
   const filteredHistory = history;
 
-  const navigateWithViewTransition = (anime, event) => {
+  const navigateWithViewTransition = (anime, episode, event) => {
     if (document.startViewTransition) {
       const x = event.clientX;
       const y = event.clientY;
@@ -79,7 +79,7 @@ export default function HistoryPage() {
       if (title) title.style.viewTransitionName = `anime-title-${anime.id}`;
 
       document.startViewTransition(() => {
-        navigate(`/anime/${anime.id}`);
+        navigate(`/anime/${anime.id}?ep=${episode}`);
       }).ready.then(() => {
         document.documentElement.style.setProperty("--reveal-x", `${x}px`);
         document.documentElement.style.setProperty("--reveal-y", `${y}px`);
@@ -90,7 +90,7 @@ export default function HistoryPage() {
         });
       });
     } else {
-      navigate(`/anime/${anime.id}`);
+      navigate(`/anime/${anime.id}?ep=${episode}`);
     }
   };
 
@@ -151,7 +151,7 @@ export default function HistoryPage() {
                       borderColor: "rgba(230, 54, 54, 0.28)",
                     }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={(e) => navigateWithViewTransition(anime, e)}
+                    onClick={(e) => navigateWithViewTransition(anime, item.episode, e)}
                   >
                     <div className="history-img-wrap">
                       <img src={anime.img} alt={anime.name} />

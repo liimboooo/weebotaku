@@ -62,15 +62,15 @@ export default function PremiumProfileDropdown() {
           </div>
 
           <div className="premium-nav-menu">
-            <button className="premium-nav-item" onClick={() => {/* navigate to profile */}}>
-              <span className="premium-nav-icon">⚙️</span>
+            <button className="premium-nav-item" onClick={() => { setIsOpen(false); navigate('/profile'); }}>
+              <span className="premium-nav-icon">👤</span>
               <span className="premium-nav-text">My Profile</span>
             </button>
-            <button className="premium-nav-item" onClick={() => {/* navigate to watchlist */}}>
+            <button className="premium-nav-item" onClick={() => { setIsOpen(false); navigate('/watchlist'); }}>
               <span className="premium-nav-icon">📋</span>
               <span className="premium-nav-text">Watchlist</span>
             </button>
-            <button className="premium-nav-item" onClick={() => {/* navigate to settings */}}>
+            <button className="premium-nav-item" onClick={() => { setIsOpen(false); navigate('/settings'); }}>
               <span className="premium-nav-icon">🔧</span>
               <span className="premium-nav-text">Settings</span>
             </button>

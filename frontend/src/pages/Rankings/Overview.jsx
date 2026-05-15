@@ -41,7 +41,7 @@ export default function Overview() {
 							<h1 className="arena-title">Momentum snapshot</h1>
 							<p className="arena-lede">A condensed read on the arena so the section has a clear starting point before you dive into battles or tier boards.</p>
 							<div className="arena-actions">
-								<button className="arena-action primary" type="button" onClick={() => navigate("/arena/character-battle")}>Enter battles</button>
+								<button className="arena-action primary" type="button" onClick={() => navigate("/arena/tier-lists")}>Enter battles</button>
 								<button className="arena-action secondary" type="button" onClick={() => navigate("/arena/tier-lists")}>Open tier lists</button>
 							</div>
 							<div className="arena-stat-grid">

@@ -4,6 +4,7 @@ import AuthForm from "../components/AuthForm";
 import AuthImage from "../components/AuthImage";
 import authService from "../services/authService";
 import { syncFromBackend } from "../services/storage";
+import "./AuthPage.css";
 
 export default function AuthPage() {
   const navigate = useNavigate();

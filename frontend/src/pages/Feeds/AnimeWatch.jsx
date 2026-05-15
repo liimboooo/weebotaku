@@ -3,9 +3,9 @@ import { ChevronLeft, ChevronRight, X, Loader } from "lucide-react";
 import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls } from "../../services/animeApi";
 import "./AnimeWatch.css";
 
-export default function AnimeWatch({ anime, onClose }) {
+export default function AnimeWatch({ anime, animeName, onClose, startEp = 1 }) {
   const [episodes, setEpisodes] = useState([]);
-  const [epIndex, setEpIndex] = useState(0);
+  const [epIndex, setEpIndex] = useState(Math.max(0, startEp - 1));
   const [loading, setLoading] = useState(true);
   const [streamLoading, setStreamLoading] = useState(false);
   const [servers, setServers] = useState([]);
@@ -29,14 +29,14 @@ export default function AnimeWatch({ anime, onClose }) {
           return;
         }
         setEpisodes(eps);
-        setEpIndex(0);
+        setEpIndex(Math.min(Math.max(0, startEp - 1), eps.length - 1));
       } catch {
         setError("Failed to load episodes.");
       } finally {
         setLoading(false);
       }
     })();
-  }, [anime.id, anime.slug, anime.source]);
+  }, [anime.id, anime.slug, anime.source, startEp]);
 
   const episode = episodes[epIndex];
 
@@ -88,7 +88,7 @@ export default function AnimeWatch({ anime, onClose }) {
             </button>
           </div>
           <div className="watch-header-center">
-            {episode && <span className="watch-title">{anime.title} — Episode {episode.episode}</span>}
+            {episode && <span className="watch-title">{animeName || anime.title} — Episode {episode.episode}</span>}
           </div>
           <div className="watch-header-right">
             <button className="watch-close-btn" onClick={onClose}>

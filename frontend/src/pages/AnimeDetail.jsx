@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -18,7 +18,16 @@ import "./AnimeDetail.css";
 
 export default function AnimeDetail() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const epFromUrl = searchParams.get('ep');
+    if (epFromUrl) { setSelectedEp(Number(epFromUrl)); return; }
+    const history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
+    const found = history.find(h => h.animeId === parseInt(id));
+    if (found) setSelectedEp(found.episode);
+  }, [id, searchParams]);
   const [isWatchlisted, setIsWatchlisted] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
@@ -345,7 +354,7 @@ export default function AnimeDetail() {
             </div>
 
             {showPlayer && watchAnime && (
-              <AnimeWatch anime={watchAnime} onClose={() => setShowPlayer(false)} />
+              <AnimeWatch anime={watchAnime} animeName={anime?.name} onClose={() => setShowPlayer(false)} startEp={selectedEp} />
             )}
 
             {anime.director && (
