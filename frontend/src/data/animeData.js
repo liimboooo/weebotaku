@@ -2,6 +2,7 @@ export const animeDatabase = {
   1: {
     id: 1,
     name: "Naruto",
+    malId: 20,
     type: "TV",
     img: "/beta-1.jpg",
     rating: 8.8,
@@ -29,6 +30,7 @@ export const animeDatabase = {
   2: {
     id: 2,
     name: "One Piece",
+    malId: 21,
     type: "TV",
     img: "/beta-2.jpg",
     rating: 9.1,
@@ -53,6 +55,7 @@ export const animeDatabase = {
   3: {
     id: 3,
     name: "Demon Slayer",
+    malId: 38000,
     type: "TV",
     img: "/beta-3.jpg",
     rating: 8.9,
@@ -83,6 +86,7 @@ export const animeDatabase = {
   4: {
     id: 4,
     name: "Attack on Titan",
+    malId: 16498,
     type: "TV",
     img: "/beta-1.jpg",
     rating: 9.0,
@@ -114,6 +118,7 @@ export const animeDatabase = {
   5: {
     id: 5,
     name: "Bleach",
+    malId: 269,
     type: "TV",
     img: "/beta-2.jpg",
     rating: 8.7,
@@ -138,6 +143,7 @@ export const animeDatabase = {
   6: {
     id: 6,
     name: "Jujutsu Kaisen",
+    malId: 40748,
     type: "TV",
     img: "/beta-3.jpg",
     rating: 8.95,
@@ -162,6 +168,7 @@ export const animeDatabase = {
   7: {
     id: 7,
     name: "My Hero Academia",
+    malId: 31964,
     type: "TV",
     img: "/beta-1.jpg",
     rating: 8.5,
@@ -186,6 +193,7 @@ export const animeDatabase = {
   8: {
     id: 8,
     name: "Steins;Gate",
+    malId: 9253,
     type: "TV",
     img: "/beta-2.jpg",
     rating: 9.2,
@@ -209,6 +217,7 @@ export const animeDatabase = {
   9: {
     id: 9,
     name: "Fullmetal Alchemist",
+    malId: 5114,
     type: "TV",
     img: "/beta-3.jpg",
     rating: 9.15,
@@ -232,6 +241,7 @@ export const animeDatabase = {
   10: {
     id: 10,
     name: "Death Note",
+    malId: 1535,
     type: "TV",
     img: "/beta-1.jpg",
     rating: 9.0,
@@ -255,6 +265,7 @@ export const animeDatabase = {
   11: {
     id: 11,
     name: "Hunter x Hunter",
+    malId: 11061,
     type: "TV",
     img: "/beta-2.jpg",
     rating: 9.1,
@@ -278,6 +289,7 @@ export const animeDatabase = {
   12: {
     id: 12,
     name: "Spy x Family",
+    malId: 50265,
     type: "TV",
     img: "/beta-3.jpg",
     rating: 8.6,

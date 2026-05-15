@@ -131,7 +131,7 @@ export function isInReadlist(id) {
 export function addToWatchHistory(animeId, episode, animeName, animeImg) {
   // Local
   const history = JSON.parse(localStorage.getItem("watchHistory") || "[]");
-  history.unshift({ animeId, episode, timestamp: Date.now() });
+  history.unshift({ animeId, episode, timestamp: Date.now(), animeName: animeName || "", animeImg: animeImg || "" });
   if (history.length > 100) history.length = 100;
   localStorage.setItem("watchHistory", JSON.stringify(history));
 

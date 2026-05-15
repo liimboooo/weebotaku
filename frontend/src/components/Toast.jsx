@@ -18,7 +18,7 @@ export default function ToastContainer() {
       setToasts((prev) => [...prev, { ...toast, id }]);
       setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
     };
-    window.addEventListener("toast", handler);
+    window.addEventListener("notification-added", handler);
     return () => window.removeEventListener("toast", handler);
   }, []);
 

@@ -11,11 +11,7 @@ const CommentSchema = new mongoose.Schema({
     required: true,
     maxlength: 2000,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+}, { timestamps: true });
 
 const CommunityPostSchema = new mongoose.Schema({
   user: {
@@ -46,11 +42,7 @@ const CommunityPostSchema = new mongoose.Schema({
     ref: 'User',
   }],
   comments: [CommentSchema],
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+}, { timestamps: true });
 
 CommunityPostSchema.index({ createdAt: -1 });
 CommunityPostSchema.index({ category: 1 });

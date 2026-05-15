@@ -9,6 +9,32 @@
   margin: 0 0 20px;
 }
 
+.review-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.review-star-picker {
+  font-size: 20px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.2);
+  transition: color 0.15s, transform 0.15s;
+}
+
+.review-star-picker:hover,
+.review-star-picker.active {
+  color: #ffd700;
+  transform: scale(1.15);
+}
+
+.review-rating-label {
+  font-size: 12px;
+  color: #ffd700;
+  margin-left: 6px;
+}
+
 .review-input-row {
   display: flex;
   gap: 10px;

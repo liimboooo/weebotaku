@@ -37,7 +37,7 @@ export default function AnimeDetail() {
   const [isCinemaMode, setIsCinemaMode] = useState(false);
   const [watchAnime, setWatchAnime] = useState(null);
   const [watchLoading, setWatchLoading] = useState(false);
-  const [watcherror, setWatchError] = useState("");
+  const [watchError, setWatchError] = useState("");
   const [jikanAnime, setJikanAnime] = useState(null);
   const [characters, setCharacters] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
@@ -46,14 +46,15 @@ export default function AnimeDetail() {
 
   const staticAnime = getAnimeById(parseInt(id));
   const anime = jikanAnime || staticAnime;
+  const malId = staticAnime?.malId || parseInt(id);
 
   useEffect(() => {
     if (!staticAnime) {
-      jikanFetchAnime(parseInt(id)).then(setJikanAnime).catch(() => {});
+      jikanFetchAnime(malId).then(setJikanAnime).catch(() => {});
     }
-    fetchAnimeCharacters(parseInt(id)).then(setCharacters).catch(() => {});
-    fetchAnimeRecommendations(parseInt(id)).then(setRecommendations).catch(() => {});
-  }, [id, staticAnime]);
+    fetchAnimeCharacters(malId).then(setCharacters).catch(() => {});
+    fetchAnimeRecommendations(malId).then(setRecommendations).catch(() => {});
+  }, [id, staticAnime, malId]);
 
   // Related anime (same genres, ranked by overlap + rating)
   const getRelatedAnime = () => {
@@ -336,7 +337,7 @@ export default function AnimeDetail() {
                   }} disabled={watchLoading}>
                     <Play size={18} fill="currentColor" /> {watchLoading ? "Searching..." : "Watch Now"}
                   </motion.button>
-                  {watcherror && <p className="ad-error-msg">{watcherror}</p>}
+                  {watchError && <p className="ad-error-msg">{watchError}</p>}
                   <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`ad-btn ad-btn-secondary ${isWatchlisted ? "active" : ""}`} onClick={toggleWatchlist}>
                     <Bookmark size={18} fill={isWatchlisted ? "currentColor" : "none"} /> {isWatchlisted ? "Saved" : "Save"}
                   </motion.button>
@@ -354,7 +355,7 @@ export default function AnimeDetail() {
             </div>
 
             {showPlayer && watchAnime && (
-              <AnimeWatch anime={watchAnime} animeName={anime?.name} onClose={() => setShowPlayer(false)} startEp={selectedEp} />
+              <AnimeWatch anime={watchAnime} animeName={anime?.name} onClose={() => setShowPlayer(false)} startEp={selectedEp} onEpisodeChange={(ep) => setSelectedEp(ep)} />
             )}
 
             {anime.director && (

@@ -16,6 +16,7 @@ import AnimatedPage from "../../components/AnimatedPage";
 import LiveRooms from "../../components/LiveRooms";
 import * as roomService from "../../services/roomService";
 import authService from "../../services/authService";
+import { addNotification } from "../../services/notificationService";
 import "./WatchTogetherCreative.css";
 
 const ANIME_OPTIONS = [
@@ -212,10 +213,9 @@ export default function WatchTogetherCreative() {
         }
       }
     } catch {
-      setIsLive(true);
+      setIsLive(false);
       setIsConfigOpen(false);
-      if (nextSource) setCurrentSourceUrl(nextSource);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      addNotification({ title: "Room Error", body: "Failed to create room. Try again.", type: "error" });
     }
   };
 

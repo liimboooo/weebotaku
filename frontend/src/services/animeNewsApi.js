@@ -111,7 +111,7 @@ function buildNewsFeed(anime, manga) {
 
   for (const m of anime.upcoming.media) {
     const a = mapAnime(m);
-    const d = a.startDate || (m.startDate ? `${m.startDate.year}-${String(m.startDate.month).padStart(2,"0")}-${String(m.startDate.day).padStart(2,"0")}` : "TBA");
+    const d = m.startDate ? `${m.startDate.year}-${String(m.startDate.month).padStart(2,"0")}-${String(m.startDate.day).padStart(2,"0")}` : "TBA";
     items.push({id:`upcoming-${m.id}`,type:"announcement",mediaType:"anime",title:`Coming Soon: ${a.title}`,description:`${d} \u2022 ${a.format} \u2022 ${a.genres.slice(0,3).join(", ")}`,image:a.image,animeId:m.id,animeTitle:a.title,date:d,score:a.score,genres:a.genres});
   }
 

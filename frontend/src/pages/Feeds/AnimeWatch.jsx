@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, X, Loader } from "lucide-react";
 import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls } from "../../services/animeApi";
 import "./AnimeWatch.css";
 
-export default function AnimeWatch({ anime, animeName, onClose, startEp = 1 }) {
+export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange }) {
   const [episodes, setEpisodes] = useState([]);
   const [epIndex, setEpIndex] = useState(Math.max(0, startEp - 1));
   const [loading, setLoading] = useState(true);
@@ -75,8 +75,8 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1 }) {
     }
   };
 
-  const goPrev = () => setEpIndex(i => Math.max(0, i - 1));
-  const goNext = () => setEpIndex(i => Math.min(episodes.length - 1, i + 1));
+  const goPrev = () => setEpIndex(i => { const next = Math.max(0, i - 1); if (onEpisodeChange && episodes[next]) onEpisodeChange(episodes[next].episode); return next; });
+  const goNext = () => setEpIndex(i => { const next = Math.min(episodes.length - 1, i + 1); if (onEpisodeChange && episodes[next]) onEpisodeChange(episodes[next].episode); return next; });
 
   return (
     <div className="watch-overlay" onClick={onClose}>
@@ -139,7 +139,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1 }) {
             <div className="watch-ep-select-wrap">
               <select
                 value={epIndex}
-                onChange={e => setEpIndex(Number(e.target.value))}
+                onChange={e => { const idx = Number(e.target.value); setEpIndex(idx); if (onEpisodeChange && episodes[idx]) onEpisodeChange(episodes[idx].episode); }}
               >
                 {episodes.map((ep, i) => (
                   <option key={i} value={i}>

@@ -74,14 +74,14 @@ export default function ProfilePage() {
     setHistory(storedH.slice(0, 10));
   };
 
-  const watchlistAnime = watchlist.map((item) => getAnimeById(item.id)).filter(Boolean);
-  const likedAnime = liked.map((id) => getAnimeById(id)).filter(Boolean);
+  const watchlistAnime = watchlist.filter(Boolean);
   const allHistory = JSON.parse(localStorage.getItem("watchHistory") || "[]");
   const episodesWatched = allHistory.length;
-  const totalEpisodes = watchlistAnime.reduce((s, a) => s + a.episodes, 0);
+  const totalEpisodes = watchlistAnime.reduce((s, a) => s + (Number(a.episodes) || 0), 0);
   const avgRating = watchlistAnime.length
-    ? (watchlistAnime.reduce((s, a) => s + a.rating, 0) / watchlistAnime.length).toFixed(1)
+    ? (watchlistAnime.reduce((s, a) => s + (a.rating || 0), 0) / watchlistAnime.length).toFixed(1)
     : "—";
+  const likedAnime = liked.map((id) => getAnimeById(id)).filter(Boolean);
 
   const favoriteGenres = {};
   watchlistAnime.forEach((a) => a.genres?.forEach((g) => { favoriteGenres[g] = (favoriteGenres[g] || 0) + 1; }));
@@ -89,7 +89,8 @@ export default function ProfilePage() {
 
   const ratedAnime = Object.entries(rated)
     .map(([id, rating]) => {
-      const anime = getAnimeById(parseInt(id));
+      const numId = parseInt(id);
+      const anime = getAnimeById(numId) || watchlist.find((w) => w.id === numId);
       return anime ? { anime, rating } : null;
     })
     .filter(Boolean);
@@ -469,7 +470,8 @@ export default function ProfilePage() {
                 {history.length > 0 ? (
                   <div className="activity-timeline">
                     {history.map((item, i) => {
-                      const anime = getAnimeById(item.animeId);
+                      const staticAnime = getAnimeById(item.animeId);
+                      const anime = staticAnime || (item.animeName ? { id: item.animeId, name: item.animeName, img: item.animeImg || "" } : null);
                       if (!anime) return null;
                       return (
                         <motion.div

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Globe, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Globe, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
 import * as tierlistService from '../../services/tierlistService';
 import AnimatedPage from '../../components/AnimatedPage';
 import Background from '../../components/Background';

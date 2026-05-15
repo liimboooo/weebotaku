@@ -73,7 +73,7 @@ export default function Header() {
   const searchRef = useRef(null);
 
   const username = localStorage.getItem('username') || 'zabi';
-  const episodesWatched = Number(localStorage.getItem('userEpisodesWatched') || 128);
+  const episodesWatched = (JSON.parse(localStorage.getItem('watchHistory') || '[]')).length;
   const hasUnclaimedRewards = localStorage.getItem('userUnclaimedRewards') === 'true';
 
   const feedItems = useMemo(

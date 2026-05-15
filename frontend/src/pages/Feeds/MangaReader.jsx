@@ -36,7 +36,7 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
     if (chapter && manga) {
       const key = "mangaProgress";
       const progress = JSON.parse(localStorage.getItem(key) || "{}");
-      progress[manga.id] = parseInt(chapter.chapter) || chIndex + 1;
+      progress[manga.id] = parseFloat(chapter.chapter) || chIndex + 1;
       localStorage.setItem(key, JSON.stringify(progress));
     }
   }, [chapter, manga, chIndex]);

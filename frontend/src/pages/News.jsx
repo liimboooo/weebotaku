@@ -91,8 +91,10 @@ export default function News() {
   const handleCardClick = (item) => {
     if (item.mediaType === "manga") {
       navigate(`/browse/manga`);
-    } else {
+    } else if (item.animeId) {
       navigate(`/anime/${item.animeId}`);
+    } else {
+      navigate(`/browse/anime`);
     }
   };
 

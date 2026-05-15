@@ -17,8 +17,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function SearchPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialQuery = searchParams.get("q") || "";
-  const [query, setQuery] = useState(initialQuery);
+  const [query, setQuery] = useState(searchParams.get("q") || "");
   const [results, setResults] = useState([]);
   const [genres, setGenres] = useState([]);
   const [activeGenre, setActiveGenre] = useState(null);
@@ -39,17 +38,23 @@ export default function SearchPage() {
 
   useEffect(() => {
     fetchAnimeGenres().then(setGenres).catch(() => {});
+    setTrendingLoading(true);
     fetchTopAnime(1, "airing").then(r => {
       setTrendingData(r.data.slice(0, 8));
     }).catch(() => {}).finally(() => setTrendingLoading(false));
   }, []);
 
-  // If there's a query in URL, fetch on mount
+  // Re-run search when URL query changes
   useEffect(() => {
-    if (initialQuery.trim()) {
-      doSearch(initialQuery, activeGenre, activeType, activeStatus);
+    const q = searchParams.get("q") || "";
+    setQuery(q);
+    if (q.trim()) {
+      doSearch(q, activeGenre, activeType, activeStatus);
+    } else {
+      setHasSearched(false);
+      setResults([]);
     }
-  }, []);
+  }, [searchParams.get("q")]);
 
   const doSearch = async (query, genre, type, status) => {
     if (!query.trim()) return;

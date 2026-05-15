@@ -231,7 +231,7 @@ function ContinueWatchingRow() {
           <motion.div
             key={`${item.animeId}-${item.episode}`}
             className="continue-card"
-            onClick={() => navigate(`/anime/${item.animeId}`)}
+            onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode}`)}
             variants={cardSlideUp}
            whileHover={{ boxShadow: "0 12px 40px rgba(230,54,54,0.12)", transition: { type: "spring", stiffness: 300 } }}
           >

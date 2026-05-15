@@ -11,6 +11,7 @@ export default function Reviews({ animeId, selectedEp }) {
     } catch { return []; }
   });
   const [newReview, setNewReview] = useState("");
+  const [reviewRating, setReviewRating] = useState(0);
   const [backendReviews, setBackendReviews] = useState([]);
 
   // Fetch reviews from backend on mount
@@ -60,7 +61,7 @@ export default function Reviews({ animeId, selectedEp }) {
       await reviewService.createReview(
         animeId,
         null,
-        8,
+        reviewRating || 8,
         newReview.slice(0, 100),
         newReview,
         false
@@ -79,6 +80,16 @@ export default function Reviews({ animeId, selectedEp }) {
     <div className="reviews-section">
       <h3>Reviews & Comments</h3>
 
+      <div className="review-rating-row">
+        {[1,2,3,4,5,6,7,8,9,10].map((n) => (
+          <span
+            key={n}
+            className={`review-star-picker ${reviewRating >= n ? "active" : ""}`}
+            onClick={() => setReviewRating(reviewRating === n ? 0 : n)}
+          >★</span>
+        ))}
+        {reviewRating > 0 && <span className="review-rating-label">{reviewRating}/10</span>}
+      </div>
       <div className="review-input-row">
         <input
           value={newReview}

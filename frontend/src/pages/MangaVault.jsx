@@ -79,7 +79,9 @@ export default function MangaVault() {
   }, [search]);
 
   useEffect(() => {
-    fetchTopManga(1).then(r => setHeroManga(r.data[0])).catch(() => {});
+    fetchTopManga(1).then(r => setHeroManga(r.data[0])).catch(() => {
+      setHeroManga({ title: "Explore Manga", rating: 0, cover: "" });
+    });
   }, []);
 
   const loadManga = useCallback(async (p, replace = false) => {
@@ -93,12 +95,17 @@ export default function MangaVault() {
       const result = q
         ? await fetchSearchManga(q, p)
         : await fetchTopManga(p);
-      setAllManga(prev => replace ? result.data : [...prev, ...result.data]);
+      setAllManga(prev => {
+        const merged = replace ? result.data : [...prev, ...result.data];
+        const seen = new Set();
+        return merged.filter(m => { if (seen.has(m.id)) return false; seen.add(m.id); return true; });
+      });
       setHasMore(result.pagination.has_next_page);
       setPage(p);
       hasLoadedOnce.current = true;
     } catch (err) {
       console.error("Failed to load manga:", err);
+      setHasMore(false);
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -312,7 +319,7 @@ export default function MangaVault() {
                               {m.status === "Ongoing" ? <Zap size={10} /> : null}
                               {m.status}
                             </div>
-                            <div className="mv-card-progress" style={{ width: `${(m.progress || 0) * 100}%` }} />
+                            <div className="mv-card-progress" style={{ width: '0%' }} />
                           </div>
                           <div className="mv-card-body">
                             <div className="mv-card-head">
@@ -420,7 +427,6 @@ export default function MangaVault() {
                       <div className="mv-modal-details">
                         <div className="mv-modal-detail"><Star size={13} /> {preview.rating} Rating</div>
                         <div className="mv-modal-detail"><BookOpen size={13} /> {preview.ch} Chapters</div>
-                        <div className="mv-modal-detail"><Zap size={13} /> {Math.round((preview.progress || 0) * 100)}% Read</div>
                       </div>
                     </div>
                     <div className="mv-modal-section">

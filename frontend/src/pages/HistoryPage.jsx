@@ -125,7 +125,8 @@ export default function HistoryPage() {
           >
             <AnimatePresence mode="popLayout">
               {filteredHistory.map((item) => {
-                const anime = getAnimeById(item.animeId);
+                const staticAnime = getAnimeById(item.animeId);
+                const anime = staticAnime || (item.animeName ? { name: item.animeName, img: item.animeImg || "", episodes: null, id: item.animeId } : null);
                 if (!anime) return null;
 
                 const date = new Date(item.timestamp).toLocaleDateString(undefined, {
@@ -165,12 +166,14 @@ export default function HistoryPage() {
                         <span className="history-date">{date}</span>
                       </div>
                       <p className="history-ep">Episode {item.episode}</p>
-                      <div className="history-progress">
-                        <div className="progress-bar">
-                          <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                      {progress > 0 && (
+                        <div className="history-progress">
+                          <div className="progress-bar">
+                            <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                          </div>
+                          <span>Watching</span>
                         </div>
-                        <span>Watching</span>
-                      </div>
+                      )}
                     </div>
                     <button
                       className="remove-item-btn"
