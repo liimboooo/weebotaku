@@ -232,25 +232,23 @@ async function searchAnilist(query) {
   return null;
 }
 
-// ─── Embed fallback source ───
+const EMBED_PROVIDERS = [
+  { name: "VidNest", url: (id) => `https://vidnest.fun/anime/${id}/1/sub` },
+  { name: "VidSrc", url: (id) => `https://vidsrc.icu/embed/anime/${id}/1/0` },
+];
+
 async function makeEmbedFallback(animeName) {
   const result = await searchAnilist(animeName);
   if (result) {
     return {
-      source: "vidnest",
+      source: "embed",
       slug: animeName,
       id: result.anilistId,
       title: result.title,
-      embedUrl: `https://vidnest.fun/anime/${result.anilistId}/1/sub`,
+      embedProviders: EMBED_PROVIDERS.map((p) => ({ name: p.name, url: p.url(result.anilistId) })),
     };
   }
-  return {
-    source: "vidnest",
-    slug: animeName,
-    id: animeName,
-    title: animeName,
-    embedUrl: "",
-  };
+  return { source: "embed", slug: animeName, id: animeName, title: animeName, embedProviders: [] };
 }
 
 // ─── Multi-source search (parallel) ───

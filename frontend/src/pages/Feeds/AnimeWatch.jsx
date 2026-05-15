@@ -15,13 +15,18 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
 
-  const isEmbedSource = ["vidnest"].includes(anime.source);
+  const isEmbedSource = ["embed"].includes(anime.source);
 
   useEffect(() => {
     if (isEmbedSource) {
       setLoading(false);
-      if (!anime.embedUrl) setError("No streaming source found for this anime.");
-      setStreamUrl(anime.embedUrl || "");
+      if (!anime.embedProviders?.length) {
+        setError("No streaming source found for this anime.");
+        return;
+      }
+      setServers(anime.embedProviders.map((p) => ({ label: p.name, url: p.url })));
+      setServerIndex(0);
+      setStreamUrl(anime.embedProviders[0].url);
       return;
     }
     (async () => {
@@ -48,7 +53,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         setLoading(false);
       }
     })();
-  }, [anime.id, anime.slug, anime.source, startEp, isEmbedSource, anime.embedUrl, retryCount]);
+  }, [anime.id, anime.slug, anime.source, startEp, isEmbedSource, anime.embedProviders, retryCount]);
 
   const episode = episodes[epIndex];
 
@@ -118,7 +123,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
             </button>
           </div>
           <div className="watch-header-center">
-            {episode && <span className="watch-title">{animeName || anime.title} — Episode {episode.episode}</span>}
+            <span className="watch-title">{animeName || anime.title}{episode ? ` — Episode ${episode.episode}` : ""}</span>
           </div>
           <div className="watch-header-right">
             <button className="watch-close-btn" onClick={onClose}>
