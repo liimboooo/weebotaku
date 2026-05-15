@@ -1,18 +1,18 @@
 import AuthPage from "./pages/AuthPage";
 import './App.css';
 import { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import Header from "./components/Header";
 import ToastContainer from "./components/Toast";
 import { LoadingProvider, useLoading } from "./components/LoadingProvider";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import AnimeDetail from "./pages/AnimeDetail";
 import SearchPage from "./pages/SearchPage";
 import WatchlistPage from "./pages/WatchlistPage";
 import ProfilePage from "./pages/ProfilePage";
 import HistoryPage from "./pages/HistoryPage";
-import { Navigate } from "react-router-dom";
 
 import { AnimatePresence } from "framer-motion";
 import GenericRoutePage from "./components/GenericRoutePage";
@@ -98,10 +98,10 @@ function AppLayout() {
           <Route path="/anime/:id" element={<AnimeDetail />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/news" element={<News />} />
-          <Route path="/watchlist" element={<WatchlistPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/watchlist" element={<ProtectedRoute><WatchlistPage /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/profile/:username" element={<ProfilePage />} />
-          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
           <Route path="/following" element={<Navigate to="/home" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
