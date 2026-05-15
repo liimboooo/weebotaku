@@ -76,15 +76,8 @@ export default function ProfilePage() {
 
   const watchlistAnime = watchlist.filter(Boolean);
   const episodesWatched = history.length;
-  const totalEpisodes = watchlistAnime.reduce((s, a) => s + (Number(a.episodes) || 0), 0);
-  const avgRating = watchlistAnime.length
-    ? (watchlistAnime.reduce((s, a) => s + (a.rating || 0), 0) / watchlistAnime.length).toFixed(1)
-    : "—";
+  const animeWatched = new Set(history.map(h => h.animeId)).size;
   const likedAnime = liked.map((id) => getAnimeById(id)).filter(Boolean);
-
-  const favoriteGenres = {};
-  watchlistAnime.forEach((a) => a.genres?.forEach((g) => { favoriteGenres[g] = (favoriteGenres[g] || 0) + 1; }));
-  const topGenres = Object.entries(favoriteGenres).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
   const ratedAnime = Object.entries(rated)
     .map(([id, rating]) => {
@@ -93,6 +86,13 @@ export default function ProfilePage() {
       return anime ? { anime, rating } : null;
     })
     .filter(Boolean);
+  const userAvgRating = ratedAnime.length
+    ? (ratedAnime.reduce((s, r) => s + r.rating, 0) / ratedAnime.length).toFixed(1)
+    : "—";
+
+  const favoriteGenres = {};
+  watchlistAnime.forEach((a) => a.genres?.forEach((g) => { favoriteGenres[g] = (favoriteGenres[g] || 0) + 1; }));
+  const topGenres = Object.entries(favoriteGenres).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
   const allStats = isRemoteProfile
     ? [
@@ -100,10 +100,10 @@ export default function ProfilePage() {
       ]
     : [
         { label: "Watchlist", value: watchlist.length, icon: Bookmark },
-        { label: "Episodes", value: totalEpisodes.toLocaleString(), icon: Film },
-        { label: "Avg Rating", value: avgRating, icon: Star },
+        { label: "Episodes", value: episodesWatched, icon: Film },
+        { label: "Avg Rating", value: userAvgRating, icon: Star },
         { label: "Liked", value: likedAnime.length, icon: Heart },
-        { label: "Watched", value: episodesWatched, icon: Eye },
+        { label: "Watched", value: animeWatched, icon: Eye },
       ];
 
   const saveProfile = async () => {
@@ -114,10 +114,11 @@ export default function ProfilePage() {
         if (existing && existing.length > 10000) localStorage.removeItem("userAvatar");
         localStorage.setItem("userAvatar", avatar);
       } catch (e) {
-        // quota exceeded — clear old avatar and retry
         localStorage.removeItem("userAvatar");
         try { localStorage.setItem("userAvatar", avatar); } catch {}
       }
+    } else {
+      localStorage.removeItem("userAvatar");
     }
     // Sync to backend
     try {
@@ -249,7 +250,7 @@ export default function ProfilePage() {
                     <input type="file" accept="image/*" hidden onChange={handleAvatarUpload} />
                   </label>
                   <button className="profile-btn profile-btn-secondary" onClick={generateAvatar}>Generate</button>
-                  {avatar && <button className="profile-btn profile-btn-ghost" onClick={() => { setAvatar(""); setAvatarPreview(""); localStorage.removeItem("userAvatar"); }}>Remove</button>}
+                  {avatar && <button className="profile-btn profile-btn-ghost" onClick={() => { setAvatar(""); setAvatarPreview(""); }}>Remove</button>}
                 </div>
                 <div className="profile-edit-row">
                   <button className="profile-btn profile-btn-primary" onClick={saveProfile}>Save</button>
@@ -565,6 +566,11 @@ export default function ProfilePage() {
                       );
                     })}
                   </div>
+                ) : isRemoteProfile ? (
+                  <div className="empty-state">
+                    <Layers size={40} />
+                    <p>No tier lists yet</p>
+                  </div>
                 ) : (
                   <div className="empty-state">
                     <Layers size={40} />
@@ -630,7 +636,9 @@ export default function ProfilePage() {
 }
 
 function formatTimeAgo(ts) {
+  if (!ts || typeof ts !== "number") return "just now";
   const diff = Date.now() - ts;
+  if (diff < 0) return "just now";
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;

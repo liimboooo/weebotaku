@@ -150,7 +150,7 @@ export default function AMVsEdits() {
   const [videoProgress, setVideoProgress] = useState(0);
   const [videoMuted, setVideoMuted] = useState(true);
   const videoRef = useRef(null);
-  const viewedSet = useRef(new Set(JSON.parse(localStorage.getItem("amv_viewed") || "[]")));
+  const viewedSet = useRef(new Set(loadFromStorage("amv_viewed", [])));
   const masonryRef = useRef(null);
   const heroBgRef = useRef(null);
   // Load metadata from localStorage + hydrate videos & covers from IndexedDB
@@ -243,7 +243,7 @@ export default function AMVsEdits() {
       return e.title.toLowerCase().includes(q)
         || e.creator.toLowerCase().includes(q)
         || e.anime.toLowerCase().includes(q)
-        || e.hashtags.some(t => t.toLowerCase().includes(q));
+        || (e.hashtags || []).some(t => t.toLowerCase().includes(q));
     })
     .sort((a, b) => {
       if (sortBy === "new") return b.timestamp - a.timestamp;
@@ -255,8 +255,6 @@ export default function AMVsEdits() {
   const creatorEdits = selectedEdit
     ? edits.filter(e => e.creator === selectedEdit.creator && e.id !== selectedEdit.id).slice(0, 4)
     : [];
-
-  const bestEdit = edits.length > 0 ? edits.reduce((best, e) => e.likes > (best?.likes || 0) ? e : best, edits[0]) : null;
 
   const handleResonate = (id) => {
     if (likedEdits.includes(id)) {
@@ -317,7 +315,9 @@ export default function AMVsEdits() {
   const [newCategory, setNewCategory] = useState("");
   const [newHashtags, setNewHashtags] = useState("");
   const [videoFile, setVideoFile] = useState(null);
+  const [videoBlobUrl, setVideoBlobUrl] = useState("");
   const [coverFile, setCoverFile] = useState(null);
+  const [coverBlobUrl, setCoverBlobUrl] = useState("");
   const [videoDuration, setVideoDuration] = useState(0);
   const [uploadError, setUploadError] = useState("");
   const [trimStart, setTrimStart] = useState(0);
@@ -334,8 +334,10 @@ export default function AMVsEdits() {
 
   const handleFileSelect = (file) => {
     if (!file) return;
-    setVideoFile(file);
+    if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl);
     const url = URL.createObjectURL(file);
+    setVideoFile(file);
+    setVideoBlobUrl(url);
     const tempVideo = document.createElement("video");
     tempVideo.src = url;
     tempVideo.onloadedmetadata = () => {
@@ -348,7 +350,6 @@ export default function AMVsEdits() {
         setTrimEnd(dur);
         setUploadStep("form");
       }
-      URL.revokeObjectURL(url);
     };
   };
 
@@ -428,8 +429,12 @@ export default function AMVsEdits() {
     setNewAnime("");
     setNewCategory("");
     setNewHashtags("");
+    if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl);
+    if (coverBlobUrl) URL.revokeObjectURL(coverBlobUrl);
     setVideoFile(null);
+    setVideoBlobUrl("");
     setCoverFile(null);
+    setCoverBlobUrl("");
     setVideoDuration(0);
     setTrimStart(0);
     setTrimEnd(40);
@@ -478,8 +483,8 @@ export default function AMVsEdits() {
     const tx = db.transaction(["videos", "covers"], "readwrite");
     tx.objectStore("videos").delete(id);
     tx.objectStore("covers").delete(id);
-    setEdits(edits.filter(e => e.id !== id));
-    setSelectedEdit(null);
+    setEdits(prev => prev.filter(e => e.id !== id));
+    setSelectedEdit(prev => prev?.id === id ? null : prev);
   };
 
   return (
@@ -575,6 +580,9 @@ export default function AMVsEdits() {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.45, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
                 onClick={() => setSelectedEdit(edit)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedEdit(edit); } }}
               >
                 <div className="edits-card">
                   <div className="edits-poster" style={{ aspectRatio: edit.aspectRatio }}>
@@ -584,7 +592,7 @@ export default function AMVsEdits() {
                     </div>
                     {savedEdits.includes(edit.id) && <div className="edits-saved-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="#e50914" stroke="#e50914" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>}
                     <div className="edits-poster-overlay">
-                      <p className="edits-overlay-desc">{edit.hashtags.slice(0, 3).join(" · ")}</p>
+                      <p className="edits-overlay-desc">{(edit.hashtags || []).slice(0, 3).join(" · ")}</p>
                     </div>
                   </div>
                   <div className="edits-card-info">
@@ -635,7 +643,14 @@ export default function AMVsEdits() {
         {/* Player Modal */}
         <AnimatePresence>
           {selectedEdit && (
-            <div className="pin-overlay" onClick={() => setSelectedEdit(null)}>
+            <motion.div
+              className="pin-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => setSelectedEdit(null)}
+            >
               <motion.div
                 className="pin-modal"
                 initial={{ opacity: 0, y: 30, scale: 0.96 }}
@@ -731,7 +746,7 @@ export default function AMVsEdits() {
                         </div>
                         {selectedEdit.creator === "@" + (localStorage.getItem("username") || "you") && (
                           <div className="pin-owner-actions">
-                            <button className="pin-edit-btn" onClick={() => { setEditingEdit(selectedEdit); setNewTitle(selectedEdit.title); setNewAnime(selectedEdit.anime); setNewCategory(selectedEdit.category || ""); setNewHashtags(selectedEdit.hashtags.join(" ")); setIsUploadOpen(true); }} title="Edit">
+                            <button className="pin-edit-btn" onClick={() => { setEditingEdit(selectedEdit); setNewTitle(selectedEdit.title); setNewAnime(selectedEdit.anime); setNewCategory(selectedEdit.category || ""); setNewHashtags((selectedEdit.hashtags || []).join(" ")); setIsUploadOpen(true); }} title="Edit">
                               <Edit3 size={15} />
                             </button>
                             <button className="pin-delete-btn" onClick={() => handleDeleteEdit(selectedEdit.id)} title="Delete">
@@ -777,7 +792,7 @@ export default function AMVsEdits() {
                       <div className="pin-description">
                         <p>A stunning {selectedEdit.anime} fan edit by {selectedEdit.creator}. {selectedEdit.duration}s of pure fire.</p>
                         <div className="pin-hashtags">
-                          {selectedEdit.hashtags.map(tag => (
+                          {(selectedEdit.hashtags || []).map(tag => (
                             <span key={tag} className="pin-hashtag">{tag}</span>
                           ))}
                         </div>
@@ -837,7 +852,7 @@ export default function AMVsEdits() {
                   </div>
                 </div>
               </motion.div>
-            </div>
+            </motion.div>
           )}
         </AnimatePresence>
 
@@ -872,7 +887,14 @@ export default function AMVsEdits() {
         {/* Upload Modal */}
         <AnimatePresence>
           {isUploadOpen && (
-            <div className="modal-overlay" onClick={resetUpload}>
+            <motion.div
+              className="modal-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={resetUpload}
+            >
               <motion.div
                 className="upload-modal"
                 initial={{ opacity: 0, scale: 0.92 }}
@@ -893,7 +915,7 @@ export default function AMVsEdits() {
                         Select a <strong>40-second window</strong> below.
                       </p>
                       <div className="trimmer-preview">
-                        <video src={URL.createObjectURL(videoFile)} className="trimmer-preview-video" controls />
+                        <video src={videoBlobUrl} className="trimmer-preview-video" controls />
                       </div>
                       <div className="trimmer-sliders">
                         <label>
@@ -940,8 +962,8 @@ export default function AMVsEdits() {
                           <input type="file" accept="video/*" onChange={(e) => handleFileSelect(e.target.files[0])} id="video-upload" hidden />
                           {videoFile ? (
                             <div className="upload-file-preview">
-                              <video src={URL.createObjectURL(videoFile)} controls className="upload-preview-video" />
-                              <button type="button" className="upload-remove-file" onClick={() => { setVideoFile(null); setVideoDuration(0); }}>
+                              <video src={videoBlobUrl} controls className="upload-preview-video" />
+                              <button type="button" className="upload-remove-file" onClick={() => { if (videoBlobUrl) URL.revokeObjectURL(videoBlobUrl); setVideoBlobUrl(""); setVideoFile(null); setVideoDuration(0); }}>
                                 <X size={14} /> Remove
                               </button>
                             </div>
@@ -965,11 +987,11 @@ export default function AMVsEdits() {
                       <div className="field">
                         <label>{editingEdit ? "Replace Cover (optional)" : "Cover Image (optional)"}</label>
                         <div className="upload-cover-input">
-                          <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files[0])} id="cover-upload" hidden />
+                          <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files[0]; if (f) { if (coverBlobUrl) URL.revokeObjectURL(coverBlobUrl); setCoverBlobUrl(URL.createObjectURL(f)); setCoverFile(f); } }} id="cover-upload" hidden />
                           {coverFile ? (
                             <div className="upload-file-preview cover-preview">
-                              <img src={URL.createObjectURL(coverFile)} alt="Cover" className="upload-preview-cover" />
-                              <button type="button" className="upload-remove-file" onClick={() => setCoverFile(null)}>
+                              <img src={coverBlobUrl} alt="Cover" className="upload-preview-cover" />
+                              <button type="button" className="upload-remove-file" onClick={() => { if (coverBlobUrl) URL.revokeObjectURL(coverBlobUrl); setCoverBlobUrl(""); setCoverFile(null); }}>
                                 <X size={14} /> Remove
                               </button>
                             </div>
@@ -1027,15 +1049,15 @@ export default function AMVsEdits() {
                       <div className="modal-footer">
                         {uploadError && <p className="upload-error">{uploadError}</p>}
                         <button type="button" className="upload-cancel-btn" onClick={resetUpload}>Cancel</button>
-                        <button type="submit" className="upload-confirm-btn" disabled={submitting || !newTitle || !videoFile}>
-                          {submitting ? "Uploading..." : "Upload Edit"}
+                        <button type="submit" className="upload-confirm-btn" disabled={submitting || !newTitle || (!editingEdit && !videoFile)}>
+                          {submitting ? "Uploading..." : editingEdit ? "Save Changes" : "Upload Edit"}
                         </button>
                       </div>
                     </>
                   )}
                 </form>
               </motion.div>
-            </div>
+            </motion.div>
           )}
         </AnimatePresence>
 

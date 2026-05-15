@@ -297,7 +297,7 @@
 
 .profile-stats-bar {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   gap: 6px;
   padding: 0 52px 36px;
   position: relative;
