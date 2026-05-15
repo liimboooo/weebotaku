@@ -235,11 +235,17 @@ async function searchAnilist(query) {
 const EMBED_PROVIDERS = [
   { name: "VidNest", url: (id) => `https://vidnest.fun/anime/${id}/1/sub` },
   { name: "VidSrc", url: (id) => `https://vidsrc.icu/embed/anime/${id}/1/0` },
+  { name: "VidPlus", url: (id) => `https://player.vidplus.to/embed/anime/${id}/1` },
+  { name: "MegaPlay", url: (id) => `https://megaplay.buzz/stream/ani/${id}/1/sub` },
 ];
 
 async function makeEmbedFallback(animeName) {
   const result = await searchAnilist(animeName);
   if (result) {
+    const anipubRetry = await searchAnipub(result.title);
+    if (anipubRetry.length > 0) {
+      return { source: "anipub", id: anipubRetry[0].Id, title: result.title };
+    }
     return {
       source: "embed",
       slug: animeName,
