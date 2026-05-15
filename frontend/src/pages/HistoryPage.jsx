@@ -135,6 +135,10 @@ export default function HistoryPage() {
                   minute: "2-digit",
                 });
 
+                const progress = anime.episodes && anime.episodes !== '?'
+                  ? Math.min((item.episode / Number(anime.episodes)) * 100, 100)
+                  : 0;
+
                 return (
                   <motion.div
                     className="history-card"
@@ -163,7 +167,7 @@ export default function HistoryPage() {
                       <p className="history-ep">Episode {item.episode}</p>
                       <div className="history-progress">
                         <div className="progress-bar">
-                          <div className="progress-fill" style={{ width: `${Math.random() * 60 + 20}%` }}></div>
+                          <div className="progress-fill" style={{ width: `${progress}%` }}></div>
                         </div>
                         <span>Watching</span>
                       </div>

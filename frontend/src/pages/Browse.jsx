@@ -319,8 +319,8 @@ export default function Browse() {
   const topAnime = heroAnime;
 
   const totalEpisodes = useMemo(() =>
-    allAnime.reduce((s, a) => s + (a.episodes || 0), 0),
-    [allAnime]
+    filteredAnime.reduce((s, a) => s + (a.episodes || 0), 0),
+    [filteredAnime]
   );
 
   const renderChip = (value, active, onClick) => (

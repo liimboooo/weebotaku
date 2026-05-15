@@ -1,8 +1,27 @@
 import React, { useState } from "react";
 import GenericRoutePage from "../../components/GenericRoutePage";
+import reportService from "../../services/reportService";
 
 export default function Report() {
 	const [submitted, setSubmitted] = useState(false);
+	const [sending, setSending] = useState(false);
+	const [category, setCategory] = useState("bug");
+	const [details, setDetails] = useState("");
+	const [error, setError] = useState("");
+
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+		if (!details.trim()) { setError("Please provide details"); return; }
+		setSending(true);
+		setError("");
+		try {
+			await reportService.submit({ category, details });
+			setSubmitted(true);
+		} catch {
+			setError("Failed to submit. Try again later.");
+		}
+		setSending(false);
+	};
 
 	return (
 		<GenericRoutePage
@@ -33,16 +52,10 @@ export default function Report() {
 						<p>Your submission is in the queue and will be reviewed by the moderation team.</p>
 					</article>
 				) : (
-					<form
-						className="generic-report-form"
-						onSubmit={(event) => {
-							event.preventDefault();
-							setSubmitted(true);
-						}}
-					>
+					<form className="generic-report-form" onSubmit={handleSubmit}>
 						<label>
 							Category
-							<select defaultValue="bug">
+							<select value={category} onChange={(e) => setCategory(e.target.value)}>
 								<option value="bug">Bug</option>
 								<option value="content">Content</option>
 								<option value="moderation">Moderation</option>
@@ -50,10 +63,11 @@ export default function Report() {
 						</label>
 						<label>
 							Details
-							<textarea rows="5" placeholder="Describe what happened, where it happened, and what you expected." />
+							<textarea rows="5" value={details} onChange={(e) => setDetails(e.target.value)} placeholder="Describe what happened, where it happened, and what you expected." />
 						</label>
-						<button type="submit" className="generic-route-action primary">
-							Submit report
+						{error && <p className="generic-route-error">{error}</p>}
+						<button type="submit" className="generic-route-action primary" disabled={sending}>
+							{sending ? "Sending..." : "Submit report"}
 						</button>
 					</form>
 				)}

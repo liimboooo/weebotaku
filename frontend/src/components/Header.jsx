@@ -79,18 +79,6 @@ export default function Header() {
     []
   );
 
-  const questTemplates = useMemo(
-    () => [
-      { title: 'Watch 20 mins', icon: '📺', target: '20 mins', type: 'watch' },
-      { title: 'Rate an Anime', icon: '⭐', target: '1 Rating', type: 'rate' },
-      { title: 'Comment on Thread', icon: '💬', target: '1 Comment', type: 'comment' },
-      { title: 'Follow a User', icon: '👥', target: '1 Follow', type: 'follow' },
-      { title: 'Complete Profile', icon: '📝', target: '100%', type: 'profile' },
-    ],
-    []
-  );
-
-
 
   function formatTimeAgo(ts) {
     const diff = Date.now() - ts;
