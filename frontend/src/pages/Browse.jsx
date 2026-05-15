@@ -283,7 +283,7 @@ export default function Browse() {
       if (!src) { addNotification({ title: "Not Available", body: "No streaming source for this title.", type: "error" }); return; }
       const history = JSON.parse(localStorage.getItem("watchHistory") || "[]");
       const found = history.find(h => h.animeId === anime.id);
-      setWatchAnime({ ...src, _name: anime.name, startEp: found?.episode || 1 });
+      setWatchAnime({ ...src, _name: anime.name, _episodes: anime.episodes || 12, startEp: found?.episode || 1 });
       addNotification({ title: "Now Playing", body: anime.name, type: "watch" });
     } catch (e) {
       addNotification({ title: "Stream Error", body: "Failed to find streaming source.", type: "error" });
@@ -485,6 +485,7 @@ export default function Browse() {
             animeName={watchAnime._name}
             onClose={() => setWatchAnime(null)}
             startEp={watchAnime.startEp || 1}
+            totalEpisodes={watchAnime._episodes || 12}
           />
         )}
       </div>

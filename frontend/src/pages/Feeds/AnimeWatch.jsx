@@ -4,7 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, consumetGetEpisodes, consumetGetStreamUrl } from "../../services/animeApi";
 import "./AnimeWatch.css";
 
-export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange }) {
+function replaceEpInUrl(url, animeId, newEp) {
+  return url.replace(new RegExp(`/${animeId}/(\\d+)`), `/${animeId}/${newEp}`);
+}
+
+export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange, totalEpisodes = 12 }) {
   const [episodes, setEpisodes] = useState([]);
   const [epIndex, setEpIndex] = useState(Math.max(0, startEp - 1));
   const [loading, setLoading] = useState(true);
@@ -23,9 +27,14 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     if (isEmbedSource) {
       setLoading(false);
       if (!anime.embedProviders?.length) { setError("No streaming source found."); return; }
-      setServers(anime.embedProviders.map(p => ({ label: p.name, url: p.url })));
+      const virtualEps = Array.from({ length: totalEpisodes }, (_, i) => ({ episode: i + 1, id: i + 1 }));
+      setEpisodes(virtualEps);
+      const providers = anime.embedProviders.map(p => ({ label: p.name, url: p.url }));
+      setServers(providers);
       setServerIndex(0);
-      setStreamUrl(anime.embedProviders[0].url);
+      const initialEp = Math.min(Math.max(1, startEp), totalEpisodes);
+      setEpIndex(initialEp - 1);
+      setStreamUrl(replaceEpInUrl(providers[0].url, anime.id, initialEp));
       return;
     }
     (async () => {
@@ -41,9 +50,16 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       } catch { setError("Failed to load episodes."); }
       finally { setLoading(false); }
     })();
-  }, [anime.id, anime.slug, anime.source, startEp, isEmbedSource, anime.embedProviders, retryCount]);
+  }, [anime.id, anime.slug, anime.source, startEp, isEmbedSource, anime.embedProviders, totalEpisodes, retryCount]);
 
   const episode = episodes[epIndex];
+
+  // Rebuild embed URL when episode or server changes
+  useEffect(() => {
+    if (!isEmbedSource || !servers[serverIndex]) return;
+    const ep = epIndex + 1;
+    setStreamUrl(replaceEpInUrl(servers[serverIndex].url, anime.id, ep));
+  }, [epIndex, serverIndex, isEmbedSource, servers, anime.id]);
 
   useEffect(() => {
     if (!episode || isEmbedSource) return;
@@ -79,7 +95,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     }
   }, [epIndex, episodes]);
 
-  const switchServer = (idx) => { if (servers[idx]) { setServerIndex(idx); setStreamUrl(servers[idx].url); } };
+  const switchServer = (idx) => { if (servers[idx]) { setServerIndex(idx); if (!isEmbedSource) setStreamUrl(servers[idx].url); } };
   const goPrev = () => setEpIndex(i => { const n = Math.max(0, i - 1); if (onEpisodeChange && episodes[n]) onEpisodeChange(episodes[n].episode); return n; });
   const goNext = () => setEpIndex(i => { const n = Math.min(episodes.length - 1, i + 1); if (onEpisodeChange && episodes[n]) onEpisodeChange(episodes[n].episode); return n; });
 

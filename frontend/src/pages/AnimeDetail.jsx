@@ -374,7 +374,7 @@ export default function AnimeDetail() {
             </div>
 
             {showPlayer && watchAnime && (
-              <AnimeWatch anime={watchAnime} animeName={anime?.name} onClose={() => setShowPlayer(false)} startEp={selectedEp} onEpisodeChange={(ep) => setSelectedEp(ep)} />
+              <AnimeWatch anime={watchAnime} animeName={anime?.name} onClose={() => setShowPlayer(false)} startEp={selectedEp} onEpisodeChange={(ep) => setSelectedEp(ep)} totalEpisodes={anime?.episodes || 12} />
             )}
 
             {anime.director && (
