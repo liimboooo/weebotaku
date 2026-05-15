@@ -12,6 +12,8 @@ import {
   Clock,
   Sparkles,
   Download,
+  Search,
+  Edit3,
 } from "lucide-react";
 import AnimatedPage from "../../components/AnimatedPage";
 
@@ -140,12 +142,15 @@ export default function AMVsEdits() {
   const [likedEdits, setLikedEdits] = useState(() => loadFromStorage(LIKED_KEY, []));
   const [savedEdits, setSavedEdits] = useState(() => loadFromStorage(SAVED_KEY, []));
   const [sortBy, setSortBy] = useState("new");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [category, setCategory] = useState("all");
   const [videoPlaying, setVideoPlaying] = useState(false);
   const [videoStarted, setVideoStarted] = useState(false);
   const [videoHover, setVideoHover] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
+  const [videoMuted, setVideoMuted] = useState(true);
   const videoRef = useRef(null);
-  const viewedSet = useRef(new Set());
+  const viewedSet = useRef(new Set(JSON.parse(localStorage.getItem("amv_viewed") || "[]")));
   const masonryRef = useRef(null);
   const heroBgRef = useRef(null);
   // Load metadata from localStorage + hydrate videos & covers from IndexedDB
@@ -174,12 +179,27 @@ export default function AMVsEdits() {
   useEffect(() => { localStorage.setItem(LIKED_KEY, JSON.stringify(likedEdits)); }, [likedEdits]);
   useEffect(() => { localStorage.setItem(SAVED_KEY, JSON.stringify(savedEdits)); }, [savedEdits]);
 
-  // Close modal on Escape
+  // Keyboard shortcuts for player modal
   useEffect(() => {
-    const handler = (e) => { if (e.key === "Escape") setSelectedEdit(null); };
+    const handler = (e) => {
+      if (e.key === "Escape") { setSelectedEdit(null); return; }
+      if (!selectedEdit || !videoRef.current) return;
+      if (e.key === " " || e.key === "Space") {
+        e.preventDefault();
+        handleVideoToggle();
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 5);
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        videoRef.current.currentTime = Math.min(videoRef.current.duration, videoRef.current.currentTime + 5);
+      }
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, []);
+  }, [selectedEdit]);
 
   // Body scroll lock when pin modal is open
   useEffect(() => {
@@ -196,6 +216,13 @@ export default function AMVsEdits() {
     setVideoHover(false);
   }, [selectedEdit?.id]);
 
+  // Scroll masonry to top when filters change
+  useEffect(() => {
+    if (ready && masonryRef.current) {
+      masonryRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [sortBy, category, searchQuery, ready]);
+
   // Parallax effect on hero background
   useEffect(() => {
     const handleScroll = () => {
@@ -208,12 +235,22 @@ export default function AMVsEdits() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const filteredEdits = edits.sort((a, b) => {
-    if (sortBy === "new") return b.timestamp - a.timestamp;
-    if (sortBy === "old") return a.timestamp - b.timestamp;
-    if (sortBy === "popular") return b.likes - a.likes;
-    return 0;
-  });
+  const filteredEdits = [...edits]
+    .filter(e => {
+      if (category !== "all" && e.category !== category) return false;
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return e.title.toLowerCase().includes(q)
+        || e.creator.toLowerCase().includes(q)
+        || e.anime.toLowerCase().includes(q)
+        || e.hashtags.some(t => t.toLowerCase().includes(q));
+    })
+    .sort((a, b) => {
+      if (sortBy === "new") return b.timestamp - a.timestamp;
+      if (sortBy === "old") return a.timestamp - b.timestamp;
+      if (sortBy === "popular") return b.likes - a.likes;
+      return 0;
+    });
 
   const creatorEdits = selectedEdit
     ? edits.filter(e => e.creator === selectedEdit.creator && e.id !== selectedEdit.id).slice(0, 4)
@@ -266,7 +303,7 @@ export default function AMVsEdits() {
   const handleVideoToggle = () => {
     if (!videoRef.current) return;
     if (videoRef.current.paused) {
-      videoRef.current.play();
+      videoRef.current.play().catch(() => {});
     } else {
       videoRef.current.pause();
     }
@@ -277,13 +314,16 @@ export default function AMVsEdits() {
   const [uploadStep, setUploadStep] = useState("form");
   const [newTitle, setNewTitle] = useState("");
   const [newAnime, setNewAnime] = useState("");
+  const [newCategory, setNewCategory] = useState("");
   const [newHashtags, setNewHashtags] = useState("");
   const [videoFile, setVideoFile] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
   const [videoDuration, setVideoDuration] = useState(0);
+  const [uploadError, setUploadError] = useState("");
   const [trimStart, setTrimStart] = useState(0);
   const [trimEnd, setTrimEnd] = useState(40);
   const [submitting, setSubmitting] = useState(false);
+  const [editingEdit, setEditingEdit] = useState(null);
 
   // Body scroll lock when upload modal is open
   useEffect(() => {
@@ -314,10 +354,44 @@ export default function AMVsEdits() {
 
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
-    if (!newTitle || !videoFile) return;
+    setUploadError("");
+    if (!newTitle) { setUploadError("Add a title."); return; }
+    if (!editingEdit && !videoFile) { setUploadError("Add a video file."); return; }
     const finalDuration = trimEnd - trimStart;
-    if (finalDuration > 40) return;
+    if (finalDuration > 40) { setUploadError("Video must be under 40 seconds."); return; }
     setSubmitting(true);
+
+    if (editingEdit) {
+      const tags = [...new Set(newHashtags.match(/#[\w]+/g) || [])].slice(0, 5);
+      const updated = {
+        ...editingEdit,
+        title: newTitle,
+        anime: newAnime || "Other",
+        category: newCategory || editingEdit.category || "edit",
+        hashtags: tags.length > 0 ? tags : ["#AnimeEdit"],
+      };
+      if (coverFile) {
+        const coverDataUrl = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(coverFile); });
+        updated.cover = coverDataUrl;
+        await storeCover(editingEdit.id, coverDataUrl);
+      }
+      if (videoFile) {
+        await storeVideo(editingEdit.id, videoFile);
+        updated.videoUrl = URL.createObjectURL(videoFile);
+        const dur = await new Promise(resolve => {
+          const v = document.createElement("video");
+          v.src = URL.createObjectURL(videoFile);
+          v.onloadedmetadata = () => { resolve(v.duration); URL.revokeObjectURL(v.src); };
+          v.onerror = () => resolve(editingEdit.duration);
+        });
+        updated.duration = Math.round(Math.min(finalDuration, dur));
+      }
+      setEdits(edits.map(e => e.id === editingEdit.id ? updated : e));
+      setSelectedEdit(updated);
+      resetUpload();
+      return;
+    }
+
     const id = Date.now();
     await storeVideo(id, videoFile);
     const blobUrl = URL.createObjectURL(videoFile);
@@ -331,6 +405,7 @@ export default function AMVsEdits() {
       title: newTitle,
       creator: "@" + (localStorage.getItem("username") || "you"),
       anime: newAnime || "Other",
+      category: newCategory || "edit",
       cover: coverDataUrl || "",
       videoUrl: blobUrl,
       likes: 0,
@@ -351,6 +426,7 @@ export default function AMVsEdits() {
     setUploadStep("form");
     setNewTitle("");
     setNewAnime("");
+    setNewCategory("");
     setNewHashtags("");
     setVideoFile(null);
     setCoverFile(null);
@@ -358,6 +434,8 @@ export default function AMVsEdits() {
     setTrimStart(0);
     setTrimEnd(40);
     setSubmitting(false);
+    setUploadError("");
+    setEditingEdit(null);
   };
 
   // Comment state in player
@@ -408,7 +486,10 @@ export default function AMVsEdits() {
     <AnimatedPage>
       <div className="anime-edits-page">
         {!ready ? (
-          <div className="edits-loading"><div className="edits-loading-spinner" /></div>
+          <div className="edits-loading">
+            <div className="edits-loading-spinner" />
+            <p className="edits-loading-text">Loading edits...</p>
+          </div>
         ) : (
         <>        
         {/* Hero Section */}
@@ -441,6 +522,34 @@ export default function AMVsEdits() {
 
         <div className="edits-controls">
           <div className="edits-nav-row">
+            <div className="edits-category-tabs">
+              {["all", "amv", "edit"].map(c => (
+                <button
+                  key={c}
+                  className={`edits-cat-btn ${category === c ? "active" : ""}`}
+                  onClick={() => setCategory(c)}
+                >
+                  {c === "all" ? "All" : c.toUpperCase() + "s"}
+                </button>
+              ))}
+            </div>
+            <div className="edits-nav-right">
+              <div className="edits-nav-search">
+                <Search size={14} />
+                <input
+                  placeholder="Search edits..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button className="edits-search-clear" onClick={() => setSearchQuery("")}>
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="edits-sort-row">
             <div className="edits-sort-module">
               {["new", "old", "popular"].map(s => (
                 <button
@@ -452,7 +561,6 @@ export default function AMVsEdits() {
                 </button>
               ))}
             </div>
-
           </div>
         </div>
 
@@ -494,7 +602,14 @@ export default function AMVsEdits() {
                 </div>
               </motion.div>
             )) : (
-              <div className="edits-empty-state">
+              <motion.div
+                key={edits.length === 0 ? "empty" : "no-results"}
+                className="edits-empty-state"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
                 <div className="edits-empty-icon"><Play size={40} /></div>
                 {edits.length === 0 ? (
                   <>
@@ -506,10 +621,13 @@ export default function AMVsEdits() {
                 ) : (
                   <>
                     <p>No edits found matching your search.</p>
-                    <p className="edits-empty-hint">Try a different search term or clear filters.</p>
+                    <p className="edits-empty-hint">Try a different search term</p>
+                    <button className="edits-upload-btn" onClick={() => { setSearchQuery(""); setCategory("all"); }}>
+                      <X size={16} /> Clear Filters
+                    </button>
                   </>
                 )}
-              </div>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>
@@ -536,12 +654,13 @@ export default function AMVsEdits() {
                       onMouseLeave={() => setVideoHover(false)}
                     >
                       {selectedEdit.videoUrl ? (
+                      <div className="pin-video-container">
                       <video
                         key={selectedEdit.id}
                         ref={videoRef}
                         src={selectedEdit.videoUrl}
                         autoPlay
-                        muted
+                        muted={videoMuted}
                         playsInline
                         className="pin-video"
                         onPlay={() => {
@@ -549,6 +668,7 @@ export default function AMVsEdits() {
                           setVideoStarted(true);
                           if (!viewedSet.current.has(selectedEdit.id)) {
                             viewedSet.current.add(selectedEdit.id);
+                            localStorage.setItem("amv_viewed", JSON.stringify([...viewedSet.current]));
                             setEdits(prev => prev.map(e => e.id === selectedEdit.id ? { ...e, views: e.views + 1 } : e));
                             setSelectedEdit(prev => prev ? { ...prev, views: prev.views + 1 } : prev);
                           }
@@ -558,6 +678,25 @@ export default function AMVsEdits() {
                         onTimeUpdate={handleVideoTime}
                         onClick={handleVideoToggle}
                       />
+                      {videoMuted && (
+                        <button
+                          className="pin-unmute-btn"
+                          onClick={(e) => { e.stopPropagation(); setVideoMuted(false); if (videoRef.current) videoRef.current.muted = false; }}
+                          title="Unmute"
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                        </button>
+                      )}
+                      {!videoMuted && (
+                        <button
+                          className="pin-mute-btn"
+                          onClick={(e) => { e.stopPropagation(); setVideoMuted(true); if (videoRef.current) videoRef.current.muted = true; }}
+                          title="Mute"
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                        </button>
+                      )}
+                      </div>
                       ) : (
                         <div className="pin-video-fallback">
                           <Play size={32} />
@@ -591,9 +730,14 @@ export default function AMVsEdits() {
                           </div>
                         </div>
                         {selectedEdit.creator === "@" + (localStorage.getItem("username") || "you") && (
-                          <button className="pin-delete-btn" onClick={() => handleDeleteEdit(selectedEdit.id)} title="Delete">
-                            <Trash2 size={15} />
-                          </button>
+                          <div className="pin-owner-actions">
+                            <button className="pin-edit-btn" onClick={() => { setEditingEdit(selectedEdit); setNewTitle(selectedEdit.title); setNewAnime(selectedEdit.anime); setNewCategory(selectedEdit.category || ""); setNewHashtags(selectedEdit.hashtags.join(" ")); setIsUploadOpen(true); }} title="Edit">
+                              <Edit3 size={15} />
+                            </button>
+                            <button className="pin-delete-btn" onClick={() => handleDeleteEdit(selectedEdit.id)} title="Delete">
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
                         )}
                       </div>
 
@@ -737,7 +881,7 @@ export default function AMVsEdits() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="modal-head">
-                  <h2>{uploadStep === "trim" ? "Trim Your Video" : "Upload Edit"}</h2>
+                  <h2>{uploadStep === "trim" ? "Trim Your Video" : editingEdit ? "Edit Post" : "Upload Edit"}</h2>
                   <button onClick={resetUpload}><X size={20} /></button>
                 </div>
 
@@ -791,7 +935,7 @@ export default function AMVsEdits() {
                   ) : (
                     <>
                       <div className="field">
-                        <label>Video</label>
+                        <label>{editingEdit ? "Replace Video (optional)" : "Video"}</label>
                         <div className="upload-video-input">
                           <input type="file" accept="video/*" onChange={(e) => handleFileSelect(e.target.files[0])} id="video-upload" hidden />
                           {videoFile ? (
@@ -800,6 +944,14 @@ export default function AMVsEdits() {
                               <button type="button" className="upload-remove-file" onClick={() => { setVideoFile(null); setVideoDuration(0); }}>
                                 <X size={14} /> Remove
                               </button>
+                            </div>
+                          ) : editingEdit ? (
+                            <div className="upload-existing-video">
+                              <div className="upload-existing-icon"><Play size={20} /></div>
+                              <div className="upload-existing-info">
+                                <strong>Current video kept</strong>
+                                <span>{editingEdit.duration}s • Choose a file above to replace</span>
+                              </div>
                             </div>
                           ) : (
                             <label htmlFor="video-upload" className="upload-video-label">
@@ -811,7 +963,7 @@ export default function AMVsEdits() {
                       </div>
 
                       <div className="field">
-                        <label>Cover Image (optional)</label>
+                        <label>{editingEdit ? "Replace Cover (optional)" : "Cover Image (optional)"}</label>
                         <div className="upload-cover-input">
                           <input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files[0])} id="cover-upload" hidden />
                           {coverFile ? (
@@ -820,6 +972,11 @@ export default function AMVsEdits() {
                               <button type="button" className="upload-remove-file" onClick={() => setCoverFile(null)}>
                                 <X size={14} /> Remove
                               </button>
+                            </div>
+                          ) : editingEdit && editingEdit.cover ? (
+                            <div className="upload-existing-video">
+                              <img src={editingEdit.cover} alt="Current cover" className="upload-existing-cover" />
+                              <span>Current cover kept — choose a file above to replace</span>
                             </div>
                           ) : (
                             <label htmlFor="cover-upload" className="upload-video-label cover-label">
@@ -844,6 +1001,15 @@ export default function AMVsEdits() {
                       </div>
 
                       <div className="field">
+                        <label>Category</label>
+                        <select value={newCategory} onChange={(e) => setNewCategory(e.target.value)}>
+                          <option value="">Select category</option>
+                          <option value="amv">AMV</option>
+                          <option value="edit">Edit</option>
+                        </select>
+                      </div>
+
+                      <div className="field">
                         <label>Hashtags (space separated, max 5)</label>
                         <input placeholder="#AnimeEdit #EpicEdit" value={newHashtags} onChange={(e) => setNewHashtags(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }} />
                       </div>
@@ -859,6 +1025,7 @@ export default function AMVsEdits() {
                       )}
 
                       <div className="modal-footer">
+                        {uploadError && <p className="upload-error">{uploadError}</p>}
                         <button type="button" className="upload-cancel-btn" onClick={resetUpload}>Cancel</button>
                         <button type="submit" className="upload-confirm-btn" disabled={submitting || !newTitle || !videoFile}>
                           {submitting ? "Uploading..." : "Upload Edit"}

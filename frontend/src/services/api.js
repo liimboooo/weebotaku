@@ -4,6 +4,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api
 class ApiClient {
   constructor() {
     this.baseURL = API_BASE_URL;
+    this._redirecting = false;
   }
 
   getToken() {
@@ -26,8 +27,11 @@ class ApiClient {
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     const config = {
-      headers: this.getHeaders(options.auth !== false),
       ...options,
+      headers: {
+        ...this.getHeaders(options.auth !== false),
+        ...options.headers,
+      },
     };
 
     const controller = new AbortController();
@@ -38,7 +42,8 @@ class ApiClient {
 
       clearTimeout(timeout);
 
-      if (response.status === 401) {
+      if (response.status === 401 && !this._redirecting) {
+        this._redirecting = true;
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/';

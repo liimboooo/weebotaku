@@ -1,11 +1,10 @@
 import AuthPage from "./pages/AuthPage";
 import './App.css';
-import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import Header from "./components/Header";
 import ToastContainer from "./components/Toast";
-import { LoadingProvider, useLoading } from "./components/LoadingProvider";
+import { LoadingProvider } from "./components/LoadingProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import AnimeDetail from "./pages/AnimeDetail";
@@ -63,13 +62,7 @@ const routePageMap = {
 function AppLayout() {
   const location = useLocation();
   const isAuthPage = location.pathname === "/";
-  const { showLoading, hideLoading } = useLoading();
-
-  useEffect(() => {
-    showLoading();
-    const t = setTimeout(() => hideLoading(), 600);
-    return () => { clearTimeout(t); hideLoading(); };
-  }, [location]);
+  const token = localStorage.getItem('token');
 
   return (
     <>
@@ -78,7 +71,7 @@ function AppLayout() {
       <ToastContainer />
       <AnimatePresence mode="wait">
         <Routes>
-          <Route path="/" element={<AuthPage />} />
+          <Route path="/" element={token ? <Navigate to="/home" replace /> : <AuthPage />} />
           <Route path="/home" element={<Home />} />
           <Route path="/browse/anime" element={<Browse />} />
           <Route path="/browse/manga" element={<MangaVault />} />

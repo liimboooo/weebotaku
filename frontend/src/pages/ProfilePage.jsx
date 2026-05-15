@@ -316,17 +316,27 @@ export default function ProfilePage() {
         </div>
 
         <div className="profile-tabs">
-          {tabs.map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              className={`profile-tab ${activeTab === key ? "active" : ""}`}
-              onClick={() => setActiveTab(key)}
-            >
-              <Icon size={16} />
-              <span>{label}</span>
-              {activeTab === key && <motion.div className="profile-tab-active" layoutId="tab-indicator" />}
-            </button>
-          ))}
+          {tabs.map(({ key, label, icon: Icon }) => {
+            const count = {
+              overview: watchlistAnime.length + likedAnime.length + ratedAnime.length,
+              watchlist: watchlistAnime.length,
+              ratings: ratedAnime.length,
+              activity: history.length,
+              tierlists: tierLists.length,
+            }[key];
+            return (
+              <button
+                key={key}
+                className={`profile-tab ${activeTab === key ? "active" : ""}`}
+                onClick={() => setActiveTab(key)}
+              >
+                <Icon size={16} />
+                <span>{label}</span>
+                {count !== undefined && <span className="profile-tab-count">{count}</span>}
+                {activeTab === key && <motion.div className="profile-tab-active" layoutId="tab-indicator" />}
+              </button>
+            );
+          })}
         </div>
 
         <AnimatePresence mode="wait">
@@ -569,7 +579,7 @@ export default function ProfilePage() {
                       <h3>AMVs & Edits</h3>
                     </div>
                     <div className="edits-content">
-                      <div className="edits-hero" onClick={() => navigate("/feeds/amvs")}>
+                      <div className="profile-edits-hero" onClick={() => navigate("/feeds/amvs")}>
                         <Video size={32} />
                         <div>
                           <strong>Explore Fan Creations</strong>

@@ -227,6 +227,8 @@ export async function syncFromBackend() {
         animeId: item.animeId,
         episode: item.episode,
         timestamp: new Date(item.timestamp).getTime(),
+        animeName: item.animeName || "",
+        animeImg: item.animeImg || "",
       }));
       localStorage.setItem("watchHistory", JSON.stringify(mapped));
     }

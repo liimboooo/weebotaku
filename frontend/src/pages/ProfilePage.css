@@ -394,6 +394,23 @@
 
 .profile-tab.active { color: #fff; }
 
+.profile-tab-count {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 7px;
+  border-radius: 999px;
+  margin-left: 2px;
+  font-variant-numeric: tabular-nums;
+  transition: all 0.25s;
+}
+
+.profile-tab.active .profile-tab-count {
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(230, 54, 54, 0.15);
+}
+
 .profile-tab-active {
   position: absolute;
   inset: 0;
@@ -865,7 +882,7 @@
   gap: 14px;
 }
 
-.edits-hero {
+.profile-edits-hero {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -877,29 +894,29 @@
   transition: all 0.25s;
 }
 
-.edits-hero:hover {
+.profile-edits-hero:hover {
   border-color: rgba(230, 54, 54, 0.15);
   background: rgba(230, 54, 54, 0.06);
   transform: translateX(4px);
 }
 
-.edits-hero svg {
+.profile-edits-hero svg {
   color: var(--red);
   flex-shrink: 0;
 }
 
-.edits-hero div {
+.profile-edits-hero div {
   min-width: 0;
 }
 
-.edits-hero strong {
+.profile-edits-hero strong {
   display: block;
   font-size: 14px;
   color: #fff;
   margin-bottom: 4px;
 }
 
-.edits-hero span {
+.profile-edits-hero span {
   font-size: 11px;
   color: var(--text-dim);
 }

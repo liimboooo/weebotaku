@@ -2,6 +2,7 @@ const BASE_URL = "https://api.jikan.moe/v4";
 
 const cache = new Map();
 const CACHE_TTL = 5 * 60 * 1000;
+const CACHE_MAX = 50;
 
 function getCached(key) {
   const entry = cache.get(key);
@@ -11,6 +12,10 @@ function getCached(key) {
 }
 
 function setCache(key, data) {
+  if (cache.size >= CACHE_MAX) {
+    const oldest = cache.keys().next().value;
+    cache.delete(oldest);
+  }
   cache.set(key, { data, time: Date.now() });
 }
 
@@ -69,7 +74,7 @@ function mapAnime(a) {
     airingDay: null,
     currentEp: a.episodes || 0,
     nextEpDate: a.status === "Currently Airing" ? "TBD" : "Ended",
-    readProgress: Math.random() * 0.8,
+    readProgress: 0,
   };
 }
 
@@ -87,7 +92,7 @@ function mapManga(m) {
     rating: m.score || 0,
     genres: m.genres?.map(g => g.name) || [],
     desc: m.synopsis || "",
-    progress: Math.random() * 0.8,
+    progress: 0,
   };
 }
 
