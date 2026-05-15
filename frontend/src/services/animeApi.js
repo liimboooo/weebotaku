@@ -237,15 +237,15 @@ async function makeEmbedFallback(animeName) {
   const result = await searchAnilist(animeName);
   if (result) {
     return {
-      source: "vidsrc",
+      source: "vidnest",
       slug: animeName,
       id: result.anilistId,
       title: result.title,
-      embedUrl: `https://vidsrc.icu/embed/anime/${result.anilistId}/1/0`,
+      embedUrl: `https://vidnest.fun/anime/${result.anilistId}/1/sub`,
     };
   }
   return {
-    source: "vidsrc",
+    source: "vidnest",
     slug: animeName,
     id: animeName,
     title: animeName,

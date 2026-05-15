@@ -15,7 +15,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
 
-  const isEmbedSource = ["vidsrc"].includes(anime.source);
+  const isEmbedSource = ["vidnest"].includes(anime.source);
 
   useEffect(() => {
     if (isEmbedSource) {
