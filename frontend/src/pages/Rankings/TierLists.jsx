@@ -315,6 +315,21 @@ export default function TierLists() {
     const el = document.querySelector('.tl-workspace');
     if (!el) return;
     try {
+      const allItems = Object.values(tiers).flat().filter(Boolean);
+      await Promise.allSettled(allItems.map(item => {
+        if (!item.image) return;
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.src = `https://api.allorigins.win/raw?url=${encodeURIComponent(item.image)}`;
+          img.onload = resolve;
+          img.onerror = () => {
+            img.src = item.image;
+            img.onload = resolve;
+            img.onerror = resolve;
+          };
+        });
+      }));
       const canvas = await html2canvas(el, {
         backgroundColor: '#0a0a0a',
         scale: 2,

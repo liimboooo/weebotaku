@@ -9,10 +9,10 @@ const {
   updateTierList,
   deleteTierList,
 } = require('../controllers/tierlistController');
-const { protect } = require('../middleware/auth');
+const { protect, optionalAuth } = require('../middleware/auth');
 
 router.post('/', protect, createTierList);
-router.get('/user/:userId', getUserTierLists);
+router.get('/user/:userId', optionalAuth, getUserTierLists);
 router.get('/by-username/:username', getUserTierListsByUsername);
 router.get('/community', getCommunityTierLists);
 router.get('/:id', getTierListById);
