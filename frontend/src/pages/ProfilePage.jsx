@@ -7,6 +7,7 @@ import authService from "../services/authService";
 import * as tierlistService from "../services/tierlistService";
 import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
+import { formatCount, timeAgo as formatTimeAgo } from "../utils/helpers";
 import { Bookmark, Heart, Star, Clock, PenLine, LogOut, Settings, Eye, Film, Users, Video, Sparkles, Layers } from "lucide-react";
 import "./ProfilePage.css";
 
@@ -93,6 +94,11 @@ export default function ProfilePage() {
   const favoriteGenres = {};
   watchlistAnime.forEach((a) => a.genres?.forEach((g) => { favoriteGenres[g] = (favoriteGenres[g] || 0) + 1; }));
   const topGenres = Object.entries(favoriteGenres).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  const storedEdits = (() => { try { return JSON.parse(localStorage.getItem("amv_edits") || "[]"); } catch { return []; } })();
+  const totalEdits = formatCount(storedEdits.length);
+  const totalCreators = formatCount(new Set(storedEdits.map(e => e.creator)).size);
+  const totalViews = formatCount(storedEdits.reduce((s, e) => s + (e.views || 0), 0));
 
   const allStats = isRemoteProfile
     ? [
@@ -601,15 +607,15 @@ export default function ProfilePage() {
                       </div>
                       <div className="edits-stats">
                         <div className="edits-stat">
-                          <strong>{likedAnime.length * 3 + 12}</strong>
+                          <strong>{totalEdits}</strong>
                           <span>Edits</span>
                         </div>
                         <div className="edits-stat">
-                          <strong>{likedAnime.length + 5}</strong>
+                          <strong>{totalCreators}</strong>
                           <span>Creators</span>
                         </div>
                         <div className="edits-stat">
-                          <strong>{episodesWatched * 2 + 45}K</strong>
+                          <strong>{totalViews}</strong>
                           <span>Views</span>
                         </div>
                       </div>
@@ -635,16 +641,4 @@ export default function ProfilePage() {
   );
 }
 
-function formatTimeAgo(ts) {
-  if (!ts || typeof ts !== "number") return "just now";
-  const diff = Date.now() - ts;
-  if (diff < 0) return "just now";
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
-  return `${Math.floor(days / 7)}w ago`;
-}
+

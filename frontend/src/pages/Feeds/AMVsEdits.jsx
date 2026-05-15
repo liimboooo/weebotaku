@@ -14,8 +14,11 @@ import {
   Download,
   Search,
   Edit3,
+  AlertTriangle,
 } from "lucide-react";
 import AnimatedPage from "../../components/AnimatedPage";
+import ErrorBoundary from "../../components/ErrorBoundary";
+import { formatCount, timeAgo, notify } from "../../utils/helpers";
 
 import "./AMVsEdits.css";
 
@@ -118,23 +121,6 @@ function generateThumbnail(file) {
   });
 }
 
-function formatCount(n) {
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
-  return String(n);
-}
-
-function timeAgo(ts) {
-  const s = Math.floor((Date.now() - ts) / 1000);
-  if (s < 60) return "Just now";
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  if (d < 30) return `${d}d ago`;
-  return new Date(ts).toLocaleDateString();
-}
-
 export default function AMVsEdits() {
   const [ready, setReady] = useState(false);
   const [edits, setEdits] = useState([]);
@@ -149,6 +135,7 @@ export default function AMVsEdits() {
   const [videoHover, setVideoHover] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
   const [videoMuted, setVideoMuted] = useState(true);
+  const [videoError, setVideoError] = useState(false);
   const videoRef = useRef(null);
   const viewedSet = useRef(new Set(loadFromStorage("amv_viewed", [])));
   const masonryRef = useRef(null);
@@ -214,6 +201,7 @@ export default function AMVsEdits() {
     setVideoStarted(false);
     setVideoProgress(0);
     setVideoHover(false);
+    setVideoError(false);
   }, [selectedEdit?.id]);
 
   // Scroll masonry to top when filters change
@@ -389,6 +377,7 @@ export default function AMVsEdits() {
       }
       setEdits(edits.map(e => e.id === editingEdit.id ? updated : e));
       setSelectedEdit(updated);
+      notify("Edit updated successfully!", "success");
       resetUpload();
       return;
     }
@@ -419,6 +408,7 @@ export default function AMVsEdits() {
       status: ["Ongoing","Completed"][Math.floor(Math.random()*2)],
     };
     setEdits([newEdit, ...edits]);
+    notify("Edit uploaded successfully!", "success");
     resetUpload();
   };
 
@@ -485,9 +475,11 @@ export default function AMVsEdits() {
     tx.objectStore("covers").delete(id);
     setEdits(prev => prev.filter(e => e.id !== id));
     setSelectedEdit(prev => prev?.id === id ? null : prev);
+    notify("Edit deleted", "info");
   };
 
   return (
+    <ErrorBoundary>
     <AnimatedPage>
       <div className="anime-edits-page">
         {!ready ? (
@@ -511,7 +503,7 @@ export default function AMVsEdits() {
           </div>
           <div className="edits-hero-content">
             <span className="edits-hero-eyebrow">ANIME EDITS COMMUNITY</span>
-            <h1 className="edits-hero-title">Discover &amp; Share Creative Anime Edits</h1>
+            <h1 className="edits-hero-title">Discover & Share Creative Anime Edits</h1>
             <p className="edits-hero-sub">The ultimate community for high-fidelity anime AMVs and fan-made edits.</p>
             <div className="edits-hero-cta">
               <button className="edits-cta-primary" onClick={() => masonryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}>
@@ -586,7 +578,7 @@ export default function AMVsEdits() {
               >
                 <div className="edits-card">
                   <div className="edits-poster" style={{ aspectRatio: edit.aspectRatio }}>
-                    {edit.cover ? <img src={edit.cover} alt={edit.title} /> : <div className="edits-poster-fallback"><Play size={24} /></div>}
+                    {edit.cover ? <img src={edit.cover} alt={edit.title} loading="lazy" /> : <div className="edits-poster-fallback"><Play size={24} /></div>}
                     <div className="edits-duration-badge">
                       <Clock size={10} /> {edit.duration}s
                     </div>
@@ -668,7 +660,7 @@ export default function AMVsEdits() {
                       onMouseEnter={() => setVideoHover(true)}
                       onMouseLeave={() => setVideoHover(false)}
                     >
-                      {selectedEdit.videoUrl ? (
+                      {selectedEdit.videoUrl && !videoError ? (
                       <div className="pin-video-container">
                       <video
                         key={selectedEdit.id}
@@ -678,6 +670,7 @@ export default function AMVsEdits() {
                         muted={videoMuted}
                         playsInline
                         className="pin-video"
+                        onError={() => setVideoError(true)}
                         onPlay={() => {
                           setVideoPlaying(true);
                           setVideoStarted(true);
@@ -714,8 +707,11 @@ export default function AMVsEdits() {
                       </div>
                       ) : (
                         <div className="pin-video-fallback">
-                          <Play size={32} />
-                          <span>Video unavailable</span>
+                          {videoError ? (
+                            <><AlertTriangle size={32} /><span>Video failed to load</span></>
+                          ) : (
+                            <><Play size={32} /><span>Video unavailable</span></>
+                          )}
                         </div>
                       )}
                       {selectedEdit.cover && <div className={`pin-video-cover ${videoStarted ? "faded" : ""}`} style={{ backgroundImage: `url(${selectedEdit.cover})` }} />}
@@ -1065,5 +1061,6 @@ export default function AMVsEdits() {
       )}
     </div>
     </AnimatedPage>
+    </ErrorBoundary>
   );
 }
