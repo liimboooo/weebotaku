@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, pointerWithin } from '@dnd-kit/core';
-import { Save, LogIn, Search, X, Loader, Sparkles } from 'lucide-react';
+import { Save, LogIn, Search, X, Loader, Sparkles, Download } from 'lucide-react';
 import * as tierlistService from '../../services/tierlistService';
 import authService from '../../services/authService';
+import html2canvas from 'html2canvas';
 import AnimatedPage from '../../components/AnimatedPage';
 import Background from '../../components/Background';
 import DroppableTier from './DroppableTier';
@@ -304,10 +305,27 @@ export default function TierLists() {
       if (res.success) {
         setSavedId(res.data._id);
         localStorage.setItem('tierListSavedId', res.data._id);
-        showToast('Saved!');
+        showToast('Saved to profile!');
       }
     } catch { showToast('Save failed'); }
     setSaving(false);
+  }
+
+  async function handleExport() {
+    const el = document.querySelector('.tl-workspace');
+    if (!el) return;
+    try {
+      const canvas = await html2canvas(el, {
+        backgroundColor: '#0a0a0a',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      const link = document.createElement('a');
+      link.download = `${title.replace(/\s+/g, '_')}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+    } catch { showToast('Export failed'); }
   }
 
   function handleReset() {
@@ -394,6 +412,7 @@ export default function TierLists() {
                 <span>{saving ? '...' : 'SAVE'}</span>
               </button>
               <button className="tl-reset" onClick={handleReset}>RESET</button>
+              <button className="tl-export" onClick={handleExport}><Download size={13} /> EXPORT</button>
               {!isLoggedIn && (
                 <button className="tl-login" onClick={() => navigate('/')}>
                   <LogIn size={13} /> LOGIN

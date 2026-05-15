@@ -33,7 +33,7 @@
   gap: 16px;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 16px 24px;
+  padding: 8px 24px;
   flex-shrink: 0;
   width: 100%;
 }
@@ -170,7 +170,7 @@
 .tl-save:hover:not(:disabled) { background: #f6121d; transform: translateY(-1px); }
 .tl-save:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.tl-reset, .tl-login {
+.tl-reset, .tl-login, .tl-export {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -186,7 +186,7 @@
   transition: all 0.2s;
 }
 
-.tl-reset:hover, .tl-login:hover {
+.tl-reset:hover, .tl-login:hover, .tl-export:hover {
   background: rgba(255, 255, 255, 0.06);
   color: #fff;
 }
@@ -195,7 +195,7 @@
 .tl-scroll {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 0 24px;
 }
 
@@ -545,7 +545,7 @@
 .tier-row {
   display: flex;
   border-bottom: 1px solid #333;
-  min-height: 130px;
+  min-height: 72px;
   background: rgba(255, 255, 255, 0.015);
   transition: background 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -572,10 +572,10 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  width: 120px;
+  width: 76px;
   flex-shrink: 0;
-  gap: 3px;
-  padding: 10px 4px;
+  gap: 2px;
+  padding: 6px 4px;
   overflow: hidden;
 }
 
@@ -590,7 +590,7 @@
 .tier-label > span {
   position: relative;
   z-index: 1;
-  font-size: 2rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #fff;
   line-height: 1;
@@ -602,18 +602,18 @@
   flex: 1;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  padding: 14px 18px;
+  gap: 6px;
+  padding: 6px 10px;
   align-content: flex-start;
-  min-height: 120px;
+  min-height: 56px;
   transition: background 0.2s;
 }
 
 .tier-placeholder {
   color: rgba(255, 255, 255, 0.06);
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 600;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   margin: auto;
 }
@@ -622,8 +622,8 @@
 .tier-card {
   display: flex;
   align-items: center;
-  padding: 6px;
-  border-radius: 8px;
+  padding: 4px;
+  border-radius: 6px;
   background: transparent;
   cursor: grab;
   transition: all 0.15s cubic-bezier(0.22, 1, 0.36, 1);
@@ -646,8 +646,8 @@
 }
 
 .tier-card-image {
-  width: 72px; height: 100px;
-  border-radius: 8px;
+  width: 48px; height: 66px;
+  border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
   background: rgba(255, 255, 255, 0.03);
