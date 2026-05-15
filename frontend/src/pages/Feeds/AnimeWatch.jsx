@@ -15,11 +15,12 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
 
-  const isEmbedSource = ["autoembed", "kwik"].includes(anime.source);
+  const isEmbedSource = ["vidsrc"].includes(anime.source);
 
   useEffect(() => {
     if (isEmbedSource) {
       setLoading(false);
+      if (!anime.embedUrl) setError("No streaming source found for this anime.");
       setStreamUrl(anime.embedUrl || "");
       return;
     }

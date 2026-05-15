@@ -209,19 +209,42 @@ async function tryGogoanimeSource(animeName) {
   return null;
 }
 
-// ─── Embed fallback sources ───
-const EMBED_PROVIDERS = [
-  { name: "autoembed", url: (title) => `https://anime.autoembed.cc/embed/${title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}-episode-1` },
-  { name: "kwik", url: (title) => `https://kwik.sbs/e/${encodeURIComponent(title.replace(/\s+/g, "-").toLowerCase())}` },
-];
+// ─── Jikan (MyAnimeList) search ───
+const JIKAN = "https://api.jikan.moe/v4";
 
-function makeEmbedFallback(animeName) {
+async function searchJikan(query) {
+  for (const q of titleVariants(query)) {
+    try {
+      const res = await fetch(`${JIKAN}/anime?q=${encodeURIComponent(q)}&limit=1`);
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.data?.length > 0) {
+        const anime = data.data[0];
+        return { malId: anime.mal_id, title: anime.title };
+      }
+    } catch {}
+  }
+  return null;
+}
+
+// ─── Embed fallback source ───
+async function makeEmbedFallback(animeName) {
+  const result = await searchJikan(animeName);
+  if (result) {
+    return {
+      source: "vidsrc",
+      slug: animeName,
+      id: result.malId,
+      title: result.title,
+      embedUrl: `https://vidsrc.icu/embed/anime/${result.malId}/1/0`,
+    };
+  }
   return {
-    source: EMBED_PROVIDERS[0].name,
+    source: "vidsrc",
     slug: animeName,
     id: animeName,
     title: animeName,
-    embedUrl: EMBED_PROVIDERS[0].url(animeName),
+    embedUrl: "",
   };
 }
 
@@ -239,5 +262,5 @@ export async function findStreamingSource(animeName) {
     if (r.status === "fulfilled" && r.value) return r.value;
   }
 
-  return makeEmbedFallback(animeName);
+  return await makeEmbedFallback(animeName);
 }
