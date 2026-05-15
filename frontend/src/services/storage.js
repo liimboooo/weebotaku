@@ -54,6 +54,8 @@ export function addToWatchlist(item) {
     }).catch(() => {});
   }
 
+  window.dispatchEvent(new CustomEvent("watchlist-updated"));
+
   return next;
 }
 
@@ -66,6 +68,8 @@ export function removeFromWatchlist(id) {
   if (isLoggedIn()) {
     api.delete(`/anime/${id}/watchlist`).catch(() => {});
   }
+
+  window.dispatchEvent(new CustomEvent("watchlist-updated"));
 
   return next;
 }
@@ -144,6 +148,8 @@ export function addToWatchHistory(animeId, episode, animeName, animeImg) {
       animeImg,
     }).catch(() => {});
   }
+
+  window.dispatchEvent(new CustomEvent("profile-data-changed"));
 }
 
 // ─── Ratings Sync ──────────────────────────────────────
@@ -156,6 +162,8 @@ export function rateAnime(animeId, rating) {
   if (isLoggedIn()) {
     api.post(`/anime/${animeId}/rate`, { rating }).catch(() => {});
   }
+
+  window.dispatchEvent(new CustomEvent("profile-data-changed"));
 }
 
 // ─── Like Sync ─────────────────────────────────────────
@@ -173,6 +181,8 @@ export function toggleLikeAnime(animeId) {
   if (isLoggedIn()) {
     api.post(`/anime/${animeId}/like`).catch(() => {});
   }
+
+  window.dispatchEvent(new CustomEvent("profile-data-changed"));
 
   return liked;
 }
@@ -240,6 +250,8 @@ export async function syncFromBackend() {
     if (likedRes.status === 'fulfilled' && likedRes.value?.data) {
       localStorage.setItem("likedAnime", JSON.stringify(likedRes.value.data));
     }
+    window.dispatchEvent(new CustomEvent("profile-data-changed"));
+    window.dispatchEvent(new CustomEvent("watchlist-updated"));
   } catch (err) {
     console.warn('Backend sync failed, using local data:', err);
   }

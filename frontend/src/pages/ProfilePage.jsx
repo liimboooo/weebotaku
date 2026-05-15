@@ -75,8 +75,7 @@ export default function ProfilePage() {
   };
 
   const watchlistAnime = watchlist.filter(Boolean);
-  const allHistory = JSON.parse(localStorage.getItem("watchHistory") || "[]");
-  const episodesWatched = allHistory.length;
+  const episodesWatched = history.length;
   const totalEpisodes = watchlistAnime.reduce((s, a) => s + (Number(a.episodes) || 0), 0);
   const avgRating = watchlistAnime.length
     ? (watchlistAnime.reduce((s, a) => s + (a.rating || 0), 0) / watchlistAnime.length).toFixed(1)
@@ -156,10 +155,18 @@ export default function ProfilePage() {
       window.addEventListener("storage", loadProfileData);
       window.addEventListener("profile-avatar-updated", loadProfileData);
       window.addEventListener("user-status-updated", loadProfileData);
+      window.addEventListener("watchlist-updated", loadProfileData);
+      window.addEventListener("profile-data-changed", loadProfileData);
+      window.addEventListener("focus", loadProfileData);
+      const interval = setInterval(loadProfileData, 5000);
       return () => {
         window.removeEventListener("storage", loadProfileData);
         window.removeEventListener("profile-avatar-updated", loadProfileData);
         window.removeEventListener("user-status-updated", loadProfileData);
+        window.removeEventListener("watchlist-updated", loadProfileData);
+        window.removeEventListener("profile-data-changed", loadProfileData);
+        window.removeEventListener("focus", loadProfileData);
+        clearInterval(interval);
       };
     }
   }, [profileUsername]);
