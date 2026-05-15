@@ -149,7 +149,7 @@ export async function getAnitakuStreamUrls(episodeUrl) {
   return servers;
 }
 
-// ─── Legacy Consumet (mostly dead, kept for backward compat) ───
+// ─── Consumet API (gogoanime, zoro) ───
 const CONSUMET = "https://api.consumet.org/anime";
 
 async function searchConsumet(provider, query) {
@@ -175,10 +175,6 @@ export async function consumetGetEpisodes(provider, id) {
   }));
 }
 
-export async function gogoGetEpisodes(id) {
-  return consumetGetEpisodes("gogoanime", id);
-}
-
 export async function consumetGetStreamUrl(episodeId, provider) {
   const res = await fetch(`${CONSUMET}/${provider}/watch/${encodeURIComponent(episodeId)}`);
   if (!res.ok) throw new Error(`${provider} stream error: ${res.status}`);
@@ -189,39 +185,59 @@ export async function consumetGetStreamUrl(episodeId, provider) {
   return null;
 }
 
-// ─── Embed / Kwik fallback sources ───
+// ─── Gogoanime direct API (alternative to Consumet) ───
+const GOGO_API = "https://gogoanime-api.vercel.app/api";
+
+async function searchGogoanime(query) {
+  for (const q of titleVariants(query)) {
+    try {
+      const res = await fetch(`${GOGO_API}/search?query=${encodeURIComponent(q)}`);
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.results?.length > 0) return data.results;
+    } catch {}
+  }
+  return [];
+}
+
+async function tryGogoanimeSource(animeName) {
+  const results = await searchGogoanime(animeName);
+  if (results.length > 0) {
+    const first = results[0];
+    return { source: "gogoanime", id: first.animeId, slug: first.animeId, title: first.title };
+  }
+  return null;
+}
+
+// ─── Embed fallback sources ───
 const EMBED_PROVIDERS = [
   { name: "embedomega", url: (title) => `https://embedomega.xyz/embed/play?title=${encodeURIComponent(title)}` },
   { name: "kwik", url: (title) => `https://kwik.sbs/e/${encodeURIComponent(title.replace(/\s+/g, "-").toLowerCase())}` },
 ];
 
-async function tryEmbedFallback(animeName) {
-  for (const provider of EMBED_PROVIDERS) {
-    try {
-      const embedUrl = provider.url(animeName);
-      const res = await fetch(embedUrl, { method: "HEAD", mode: "cors" });
-      if (res.ok || res.status < 500) {
-        return { source: provider.name, slug: animeName, id: animeName, title: animeName, embedUrl };
-      }
-    } catch {}
-  }
-  return null;
+function makeEmbedFallback(animeName) {
+  return {
+    source: EMBED_PROVIDERS[0].name,
+    slug: animeName,
+    id: animeName,
+    title: animeName,
+    embedUrl: EMBED_PROVIDERS[0].url(animeName),
+  };
 }
 
-// ─── Multi-source search ───
+// ─── Multi-source search (parallel) ───
 export async function findStreamingSource(animeName) {
-  const anitaku = await searchAnitaku(animeName);
-  if (anitaku.length > 0) {
-    return { source: "anitaku", slug: anitaku[0].slug, id: anitaku[0].slug, title: anitaku[0].title };
+  const sources = [
+    searchAnitaku(animeName).then(r => r.length > 0 ? { source: "anitaku", slug: r[0].slug, id: r[0].slug, title: r[0].title } : null),
+    searchAnipub(animeName).then(r => r.length > 0 ? { source: "anipub", id: r[0].Id, title: r[0].Name } : null),
+    searchConsumet("gogoanime", animeName).then(r => r.length > 0 ? { source: "consumet", id: r[0].id, title: r[0].title, provider: "gogoanime" } : null),
+    tryGogoanimeSource(animeName),
+  ];
+
+  const results = await Promise.allSettled(sources);
+  for (const r of results) {
+    if (r.status === "fulfilled" && r.value) return r.value;
   }
 
-  const anipub = await searchAnipub(animeName);
-  if (anipub.length > 0) {
-    return { source: "anipub", id: anipub[0].Id, title: anipub[0].Name };
-  }
-
-  const fallback = await tryEmbedFallback(animeName);
-  if (fallback) return fallback;
-
-  return null;
+  return makeEmbedFallback(animeName);
 }

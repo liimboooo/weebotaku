@@ -331,7 +331,7 @@ export default function AnimeDetail() {
                         setWatchAnime(src);
                         setShowPlayer(true);
                         addNotification({ title: "Now Playing", body: anime.name, type: "watch" });
-                      } else { setWatchError("No streaming source found for this title."); }
+                          } else { setWatchError("No streaming source available. Try again or check back later."); }
                     } catch (e) { setWatchError("Failed to find streaming source."); }
                     finally { setWatchLoading(false); }
                   }} disabled={watchLoading}>
@@ -349,7 +349,7 @@ export default function AnimeDetail() {
                             setWatchAnime(src);
                             setShowPlayer(true);
                             addNotification({ title: "Now Playing", body: anime.name, type: "watch" });
-                          } else { setWatchError("No streaming source found for this title."); }
+                      } else { setWatchError("No streaming source available. Try again or check back later."); }
                         } catch (e) { setWatchError("Failed to find streaming source."); }
                         finally { setWatchLoading(false); }
                       }}>

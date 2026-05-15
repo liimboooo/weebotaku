@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, X, Loader } from "lucide-react";
-import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls } from "../../services/animeApi";
+import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, consumetGetEpisodes, consumetGetStreamUrl } from "../../services/animeApi";
 import "./AnimeWatch.css";
 
 export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange }) {
@@ -30,6 +30,8 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         let eps = [];
         if (anime.source === "anitaku") {
           eps = await getAnitakuEpisodes(anime.slug);
+        } else if (anime.source === "consumet" || anime.source === "gogoanime") {
+          eps = await consumetGetEpisodes(anime.provider || "gogoanime", anime.id);
         } else {
           eps = await getAnimeEpisodes(anime.id);
         }
@@ -65,6 +67,24 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
             setStreamUrl(urls[0].url);
           } else {
             setError("No video servers found.");
+          }
+        } catch {
+          setError("Failed to load stream.");
+        } finally {
+          setStreamLoading(false);
+        }
+      })();
+    } else if (anime.source === "consumet" || anime.source === "gogoanime") {
+      (async () => {
+        setError("");
+        setStreamLoading(true);
+        setStreamUrl("");
+        try {
+          const url = await consumetGetStreamUrl(episode.id, episode.provider || anime.provider || "gogoanime");
+          if (url) {
+            setStreamUrl(url);
+          } else {
+            setError("No stream URL found.");
           }
         } catch {
           setError("Failed to load stream.");
