@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { ChevronLeft, ChevronRight, X, Loader } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Loader, Image, ArrowLeftRight } from "lucide-react";
 import { getChapterPages } from "../../services/mangaApi";
 import "./MangaReader.css";
+
+const QUALITY_ICON = { data: "HD", "data-saver": "SD" };
 
 export default function MangaReader({ manga, chapters, initialChapter, onClose }) {
   const [chIndex, setChIndex] = useState(() => {
@@ -12,6 +14,11 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
   const [pageIndex, setPageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [quality, setQuality] = useState("data-saver");
+  const [direction, setDirection] = useState("ltr");
+  const [preloaded, setPreloaded] = useState([]);
+  const [imgError, setImgError] = useState(false);
+  const imgRef = useRef(null);
 
   const chapter = chapters[chIndex];
 
@@ -20,43 +27,85 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
     setLoading(true);
     setError("");
     setPageIndex(0);
+    setImgError(false);
+    setPreloaded([]);
     try {
-      const urls = await getChapterPages(chapter.id);
+      const urls = await getChapterPages(chapter.id, quality);
       setPages(urls);
-    } catch (e) {
-      setError("Failed to load chapter pages.");
+    } catch {
+      try {
+        const urls = await getChapterPages(chapter.id, quality === "data" ? "data-saver" : "data");
+        setPages(urls);
+        setQuality(quality === "data" ? "data-saver" : "data");
+      } catch {
+        setError("Failed to load chapter pages.");
+      }
     } finally {
       setLoading(false);
     }
-  }, [chapter]);
+  }, [chapter, quality]);
 
   useEffect(() => { loadPages(); }, [loadPages]);
+
+  useEffect(() => {
+    if (pages.length > 0 && pageIndex < pages.length - 1) {
+      const nextIdx = pageIndex + 1;
+      if (!preloaded.includes(nextIdx)) {
+        setPreloaded(p => [...p, nextIdx]);
+        const img = new Image();
+        img.src = pages[nextIdx];
+      }
+    }
+  }, [pageIndex, pages, preloaded]);
 
   useEffect(() => {
     if (chapter && manga) {
       const key = "mangaProgress";
       const progress = JSON.parse(localStorage.getItem(key) || "{}");
-      progress[manga.id] = parseFloat(chapter.chapter) || chIndex + 1;
+      progress[manga.id] = { ch: parseFloat(chapter.chapter) || chIndex + 1, page: pageIndex, chId: chapter.id };
       localStorage.setItem(key, JSON.stringify(progress));
     }
-  }, [chapter, manga, chIndex]);
+  }, [chapter, manga, chIndex, pageIndex]);
 
-  const goNextChapter = () => {
-    if (chIndex < chapters.length - 1) setChIndex(i => i + 1);
-  };
-  const goPrevChapter = () => {
-    if (chIndex > 0) setChIndex(i => i - 1);
-  };
-  const goPrevPage = () => setPageIndex(i => Math.max(0, i - 1));
-  const goNextPage = () => {
-    setPageIndex(i => {
-      if (i >= pages.length - 1) {
-        if (chIndex < chapters.length - 1) goNextChapter();
-        return i;
-      }
-      return i + 1;
-    });
-  };
+  const goNextChapter = useCallback(() => {
+    if (chIndex < chapters.length - 1) { setChIndex(i => i + 1); return true; }
+    return false;
+  }, [chIndex, chapters.length]);
+
+  const goPrevChapter = useCallback(() => {
+    if (chIndex > 0) { setChIndex(i => i - 1); return true; }
+    return false;
+  }, [chIndex]);
+
+  const goPrevPage = useCallback(() => {
+    if (direction === "rtl") {
+      setPageIndex(i => {
+        if (i >= pages.length - 1) return i;
+        return i + 1;
+      });
+    } else {
+      setPageIndex(i => Math.max(0, i - 1));
+    }
+  }, [direction, pages.length]);
+
+  const goNextPage = useCallback(() => {
+    if (direction === "rtl") {
+      setPageIndex(i => {
+        if (i <= 0) return i;
+        return i - 1;
+      });
+    } else {
+      setPageIndex(i => {
+        if (i >= pages.length - 1) {
+          if (chIndex < chapters.length - 1) {
+            setChIndex(ci => ci + 1);
+          }
+          return i;
+        }
+        return i + 1;
+      });
+    }
+  }, [direction, pages.length, chIndex, chapters.length]);
 
   const goNextPageRef = useRef(goNextPage);
   const goPrevPageRef = useRef(goPrevPage);
@@ -72,10 +121,35 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  const handleImgClick = () => {
+    if (direction === "rtl") {
+      const half = imgRef.current?.offsetWidth / 2 || 0;
+      const x = window.lastClickX || 0;
+      if (x > half) goPrevPage();
+      else goNextPage();
+    } else {
+      goNextPage();
+    }
+  };
+
+  const handleImgMouseDown = (e) => {
+    window.lastClickX = e.nativeEvent.offsetX;
+  };
+
   const chNum = chapter?.chapter || "?";
-  const chTitle = chapter?.title || `Chapter ${chNum}`;
+  const chTitle = chapter?.title || `Ch. ${chNum}`;
   const hasPrevCh = chIndex > 0;
   const hasNextCh = chIndex < chapters.length - 1;
+  const currentPage = direction === "rtl" ? pages.length - pageIndex : pageIndex + 1;
+  const totalPages = pages.length;
+
+  const toggleQuality = () => {
+    setQuality(q => q === "data" ? "data-saver" : "data");
+  };
+
+  const toggleDirection = () => {
+    setDirection(d => d === "ltr" ? "rtl" : "ltr");
+  };
 
   return (
     <div className="reader-overlay" onClick={onClose}>
@@ -85,9 +159,19 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
             <ChevronLeft size={22} /> {manga?.title || "Back"}
           </button>
           <span className="reader-title">{chTitle}</span>
-          <button className="reader-close-btn" onClick={onClose}>
-            <X size={20} />
-          </button>
+          <div className="reader-header-actions">
+            <button className="reader-action-btn" onClick={toggleDirection} title={`Direction: ${direction.toUpperCase()}`}>
+              <ArrowLeftRight size={16} />
+              <span>{direction.toUpperCase()}</span>
+            </button>
+            <button className="reader-action-btn" onClick={toggleQuality} title={`Quality: ${quality}`}>
+              <Image size={16} />
+              <span>{QUALITY_ICON[quality]}</span>
+            </button>
+            <button className="reader-close-btn" onClick={onClose}>
+              <X size={20} />
+            </button>
+          </div>
         </header>
 
         <div className="reader-body">
@@ -113,13 +197,23 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
             {error && <div className="reader-error">{error}</div>}
             {!loading && !error && pages.length > 0 && (
               <img
-                key={chapter?.id + "_" + pageIndex}
-                src={pages[pageIndex]}
-                alt={`Page ${pageIndex + 1}`}
+                key={`${chapter?.id}_${pageIndex}_${quality}`}
+                ref={imgRef}
+                src={imgError ? undefined : pages[pageIndex]}
+                onError={() => setImgError(true)}
+                onLoad={() => setImgError(false)}
+                alt={`Page ${currentPage}`}
                 className="reader-page-img"
                 referrerPolicy="no-referrer"
-                onClick={goNextPage}
+                onClick={handleImgClick}
+                onMouseDown={handleImgMouseDown}
+                style={{ cursor: direction === "rtl" ? "pointer" : "pointer" }}
               />
+            )}
+            {imgError && !loading && !error && (
+              <div className="reader-error">
+                <p>Failed to load this page. Try switching quality.</p>
+              </div>
             )}
             {!loading && !error && pages.length === 0 && (
               <div className="reader-loading"><p>No pages available.</p></div>
@@ -128,11 +222,11 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
 
           <div className="reader-controls-bottom">
             <div className="reader-page-nav">
-              <button disabled={pageIndex === 0} onClick={goPrevPage}>
+              <button disabled={direction === "ltr" ? pageIndex === 0 : pageIndex >= pages.length - 1} onClick={goPrevPage}>
                 <ChevronLeft size={18} />
               </button>
-              <span>{pageIndex + 1} / {pages.length}</span>
-              <button disabled={pageIndex >= pages.length - 1 && !hasNextCh} onClick={goNextPage}>
+              <span>{currentPage} / {totalPages}</span>
+              <button disabled={direction === "ltr" ? pageIndex >= pages.length - 1 && !hasNextCh : pageIndex <= 0 && !hasPrevCh} onClick={goNextPage}>
                 <ChevronRight size={18} />
               </button>
             </div>

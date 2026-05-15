@@ -72,13 +72,25 @@ export async function getMangaChapters(mangaId, lang = "en") {
     }));
 }
 
-export async function getChapterPages(chapterId) {
+export async function getChapterPages(chapterId, quality = "data") {
   const json = await mdFetch(`/at-home/server/${chapterId}`);
   const base = json.baseUrl;
   const hash = json.chapter.hash;
-  const quality = json.chapter["data-saver"]?.length > 0 ? "data-saver" : "data";
-  const files = json.chapter[quality];
-  return files.map(f => `${base}/${quality}/${hash}/${f}`);
+  const q = quality === "data-saver" && json.chapter["data-saver"]?.length > 0 ? "data-saver" : "data";
+  const files = json.chapter[q];
+  return files.map(f => `${base}/${q}/${hash}/${f}`);
+}
+
+export async function getChapterPagesWithFallback(chapterId) {
+  try {
+    return await getChapterPages(chapterId, "data");
+  } catch {
+    try {
+      return await getChapterPages(chapterId, "data-saver");
+    } catch {
+      throw new Error("Failed to load chapter pages.");
+    }
+  }
 }
 
 export async function getMangaById(mangaId) {

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLoading } from "../components/LoadingProvider";
 import { Search, X, Star, BookOpen, Eye, Heart, Sparkles, Zap, Library, List, Grid3x3, Users, Activity, ChevronDown, SlidersHorizontal } from "lucide-react";
@@ -52,6 +53,7 @@ function FilterDropdown({ label, icon: Icon, items, active, children }) {
 }
 
 export default function MangaVault() {
+  const navigate = useNavigate();
   const [allManga, setAllManga] = useState([]);
   const [heroManga, setHeroManga] = useState(null);
   const { showLoading: showGlobalLoading, hideLoading: hideGlobalLoading } = useLoading();
@@ -172,6 +174,16 @@ export default function MangaVault() {
       alert("Failed to load manga from MangaDex.");
     } finally {
       setChapterLoading(false);
+    }
+  };
+
+  const openDetail = async (manga) => {
+    try {
+      const results = await mdSearch(manga.title);
+      if (results.length > 0) navigate(`/manga/${results[0].id}`);
+      else alert("Manga not found on MangaDex.");
+    } catch {
+      alert("Failed to load manga details.");
     }
   };
 
@@ -449,6 +461,9 @@ export default function MangaVault() {
                     </button>
                     <button className="mv-modal-btn mv-modal-btn-primary" onClick={() => openReader(preview)} disabled={chapterLoading}>
                       {chapterLoading ? "Searching..." : "Read Online"}
+                    </button>
+                    <button className="mv-modal-btn mv-modal-btn-secondary" onClick={() => openDetail(preview)}>
+                      View Details
                     </button>
                   </div>
                 </div>

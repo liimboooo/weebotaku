@@ -1,0 +1,213 @@
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ArrowLeft, BookOpen, Heart, Star, ChevronDown, Loader } from "lucide-react";
+import { getMangaById, getMangaChapters } from "../services/mangaApi";
+import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
+import MangaReader from "./Feeds/MangaReader";
+import Background from "../components/Background";
+import AnimatedPage from "../components/AnimatedPage";
+import "./MangaDetail.css";
+
+export default function MangaDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [manga, setManga] = useState(null);
+  const [chapters, setChapters] = useState([]);
+  const [filteredCh, setFilteredCh] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [chLoading, setChLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [isInList, setIsInList] = useState(false);
+  const [chapterLimit, setChapterLimit] = useState(50);
+
+  const [readerManga, setReaderManga] = useState(null);
+  const [readerChapters, setReaderChapters] = useState([]);
+  const [readerChapter, setReaderChapter] = useState(null);
+  const [readerOpen, setReaderOpen] = useState(false);
+
+  useEffect(() => {
+    setIsInList(loadReadlist().some(i => i.id === id));
+  }, [id]);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const m = await getMangaById(id);
+        setManga(m);
+      } catch {
+        setError("Failed to load manga details.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id]);
+
+  useEffect(() => {
+    if (!manga) return;
+    (async () => {
+      setChLoading(true);
+      try {
+        const ch = await getMangaChapters(id);
+        setChapters(ch);
+        setFilteredCh(ch.slice(0, chapterLimit));
+      } catch {
+        console.error("Failed to load chapters");
+      } finally {
+        setChLoading(false);
+      }
+    })();
+  }, [manga, id, chapterLimit]);
+
+  const openReader = async (ch) => {
+    if (!ch) return;
+    setReaderManga(manga);
+    setReaderChapters(chapters);
+    setReaderChapter(ch);
+    setReaderOpen(true);
+  };
+
+  const toggleReadlist = () => {
+    if (isInList) {
+      removeFromReadlist(id);
+      setIsInList(false);
+    } else if (manga) {
+      addToReadlist({
+        id,
+        title: manga.title,
+        cover: manga.coverUrl,
+        rating: 0,
+        ch: chapters.length,
+        status: manga.status,
+        author: manga.author,
+      });
+      setIsInList(true);
+    }
+  };
+
+  const showAll = () => setChapterLimit(chapters.length);
+  const displayedCh = chapterLimit >= chapters.length ? chapters : chapters.slice(0, chapterLimit);
+  const hasMoreCh = chapterLimit < chapters.length;
+
+  useGSAP(() => {
+    gsap.from(".md-hero-content", { opacity: 0, y: 40, duration: 0.6, ease: "power3.out" });
+    gsap.from(".md-cover-wrap", { opacity: 0, scale: 0.9, duration: 0.5, delay: 0.2, ease: "back.out(1.5)" });
+  }, [manga]);
+
+  if (loading) {
+    return (
+      <AnimatedPage>
+        <div className="md"><Background />
+          <div className="md-loading"><Loader size={36} className="md-spinner" /><p>Loading manga...</p></div>
+        </div>
+      </AnimatedPage>
+    );
+  }
+
+  if (error) {
+    return (
+      <AnimatedPage>
+        <div className="md"><Background />
+          <div className="md-loading"><p>{error}</p>
+            <button className="md-back-btn" onClick={() => navigate("/browse/manga")}>Back to Browse</button>
+          </div>
+        </div>
+      </AnimatedPage>
+    );
+  }
+
+  return (
+    <AnimatedPage>
+      <div className="md">
+        <Background />
+        <div className="md-bg-ornament" />
+
+        <div className="md-shell">
+          <button className="md-nav-back" onClick={() => navigate(-1)}>
+            <ArrowLeft size={18} /> Back
+          </button>
+
+          <div className="md-hero">
+            <div className="md-cover-wrap">
+              {manga.coverUrl && <img src={manga.coverUrl} alt={manga.title} className="md-cover" />}
+            </div>
+            <div className="md-hero-content">
+              <h1 className="md-title">{manga.title}</h1>
+              <div className="md-meta">
+                {manga.author && <span className="md-meta-item">{manga.author}</span>}
+                {manga.year && <span className="md-meta-item">{manga.year}</span>}
+                <span className={`md-meta-item md-status ${manga.status}`}>{manga.status}</span>
+              </div>
+              {manga.tags?.length > 0 && (
+                <div className="md-tags">
+                  {manga.tags.map(t => <span key={t} className="md-tag">{t}</span>)}
+                </div>
+              )}
+              {manga.description && (
+                <p className="md-desc">{manga.description.replace(/<[^>]*>/g, "").slice(0, 500)}</p>
+              )}
+              <div className="md-actions">
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  className="md-btn md-btn-primary" onClick={() => openReader(chapters[0])}>
+                  <BookOpen size={16} /> Start Reading
+                </motion.button>
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  className={`md-btn md-btn-secondary ${isInList ? "active" : ""}`} onClick={toggleReadlist}>
+                  <Heart size={16} fill={isInList ? "currentColor" : "none"} />
+                  {isInList ? "In Your List" : "Add to List"}
+                </motion.button>
+              </div>
+            </div>
+          </div>
+
+          <section className="md-chapters">
+            <h2 className="md-section-title">Chapters ({chapters.length})</h2>
+            {chLoading ? (
+              <div className="md-ch-loading"><Loader size={24} className="md-spinner" /><p>Loading chapters...</p></div>
+            ) : chapters.length === 0 ? (
+              <div className="md-ch-empty"><p>No chapters available.</p></div>
+            ) : (
+              <div className="md-ch-list">
+                {displayedCh.map((ch, i) => (
+                  <motion.button key={ch.id} className="md-ch-item"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.02 }}
+                    onClick={() => openReader(ch)}>
+                    <div className="md-ch-left">
+                      <span className="md-ch-num">Ch. {ch.chapter}</span>
+                      {ch.title && <span className="md-ch-title">{ch.title}</span>}
+                    </div>
+                    <div className="md-ch-right">
+                      {ch.group && <span className="md-ch-group">{ch.group}</span>}
+                      <span className="md-ch-pages">{ch.pages}p</span>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            )}
+            {hasMoreCh && (
+              <button className="md-ch-more" onClick={showAll}>
+                Show All ({chapters.length} chapters) <ChevronDown size={16} />
+              </button>
+            )}
+          </section>
+        </div>
+
+        {readerOpen && (
+          <MangaReader
+            manga={readerManga}
+            chapters={readerChapters}
+            initialChapter={readerChapter}
+            onClose={() => setReaderOpen(false)}
+          />
+        )}
+      </div>
+    </AnimatedPage>
+  );
+}
