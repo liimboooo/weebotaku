@@ -15,7 +15,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
 
-  const isEmbedSource = ["embedomega", "kwik"].includes(anime.source);
+  const isEmbedSource = ["autoembed", "kwik"].includes(anime.source);
 
   useEffect(() => {
     if (isEmbedSource) {

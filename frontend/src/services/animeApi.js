@@ -211,7 +211,7 @@ async function tryGogoanimeSource(animeName) {
 
 // ─── Embed fallback sources ───
 const EMBED_PROVIDERS = [
-  { name: "embedomega", url: (title) => `https://embedomega.xyz/embed/play?title=${encodeURIComponent(title)}` },
+  { name: "autoembed", url: (title) => `https://anime.autoembed.cc/embed/${title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}-episode-1` },
   { name: "kwik", url: (title) => `https://kwik.sbs/e/${encodeURIComponent(title.replace(/\s+/g, "-").toLowerCase())}` },
 ];
 
