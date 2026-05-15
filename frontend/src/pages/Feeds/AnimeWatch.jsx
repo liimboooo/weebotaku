@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X, Loader, Play, Monitor, Maximize2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, consumetGetEpisodes, consumetGetStreamUrl } from "../../services/animeApi";
@@ -7,6 +8,8 @@ import "./AnimeWatch.css";
 function replaceEpInUrl(url, animeId, newEp) {
   return url.replace(new RegExp(`/${animeId}/(\\d+)`), `/${animeId}/${newEp}`);
 }
+
+const MAX_EMBED_EPISODES = 50;
 
 export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange, totalEpisodes = 12 }) {
   const [episodes, setEpisodes] = useState([]);
@@ -27,7 +30,8 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     if (isEmbedSource) {
       setLoading(false);
       if (!anime.embedProviders?.length) { setError("No streaming source found."); return; }
-      const virtualEps = Array.from({ length: totalEpisodes }, (_, i) => ({ episode: i + 1, id: i + 1 }));
+      const epCount = Math.min(totalEpisodes, MAX_EMBED_EPISODES);
+      const virtualEps = Array.from({ length: epCount }, (_, i) => ({ episode: i + 1, id: i + 1 }));
       setEpisodes(virtualEps);
       const providers = anime.embedProviders.map(p => ({ label: p.name, url: p.url }));
       setServers(providers);
@@ -99,7 +103,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const goPrev = () => setEpIndex(i => { const n = Math.max(0, i - 1); if (onEpisodeChange && episodes[n]) onEpisodeChange(episodes[n].episode); return n; });
   const goNext = () => setEpIndex(i => { const n = Math.min(episodes.length - 1, i + 1); if (onEpisodeChange && episodes[n]) onEpisodeChange(episodes[n].episode); return n; });
 
-  return (
+  return createPortal(
     <motion.div className="watch-overlay" onClick={onClose}
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
     >
@@ -224,6 +228,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }

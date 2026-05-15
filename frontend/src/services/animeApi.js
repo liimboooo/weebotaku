@@ -233,10 +233,10 @@ async function searchAnilist(query) {
 }
 
 const EMBED_PROVIDERS = [
-  { name: "VidNest", url: (id) => `https://vidnest.fun/anime/${id}/1/sub` },
-  { name: "VidSrc", url: (id) => `https://vidsrc.icu/embed/anime/${id}/1/0` },
-  { name: "VidPlus", url: (id) => `https://player.vidplus.to/embed/anime/${id}/1` },
-  { name: "MegaPlay", url: (id) => `https://megaplay.buzz/stream/ani/${id}/1/sub` },
+  { name: "MegaPlay", url: (id, ep = 1) => `https://megaplay.buzz/stream/ani/${id}/${ep}/sub` },
+  { name: "DropFile", url: (id, ep = 1) => `https://dropfile.cc/player/tv/anilist-${id}/${ep}/1?audio=sub&lang=en` },
+  { name: "NinjaStream", url: (id, ep = 1) => `https://ninjasheild.stream/map/anime/${id}/${ep}/sub` },
+  { name: "VidRush", url: (id, ep = 1) => `https://player.vidrush.net/embed/anime/${id}/${ep}` },
 ];
 
 async function makeEmbedFallback(animeName) {
