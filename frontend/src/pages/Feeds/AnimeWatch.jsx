@@ -12,8 +12,17 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [serverIndex, setServerIndex] = useState(0);
   const [streamUrl, setStreamUrl] = useState("");
   const [error, setError] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
+  const [streamRetryCount, setStreamRetryCount] = useState(0);
+
+  const isEmbedSource = ["embedomega", "kwik"].includes(anime.source);
 
   useEffect(() => {
+    if (isEmbedSource) {
+      setLoading(false);
+      setStreamUrl(anime.embedUrl || "");
+      return;
+    }
     (async () => {
       setLoading(true);
       setError("");
@@ -36,12 +45,12 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         setLoading(false);
       }
     })();
-  }, [anime.id, anime.slug, anime.source, startEp]);
+  }, [anime.id, anime.slug, anime.source, startEp, isEmbedSource, anime.embedUrl, retryCount]);
 
   const episode = episodes[epIndex];
 
   useEffect(() => {
-    if (!episode) return;
+    if (!episode || isEmbedSource) return;
     if (anime.source === "anitaku") {
       (async () => {
         setError("");
@@ -66,7 +75,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     } else {
       setStreamUrl(episode.url);
     }
-  }, [episode, anime.source]);
+  }, [episode, anime.source, isEmbedSource, streamRetryCount]);
 
   const switchServer = (idx) => {
     if (servers[idx]) {
@@ -104,14 +113,27 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
               <p>Loading episodes...</p>
             </div>
           )}
-          {error && <div className="watch-error">{error}</div>}
+          {!loading && error && (
+            <div className="watch-error">
+              <p>{error}</p>
+              <button className="watch-retry-btn" onClick={() => {
+                if (episodes.length === 0) {
+                  setRetryCount(c => c + 1);
+                } else {
+                  setStreamRetryCount(c => c + 1);
+                }
+              }}>
+                Retry
+              </button>
+            </div>
+          )}
           {!loading && !error && streamUrl && !streamLoading && (
             <div className="watch-player-wrap">
               <iframe
-                key={`${episode.episode}-${serverIndex}`}
+                key={`${episode?.episode || 0}-${serverIndex}`}
                 className="watch-player"
                 src={streamUrl}
-                title={`Episode ${episode.episode}`}
+                title={`Episode ${episode?.episode || ""}`}
                 allow="autoplay; fullscreen; encrypted-media"
                 allowFullScreen
               />
@@ -123,7 +145,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
               <p>Loading stream...</p>
             </div>
           )}
-          {!loading && !error && !streamLoading && !streamUrl && episode && (
+          {!loading && !error && !streamLoading && !streamUrl && !isEmbedSource && episode && (
             <div className="watch-loading">
               <Loader size={32} className="watch-spinner" />
               <p>Preparing stream...</p>

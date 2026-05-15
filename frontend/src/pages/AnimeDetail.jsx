@@ -337,7 +337,26 @@ export default function AnimeDetail() {
                   }} disabled={watchLoading}>
                     <Play size={18} fill="currentColor" /> {watchLoading ? "Searching..." : "Watch Now"}
                   </motion.button>
-                  {watchError && <p className="ad-error-msg">{watchError}</p>}
+                  {!watchLoading && watchError && (
+                    <p className="ad-error-msg">
+                      {watchError}
+                      <button className="ad-retry-btn" onClick={async () => {
+                        setWatchError("");
+                        setWatchLoading(true);
+                        try {
+                          const src = await findStreamingSource(anime.name);
+                          if (src) {
+                            setWatchAnime(src);
+                            setShowPlayer(true);
+                            addNotification({ title: "Now Playing", body: anime.name, type: "watch" });
+                          } else { setWatchError("No streaming source found for this title."); }
+                        } catch (e) { setWatchError("Failed to find streaming source."); }
+                        finally { setWatchLoading(false); }
+                      }}>
+                        Retry
+                      </button>
+                    </p>
+                  )}
                   <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`ad-btn ad-btn-secondary ${isWatchlisted ? "active" : ""}`} onClick={toggleWatchlist}>
                     <Bookmark size={18} fill={isWatchlisted ? "currentColor" : "none"} /> {isWatchlisted ? "Saved" : "Save"}
                   </motion.button>

@@ -18,6 +18,8 @@ const titleVariants = (title) => {
 // ─── CORS Proxy ───
 const CORS_PROXIES = [
   "https://api.codetabs.com/v1/proxy?quest=",
+  "https://corsproxy.io/?url=",
+  "https://api.allorigins.win/raw?url=",
 ];
 
 async function fetchHtmlViaProxy(url) {
@@ -187,6 +189,25 @@ export async function consumetGetStreamUrl(episodeId, provider) {
   return null;
 }
 
+// ─── Embed / Kwik fallback sources ───
+const EMBED_PROVIDERS = [
+  { name: "embedomega", url: (title) => `https://embedomega.xyz/embed/play?title=${encodeURIComponent(title)}` },
+  { name: "kwik", url: (title) => `https://kwik.sbs/e/${encodeURIComponent(title.replace(/\s+/g, "-").toLowerCase())}` },
+];
+
+async function tryEmbedFallback(animeName) {
+  for (const provider of EMBED_PROVIDERS) {
+    try {
+      const embedUrl = provider.url(animeName);
+      const res = await fetch(embedUrl, { method: "HEAD", mode: "cors" });
+      if (res.ok || res.status < 500) {
+        return { source: provider.name, slug: animeName, id: animeName, title: animeName, embedUrl };
+      }
+    } catch {}
+  }
+  return null;
+}
+
 // ─── Multi-source search ───
 export async function findStreamingSource(animeName) {
   const anitaku = await searchAnitaku(animeName);
@@ -198,6 +219,9 @@ export async function findStreamingSource(animeName) {
   if (anipub.length > 0) {
     return { source: "anipub", id: anipub[0].Id, title: anipub[0].Name };
   }
+
+  const fallback = await tryEmbedFallback(animeName);
+  if (fallback) return fallback;
 
   return null;
 }

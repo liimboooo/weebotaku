@@ -97,6 +97,21 @@
   color: #f87171;
 }
 
+.watch-retry-btn {
+  margin-top: 12px;
+  background: rgba(255,255,255,0.08);
+  border: none;
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.watch-retry-btn:hover {
+  background: rgba(255,255,255,0.15);
+}
+
 .watch-player-wrap {
   width: 100%;
   height: 100%;
