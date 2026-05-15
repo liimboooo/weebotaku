@@ -209,18 +209,23 @@ async function tryGogoanimeSource(animeName) {
   return null;
 }
 
-// ─── Jikan (MyAnimeList) search ───
-const JIKAN = "https://api.jikan.moe/v4";
+// ─── AniList search (GraphQL) ───
+const ANILIST_QL = "https://graphql.anilist.co";
 
-async function searchJikan(query) {
-  for (const q of titleVariants(query)) {
+async function searchAnilist(query) {
+  const q = `query ($search: String) { Media(search: $search, type: ANIME) { id title { romaji english } } }`;
+  for (const v of titleVariants(query)) {
     try {
-      const res = await fetch(`${JIKAN}/anime?q=${encodeURIComponent(q)}&limit=1`);
+      const res = await fetch(ANILIST_QL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: q, variables: { search: v } }),
+      });
       if (!res.ok) continue;
       const data = await res.json();
-      if (data.data?.length > 0) {
-        const anime = data.data[0];
-        return { malId: anime.mal_id, title: anime.title };
+      if (data.data?.Media?.id) {
+        const t = data.data.Media.title;
+        return { anilistId: data.data.Media.id, title: t.english || t.romaji };
       }
     } catch {}
   }
@@ -229,14 +234,14 @@ async function searchJikan(query) {
 
 // ─── Embed fallback source ───
 async function makeEmbedFallback(animeName) {
-  const result = await searchJikan(animeName);
+  const result = await searchAnilist(animeName);
   if (result) {
     return {
       source: "vidsrc",
       slug: animeName,
-      id: result.malId,
+      id: result.anilistId,
       title: result.title,
-      embedUrl: `https://vidsrc.icu/embed/anime/${result.malId}/1/0`,
+      embedUrl: `https://vidsrc.icu/embed/anime/${result.anilistId}/1/0`,
     };
   }
   return {
