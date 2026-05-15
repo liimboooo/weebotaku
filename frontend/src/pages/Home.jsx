@@ -207,7 +207,15 @@ function ContinueWatchingRow() {
     });
   }, []);
 
-  if (items.length === 0) return null;
+  if (items.length === 0) return (
+    <section className="home-section">
+      <SectionHeader icon={Clock} title="Continue Watching" subtitle="Pick up where you left off" />
+      <div className="home-empty-state">
+        <Clock size={24} />
+        <p>No watch history yet — start watching to see your progress here.</p>
+      </div>
+    </section>
+  );
 
   return (
     <section className="home-section">

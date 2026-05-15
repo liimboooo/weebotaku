@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, Heart, Play, RotateCcw, Search, Sparkles, Star, TrendingUp, Clock, Tv, Zap } from "lucide-react";
+import { Calendar, Heart, Play, RotateCcw, Search, Sparkles, Star, TrendingUp, Clock, Tv, Zap, X } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -16,8 +16,9 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function SearchPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState([]);
   const [genres, setGenres] = useState([]);
   const [activeGenre, setActiveGenre] = useState(null);
@@ -31,6 +32,7 @@ export default function SearchPage() {
     try { return JSON.parse(localStorage.getItem("recentSearches") || "[]"); }
     catch { return []; }
   });
+  const searchRef = useRef(null);
 
   const types = ["All", "TV", "Movie", "Special", "OVA", "ONA"];
   const statuses = ["All", "Ongoing", "Completed"];
@@ -136,6 +138,27 @@ export default function SearchPage() {
         <Background />
 
         <div className="discovery-header">
+          <div className="search-page-input-wrap">
+            <Search size={16} className="search-page-input-icon" />
+            <input
+              ref={searchRef}
+              className="search-page-input"
+              placeholder="Search anime..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && query.trim()) {
+                  searchFromPill(query.trim());
+                }
+              }}
+              autoFocus
+            />
+            {query && (
+              <button className="search-page-input-clear" onClick={() => { setQuery(''); searchRef.current?.focus(); }}>
+                <X size={14} />
+              </button>
+            )}
+          </div>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -144,7 +167,7 @@ export default function SearchPage() {
           >
             {searchParams.get("q")
               ? <>Results for "<strong>{searchParams.get("q")}</strong>"</>
-              : "Jump in — pick a genre or search from the header"}
+              : "Jump in — pick a genre or search above"}
           </motion.p>
         </div>
 

@@ -60,8 +60,8 @@ export default function Reviews({ animeId, selectedEp }) {
       await reviewService.createReview(
         animeId,
         null,
-        8, // default rating
-        newReview.slice(0, 50),
+        8,
+        newReview.slice(0, 100),
         newReview,
         false
       );

@@ -12,6 +12,58 @@
   margin-bottom: 30px;
 }
 
+.search-page-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.search-page-input-icon {
+  position: absolute;
+  left: 14px;
+  color: rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+}
+
+.search-page-input {
+  flex: 1;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0 40px 0 42px;
+  color: #fff;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-page-input:focus {
+  border-color: rgba(230, 54, 54, 0.3);
+  box-shadow: 0 0 0 3px rgba(230, 54, 54, 0.08);
+}
+
+.search-page-input-clear {
+  position: absolute;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.search-page-input-clear:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.6);
+}
+
 .discovery-sub {
   color: #888;
   font-size: 16px;
@@ -179,7 +231,7 @@
 
 .sr-card-thumb {
   position: relative;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 3 / 4;
   overflow: hidden;
   background: linear-gradient(135deg, #1a1a1a 0%, #111 50%, #1a0a0a 100%);
 }

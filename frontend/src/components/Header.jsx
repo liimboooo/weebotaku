@@ -33,6 +33,12 @@ export default function Header() {
   const [arenaOpen, setArenaOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
+  const path = location.pathname;
+
+  const isExploreActive = path.startsWith('/browse/');
+  const isFeedsActive = ['/feeds/amvs', '/watch-together', '/news'].some(p => path.startsWith(p));
+  const isArenaActive = path.startsWith('/arena/') || path.startsWith('/rankings/');
+  const isMoreActive = ['/settings', '/help', '/system/rules', '/report'].some(p => path.startsWith(p));
   const [searchTerm, setSearchTerm] = useState('');
   const [profileImage, setProfileImage] = useState(() => localStorage.getItem('userAvatar') || '');
   const [statusMessage, setStatusMessage] = useState(() => localStorage.getItem('userStatusMessage') || 'Watching One Piece...');
@@ -191,7 +197,7 @@ export default function Header() {
           <nav className="header-nav" aria-label="Primary">
             <div className="explore-dropdown-container" ref={exploreRef}>
               <button
-                className={`nav-link ${exploreOpen ? 'active' : ''}`}
+                className={`nav-link ${exploreOpen || isExploreActive ? 'active' : ''}`}
                 onClick={() => setExploreOpen((value) => !value)}
                 aria-expanded={exploreOpen}
                 aria-haspopup="true"
@@ -230,7 +236,7 @@ export default function Header() {
 
             <div className="feeds-dropdown-container" ref={feedsRef}>
               <button
-                className={`nav-link ${feedsOpen ? 'active' : ''}`}
+                className={`nav-link ${feedsOpen || isFeedsActive ? 'active' : ''}`}
                 onClick={() => setFeedsOpen((value) => !value)}
                 aria-expanded={feedsOpen}
                 aria-haspopup="true"
@@ -265,7 +271,7 @@ export default function Header() {
 
             <div className="arena-dropdown-container" ref={arenaRef}>
               <button
-                className={`nav-link arena-link ${arenaOpen ? 'active' : ''}`}
+                className={`nav-link arena-link ${arenaOpen || isArenaActive ? 'active' : ''}`}
                 onClick={() => setArenaOpen((value) => !value)}
                 aria-expanded={arenaOpen}
                 aria-haspopup="true"
@@ -298,7 +304,7 @@ export default function Header() {
             </div>
 
             <div className="more-dropdown-container" ref={moreDropdownRef}>
-              <button className="more-button" onClick={() => setMoreDropdownOpen((value) => !value)}
+              <button className={`more-button ${moreDropdownOpen || isMoreActive ? 'active' : ''}`} onClick={() => setMoreDropdownOpen((value) => !value)}
                 aria-expanded={moreDropdownOpen} aria-haspopup="true">
                 More <ChevronDown size={14} />
               </button>
@@ -325,6 +331,11 @@ export default function Header() {
             placeholder="Search anime...  (Ctrl+K)"
             aria-label="Search anime"
           />
+          {searchTerm && (
+            <button type="button" className="search-clear" onClick={() => { setSearchTerm(''); searchRef.current?.focus(); }}>
+              <X size={14} />
+            </button>
+          )}
         </form>
 
         <div className="header-actions">

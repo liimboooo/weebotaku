@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sparkles, Mail, User, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
 
 const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '952361732795-in2ha0ljhjadc2q9g4ib2hpd41jrbjn4.apps.googleusercontent.com';
 
 export default function AuthForm({ type, username, email, password, setUsername, setEmail, setPassword, onSubmit, onModeChange, error, loading, onGoogleSuccess, onGoogleError }) {
+  const navigate = useNavigate();
   const [showPw, setShowPw] = useState(false);
+  const [confirmPw, setConfirmPw] = useState("");
   const btnRef = useRef(null);
   const rendered = useRef(false);
 
@@ -61,7 +64,11 @@ export default function AuthForm({ type, username, email, password, setUsername,
         </div>
       )}
 
-      <form className="auth-form" onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
+      <form className="auth-form" onSubmit={(e) => {
+        e.preventDefault();
+        if (type === "register" && password !== confirmPw) return;
+        onSubmit();
+      }}>
         {type === "register" && (
           <div className="auth-input-wrap">
             <Mail size={16} className="auth-input-icon" />
@@ -103,6 +110,20 @@ export default function AuthForm({ type, username, email, password, setUsername,
             {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
+        {type === "register" && (
+          <div className="auth-input-wrap">
+            <Lock size={16} className="auth-input-icon" />
+            <input
+              className="auth-input"
+              type={showPw ? "text" : "password"}
+              placeholder="Confirm password"
+              value={confirmPw}
+              onChange={(e) => setConfirmPw(e.target.value)}
+              autoComplete="new-password"
+            />
+            <span className="auth-input-bar" />
+          </div>
+        )}
         <div className="auth-actions">
           <button type="submit" className="auth-button" disabled={loading}>
             {loading ? (
@@ -111,7 +132,7 @@ export default function AuthForm({ type, username, email, password, setUsername,
               <>{type === "login" ? "Sign In" : "Sign Up"} <ArrowRight size={18} /></>
             )}
           </button>
-          {type === "login" && <span className="auth-forgot">Forgot?</span>}
+          {type === "login" && <span className="auth-forgot" onClick={() => navigate('/help')}>Forgot?</span>}
         </div>
       </form>
 

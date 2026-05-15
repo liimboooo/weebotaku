@@ -329,6 +329,7 @@ export default function TierLists() {
   }
 
   function handleReset() {
+    if (!window.confirm('Reset everything? This cannot be undone.')) return;
     setTiers(buildEmptyTiers());
     setSavedId(null);
     setTitle('My Tier List');
