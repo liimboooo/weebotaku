@@ -52,8 +52,10 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
       const nextIdx = pageIndex + 1;
       if (!preloaded.includes(nextIdx)) {
         setPreloaded(p => [...p, nextIdx]);
-        const img = new Image();
-        img.src = pages[nextIdx];
+        try {
+          const img = new Image();
+          img.src = pages[nextIdx];
+        } catch {}
       }
     }
   }, [pageIndex, pages, preloaded]);

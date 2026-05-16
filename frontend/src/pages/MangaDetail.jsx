@@ -96,8 +96,14 @@ export default function MangaDetail() {
   const hasMoreCh = chapterLimit < chapters.length;
 
   useGSAP(() => {
-    gsap.from(".md-hero-content", { opacity: 0, y: 40, duration: 0.6, ease: "power3.out" });
-    gsap.from(".md-cover-wrap", { opacity: 0, scale: 0.9, duration: 0.5, delay: 0.2, ease: "back.out(1.5)" });
+    const hero = document.querySelector(".md-hero-content");
+    const cover = document.querySelector(".md-cover-wrap");
+    if (hero) {
+      gsap.from(hero, { opacity: 0, y: 40, duration: 0.6, ease: "power3.out" });
+    }
+    if (cover) {
+      gsap.from(cover, { opacity: 0, scale: 0.9, duration: 0.5, delay: 0.2, ease: "back.out(1.5)" });
+    }
   }, [manga]);
 
   if (loading) {

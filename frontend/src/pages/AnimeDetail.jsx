@@ -91,27 +91,23 @@ export default function AnimeDetail() {
   }, [id]);
 
   useGSAP(() => {
+    const bg = document.querySelector(".ad-hero-bg");
+    const poster = document.querySelector(".ad-poster");
+    const body = document.querySelector(".ad-body-right");
+
+    if (!bg && !poster && !body) return;
+
     const tl = gsap.timeline();
 
-    tl.from(".ad-hero-bg", {
-      scale: 1.3,
-      opacity: 0,
-      duration: 0.8,
-      ease: "power2.out"
-    })
-    .from(".ad-poster", {
-      x: -50,
-      opacity: 0,
-      duration: 0.5,
-      ease: "power2.out"
-    }, "-=0.5")
-    .from(".ad-body-right > *", {
-      y: 20,
-      opacity: 0,
-      stagger: 0.05,
-      duration: 0.4,
-      ease: "power2.out"
-    }, "-=0.3");
+    if (bg) {
+      tl.from(bg, { scale: 1.3, opacity: 0, duration: 0.8, ease: "power2.out" });
+    }
+    if (poster) {
+      tl.from(poster, { x: -50, opacity: 0, duration: 0.5, ease: "power2.out" }, "-=0.5");
+    }
+    if (body) {
+      tl.from(body.children, { y: 20, opacity: 0, stagger: 0.05, duration: 0.4, ease: "power2.out" }, "-=0.3");
+    }
 
     // Simplified parallax - disabled for performance
   }, { dependencies: [id] });

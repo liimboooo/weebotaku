@@ -4,19 +4,25 @@ const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 let lastCall = 0;
 const MIN_INTERVAL = 250;
 
-async function mdFetchViaProxy(path) {
-  const res = await fetch(`${API_BASE}/scrape/fetch?url=${encodeURIComponent(BASE + path)}`);
-  if (!res.ok) return null;
-  const json = await res.json();
-  if (!json.success) return null;
-  try { return JSON.parse(json.data); } catch { return null; }
-}
-
 async function mdFetch(path) {
   const now = Date.now();
   const wait = Math.max(0, MIN_INTERVAL - (now - lastCall));
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   lastCall = Date.now();
+
+  // Always route through backend proxy to avoid CORS
+  const url = `${API_BASE}/scrape/fetch?url=${encodeURIComponent(BASE + path)}`;
+  try {
+    const res = await fetch(url);
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) {
+        return JSON.parse(json.data);
+      }
+    }
+  } catch {}
+
+  // Fallback: direct MangaDex fetch (works for local dev without backend)
   let err;
   try {
     const res = await fetch(`${BASE}${path}`);
@@ -25,8 +31,6 @@ async function mdFetch(path) {
   } catch (e) {
     err = e;
   }
-  const proxy = await mdFetchViaProxy(path);
-  if (proxy) return proxy;
   throw err;
 }
 
