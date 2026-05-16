@@ -173,7 +173,7 @@ export default function MangaVault() {
       setReaderChapter(chapters[0]);
       setReaderOpen(true);
     } catch (e) {
-      setReaderError("Failed to load manga from MangaDex.");
+      setReaderError(`MangaDex error: ${e?.message || "Unknown"}`);
     } finally {
       setChapterLoading(false);
     }
@@ -184,8 +184,8 @@ export default function MangaVault() {
       const results = await mdSearch(manga.title);
       if (results.length > 0) navigate(`/manga/${results[0].id}`);
       else setReaderError("Manga not found on MangaDex.");
-    } catch {
-      setReaderError("Failed to load manga details.");
+    } catch (e) {
+      setReaderError(`MangaDex error: ${e?.message || "Unknown"}`);
     }
   };
 
