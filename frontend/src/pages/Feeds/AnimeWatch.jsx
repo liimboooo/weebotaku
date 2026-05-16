@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, X, Loader, Play, Monitor, Maximize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Loader, Play, Monitor, Maximize2, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, getWitanimeEpisodes, getWitanimeStreamUrl } from "../../services/animeApi";
 import "./AnimeWatch.css";
@@ -125,6 +125,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
             {episode && (
               <span className="watch-topbar-ep">Episode {episode.episode}</span>
             )}
+            <span className="watch-source-badge">{anime.source}</span>
           </div>
           <div className="watch-topbar-right">
             <button className="watch-close" onClick={onClose}><X size={18} /></button>

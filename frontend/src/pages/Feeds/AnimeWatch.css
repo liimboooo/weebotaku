@@ -82,6 +82,21 @@
   font-family: "Space Grotesk", sans-serif;
 }
 
+.watch-source-badge {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: "Space Grotesk", sans-serif;
+  background: rgba(220,38,38,0.1);
+  color: #e63636;
+  border: 1px solid rgba(220,38,38,0.15);
+}
+
 .watch-topbar-right {
   display: flex;
   align-items: center;

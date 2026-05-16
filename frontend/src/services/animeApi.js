@@ -321,9 +321,9 @@ export async function getWitanimeStreamUrl(episodeUrl) {
 // ─── Multi-source search (parallel) ───
 export async function findStreamingSource(animeName) {
   const sources = [
+    searchWitanime(animeName).then(r => r ? { source: "witanime", slug: r.slug, id: r.slug, title: r.title } : null),
     searchAnipub(animeName).then(r => r.length > 0 ? { source: "anipub", id: r[0].Id, title: r[0].Name } : null),
     searchAnitaku(animeName).then(r => r.length > 0 ? { source: "anitaku", slug: r[0].slug, id: r[0].slug, title: r[0].title } : null),
-    searchWitanime(animeName).then(r => r ? { source: "witanime", slug: r.slug, id: r.slug, title: r.title } : null),
   ];
 
   const results = await Promise.allSettled(sources);
