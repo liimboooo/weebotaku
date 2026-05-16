@@ -7,6 +7,7 @@ import { ArrowLeft, BookOpen, Heart, Star, ChevronDown, Loader } from "lucide-re
 import { getMangaById, getMangaChapters } from "../services/mangaApi";
 import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
 import MangaReader from "./Feeds/MangaReader";
+import ErrorBoundary from "../components/ErrorBoundary";
 import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
 import "./MangaDetail.css";
@@ -200,12 +201,18 @@ export default function MangaDetail() {
         </div>
 
         {readerOpen && (
-          <MangaReader
-            manga={readerManga}
-            chapters={readerChapters}
-            initialChapter={readerChapter}
-            onClose={() => setReaderOpen(false)}
-          />
+          <ErrorBoundary
+            fallbackMessage="Failed to load chapter reader"
+            onReset={() => setReaderOpen(false)}
+            minHeight="400px"
+          >
+            <MangaReader
+              manga={readerManga}
+              chapters={readerChapters || []}
+              initialChapter={readerChapter}
+              onClose={() => setReaderOpen(false)}
+            />
+          </ErrorBoundary>
         )}
       </div>
     </AnimatedPage>

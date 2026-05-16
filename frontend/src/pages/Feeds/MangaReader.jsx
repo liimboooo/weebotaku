@@ -20,10 +20,10 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
   const [imgError, setImgError] = useState(false);
   const imgRef = useRef(null);
 
-  const chapter = chapters[chIndex];
+  const chapter = chapters?.[chIndex];
 
   const loadPages = useCallback(async () => {
-    if (!chapter) return;
+    if (!chapter?.id) { setLoading(false); setError("Chapter not found."); return; }
     setLoading(true);
     setError("");
     setPageIndex(0);
@@ -35,7 +35,7 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
     } catch {
       try {
         const urls = await getChapterPages(chapter.id, quality === "data" ? "data-saver" : "data");
-        setPages(urls);
+        setPages(urls || []);
         setQuality(quality === "data" ? "data-saver" : "data");
       } catch {
         setError("Failed to load chapter pages.");
@@ -43,12 +43,12 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
     } finally {
       setLoading(false);
     }
-  }, [chapter, quality]);
+  }, [chapter?.id, quality]);
 
   useEffect(() => { loadPages(); }, [loadPages]);
 
   useEffect(() => {
-    if (pages.length > 0 && pageIndex < pages.length - 1) {
+    if (pages?.length > 0 && pageIndex < pages.length - 1) {
       const nextIdx = pageIndex + 1;
       if (!preloaded.includes(nextIdx)) {
         setPreloaded(p => [...p, nextIdx]);
@@ -59,18 +59,23 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
   }, [pageIndex, pages, preloaded]);
 
   useEffect(() => {
-    if (chapter && manga) {
-      const key = "mangaProgress";
-      const progress = JSON.parse(localStorage.getItem(key) || "{}");
-      progress[manga.id] = { ch: parseFloat(chapter.chapter) || chIndex + 1, page: pageIndex, chId: chapter.id };
-      localStorage.setItem(key, JSON.stringify(progress));
+    if (chapter && manga?.id) {
+      try {
+        const key = "mangaProgress";
+        const progress = JSON.parse(localStorage.getItem(key) || "{}");
+        progress[manga.id] = { ch: parseFloat(chapter.chapter) || chIndex + 1, page: pageIndex, chId: chapter.id };
+        localStorage.setItem(key, JSON.stringify(progress));
+      } catch {}
     }
   }, [chapter, manga, chIndex, pageIndex]);
 
+  const chaptersLen = chapters?.length || 0;
+  const pagesLen = pages?.length || 0;
+
   const goNextChapter = useCallback(() => {
-    if (chIndex < chapters.length - 1) { setChIndex(i => i + 1); return true; }
+    if (chIndex < chaptersLen - 1) { setChIndex(i => i + 1); return true; }
     return false;
-  }, [chIndex, chapters.length]);
+  }, [chIndex, chaptersLen]);
 
   const goPrevChapter = useCallback(() => {
     if (chIndex > 0) { setChIndex(i => i - 1); return true; }
@@ -80,13 +85,13 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
   const goPrevPage = useCallback(() => {
     if (direction === "rtl") {
       setPageIndex(i => {
-        if (i >= pages.length - 1) return i;
+        if (i >= pagesLen - 1) return i;
         return i + 1;
       });
     } else {
       setPageIndex(i => Math.max(0, i - 1));
     }
-  }, [direction, pages.length]);
+  }, [direction, pagesLen]);
 
   const goNextPage = useCallback(() => {
     if (direction === "rtl") {
@@ -96,8 +101,8 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
       });
     } else {
       setPageIndex(i => {
-        if (i >= pages.length - 1) {
-          if (chIndex < chapters.length - 1) {
+        if (i >= pagesLen - 1) {
+          if (chIndex < chaptersLen - 1) {
             setChIndex(ci => ci + 1);
           }
           return i;
@@ -105,7 +110,7 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
         return i + 1;
       });
     }
-  }, [direction, pages.length, chIndex, chapters.length]);
+  }, [direction, pagesLen, chIndex, chaptersLen]);
 
   const goNextPageRef = useRef(goNextPage);
   const goPrevPageRef = useRef(goPrevPage);
@@ -139,9 +144,9 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
   const chNum = chapter?.chapter || "?";
   const chTitle = chapter?.title || `Ch. ${chNum}`;
   const hasPrevCh = chIndex > 0;
-  const hasNextCh = chIndex < chapters.length - 1;
-  const currentPage = direction === "rtl" ? pages.length - pageIndex : pageIndex + 1;
-  const totalPages = pages.length;
+  const hasNextCh = chIndex < chaptersLen - 1;
+  const currentPage = direction === "rtl" ? pagesLen - pageIndex : pageIndex + 1;
+  const totalPages = pagesLen;
 
   const toggleQuality = () => {
     setQuality(q => q === "data" ? "data-saver" : "data");
@@ -195,19 +200,17 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
               </div>
             )}
             {error && <div className="reader-error">{error}</div>}
-            {!loading && !error && pages.length > 0 && (
+            {!loading && !error && pagesLen > 0 && !imgError && (
               <img
                 key={`${chapter?.id}_${pageIndex}_${quality}`}
                 ref={imgRef}
-                src={imgError ? undefined : pages[pageIndex]}
+                src={pages[pageIndex]}
                 onError={() => setImgError(true)}
-                onLoad={() => setImgError(false)}
                 alt={`Page ${currentPage}`}
                 className="reader-page-img"
                 referrerPolicy="no-referrer"
                 onClick={handleImgClick}
                 onMouseDown={handleImgMouseDown}
-                style={{ cursor: direction === "rtl" ? "pointer" : "pointer" }}
               />
             )}
             {imgError && !loading && !error && (
@@ -215,25 +218,25 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
                 <p>Failed to load this page. Try switching quality.</p>
               </div>
             )}
-            {!loading && !error && pages.length === 0 && (
+            {!loading && !error && pagesLen === 0 && (
               <div className="reader-loading"><p>No pages available.</p></div>
             )}
           </div>
 
           <div className="reader-controls-bottom">
             <div className="reader-page-nav">
-              <button disabled={direction === "ltr" ? pageIndex === 0 : pageIndex >= pages.length - 1} onClick={goPrevPage}>
+              <button disabled={direction === "ltr" ? pageIndex === 0 : pageIndex >= pagesLen - 1} onClick={goPrevPage}>
                 <ChevronLeft size={18} />
               </button>
               <span>{currentPage} / {totalPages}</span>
-              <button disabled={direction === "ltr" ? pageIndex >= pages.length - 1 && !hasNextCh : pageIndex <= 0 && !hasPrevCh} onClick={goNextPage}>
+              <button disabled={direction === "ltr" ? pageIndex >= pagesLen - 1 && !hasNextCh : pageIndex <= 0 && !hasPrevCh} onClick={goNextPage}>
                 <ChevronRight size={18} />
               </button>
             </div>
             <div className="reader-progress-bar">
               <div
                 className="reader-progress-fill"
-                style={{ width: `${pages.length > 0 ? ((pageIndex + 1) / pages.length) * 100 : 0}%` }}
+                style={{ width: `${pagesLen > 0 ? ((pageIndex + 1) / pagesLen) * 100 : 0}%` }}
               />
             </div>
           </div>
