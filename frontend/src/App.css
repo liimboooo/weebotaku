@@ -316,6 +316,28 @@ body {
 
 .google-wrapper {
   width: 100%;
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.2s;
+}
+
+.google-wrapper:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(229, 9, 20, 0.2);
+}
+
+.google-wrapper > div {
+  width: 100% !important;
+}
+
+.google-wrapper iframe {
+  filter: brightness(0.95) saturate(0.9);
+  border-radius: 12px !important;
 }
 
 .google-button {

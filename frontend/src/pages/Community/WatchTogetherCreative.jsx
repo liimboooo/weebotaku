@@ -84,6 +84,7 @@ export default function WatchTogetherCreative() {
   const [roomsLoading, setRoomsLoading] = useState(true);
   const [dbRoomId, setDbRoomId] = useState(null);
   const [liveKitConnected, setLiveKitConnected] = useState(false);
+  const [liveKitError, setLiveKitError] = useState('');
 
   const [chatMessages, setChatMessages] = useState([]);
   const [draftComms, setDraftComms] = useState("");
@@ -161,7 +162,10 @@ export default function WatchTogetherCreative() {
     if (!isLoggedIn) return;
     try {
       const tokenRes = await roomService.getRoomToken(roomId);
-      if (!tokenRes.success) return;
+      if (!tokenRes.success) {
+        setLiveKitError(tokenRes.message || 'LiveKit not configured. Chat will be local only.');
+        return;
+      }
 
       const room = new Room();
       liveRoomRef.current = room;
@@ -180,11 +184,13 @@ export default function WatchTogetherCreative() {
       const count = room.participants.size + 1;
       setParticipantCount(count);
       setLiveKitConnected(true);
+      setLiveKitError('');
       if (dbRoomId) {
         roomService.updateParticipantCount(dbRoomId, count).catch(() => {});
       }
     } catch (err) {
       console.error('LiveKit connection failed:', err);
+      setLiveKitError('Failed to connect to LiveKit. Chat will be local only.');
     }
   };
 
@@ -368,9 +374,10 @@ export default function WatchTogetherCreative() {
                     <Link2 size={14} color="#10b981" />
                     <span>
                       Secure {privacyMode} Uplink
-                      {liveKitConnected ? ' · Real-time Chat Active' : ' (no LiveKit connection)'}
+                      {liveKitConnected ? ' · Real-time Chat Active' : ' · Local chat only'}
                     </span>
                     {liveKitConnected && <span className="encryption-pill">E2E Encrypted</span>}
+                    {liveKitError && <span className="livekit-warning">{liveKitError}</span>}
                   </div>
                 </div>
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
-export default function TierCard({ id, item, isDragOverlay = false }) {
+export default function TierCard({ id, item, isDragOverlay = false, onRemove }) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
 
@@ -50,6 +50,11 @@ export default function TierCard({ id, item, isDragOverlay = false }) {
           <div className="tier-card-genres">
             {genres.join(' · ')}
           </div>
+        )}
+        {!isDragOverlay && onRemove && (
+          <button className="tier-card-remove" onClick={(e) => { e.stopPropagation(); onRemove(item.id); }} title="Remove">
+            ×
+          </button>
         )}
       </div>
     </div>

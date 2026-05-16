@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAnimeById } from "../data/animeData";
-import { loadWatchlist } from "../services/storage";
+import { loadWatchlist, removeFromWatchlist } from "../services/storage";
 import authService from "../services/authService";
 import * as tierlistService from "../services/tierlistService";
 import AnimatedPage from "../components/AnimatedPage";
@@ -41,6 +41,7 @@ export default function ProfilePage() {
   const [tierListsLoading, setTierListsLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [remoteUser, setRemoteUser] = useState(null);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const loadTierLists = async () => {
     setTierListsLoading(true);
@@ -108,7 +109,7 @@ export default function ProfilePage() {
         { label: "Watchlist", value: watchlist.length, icon: Bookmark },
         { label: "Episodes", value: episodesWatched, icon: Film },
         { label: "Avg Rating", value: userAvgRating, icon: Star },
-        { label: "Liked", value: likedAnime.length, icon: Heart },
+        { label: "Liked", value: liked.length, icon: Heart },
         { label: "Watched", value: animeWatched, icon: Eye },
       ];
 
@@ -264,7 +265,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             ) : (
-              <div className="profile-info-area">
+              <div className="profile-info-area" onClick={() => setInfoOpen(true)} style={{ cursor: 'pointer' }}>
                 <h1 className="profile-name">{username}</h1>
                 <div className="profile-status-row">
                   {isRemoteProfile ? (
@@ -441,6 +442,9 @@ export default function ProfilePage() {
                             </div>
                           )}
                         </div>
+                        <button className="list-item-remove" onClick={(e) => { e.stopPropagation(); removeFromWatchlist(anime.id); loadProfileData(); }} title="Remove from watchlist">
+                          ✕
+                        </button>
                       </motion.div>
                     ))}
                   </div>
@@ -630,6 +634,10 @@ export default function ProfilePage() {
           </motion.div>
         </AnimatePresence>
 
+        <AnimatePresence>
+          {infoOpen && <ProfileInfoModal username={username} avatar={avatarPreview || avatar} onClose={() => setInfoOpen(false)} />}
+        </AnimatePresence>
+
         {previewOpen && (avatarPreview || avatar) && (
           <div className="profile-preview-overlay" onClick={() => setPreviewOpen(false)}>
             <button className="profile-preview-close" onClick={() => setPreviewOpen(false)}>✕</button>
@@ -638,6 +646,45 @@ export default function ProfilePage() {
         )}
       </div>
     </AnimatedPage>
+  );
+}
+
+export function ProfileInfoModal({ username, avatar, onClose }) {
+  const socialLinks = JSON.parse(localStorage.getItem('socialLinks') || '{}');
+  return (
+    <motion.div className="profile-info-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+      <motion.div className="profile-info-modal" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} onClick={e => e.stopPropagation()}>
+        <button className="profile-info-close" onClick={onClose}>✕</button>
+        <div className="profile-info-avatar">
+          {avatar ? <img src={avatar} alt={username} /> : <span>{username?.charAt(0)?.toUpperCase()}</span>}
+        </div>
+        <h2>{username}</h2>
+        <div className="profile-info-details">
+          <div className="profile-info-detail">
+            <span>Member since</span>
+            <strong>{localStorage.getItem('memberSince') || new Date().getFullYear()}</strong>
+          </div>
+          {socialLinks.instagram && (
+            <div className="profile-info-detail">
+              <span>Instagram</span>
+              <strong><a href={`https://instagram.com/${socialLinks.instagram}`} target="_blank" rel="noopener noreferrer">@{socialLinks.instagram}</a></strong>
+            </div>
+          )}
+          {socialLinks.twitter && (
+            <div className="profile-info-detail">
+              <span>Twitter / X</span>
+              <strong><a href={`https://twitter.com/${socialLinks.twitter}`} target="_blank" rel="noopener noreferrer">@{socialLinks.twitter}</a></strong>
+            </div>
+          )}
+          {socialLinks.discord && (
+            <div className="profile-info-detail">
+              <span>Discord</span>
+              <strong>{socialLinks.discord}</strong>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 

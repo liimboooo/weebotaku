@@ -50,6 +50,8 @@ export default function News() {
   const [error, setError] = useState(null);
   const [mediaFilter, setMediaFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("all");
+  const [visibleCount, setVisibleCount] = useState(24);
+  const [newsSearch, setNewsSearch] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -67,8 +69,10 @@ export default function News() {
   const filteredNews = (data?.allNews || []).filter((item) => {
     if (mediaFilter !== "all" && item.mediaType !== mediaFilter) return false;
     if (validTab !== "all" && item.type !== validTab) return false;
+    if (newsSearch.trim() && !item.title.toLowerCase().includes(newsSearch.toLowerCase())) return false;
     return true;
   });
+  const visibleNews = filteredNews.slice(0, visibleCount);
 
   const container = {
     hidden: { opacity: 0 },
@@ -124,10 +128,13 @@ export default function News() {
 
           {error && <div className="news-error">{error} <button className="news-retry-btn" onClick={refresh}>Retry</button></div>}
 
-          <div className="media-toggle">
-            <button className={`media-btn ${mediaFilter === "all" ? "active" : ""}`} onClick={() => { setMediaFilter("all"); setActiveTab("all"); }}>All</button>
-            <button className={`media-btn ${mediaFilter === "anime" ? "active" : ""}`} onClick={() => { setMediaFilter("anime"); setActiveTab("all"); }}>Anime</button>
-            <button className={`media-btn ${mediaFilter === "manga" ? "active" : ""}`} onClick={() => { setMediaFilter("manga"); setActiveTab("all"); }}>Manga</button>
+          <div className="news-controls">
+            <div className="media-toggle">
+              <button className={`media-btn ${mediaFilter === "all" ? "active" : ""}`} onClick={() => { setMediaFilter("all"); setActiveTab("all"); }}>All</button>
+              <button className={`media-btn ${mediaFilter === "anime" ? "active" : ""}`} onClick={() => { setMediaFilter("anime"); setActiveTab("all"); }}>Anime</button>
+              <button className={`media-btn ${mediaFilter === "manga" ? "active" : ""}`} onClick={() => { setMediaFilter("manga"); setActiveTab("all"); }}>Manga</button>
+            </div>
+            <input className="news-search" type="text" placeholder="Search news..." value={newsSearch} onChange={e => { setNewsSearch(e.target.value); setVisibleCount(24); }} />
           </div>
 
           {!loading && showFeatured && (
@@ -204,11 +211,11 @@ export default function News() {
             </div>
 
             <div className="news-tab-content">
-        {loading ? (
-          <Loader text="Loading news..." />
-        ) : (
+              {loading ? (
+                <Loader text="Loading news..." />
+              ) : (
                 <motion.div className="news-feed" variants={container} initial="hidden" animate="show">
-                  {filteredNews.map((item) => {
+                  {visibleNews.map((item) => {
                     const config = TYPE_CONFIG[item.type] || { label: item.type, className: "", icon: "" };
                     return (
                       <motion.article
@@ -238,6 +245,13 @@ export default function News() {
                       </motion.article>
                     );
                   })}
+                  {visibleNews.length > 0 && visibleNews.length < filteredNews.length && (
+                    <motion.div className="news-load-more" variants={itemAnim}>
+                      <button className="news-load-more-btn" onClick={() => setVisibleCount(c => c + 24)}>
+                        Load More ({filteredNews.length - visibleNews.length} remaining)
+                      </button>
+                    </motion.div>
+                  )}
                 </motion.div>
               )}
             </div>

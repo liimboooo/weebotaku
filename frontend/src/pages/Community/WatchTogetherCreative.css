@@ -591,6 +591,17 @@ input[type="range"]::-webkit-slider-thumb {
   font-size: 0.7rem;
 }
 
+.livekit-warning {
+  margin-left: auto;
+  color: #f59e0b;
+  background: rgba(245,158,11,0.1);
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1px solid rgba(245,158,11,0.2);
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
 @media (max-width: 1000px) {
   .stage-grid {
     grid-template-columns: 1fr;

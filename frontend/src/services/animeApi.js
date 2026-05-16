@@ -257,6 +257,136 @@ async function makeEmbedFallback(animeName) {
   return { source: "embed", slug: animeName, id: animeName, title: animeName, embedProviders: [] };
 }
 
+// ─── WitAnime (WordPress-based, Arabic subtitles) ───
+const WITANIME = "https://witanime.fun";
+
+function witanimeBase64ToBytes(str) {
+  return Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
+}
+
+function decryptWitanimeEpisodeData(encoded) {
+  try {
+    const dot = encoded.indexOf(".");
+    if (dot === -1) return null;
+    const key = witanimeBase64ToBytes(encoded.slice(0, dot));
+    const data = witanimeBase64ToBytes(encoded.slice(dot + 1));
+    const result = new Uint8Array(data.length);
+    for (let i = 0; i < data.length; i++) {
+      result[i] = data[i] ^ key[i % key.length];
+    }
+    return JSON.parse(new TextDecoder().decode(result));
+  } catch {
+    return null;
+  }
+}
+
+async function searchWitanime(query) {
+  for (const q of titleVariants(query)) {
+    try {
+      const html = await fetchHtmlViaProxy(`${WITANIME}/?s=${encodeURIComponent(q)}`);
+      if (!html) continue;
+      const slugMatch =
+        html.match(/href=["']https?:\/\/witanime\.fun\/(?:anime|series)\/([^"'/]+)\/["']/i) ||
+        html.match(/href=["']\/(?:anime|series)\/([^"'/]+)\/["']/i) ||
+        html.match(/data-slug=["']([^"']+)["']/i);
+      if (slugMatch) return { slug: slugMatch[1], title: q };
+    } catch {}
+  }
+  return null;
+}
+
+function normalizeWitanimeUrl(pathOrUrl) {
+  if (!pathOrUrl) return "";
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+  return `${WITANIME}${pathOrUrl.startsWith("/") ? pathOrUrl : `/${pathOrUrl}`}`;
+}
+
+function extractWitanimeEpisodePayload(html) {
+  const patterns = [
+    /var\s+processedEpisodeData\s*=\s*(["'])([^"']+)\1\s*;/i,
+    /window\.processedEpisodeData\s*=\s*(["'])([^"']+)\1\s*;/i,
+    /let\s+processedEpisodeData\s*=\s*(["'])([^"']+)\1\s*;/i,
+    /const\s+processedEpisodeData\s*=\s*(["'])([^"']+)\1\s*;/i,
+    /data-processed-episode=["']([^"']+)["']/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match) return match[2] || match[1];
+  }
+
+  const scriptMatch = html.match(/processedEpisodeData\s*[:=]\s*(["'])([^"']+)\1/i);
+  return scriptMatch ? scriptMatch[2] : null;
+}
+
+function parseWitanimeEpisodeLinks(html) {
+  const episodes = [];
+  const seen = new Set();
+  const linkPatterns = [
+    /<a[^>]+href=["']([^"']*(?:episode|ep)[^"']*)["'][^>]*>(?:.|\n|\r)*?<[^>]*class=["'][^"']*(?:episode|ep|num)[^"']*["'][^>]*>(\d+)<\/[^>]+>/gi,
+    /<a[^>]+data-num=["'](\d+)["'][^>]+href=["']([^"']+)["']/gi,
+    /href=["']([^"']*\/episode\/[^"']+)["'][^>]*data-num=["'](\d+)["']/gi,
+    /href=["']([^"']*\/ep\/[^"']+)["'][^>]*data-num=["'](\d+)["']/gi,
+  ];
+
+  for (const pattern of linkPatterns) {
+    let match;
+    while ((match = pattern.exec(html)) !== null) {
+      const episode = parseInt(match[2] || match[1], 10);
+      const url = normalizeWitanimeUrl(match[1] || match[2]);
+      if (!episode || !url || seen.has(url)) continue;
+      seen.add(url);
+      episodes.push({ episode, url, type: "sub" });
+    }
+  }
+
+  return episodes.sort((a, b) => a.episode - b.episode);
+}
+
+export async function getWitanimeEpisodes(slug) {
+  try {
+    const html = await fetchHtmlViaProxy(`${WITANIME}/anime/${slug}/`);
+    if (!html) return [];
+    const payload = extractWitanimeEpisodePayload(html);
+    if (payload) {
+      const decrypted = decryptWitanimeEpisodeData(payload);
+      if (Array.isArray(decrypted) && decrypted.length > 0) {
+        const episodes = decrypted.map((ep) => {
+          let epUrl = "";
+          try { epUrl = atob(ep.url); } catch { epUrl = ep.url || ""; }
+          epUrl = normalizeWitanimeUrl(epUrl);
+          return { episode: ep.number || 0, url: epUrl, type: ep.type || "sub" };
+        }).filter((ep) => ep.episode > 0 && ep.url).sort((a, b) => a.episode - b.episode);
+
+        if (episodes.length > 0) return episodes;
+      }
+    }
+
+    return parseWitanimeEpisodeLinks(html);
+  } catch {
+    return [];
+  }
+}
+
+export async function getWitanimeStreamUrl(episodeUrl) {
+  try {
+    const html = await fetchHtmlViaProxy(episodeUrl);
+    if (!html) return null;
+    // Try to find iframe source
+    const iframeMatch = html.match(/<iframe[^>]*src=["']([^"']+)["']/i);
+    if (iframeMatch) return iframeMatch[1];
+    // Try video source
+    const videoMatch = html.match(/<video[^>]*>.*?<source[^>]*src=["']([^"']+)["']/is);
+    if (videoMatch) return videoMatch[1];
+    // Try direct video URL in data attributes
+    const dataSrcMatch = html.match(/data-src=["']([^"']+)["']/i);
+    if (dataSrcMatch) return dataSrcMatch[1];
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // ─── Multi-source search (parallel) ───
 export async function findStreamingSource(animeName) {
   const sources = [
@@ -264,6 +394,7 @@ export async function findStreamingSource(animeName) {
     searchAnipub(animeName).then(r => r.length > 0 ? { source: "anipub", id: r[0].Id, title: r[0].Name } : null),
     searchConsumet("gogoanime", animeName).then(r => r.length > 0 ? { source: "consumet", id: r[0].id, title: r[0].title, provider: "gogoanime" } : null),
     tryGogoanimeSource(animeName),
+    searchWitanime(animeName).then(r => r ? { source: "witanime", slug: r.slug, id: r.slug, title: r.title } : null),
   ];
 
   const results = await Promise.allSettled(sources);

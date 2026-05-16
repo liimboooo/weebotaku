@@ -725,3 +725,107 @@
   .tier-label-count { display: none; }
   .tier-card-image { width: 52px; height: 72px; }
 }
+
+/* ─── Remove Button ──────────────────────────────── */
+.tier-card-remove {
+  position: absolute;
+  top: -6px; right: -6px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: #e50914;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(229,9,20,0.4);
+}
+
+.tier-card:hover .tier-card-remove {
+  opacity: 1;
+}
+
+.tier-card-remove:hover {
+  transform: scale(1.15);
+}
+
+/* ─── Confirm Modal ──────────────────────────────── */
+.tl-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.tl-confirm-modal {
+  background: #1a1a1a;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.tl-confirm-modal h3 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  color: #fff;
+}
+
+.tl-confirm-modal p {
+  margin: 0 0 24px;
+  color: #888;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.tl-confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.tl-confirm-cancel, .tl-confirm-delete {
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+}
+
+.tl-confirm-cancel {
+  background: rgba(255,255,255,0.06);
+  color: #888;
+}
+
+.tl-confirm-delete {
+  background: #e50914;
+  color: #fff;
+}
+
+.tl-confirm-cancel:hover { background: rgba(255,255,255,0.1); }
+.tl-confirm-delete:hover { background: #f6121d; }
+
+/* ─── Loading State ──────────────────────────────── */
+.tl-center-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 16px;
+  color: #888;
+  font-size: 14px;
+}

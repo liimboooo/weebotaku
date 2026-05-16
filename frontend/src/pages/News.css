@@ -70,6 +70,14 @@
 .news-card-footer{display:flex;gap:4px;flex-wrap:wrap;margin-top:auto}
 .news-genre{font-size:.7rem;color:#666;background:rgba(255,255,255,0.04);padding:2px 8px;border-radius:5px}
 
+.news-controls{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.news-search{flex:1;min-width:180px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;color:#fff;font-size:14px;outline:none;transition:border-color 0.2s}
+.news-search:focus{border-color:rgba(229,9,20,0.3)}
+.news-search::placeholder{color:rgba(255,255,255,0.2)}
+.news-load-more{display:flex;justify-content:center;padding:20px 0}
+.news-load-more-btn{padding:12px 32px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s}
+.news-load-more-btn:hover{background:rgba(255,255,255,0.08);border-color:rgba(229,9,20,0.2)}
+
 @media(max-width:900px){.featured-grid{grid-template-columns:1fr}}
 @media(max-width:640px){
   .news-container{padding:90px 14px 40px}

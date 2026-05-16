@@ -34,8 +34,6 @@ export default function TierLists() {
   const currentUser = authService.getCurrentUser();
   const isLoggedIn = authService.isLoggedIn();
   const searchRef = useRef(null);
-  const seeded = useRef(false);
-
   const [tiers, setTiers] = useState(() => {
     const saved = localStorage.getItem('tierListDraft');
     if (saved) { try { return JSON.parse(saved); } catch {} }
@@ -47,8 +45,11 @@ export default function TierLists() {
   const [loaded, setLoaded] = useState(false);
   const [activeItem, setActiveItem] = useState(null);
   const [toast, setToast] = useState(null);
-  const [isPublic, setIsPublic] = useState(true);
+  const [confirmReset, setConfirmReset] = useState(false);
   const [pulsingTier, setPulsingTier] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const autoSaveRef = useRef(null);
+  const lastSavedRef = useRef(JSON.stringify(tiers));
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -78,15 +79,16 @@ export default function TierLists() {
               unranked: [],
             });
             setTitle(list.title || 'My Tier List');
-            setIsPublic(list.isPublic !== false);
             setSavedId(list._id);
             localStorage.setItem('tierListSavedId', list._id);
           }
         } catch {}
         setLoaded(true);
+        setInitialLoading(false);
       })();
     } else if (!isLoggedIn) {
       setLoaded(true);
+      setInitialLoading(false);
     }
   }, [isLoggedIn, currentUser?.id, loaded]);
 
@@ -97,35 +99,35 @@ export default function TierLists() {
     }
   }, [tiers, title, loaded]);
 
-  // ─── Seed sample data on first load ──────────
+  // ─── Auto-save to backend with debounce ───────
   useEffect(() => {
-    if (!loaded || seeded.current) return;
-    const hasAny = Object.values(tiers).some((arr) => arr.length > 0);
-    if (hasAny) { seeded.current = true; return; }
-    seeded.current = true;
-    (async () => {
+    if (!loaded || !isLoggedIn) return;
+    const current = JSON.stringify(tiers);
+    if (current === lastSavedRef.current) return;
+    clearTimeout(autoSaveRef.current);
+    autoSaveRef.current = setTimeout(async () => {
+      lastSavedRef.current = current;
       try {
-        const res = await fetch(TOP_ANIME);
-        const json = await res.json();
-        const items = (json.data || []).map((d) => ({
-          id: `j-${d.mal_id}`,
-          name: d.title,
-          image: d.images?.jpg?.image_url || null,
-          type: 'anime',
-          genres: (d.genres || []).map(g => g.name),
-          malId: d.mal_id,
-        }));
-        setTiers({
-          s: items.slice(0, 2),
-          a: items.slice(2, 4),
-          b: items.slice(4, 6),
-          c: items.slice(6, 8),
-          d: items.slice(8, 10),
-          unranked: [],
-        });
+        const payload = { title, isPublic: true, tiers: {}, unranked: [] };
+        for (const t of TIER_CONFIG) payload.tiers[t.id] = tiers[t.id];
+        if (savedId) {
+          await tierlistService.updateTierList(savedId, payload);
+        } else {
+          const res = await tierlistService.saveTierList(payload);
+          if (res.success) {
+            setSavedId(res.data._id);
+            localStorage.setItem('tierListSavedId', res.data._id);
+          }
+        }
       } catch {}
-    })();
-  }, [loaded, tiers]);
+    }, 1500);
+    return () => clearTimeout(autoSaveRef.current);
+  }, [tiers, title, loaded, isLoggedIn, savedId]);
+
+  // ─── Set initialLoading false when no backend data ───
+  useEffect(() => {
+    if (loaded && !isLoggedIn) setInitialLoading(false);
+  }, [loaded, isLoggedIn]);
 
   const showToast = useCallback((msg) => {
     setToast(msg);
@@ -179,7 +181,20 @@ export default function TierLists() {
     })();
   }, [searchType]);
 
+  function getContentType() {
+    for (const t of TIER_CONFIG) {
+      const found = tiers[t.id].find(i => i.type);
+      if (found) return found.type;
+    }
+    return null;
+  }
+
   function handleAddFromSearch(item, tierId) {
+    const existingType = getContentType();
+    if (existingType && item.type && item.type !== existingType) {
+      showToast(`Cannot add ${item.type} to a ${existingType} tier list`);
+      return;
+    }
     setTiers((prev) => {
       const exists = Object.values(prev).flat().some((i) => i.id === item.id);
       if (exists) return prev;
@@ -187,6 +202,16 @@ export default function TierLists() {
     });
     setPulsingTier(tierId);
     setTimeout(() => setPulsingTier(null), 600);
+  }
+
+  function handleRemoveItem(itemId) {
+    setTiers((prev) => {
+      const next = { ...prev };
+      for (const t of TIER_CONFIG) {
+        next[t.id] = prev[t.id].filter(i => i.id !== itemId);
+      }
+      return next;
+    });
   }
 
   function handleSearchKeyDown(e) {
@@ -290,6 +315,11 @@ export default function TierLists() {
     setTimeout(() => setPulsingTier(null), 600);
   }
 
+  function handleDropFromSearch(item, tierId) {
+    handleAddFromSearch(item, tierId);
+    setSearchResults((prev) => prev.filter((i) => i.id !== item.id));
+  }
+
   function handleDragCancel() { setActiveItem(null); }
 
   // ─── Save / Reset ─────────────────────────────
@@ -297,7 +327,7 @@ export default function TierLists() {
     if (!isLoggedIn) { showToast('Log in to save'); return; }
     setSaving(true);
     try {
-      const payload = { title, isPublic, tiers: {}, unranked: [] };
+      const payload = { title, isPublic: true, tiers: {}, unranked: [] };
       for (const t of TIER_CONFIG) payload.tiers[t.id] = tiers[t.id];
       const res = savedId
         ? await tierlistService.updateTierList(savedId, payload)
@@ -344,34 +374,18 @@ export default function TierLists() {
   }
 
   function handleReset() {
-    if (!window.confirm('Reset everything? This cannot be undone.')) return;
     setTiers(buildEmptyTiers());
     setSavedId(null);
     setTitle('My Tier List');
-    seeded.current = true;
     setSearchQuery('');
     setSearchResults([]);
     setSearchIndex(-1);
     localStorage.removeItem('tierListSavedId');
     localStorage.removeItem('tierListDraft');
     localStorage.removeItem('tierListTitle');
+    setConfirmReset(false);
+    lastSavedRef.current = JSON.stringify(buildEmptyTiers());
     showToast('Reset');
-    (async () => {
-      try {
-        const url = searchType === 'manga' ? TOP_MANGA : TOP_ANIME;
-        const res = await fetch(url);
-        const json = await res.json();
-        const items = (json.data || []).map((d) => ({
-          id: `j-${d.mal_id}`,
-          name: d.title,
-          image: d.images?.jpg?.image_url || null,
-          type: searchType,
-          genres: (d.genres || []).map(g => g.name),
-          malId: d.mal_id,
-        }));
-        setSearchResults(items);
-      } catch {}
-    })();
   }
 
   const sensors = useSensors(
@@ -420,14 +434,11 @@ export default function TierLists() {
               </div>
             </div>
             <div className="tl-actions">
-              <button className={`tl-vis ${isPublic ? 'public' : 'private'}`} onClick={() => setIsPublic((p) => !p)}>
-                {isPublic ? 'PUBLIC' : 'PRIVATE'}
-              </button>
               <button className="tl-save" onClick={handleSave} disabled={saving}>
                 <Save size={13} />
-                <span>{saving ? '...' : 'SAVE'}</span>
+                <span>{saving ? 'SAVING...' : savedId ? 'SAVED' : 'SAVE'}</span>
               </button>
-              <button className="tl-reset" onClick={handleReset}>RESET</button>
+              <button className="tl-reset" onClick={() => setConfirmReset(true)}>RESET</button>
               <button className="tl-export" onClick={handleExport}><Download size={13} /> EXPORT</button>
               {!isLoggedIn && (
                 <button className="tl-login" onClick={() => navigate('/')}>
@@ -438,7 +449,10 @@ export default function TierLists() {
           </div>
         </div>
 
-        <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
+          {initialLoading ? (
+            <div className="tl-center-loading"><Loader size={24} className="tl-ws-search-spin" /><p>Loading your tier list...</p></div>
+          ) : (
+          <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
           <div className="tl-scroll">
           <div className="tl-workspace">
             {/* ── Search Bar ── */}
@@ -542,7 +556,7 @@ export default function TierLists() {
                 <DroppableTier
                   key={tier.id} id={tier.id} label={tier.label}
                   color={tier.color} items={tiers[tier.id]} delay={idx * 0.05}
-                  pulse={pulsingTier === tier.id}
+                  pulse={pulsingTier === tier.id} onRemove={handleRemoveItem}
                 />
               ))}
             </div>
@@ -553,6 +567,22 @@ export default function TierLists() {
             {activeItem ? <TierCard item={activeItem} isDragOverlay /> : null}
           </DragOverlay>
         </DndContext>
+        )}
+
+        <AnimatePresence>
+          {confirmReset && (
+            <motion.div className="tl-confirm-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setConfirmReset(false)}>
+              <motion.div className="tl-confirm-modal" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} onClick={e => e.stopPropagation()}>
+                <h3>Reset Tier List?</h3>
+                <p>This will remove all items from your tier list. This cannot be undone.</p>
+                <div className="tl-confirm-actions">
+                  <button className="tl-confirm-cancel" onClick={() => setConfirmReset(false)}>Cancel</button>
+                  <button className="tl-confirm-delete" onClick={handleReset}>Reset</button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </AnimatedPage>
   );

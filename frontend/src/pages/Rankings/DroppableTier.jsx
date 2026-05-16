@@ -3,7 +3,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import TierCard from './TierCard';
 
-export default function DroppableTier({ id, label, color, items, delay = 0, pulse = false }) {
+export default function DroppableTier({ id, label, color, items, delay = 0, pulse = false, onRemove }) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
   const rowStyle = isOver
@@ -35,7 +35,7 @@ export default function DroppableTier({ id, label, color, items, delay = 0, puls
               exit={{ opacity: 0, scale: 0.85, transition: { duration: 0.12 } }}
               transition={{ type: 'spring', stiffness: 400, damping: 28, mass: 0.4 }}
             >
-              <TierCard id={item.id} item={item} />
+              <TierCard id={item.id} item={item} onRemove={onRemove} />
             </motion.div>
           ))}
         </AnimatePresence>

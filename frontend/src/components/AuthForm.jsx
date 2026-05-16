@@ -34,10 +34,11 @@ export default function AuthForm({ type, username, email, password, setUsername,
         });
         if (btnRef.current) {
           window.google.accounts.id.renderButton(btnRef.current, {
-            theme: 'outline',
+            theme: 'filled_black',
             size: 'large',
             shape: 'rectangular',
             text: 'continue_with',
+            width: btnRef.current.offsetWidth || 320,
           });
         }
       }
