@@ -180,10 +180,8 @@ async function searchAnilist(query) {
 
 const EMBED_PROVIDERS = [
   { name: "MegaPlay", url: (id, ep = 1) => `https://megaplay.buzz/stream/ani/${id}/${ep}/sub` },
-  { name: "EmbTaku", url: (id, ep = 1) => `https://embtaku.pro/streaming.php?id=${id}&ep=${ep}` },
   { name: "DropFile", url: (id, ep = 1) => `https://dropfile.cc/player/tv/anilist-${id}/${ep}/1?audio=sub&lang=en` },
   { name: "DropFile AR", url: (id, ep = 1) => `https://dropfile.cc/player/tv/anilist-${id}/${ep}/1?audio=sub&lang=ar` },
-  { name: "2Anime", url: (id, ep = 1) => `https://www.2anime.xyz/embed/anilist/${id}/${ep}` },
 ];
 
 async function makeEmbedFallback(animeName) {

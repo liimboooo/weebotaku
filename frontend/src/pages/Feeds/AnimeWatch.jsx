@@ -8,6 +8,9 @@ import "./AnimeWatch.css";
 function replaceEpInUrl(url, animeId, newEp) {
   let result = url.replace(new RegExp(`/${animeId}/(\\d+)`), `/${animeId}/${newEp}`);
   result = result.replace(/([?&]ep=)\d+/g, `$1${newEp}`);
+  if (animeId && !Number.isNaN(Number(animeId))) {
+    result = result.replace(new RegExp(`anilist-${animeId}/(\\d+)`), `anilist-${animeId}/${newEp}`);
+  }
   return result;
 }
 
