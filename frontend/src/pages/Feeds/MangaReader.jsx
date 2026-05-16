@@ -19,15 +19,16 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
   const [preloaded, setPreloaded] = useState([]);
   const [imgError, setImgError] = useState(false);
   const [imgRetry, setImgRetry] = useState(0);
+  const cdnRef = useRef(0);
   const imgRef = useRef(null);
 
   const chapter = chapters?.[chIndex];
 
-  const loadPages = useCallback(async () => {
+  const loadPages = useCallback(async (preservePage) => {
     if (!chapter?.id) { setLoading(false); setError("Chapter not found."); return; }
     setLoading(true);
     setError("");
-    setPageIndex(0);
+    if (!preservePage) { setPageIndex(0); cdnRef.current = 0; }
     setImgError(false);
     setPreloaded([]);
     setImgRetry(0);
@@ -52,6 +53,10 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
   }, [chapter?.id, quality]);
 
   useEffect(() => { loadPages(); }, [loadPages]);
+
+  const refreshPages = useCallback(() => {
+    loadPages(true);
+  }, [loadPages]);
 
   useEffect(() => {
     if (pages?.length > 0 && pageIndex < pages.length - 1) {
@@ -216,6 +221,10 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
                 onError={() => {
                   if (imgRetry < 2) {
                     setImgRetry(r => r + 1);
+                  } else if (cdnRef.current < 2) {
+                    cdnRef.current += 1;
+                    setImgRetry(0);
+                    refreshPages();
                   } else {
                     setImgError(true);
                   }
@@ -230,8 +239,8 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
               <div className="reader-error">
                 <p>Failed to load this page.</p>
                 <button className="reader-retry-btn" onClick={() => {
-                  setImgRetry(0);
                   setImgError(false);
+                  refreshPages();
                 }}>
                   Try Again
                 </button>
