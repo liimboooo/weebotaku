@@ -180,8 +180,6 @@ async function searchAnilist(query) {
 
 const EMBED_PROVIDERS = [
   { name: "MegaPlay", url: (id, ep = 1) => `https://megaplay.buzz/stream/ani/${id}/${ep}/sub` },
-  { name: "DropFile", url: (id, ep = 1) => `https://dropfile.cc/player/tv/anilist-${id}/${ep}/1?audio=sub&lang=en` },
-  { name: "DropFile AR", url: (id, ep = 1) => `https://dropfile.cc/player/tv/anilist-${id}/${ep}/1?audio=sub&lang=ar` },
 ];
 
 async function makeEmbedFallback(animeName) {
