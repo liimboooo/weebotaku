@@ -123,10 +123,9 @@ export async function getChapterPages(chapterId, quality = "data") {
   if (!json.baseUrl || !json.chapter?.hash) throw new Error("Invalid at-home response");
   const base = json.baseUrl;
   const hash = json.chapter.hash;
-  const q = quality === "data-saver" && json.chapter["data-saver"]?.length > 0 ? "data-saver" : "data";
-  const files = json.chapter[q];
-  if (!files?.length) throw new Error("No pages found for this chapter");
-  return files.map(f => `${base}/${q}/${hash}/${f}`);
+  const files = json.chapter[quality];
+  if (!files?.length) throw new Error(`No pages found for quality: ${quality}`);
+  return files.map(f => `${base}/${quality}/${hash}/${f}`);
 }
 
 export async function getChapterPagesWithFallback(chapterId) {
