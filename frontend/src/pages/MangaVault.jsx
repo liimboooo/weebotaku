@@ -140,6 +140,7 @@ export default function MangaVault() {
   const filtered = useMemo(() => {
     return allManga
       .filter(m => {
+        if (!m.ch) return false;
         if (activeDemo.length && !activeDemo.includes(m.demo)) return false;
         if (activeStatus.length && !activeStatus.includes(m.status)) return false;
         return true;
