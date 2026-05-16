@@ -348,16 +348,12 @@ export default function TierLists() {
       const allItems = Object.values(tiers).flat().filter(Boolean);
       await Promise.allSettled(allItems.map(item => {
         if (!item.image) return;
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           const img = new Image();
           img.crossOrigin = 'anonymous';
-          img.src = `https://api.allorigins.win/raw?url=${encodeURIComponent(item.image)}`;
+          img.src = item.image;
           img.onload = resolve;
-          img.onerror = () => {
-            img.src = item.image;
-            img.onload = resolve;
-            img.onerror = resolve;
-          };
+          img.onerror = resolve;
         });
       }));
       const canvas = await html2canvas(el, {

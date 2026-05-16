@@ -2,11 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X, Loader, Play, Monitor, Maximize2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, consumetGetEpisodes, consumetGetStreamUrl, getWitanimeEpisodes, getWitanimeStreamUrl } from "../../services/animeApi";
+import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, getWitanimeEpisodes, getWitanimeStreamUrl } from "../../services/animeApi";
 import "./AnimeWatch.css";
 
 function replaceEpInUrl(url, animeId, newEp) {
-  return url.replace(new RegExp(`/${animeId}/(\\d+)`), `/${animeId}/${newEp}`);
+  let result = url.replace(new RegExp(`/${animeId}/(\\d+)`), `/${animeId}/${newEp}`);
+  result = result.replace(/([?&]ep=)\d+/g, `$1${newEp}`);
+  return result;
 }
 
 const MAX_EMBED_EPISODES = 50;
@@ -47,7 +49,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         let eps = [];
         if (anime.source === "anitaku") eps = await getAnitakuEpisodes(anime.slug);
         else if (anime.source === "witanime") eps = await getWitanimeEpisodes(anime.slug);
-        else if (anime.source === "consumet" || anime.source === "gogoanime") eps = await consumetGetEpisodes(anime.provider || "gogoanime", anime.id);
         else eps = await getAnimeEpisodes(anime.id);
         if (eps.length === 0) { setError("No streaming links available."); return; }
         setEpisodes(eps);
@@ -83,16 +84,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         setError(""); setStreamLoading(true); setStreamUrl("");
         try {
           const url = await getWitanimeStreamUrl(episode.url);
-          if (url) setStreamUrl(url);
-          else setError("No stream URL found.");
-        } catch { setError("Failed to load stream."); }
-        finally { setStreamLoading(false); }
-      })();
-    } else if (anime.source === "consumet" || anime.source === "gogoanime") {
-      (async () => {
-        setError(""); setStreamLoading(true); setStreamUrl("");
-        try {
-          const url = await consumetGetStreamUrl(episode.id, episode.provider || anime.provider || "gogoanime");
           if (url) setStreamUrl(url);
           else setError("No stream URL found.");
         } catch { setError("Failed to load stream."); }

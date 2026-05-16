@@ -15,25 +15,17 @@ const titleVariants = (title) => {
   ].filter((s, i, a) => s && s.length > 2 && a.indexOf(s) === i);
 };
 
-// ─── CORS Proxy ───
-const CORS_PROXIES = [
-  "https://api.codetabs.com/v1/proxy?quest=",
-  "https://corsproxy.io/?url=",
-  "https://api.allorigins.win/raw?url=",
-];
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 async function fetchHtmlViaProxy(url) {
-  for (const p of CORS_PROXIES) {
-    try {
-      const proxyUrl = `${p}${encodeURIComponent(url)}`;
-      const res = await Promise.race([
-        fetch(proxyUrl, { mode: "cors" }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 12000)),
-      ]);
-      if (res.ok) return await res.text();
-    } catch {}
+  try {
+    const res = await fetch(`${API_BASE}/scrape/fetch?url=${encodeURIComponent(url)}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.success ? data.data : null;
+  } catch {
+    return null;
   }
-  return null;
 }
 
 // ─── AniPub ───
@@ -149,65 +141,7 @@ export async function getAnitakuStreamUrls(episodeUrl) {
   return servers;
 }
 
-// ─── Consumet API (gogoanime, zoro) ───
-const CONSUMET = "https://api.consumet.org/anime";
 
-async function searchConsumet(provider, query) {
-  for (const q of titleVariants(query)) {
-    try {
-      const res = await fetch(`${CONSUMET}/${provider}/${encodeURIComponent(q)}?page=1`);
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (data.results?.length > 0) return data.results;
-    } catch {}
-  }
-  return [];
-}
-
-export async function consumetGetEpisodes(provider, id) {
-  const res = await fetch(`${CONSUMET}/${provider}/info/${encodeURIComponent(id)}`);
-  if (!res.ok) throw new Error(`${provider} info error: ${res.status}`);
-  const data = await res.json();
-  return (data.episodes || []).map((ep) => ({
-    episode: ep.number,
-    id: ep.id,
-    provider,
-  }));
-}
-
-export async function consumetGetStreamUrl(episodeId, provider) {
-  const res = await fetch(`${CONSUMET}/${provider}/watch/${encodeURIComponent(episodeId)}`);
-  if (!res.ok) throw new Error(`${provider} stream error: ${res.status}`);
-  const data = await res.json();
-  if (data.iframe) return data.iframe;
-  if (data.url) return data.url;
-  if (data.sources?.length > 0) return data.sources[0].url;
-  return null;
-}
-
-// ─── Gogoanime direct API (alternative to Consumet) ───
-const GOGO_API = "https://gogoanime-api.vercel.app/api";
-
-async function searchGogoanime(query) {
-  for (const q of titleVariants(query)) {
-    try {
-      const res = await fetch(`${GOGO_API}/search?query=${encodeURIComponent(q)}`);
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (data.results?.length > 0) return data.results;
-    } catch {}
-  }
-  return [];
-}
-
-async function tryGogoanimeSource(animeName) {
-  const results = await searchGogoanime(animeName);
-  if (results.length > 0) {
-    const first = results[0];
-    return { source: "gogoanime", id: first.animeId, slug: first.animeId, title: first.title };
-  }
-  return null;
-}
 
 // ─── AniList search (GraphQL) ───
 const ANILIST_QL = "https://graphql.anilist.co";
@@ -236,7 +170,8 @@ const EMBED_PROVIDERS = [
   { name: "MegaPlay", url: (id, ep = 1) => `https://megaplay.buzz/stream/ani/${id}/${ep}/sub` },
   { name: "DropFile", url: (id, ep = 1) => `https://dropfile.cc/player/tv/anilist-${id}/${ep}/1?audio=sub&lang=en` },
   { name: "NinjaStream", url: (id, ep = 1) => `https://ninjasheild.stream/map/anime/${id}/${ep}/sub` },
-  { name: "VidRush", url: (id, ep = 1) => `https://player.vidrush.net/embed/anime/${id}/${ep}` },
+  { name: "GotEmbed", url: (id, ep = 1) => `https://gotembed.com/api/goto.php?server=1&id=${id}&ep=${ep}` },
+  { name: "EmbTaku", url: (id, ep = 1) => `https://embtaku.pro/streaming.php?id=${id}&ep=${ep}` },
 ];
 
 async function makeEmbedFallback(animeName) {
@@ -258,7 +193,7 @@ async function makeEmbedFallback(animeName) {
 }
 
 // ─── WitAnime (WordPress-based, Arabic subtitles) ───
-const WITANIME = "https://witanime.fun";
+const WITANIME = "https://witanime.you";
 
 function witanimeBase64ToBytes(str) {
   return Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
@@ -270,9 +205,9 @@ function decryptWitanimeEpisodeData(encoded) {
     if (dot === -1) return null;
     const key = witanimeBase64ToBytes(encoded.slice(0, dot));
     const data = witanimeBase64ToBytes(encoded.slice(dot + 1));
-    const result = new Uint8Array(data.length);
-    for (let i = 0; i < data.length; i++) {
-      result[i] = data[i] ^ key[i % key.length];
+    const result = new Uint8Array(key.length);
+    for (let i = 0; i < key.length; i++) {
+      result[i] = key[i] ^ data[i % data.length];
     }
     return JSON.parse(new TextDecoder().decode(result));
   } catch {
@@ -280,16 +215,23 @@ function decryptWitanimeEpisodeData(encoded) {
   }
 }
 
+function extractWitanimeSlugFromEpisodeUrl(url) {
+  const match = url.match(/\/episode\/(.+?)-%d8%a7%d9%84%d8%ad%d9%84%d9%82%d8%a9-/i);
+  if (match) return match[1];
+  const fallback = url.match(/\/episode\/(.+?)-\d+\/?$/);
+  return fallback ? fallback[1] : null;
+}
+
 async function searchWitanime(query) {
   for (const q of titleVariants(query)) {
     try {
       const html = await fetchHtmlViaProxy(`${WITANIME}/?s=${encodeURIComponent(q)}`);
       if (!html) continue;
-      const slugMatch =
-        html.match(/href=["']https?:\/\/witanime\.fun\/(?:anime|series)\/([^"'/]+)\/["']/i) ||
-        html.match(/href=["']\/(?:anime|series)\/([^"'/]+)\/["']/i) ||
-        html.match(/data-slug=["']([^"']+)["']/i);
-      if (slugMatch) return { slug: slugMatch[1], title: q };
+      const episodeMatch = html.match(/href=["']([^"']*\/episode\/([^"']+))["']/i);
+      if (episodeMatch) {
+        const slug = extractWitanimeSlugFromEpisodeUrl(episodeMatch[1]);
+        if (slug) return { slug, title: q };
+      }
     } catch {}
   }
   return null;
@@ -315,32 +257,7 @@ function extractWitanimeEpisodePayload(html) {
     if (match) return match[2] || match[1];
   }
 
-  const scriptMatch = html.match(/processedEpisodeData\s*[:=]\s*(["'])([^"']+)\1/i);
-  return scriptMatch ? scriptMatch[2] : null;
-}
-
-function parseWitanimeEpisodeLinks(html) {
-  const episodes = [];
-  const seen = new Set();
-  const linkPatterns = [
-    /<a[^>]+href=["']([^"']*(?:episode|ep)[^"']*)["'][^>]*>(?:.|\n|\r)*?<[^>]*class=["'][^"']*(?:episode|ep|num)[^"']*["'][^>]*>(\d+)<\/[^>]+>/gi,
-    /<a[^>]+data-num=["'](\d+)["'][^>]+href=["']([^"']+)["']/gi,
-    /href=["']([^"']*\/episode\/[^"']+)["'][^>]*data-num=["'](\d+)["']/gi,
-    /href=["']([^"']*\/ep\/[^"']+)["'][^>]*data-num=["'](\d+)["']/gi,
-  ];
-
-  for (const pattern of linkPatterns) {
-    let match;
-    while ((match = pattern.exec(html)) !== null) {
-      const episode = parseInt(match[2] || match[1], 10);
-      const url = normalizeWitanimeUrl(match[1] || match[2]);
-      if (!episode || !url || seen.has(url)) continue;
-      seen.add(url);
-      episodes.push({ episode, url, type: "sub" });
-    }
-  }
-
-  return episodes.sort((a, b) => a.episode - b.episode);
+  return null;
 }
 
 export async function getWitanimeEpisodes(slug) {
@@ -355,16 +272,39 @@ export async function getWitanimeEpisodes(slug) {
           let epUrl = "";
           try { epUrl = atob(ep.url); } catch { epUrl = ep.url || ""; }
           epUrl = normalizeWitanimeUrl(epUrl);
-          return { episode: ep.number || 0, url: epUrl, type: ep.type || "sub" };
+          return { episode: Number(ep.number) || 0, url: epUrl, type: ep.type || "sub" };
         }).filter((ep) => ep.episode > 0 && ep.url).sort((a, b) => a.episode - b.episode);
 
         if (episodes.length > 0) return episodes;
       }
     }
-
-    return parseWitanimeEpisodeLinks(html);
+    return [];
   } catch {
     return [];
+  }
+}
+
+function extractWitanimeVideoUrl(html) {
+  try {
+    const zG = html.match(/var\s+_zG\s*=\s*["']([^"']+)["']/);
+    const zH = html.match(/var\s+_zH\s*=\s*["']([^"']+)["']/);
+    if (!zG || !zH) return null;
+
+    const resources = JSON.parse(atob(zG[1]));
+    const configs = JSON.parse(atob(zH[1]));
+    if (!resources?.length || !configs?.length) return null;
+
+    const res = resources[0];
+    const cfg = configs[0];
+
+    const reversed = res.split("").reverse().join("");
+    const clean = reversed.replace(/[^A-Za-z0-9+/=]/g, "");
+    const decoded = atob(clean);
+    const idx = parseInt(atob(cfg.k), 10);
+    const offset = cfg.d[idx] || 0;
+    return decoded.slice(0, decoded.length - offset);
+  } catch {
+    return null;
   }
 }
 
@@ -372,16 +312,7 @@ export async function getWitanimeStreamUrl(episodeUrl) {
   try {
     const html = await fetchHtmlViaProxy(episodeUrl);
     if (!html) return null;
-    // Try to find iframe source
-    const iframeMatch = html.match(/<iframe[^>]*src=["']([^"']+)["']/i);
-    if (iframeMatch) return iframeMatch[1];
-    // Try video source
-    const videoMatch = html.match(/<video[^>]*>.*?<source[^>]*src=["']([^"']+)["']/is);
-    if (videoMatch) return videoMatch[1];
-    // Try direct video URL in data attributes
-    const dataSrcMatch = html.match(/data-src=["']([^"']+)["']/i);
-    if (dataSrcMatch) return dataSrcMatch[1];
-    return null;
+    return extractWitanimeVideoUrl(html);
   } catch {
     return null;
   }
@@ -390,10 +321,8 @@ export async function getWitanimeStreamUrl(episodeUrl) {
 // ─── Multi-source search (parallel) ───
 export async function findStreamingSource(animeName) {
   const sources = [
-    searchAnitaku(animeName).then(r => r.length > 0 ? { source: "anitaku", slug: r[0].slug, id: r[0].slug, title: r[0].title } : null),
     searchAnipub(animeName).then(r => r.length > 0 ? { source: "anipub", id: r[0].Id, title: r[0].Name } : null),
-    searchConsumet("gogoanime", animeName).then(r => r.length > 0 ? { source: "consumet", id: r[0].id, title: r[0].title, provider: "gogoanime" } : null),
-    tryGogoanimeSource(animeName),
+    searchAnitaku(animeName).then(r => r.length > 0 ? { source: "anitaku", slug: r[0].slug, id: r[0].slug, title: r[0].title } : null),
     searchWitanime(animeName).then(r => r ? { source: "witanime", slug: r.slug, id: r.slug, title: r.title } : null),
   ];
 
