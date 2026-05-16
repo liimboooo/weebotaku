@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X, Loader, Play, Monitor, Maximize2, Globe } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, getWitanimeEpisodes, getWitanimeStreamUrl } from "../../services/animeApi";
+import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, getWitanimeEpisodes, getWitanimeStreamUrl, getAnime3rbEpisodes, getAnime3rbStreamUrl } from "../../services/animeApi";
 import "./AnimeWatch.css";
 
 function replaceEpInUrl(url, animeId, newEp) {
@@ -49,6 +49,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         let eps = [];
         if (anime.source === "anitaku") eps = await getAnitakuEpisodes(anime.slug);
         else if (anime.source === "witanime") eps = await getWitanimeEpisodes(anime.slug);
+        else if (anime.source === "anime3rb") eps = await getAnime3rbEpisodes(anime.slug);
         else eps = await getAnimeEpisodes(anime.id);
         if (eps.length === 0) { setError("No streaming links available."); return; }
         setEpisodes(eps);
@@ -84,6 +85,16 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         setError(""); setStreamLoading(true); setStreamUrl("");
         try {
           const url = await getWitanimeStreamUrl(episode.url);
+          if (url) setStreamUrl(url);
+          else setError("No stream URL found.");
+        } catch { setError("Failed to load stream."); }
+        finally { setStreamLoading(false); }
+      })();
+    } else if (anime.source === "anime3rb") {
+      (async () => {
+        setError(""); setStreamLoading(true); setStreamUrl("");
+        try {
+          const url = await getAnime3rbStreamUrl(episode.url);
           if (url) setStreamUrl(url);
           else setError("No stream URL found.");
         } catch { setError("Failed to load stream."); }

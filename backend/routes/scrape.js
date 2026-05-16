@@ -3,6 +3,21 @@ const router = express.Router();
 
 const SCRAPE_TIMEOUT = 20000;
 
+async function fetchWithNative(url) {
+  try {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), SCRAPE_TIMEOUT);
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(id);
+    if (response.ok) {
+      return await response.text();
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
 async function fetchWithWreq(url) {
   try {
     const wreq = require('wreq-js');
@@ -23,7 +38,11 @@ router.get('/fetch', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Missing url query param' });
   }
 
-  const html = await fetchWithWreq(url);
+  let html = await fetchWithNative(url);
+
+  if (!html) {
+    html = await fetchWithWreq(url);
+  }
 
   if (html) {
     res.json({ success: true, data: html });

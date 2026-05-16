@@ -181,9 +181,11 @@ async function searchAnilist(query) {
 const EMBED_PROVIDERS = [
   { name: "MegaPlay", url: (id, ep = 1) => `https://megaplay.buzz/stream/ani/${id}/${ep}/sub` },
   { name: "DropFile", url: (id, ep = 1) => `https://dropfile.cc/player/tv/anilist-${id}/${ep}/1?audio=sub&lang=en` },
+  { name: "DropFile AR", url: (id, ep = 1) => `https://dropfile.cc/player/tv/anilist-${id}/${ep}/1?audio=sub&lang=ar` },
   { name: "NinjaStream", url: (id, ep = 1) => `https://ninjasheild.stream/map/anime/${id}/${ep}/sub` },
   { name: "GotEmbed", url: (id, ep = 1) => `https://gotembed.com/api/goto.php?server=1&id=${id}&ep=${ep}` },
   { name: "EmbTaku", url: (id, ep = 1) => `https://embtaku.pro/streaming.php?id=${id}&ep=${ep}` },
+  { name: "LetsEmbed", url: (id, ep = 1) => `https://letsembed.cc/embed/anime/?id=${id}&ep=${ep}` },
 ];
 
 async function makeEmbedFallback(animeName) {
@@ -330,10 +332,76 @@ export async function getWitanimeStreamUrl(episodeUrl) {
   }
 }
 
+// ─── Anime3rb (Arabic subtitles, WordPress-based) ───
+const ANIME3RB = "https://anime3rb.com";
+
+async function searchAnime3rb(query) {
+  for (const q of titleVariants(query)) {
+    try {
+      const html = await fetchHtmlViaProxy(`${ANIME3RB}/titles/list?q=${encodeURIComponent(q)}`);
+      if (!html) continue;
+      const aRe = /<a[^>]*href="https:\/\/anime3rb\.com\/titles\/([a-z0-9-]+)"[^>]*>(?:(?!<\/a>)[\s\S])*?<h4 class="text-lg">([^<]+)<\/h4>(?:(?!<\/a>)[\s\S])*?<\/a>/gi;
+      let m;
+      while ((m = aRe.exec(html)) !== null) {
+        const slug = m[1];
+        if (slug === "list" || slug.startsWith("list/")) continue;
+        const title = m[2].trim();
+        if (scoreRelevance(title, q) > 30) return { slug, title };
+      }
+    } catch {}
+  }
+  return null;
+}
+
+function parseAnime3rbEpisodeCount(html) {
+  const eps = html.match(/<span>الحلقة \d+<\/span>/g);
+  return eps ? eps.length : 0;
+}
+
+export async function getAnime3rbEpisodes(slug) {
+  try {
+    const html = await fetchHtmlViaProxy(`${ANIME3RB}/titles/${slug}`);
+    if (!html) return [];
+    const total = parseAnime3rbEpisodeCount(html);
+    if (!total) return [];
+    return Array.from({ length: total }, (_, i) => ({
+      episode: i + 1,
+      url: `${ANIME3RB}/episode/${slug}/${i + 1}`,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function decodeHtmlEntities(str) {
+  return str.replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+}
+
+export async function getAnime3rbStreamUrl(episodeUrl) {
+  try {
+    const html = await fetchHtmlViaProxy(episodeUrl);
+    if (!html) return null;
+    const snapRe = /wire:snapshot="([^"]+)"/g;
+    let m;
+    while ((m = snapRe.exec(html)) !== null) {
+      const raw = decodeURIComponent(m[1]);
+      const decoded = decodeHtmlEntities(raw);
+      try {
+        const data = JSON.parse(decoded);
+        if (data?.data?.video_url) return data.data.video_url;
+      } catch {}
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // ─── Multi-source search (parallel) ───
 export async function findStreamingSource(animeName) {
   const sources = [
     searchWitanime(animeName).then(r => r ? { source: "witanime", slug: r.slug, id: r.slug, title: r.title } : null),
+    searchAnime3rb(animeName).then(r => r ? { source: "anime3rb", slug: r.slug, id: r.slug, title: r.title } : null),
     searchAnipub(animeName).then(r => r.length > 0 ? { source: "anipub", id: r[0].Id, title: r[0].Name } : null),
     searchAnitaku(animeName).then(r => r.length > 0 ? { source: "anitaku", slug: r[0].slug, id: r[0].slug, title: r[0].title } : null),
   ];
