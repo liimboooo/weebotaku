@@ -310,10 +310,34 @@ export const animeDatabase = {
     imdbId: "tt13706018",
     trailerUrl: "https://www.youtube-nocookie.com/embed/GjUQVwY_3iA"
   },
+  13: {
+    id: 13,
+    name: "Re:Zero kara Hajimeru Isekai Seikatsu",
+    malId: 31240,
+    type: "TV",
+    img: "https://cdn.myanimelist.net/images/anime/1522/128038.jpg",
+    rating: 8.2,
+    votes: 1800,
+    year: 2016,
+    episodes: 25,
+    status: "Completed",
+    genres: ["Drama", "Fantasy", "Psychological", "Thriller"],
+    synopsis:
+      "Subaru Natsuki is suddenly transported to another world after leaving a convenience store. With no special powers, he discovers he has the ability to return by death, forcing him to relive traumatic events over and over.",
+    director: "Masaharu Watanabe",
+    studio: "White Fox",
+    season: "Spring 2016",
+    trend: "+28%",
+    description: "A boy's struggle to survive in a fantasy world.",
+    currentEp: 25,
+    nextEpDate: "Ended",
+    imdbId: "tt5114676",
+    trailerUrl: "https://www.youtube-nocookie.com/embed/ZS1RkP6dffQ"
+  },
 };
 
 export const getAllAnime = () => Object.values(animeDatabase);
-export const getAnimeById = (id) => animeDatabase[id];
+export const getAnimeById = (id) => animeDatabase[id] || Object.values(animeDatabase).find(a => a.malId === id);
 export const getAnimeType = (anime) => anime?.type || "TV";
 export const searchAnime = (query) => {
   const q = query.toLowerCase();

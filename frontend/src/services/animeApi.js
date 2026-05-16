@@ -336,6 +336,8 @@ export async function getWitanimeStreamUrl(episodeUrl) {
 const ANIME3RB = "https://anime3rb.com";
 
 async function searchAnime3rb(query) {
+  let best = null;
+  let bestScore = 0;
   for (const q of titleVariants(query)) {
     try {
       const html = await fetchHtmlViaProxy(`${ANIME3RB}/titles/list?q=${encodeURIComponent(q)}`);
@@ -346,11 +348,23 @@ async function searchAnime3rb(query) {
         const slug = m[1];
         if (slug === "list" || slug.startsWith("list/")) continue;
         const title = m[2].trim();
-        if (scoreRelevance(title, q) > 30) return { slug, title };
+        let score = scoreRelevance(title, q);
+        if (score > 30) {
+          if (score > bestScore) {
+            bestScore = score;
+            best = { slug, title };
+          } else if (score === bestScore) {
+            const slugParts = slug.replace(/^[^/]+\//, "").split("-");
+            const bestParts = best.slug.replace(/^[^/]+\//, "").split("-");
+            if (slugParts.length < bestParts.length) {
+              best = { slug, title };
+            }
+          }
+        }
       }
     } catch {}
   }
-  return null;
+  return best;
 }
 
 function parseAnime3rbEpisodeCount(html) {

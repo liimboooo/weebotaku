@@ -43,14 +43,17 @@ export default function AnimeDetail() {
   const [recommendations, setRecommendations] = useState(null);
   const [showTrailer, setShowTrailer] = useState(false);
   const [bgLoaded, setBgLoaded] = useState(false);
+  const [jikanError, setJikanError] = useState("");
 
   const staticAnime = getAnimeById(parseInt(id));
   const anime = jikanAnime || staticAnime;
   const malId = staticAnime?.malId || parseInt(id);
 
   useEffect(() => {
+    setJikanError("");
     if (!staticAnime) {
-      jikanFetchAnime(malId).then(setJikanAnime).catch(() => {});
+      const timeout = setTimeout(() => setJikanError("Failed to load anime details. Check your connection."), 15000);
+      jikanFetchAnime(malId).then(r => { clearTimeout(timeout); setJikanAnime(r); }).catch(() => { clearTimeout(timeout); setJikanError("Could not load this anime. It may not be available."); });
     }
     fetchAnimeCharacters(malId).then(setCharacters).catch(() => {});
     fetchAnimeRecommendations(malId).then(setRecommendations).catch(() => {});
@@ -212,7 +215,7 @@ export default function AnimeDetail() {
           <div className="anime-detail-page">
             <Background />
             <div className="detail-loading" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', color: '#888' }}>
-              <p>Loading anime details...</p>
+              {jikanError ? <><p style={{ color: '#e63636', fontSize: 18, textAlign: 'center' }}>{jikanError}</p><button onClick={() => navigate(-1)} style={{ marginTop: 16, padding: '8px 20px', borderRadius: 8, border: '1px solid #333', background: 'transparent', color: '#fff', cursor: 'pointer' }}>Go back</button></> : <p>Loading anime details...</p>}
             </div>
           </div>
         </AnimatedPage>
