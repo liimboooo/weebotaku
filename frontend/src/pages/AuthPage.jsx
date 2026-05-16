@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import AuthForm from "../components/AuthForm";
 import AuthImage from "../components/AuthImage";
 import authService from "../services/authService";
@@ -8,6 +8,8 @@ import "./AuthPage.css";
 
 export default function AuthPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || "/home";
   const [mode, setMode] = useState("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -28,8 +30,8 @@ export default function AuthPage() {
       localStorage.setItem("userStatusMessage", response.user.statusMessage);
     }
     syncFromBackend().catch(() => {});
-    navigate("/home");
-  }, [navigate]);
+    navigate(from, { replace: true });
+  }, [navigate, from]);
 
   const handleSubmit = useCallback(async () => {
     const u = username.trim();
