@@ -179,13 +179,13 @@ async function searchAnilist(query) {
 }
 
 const EMBED_PROVIDERS = [
+  { name: "VidSrc", url: (id, ep = 1) => `https://vidsrc.to/embed/anime/${id}/${ep}` },
+  { name: "MultiEmbed", url: (id, ep = 1) => `https://www.multiembed.mov/?anilist_id=${id}&ep=${ep}` },
   { name: "MegaPlay", url: (id, ep = 1) => `https://megaplay.buzz/stream/ani/${id}/${ep}/sub` },
+  { name: "2Anime", url: (id, ep = 1) => `https://www.2anime.xyz/embed/anilist/${id}/${ep}` },
   { name: "DropFile", url: (id, ep = 1) => `https://dropfile.cc/player/tv/anilist-${id}/${ep}/1?audio=sub&lang=en` },
   { name: "DropFile AR", url: (id, ep = 1) => `https://dropfile.cc/player/tv/anilist-${id}/${ep}/1?audio=sub&lang=ar` },
-  { name: "NinjaStream", url: (id, ep = 1) => `https://ninjasheild.stream/map/anime/${id}/${ep}/sub` },
-  { name: "GotEmbed", url: (id, ep = 1) => `https://gotembed.com/api/goto.php?server=1&id=${id}&ep=${ep}` },
   { name: "EmbTaku", url: (id, ep = 1) => `https://embtaku.pro/streaming.php?id=${id}&ep=${ep}` },
-  { name: "LetsEmbed", url: (id, ep = 1) => `https://letsembed.cc/embed/anime/?id=${id}&ep=${ep}` },
 ];
 
 async function makeEmbedFallback(animeName) {
@@ -199,6 +199,7 @@ async function makeEmbedFallback(animeName) {
       source: "embed",
       slug: animeName,
       id: result.anilistId,
+      anilistId: result.anilistId,
       title: result.title,
       embedProviders: EMBED_PROVIDERS.map((p) => ({ name: p.name, url: p.url(result.anilistId) })),
     };
@@ -413,6 +414,7 @@ export async function getAnime3rbStreamUrl(episodeUrl) {
 
 // ─── Multi-source search (parallel) ───
 export async function findStreamingSource(animeName) {
+  const embedResult = searchAnilist(animeName).catch(() => null);
   const sources = [
     searchWitanime(animeName).then(r => r ? { source: "witanime", slug: r.slug, id: r.slug, title: r.title } : null),
     searchAnime3rb(animeName).then(r => r ? { source: "anime3rb", slug: r.slug, id: r.slug, title: r.title } : null),
@@ -420,9 +422,19 @@ export async function findStreamingSource(animeName) {
     searchAnitaku(animeName).then(r => r.length > 0 ? { source: "anitaku", slug: r[0].slug, id: r[0].slug, title: r[0].title } : null),
   ];
 
-  const results = await Promise.allSettled(sources);
-  for (const r of results) {
-    if (r.status === "fulfilled" && r.value) return r.value;
+  const all = await Promise.allSettled([...sources, embedResult]);
+  const embedInfo = all[4].status === "fulfilled" ? all[4].value : null;
+
+  for (let i = 0; i < 4; i++) {
+    const r = all[i];
+    if (r.status === "fulfilled" && r.value) {
+      const out = r.value;
+      if (embedInfo) {
+        out.embedProviders = EMBED_PROVIDERS.map(p => ({ name: p.name, url: p.url(embedInfo.anilistId) }));
+        out.anilistId = embedInfo.anilistId;
+      }
+      return out;
+    }
   }
 
   return await makeEmbedFallback(animeName);

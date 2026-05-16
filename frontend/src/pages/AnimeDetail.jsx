@@ -93,19 +93,19 @@ export default function AnimeDetail() {
   useGSAP(() => {
     const tl = gsap.timeline();
 
-    tl.from(".hero-bg", {
+    tl.from(".ad-hero-bg", {
       scale: 1.3,
       opacity: 0,
       duration: 0.8,
       ease: "power2.out"
     })
-    .from(".detail-poster", {
+    .from(".ad-poster", {
       x: -50,
       opacity: 0,
       duration: 0.5,
       ease: "power2.out"
     }, "-=0.5")
-    .from(".detail-content > *", {
+    .from(".ad-body-right > *", {
       y: 20,
       opacity: 0,
       stagger: 0.05,

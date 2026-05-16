@@ -93,7 +93,7 @@ export default function AuthPage() {
   }, []);
 
   return (
-    <div className="container">
+    <div className="auth-container">
       <AuthForm
         key={mode}
         type={mode}

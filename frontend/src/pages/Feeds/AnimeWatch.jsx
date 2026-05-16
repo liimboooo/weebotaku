@@ -24,9 +24,10 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [error, setError] = useState("");
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
+  const [useEmbedFallback, setUseEmbedFallback] = useState(false);
   const scrollRef = useRef(null);
 
-  const isEmbedSource = ["embed"].includes(anime.source);
+  const isEmbedSource = ["embed"].includes(anime.source) || useEmbedFallback;
 
   useEffect(() => {
     if (isEmbedSource) {
@@ -40,7 +41,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       setServerIndex(0);
       const initialEp = Math.min(Math.max(1, startEp), totalEpisodes);
       setEpIndex(initialEp - 1);
-      setStreamUrl(replaceEpInUrl(providers[0].url, anime.id, initialEp));
+      setStreamUrl(replaceEpInUrl(providers[0].url, anime.anilistId || anime.id, initialEp));
       return;
     }
     (async () => {
@@ -65,7 +66,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   useEffect(() => {
     if (!isEmbedSource || !servers[serverIndex]) return;
     const ep = epIndex + 1;
-    setStreamUrl(replaceEpInUrl(servers[serverIndex].url, anime.id, ep));
+    setStreamUrl(replaceEpInUrl(servers[serverIndex].url, anime.anilistId || anime.id, ep));
   }, [epIndex, serverIndex, isEmbedSource, servers, anime.id]);
 
   useEffect(() => {
@@ -157,10 +158,17 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                 <div className="watch-center">
                   <div className="watch-err-badge">!</div>
                   <p className="watch-err-text">{error}</p>
-                  <button className="watch-btn watch-btn-ghost" onClick={() => {
-                    if (episodes.length === 0) setRetryCount(c => c + 1);
-                    else setStreamRetryCount(c => c + 1);
-                  }}>Retry</button>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="watch-btn watch-btn-ghost" onClick={() => {
+                      if (episodes.length === 0) setRetryCount(c => c + 1);
+                      else setStreamRetryCount(c => c + 1);
+                    }}>Retry</button>
+                    {anime.embedProviders?.length > 0 && !useEmbedFallback && (
+                      <button className="watch-btn" onClick={() => setUseEmbedFallback(true)}>
+                        <Globe size={14} /> Embed Player
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
               {!loading && !error && streamUrl && !streamLoading && (

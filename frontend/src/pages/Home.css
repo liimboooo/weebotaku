@@ -131,7 +131,7 @@
   position: absolute;
   inset: 0;
   z-index: 3;
-  background: linear-gradient(180deg, rgba(2,2,2,0.08) 0%, rgba(2,2,2,0.2) 12%, rgba(2,2,2,0.4) 28%, rgba(2,2,2,0.6) 45%, rgba(2,2,2,0.82) 62%, #020202 78%);
+  background: linear-gradient(180deg, rgba(5,5,5,0.08) 0%, rgba(5,5,5,0.2) 12%, rgba(5,5,5,0.4) 28%, rgba(5,5,5,0.6) 45%, rgba(5,5,5,0.82) 62%, #050505 78%);
 }
 
 .home-hero-gradient-side {
@@ -139,7 +139,7 @@
   inset: 0;
   z-index: 3;
   background:
-    linear-gradient(90deg, rgba(2,2,2,0.85) 0%, rgba(2,2,2,0.4) 30%, transparent 55%);
+    linear-gradient(90deg, rgba(5,5,5,0.85) 0%, rgba(5,5,5,0.4) 30%, transparent 55%);
 }
 
 /* Hero content */
@@ -484,7 +484,7 @@
   margin: 48px 0;
 }
 
-.section-title {
+.home-section .section-title {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -898,7 +898,7 @@
 
   .home-hero-gradient-side {
     background:
-      linear-gradient(90deg, rgba(2,2,2,0.98) 0%, rgba(2,2,2,0.7) 60%, rgba(2,2,2,0.3) 100%);
+      linear-gradient(90deg, rgba(5,5,5,0.98) 0%, rgba(5,5,5,0.7) 60%, rgba(5,5,5,0.3) 100%);
   }
 
   .season-grid {
