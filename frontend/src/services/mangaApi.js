@@ -1,16 +1,33 @@
 const BASE = "https://api.mangadex.org";
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 let lastCall = 0;
 const MIN_INTERVAL = 250;
+
+async function mdFetchViaProxy(path) {
+  const res = await fetch(`${API_BASE}/scrape/fetch?url=${encodeURIComponent(BASE + path)}`);
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (!json.success) return null;
+  try { return JSON.parse(json.data); } catch { return null; }
+}
 
 async function mdFetch(path) {
   const now = Date.now();
   const wait = Math.max(0, MIN_INTERVAL - (now - lastCall));
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   lastCall = Date.now();
-  const res = await fetch(`${BASE}${path}`);
-  if (!res.ok) throw new Error(`MangaDex error: ${res.status}`);
-  return res.json();
+  let err;
+  try {
+    const res = await fetch(`${BASE}${path}`);
+    if (res.ok) return await res.json();
+    err = new Error(`MangaDex error: ${res.status}`);
+  } catch (e) {
+    err = e;
+  }
+  const proxy = await mdFetchViaProxy(path);
+  if (proxy) return proxy;
+  throw err;
 }
 
 function cleanTitle(title) {
