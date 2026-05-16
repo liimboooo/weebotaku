@@ -8,7 +8,7 @@ import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchTopManga, fetchSearchManga } from "../services/jikanApi";
 import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
-import { searchManga as mdSearch, getMangaChapters } from "../services/mangaApi";
+import { searchManga as mdSearch, getMangaChapters, searchComick, getComickChapters, getComickChapterPages } from "../services/mangaApi";
 import MangaReader from "./Feeds/MangaReader";
 import "./MangaVault.css";
 
@@ -165,16 +165,43 @@ export default function MangaVault() {
     setReaderError("");
     try {
       const results = await mdSearch(manga.title);
-      if (results.length === 0) { setReaderError("Manga not found on MangaDex."); return; }
-      const md = results[0];
-      const chapters = await getMangaChapters(md.id);
-      if (chapters.length === 0) { setReaderError("No readable chapters found. This manga may be externally hosted."); return; }
-      setReaderManga(md);
-      setReaderChapters(chapters);
-      setReaderChapter(chapters[0]);
-      setReaderOpen(true);
+      if (results.length > 0) {
+        const md = results[0];
+        const chapters = await getMangaChapters(md.id);
+        if (chapters.length > 0) {
+          setReaderManga(md);
+          setReaderChapters(chapters);
+          setReaderChapter(chapters[0]);
+          setReaderOpen(true);
+          return;
+        }
+      }
+
+      const comickResults = await searchComick(manga.title);
+      if (comickResults.length > 0) {
+        const cm = comickResults[0];
+        const chapters = await getComickChapters(cm.slug);
+        if (chapters.length > 0) {
+          for (const ch of chapters) {
+            try {
+              ch.pagesList = await getComickChapterPages(ch.id);
+              ch.pages = ch.pagesList.length;
+            } catch { continue; }
+          }
+          const validChapters = chapters.filter(ch => ch.pages > 0);
+          if (validChapters.length > 0) {
+            setReaderManga(cm);
+            setReaderChapters(validChapters);
+            setReaderChapter(validChapters[0]);
+            setReaderOpen(true);
+            return;
+          }
+        }
+      }
+
+      setReaderError("No readable chapters found on any provider.");
     } catch (e) {
-      setReaderError(`MangaDex error: ${e?.message || "Unknown"}`);
+      setReaderError(`Error: ${e?.message || "Unknown"}`);
     } finally {
       setChapterLoading(false);
     }

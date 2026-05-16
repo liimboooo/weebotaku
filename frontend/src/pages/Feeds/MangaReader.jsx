@@ -33,6 +33,13 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
     setImgError(false);
     setPreloaded([]);
     setImgRetry(0);
+
+    if (chapter.provider === "comick" && chapter.pagesList?.length) {
+      setPages(chapter.pagesList);
+      setLoading(false);
+      return;
+    }
+
     let actualQuality = quality;
     let urls;
     try {
@@ -51,7 +58,7 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
     setPages(urls || []);
     if (actualQuality !== quality) setQuality(actualQuality);
     setLoading(false);
-  }, [chapter?.id, quality]);
+  }, [chapter?.id, quality, chapter?.provider, chapter?.pagesList]);
 
   useEffect(() => { loadPages(); }, [loadPages]);
 
@@ -218,7 +225,7 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
               <img
                 key={`${chapter?.id}_${pageIndex}_${imgRetry}_${cdnRef.current}`}
                 ref={imgRef}
-                src={`${API_BASE}/scrape/manga-image?url=${encodeURIComponent(pages[pageIndex])}&chapterId=${chapter?.id || ''}`}
+                src={chapter?.provider === "comick" ? pages[pageIndex] : `${API_BASE}/scrape/manga-image?url=${encodeURIComponent(pages[pageIndex])}&chapterId=${chapter?.id || ''}`}
                 onError={() => {
                   if (imgRetry < 2) {
                     setImgRetry(r => r + 1);

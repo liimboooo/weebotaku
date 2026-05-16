@@ -140,6 +140,58 @@ export async function getChapterPagesWithFallback(chapterId) {
   }
 }
 
+const COMICK_BASE = "https://api.comick.io";
+
+async function comickFetch(path) {
+  const now = Date.now();
+  const wait = Math.max(0, 250 - (now - lastCall));
+  if (wait > 0) await new Promise(r => setTimeout(r, wait));
+  lastCall = Date.now();
+  const res = await fetch(`${COMICK_BASE}${path}`, {
+    headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
+  });
+  if (!res.ok) throw new Error(`Comick error: ${res.status}`);
+  return res.json();
+}
+
+export async function searchComick(query) {
+  const json = await comickFetch(`/search?q=${encodeURIComponent(query)}&limit=5`);
+  if (!json?.length) return [];
+  return json.map(m => ({
+    id: m.slug,
+    title: m.title || m.slug,
+    slug: m.slug,
+    coverUrl: m.md_covers?.[0] ? `https://meo.comick.pics/${m.md_covers[0]}` : null,
+    year: m.year,
+    country: m.country,
+    provider: "comick",
+  }));
+}
+
+export async function getComickChapters(slug, lang = "en") {
+  const json = await comickFetch(`/comic/${slug}/chapters?lang=${lang}&limit=500`);
+  if (!json?.chapters?.length) return [];
+  return json.chapters
+    .filter(ch => ch.lang === lang)
+    .map(ch => ({
+      id: ch.hid,
+      chapter: ch.chap,
+      title: ch.title || "",
+      volume: ch.vol || "",
+      pages: 0,
+      group: ch.group_name?.[0] || "",
+      provider: "comick",
+    }))
+    .sort((a, b) => parseFloat(b.chapter) - parseFloat(a.chapter));
+}
+
+export async function getComickChapterPages(chapterHid) {
+  const json = await comickFetch(`/chapter/${chapterHid}`);
+  const images = json?.chapter?.md_images;
+  if (!images?.length) throw new Error("No Comick pages found");
+  return images.map(img => `https://meo.comick.pics/${img.b2key}`);
+}
+
 export async function getMangaById(mangaId) {
   const json = await mdFetch(`/manga/${mangaId}?includes[]=cover_art&includes[]=author`);
   if (!json?.data) throw new Error("Manga not found");
