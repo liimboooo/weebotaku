@@ -221,6 +221,11 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                   </div>
                 </div>
               )}
+              {!isEmbedSource && anime.embedProviders?.length > 0 && (
+                <button className="watch-btn" onClick={() => setUseEmbedFallback(true)} style={{ fontSize: 11, flexShrink: 0 }}>
+                  <Globe size={12} /> Embed
+                </button>
+              )}
             </div>
           </div>
 
