@@ -807,7 +807,8 @@ export default function AMVsEdits() {
                           [...(editComments[selectedEdit.id] || [])].reverse().map(c => (
                             <div className="pin-comment" key={c.id}>
                               <div className="pin-c-avatar">
-                                {c.avatar ? <img src={c.avatar} alt="" /> : <span>{c.user.charAt(0)}</span>}
+                                {c.avatar ? <img src={c.avatar} alt="" onError={(e) => { e.target.style.display = 'none'; }} /> : null}
+                                <span className="pin-c-avatar-fallback">{c.user?.charAt(0) || 'A'}</span>
                               </div>
                               <div className="pin-c-body">
                                 <div className="pin-c-head">
