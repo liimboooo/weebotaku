@@ -30,31 +30,55 @@ function mangaTitleVariants(title) {
   return [...new Set(variants.filter(s => s && s.length > 2))];
 }
 
+function titleScore(query, title) {
+  const norm = s => s.toLowerCase().replace(/[-_'"/.]+/g, " ").replace(/\s+/g, " ").trim();
+  const q = norm(query);
+  const t = norm(title);
+  if (t === q) return 100;
+  if (t.startsWith(q)) return 85;
+  if (t.includes(q)) return 70;
+  const qWords = new Set(q.split(/\s+/));
+  const tWords = t.split(/\s+/);
+  const overlap = tWords.filter(w => qWords.has(w)).length;
+  if (overlap > 0) return 40 + (overlap / Math.max(qWords.size, 1)) * 30;
+  return 0;
+}
+
+function mapMangaResult(m) {
+  const coverRel = m.relationships.find(r => r.type === "cover_art");
+  const coverFile = coverRel?.attributes?.fileName;
+  const title = m.attributes.title?.en || Object.values(m.attributes.title || {})[0] || "Unknown";
+  return {
+    id: m.id,
+    title,
+    altTitles: m.attributes.altTitles || [],
+    description: m.attributes.description?.en || "",
+    coverUrl: coverFile ? `https://uploads.mangadex.org/covers/${m.id}/${coverFile}.256.jpg` : null,
+    status: m.attributes.status || "unknown",
+    year: m.attributes.year,
+    tags: m.attributes.tags?.map(t => t.attributes.name.en) || [],
+    originalLanguage: m.attributes.originalLanguage,
+    availableLanguages: m.attributes.availableTranslatedLanguages || [],
+    author: m.relationships.find(r => r.type === "author")?.attributes?.name || "Unknown",
+  };
+}
+
 export async function searchManga(query) {
+  let allResults = [];
   for (const q of mangaTitleVariants(query)) {
-    const json = await mdFetch(`/manga?title=${encodeURIComponent(q)}&limit=5&order[relevance]=desc&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&includes[]=cover_art`);
+    const json = await mdFetch(`/manga?title=${encodeURIComponent(q)}&limit=10&order[relevance]=desc&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&includes[]=cover_art`);
     if (json.data.length > 0) {
-      return json.data.map(m => {
-        const coverRel = m.relationships.find(r => r.type === "cover_art");
-        const coverFile = coverRel?.attributes?.fileName;
-        const title = m.attributes.title?.en || Object.values(m.attributes.title || {})[0] || "Unknown";
-        return {
-          id: m.id,
-          title,
-          altTitles: m.attributes.altTitles || [],
-          description: m.attributes.description?.en || "",
-          coverUrl: coverFile ? `https://uploads.mangadex.org/covers/${m.id}/${coverFile}.256.jpg` : null,
-          status: m.attributes.status || "unknown",
-          year: m.attributes.year,
-          tags: m.attributes.tags?.map(t => t.attributes.name.en) || [],
-          originalLanguage: m.attributes.originalLanguage,
-          availableLanguages: m.attributes.availableTranslatedLanguages || [],
-          author: m.relationships.find(r => r.type === "author")?.attributes?.name || "Unknown",
-        };
-      });
+      allResults = json.data;
+      break;
     }
   }
-  return [];
+  if (allResults.length === 0) return [];
+  const scored = allResults
+    .map(m => ({ m, score: titleScore(query, m.attributes.title?.en || Object.values(m.attributes.title || {})[0] || "") }))
+    .filter(s => s.score >= 40)
+    .sort((a, b) => b.score - a.score);
+  if (scored.length === 0) return allResults.slice(0, 3).map(mapMangaResult);
+  return scored.map(s => mapMangaResult(s.m));
 }
 
 export async function getMangaChapters(mangaId, lang = "en") {
@@ -74,10 +98,12 @@ export async function getMangaChapters(mangaId, lang = "en") {
 
 export async function getChapterPages(chapterId, quality = "data") {
   const json = await mdFetch(`/at-home/server/${chapterId}`);
+  if (!json.baseUrl || !json.chapter?.hash) throw new Error("Invalid at-home response");
   const base = json.baseUrl;
   const hash = json.chapter.hash;
   const q = quality === "data-saver" && json.chapter["data-saver"]?.length > 0 ? "data-saver" : "data";
   const files = json.chapter[q];
+  if (!files?.length) throw new Error("No pages found for this chapter");
   return files.map(f => `${base}/${q}/${hash}/${f}`);
 }
 

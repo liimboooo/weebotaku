@@ -157,21 +157,23 @@ export default function MangaVault() {
   const [readerChapter, setReaderChapter] = useState(null);
   const [readerOpen, setReaderOpen] = useState(false);
   const [chapterLoading, setChapterLoading] = useState(false);
+  const [readerError, setReaderError] = useState("");
 
   const openReader = async (manga) => {
     setChapterLoading(true);
+    setReaderError("");
     try {
       const results = await mdSearch(manga.title);
-      if (results.length === 0) { alert("Manga not found on MangaDex."); return; }
+      if (results.length === 0) { setReaderError("Manga not found on MangaDex."); return; }
       const md = results[0];
       const chapters = await getMangaChapters(md.id);
-      if (chapters.length === 0) { alert("No readable chapters found."); return; }
+      if (chapters.length === 0) { setReaderError("No readable chapters found. This manga may be externally hosted."); return; }
       setReaderManga(md);
       setReaderChapters(chapters);
       setReaderChapter(chapters[0]);
       setReaderOpen(true);
     } catch (e) {
-      alert("Failed to load manga from MangaDex.");
+      setReaderError("Failed to load manga from MangaDex.");
     } finally {
       setChapterLoading(false);
     }
@@ -181,9 +183,9 @@ export default function MangaVault() {
     try {
       const results = await mdSearch(manga.title);
       if (results.length > 0) navigate(`/manga/${results[0].id}`);
-      else alert("Manga not found on MangaDex.");
+      else setReaderError("Manga not found on MangaDex.");
     } catch {
-      alert("Failed to load manga details.");
+      setReaderError("Failed to load manga details.");
     }
   };
 
@@ -318,7 +320,7 @@ export default function MangaVault() {
                     >
                       {view === "grid" ? (
                         <>
-                          <div className="mv-card-thumb" onClick={() => setPreview(m)}>
+                          <div className="mv-card-thumb" onClick={() => { setPreview(m); setReaderError(""); }}>
                             <img src={m.cover} alt={m.title} loading="lazy" />
                             <div className="mv-card-overlay">
                               <div className="mv-card-play"><Eye size={20} /></div>
@@ -354,10 +356,10 @@ export default function MangaVault() {
                         </>
                       ) : (
                         <>
-                          <div className="mv-row-thumb" onClick={() => setPreview(m)}>
+                          <div className="mv-row-thumb" onClick={() => { setPreview(m); setReaderError(""); }}>
                             <img src={m.cover} alt={m.title} loading="lazy" />
                           </div>
-                          <div className="mv-row-body" onClick={() => setPreview(m)}>
+                          <div className="mv-row-body" onClick={() => { setPreview(m); setReaderError(""); }}>
                             <div className="mv-row-head">
                               <h3>{m.title}</h3>
                               <span className="mv-row-author">{m.author}</span>
@@ -410,7 +412,7 @@ export default function MangaVault() {
 
         <AnimatePresence>
           {preview && (
-            <div className="mv-modal-overlay" onClick={() => setPreview(null)}>
+            <div className="mv-modal-overlay" onClick={() => { setPreview(null); setReaderError(""); }}>
               <motion.div
                 className="mv-modal"
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -423,7 +425,7 @@ export default function MangaVault() {
                     <span className="mv-modal-status"><span className="mv-pulse-dot" /> {preview.status}</span>
                     <h2>{preview.title}</h2>
                   </div>
-                  <button className="mv-modal-close" onClick={() => setPreview(null)}><X size={22} /></button>
+                  <button className="mv-modal-close" onClick={() => { setPreview(null); setReaderError(""); }}><X size={22} /></button>
                 </div>
                 <div className="mv-modal-body">
                   <div className="mv-modal-cover">
@@ -455,6 +457,7 @@ export default function MangaVault() {
                     <div className="mv-modal-bar">
                       <div className="mv-modal-bar-fill" style={{ width: `${(preview.progress || 0) * 100}%` }} />
                     </div>
+                    {readerError && <div className="mv-modal-error">{readerError}</div>}
                     <button className="mv-modal-btn" onClick={() => toggleWishlist(preview.id)}>
                       <Heart size={16} fill={wishlist.some(i => i.id === preview.id) ? "currentColor" : "none"} />
                       {wishlist.some(i => i.id === preview.id) ? "In Your List" : "Add to List"}
