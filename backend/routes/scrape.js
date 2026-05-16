@@ -1,4 +1,5 @@
 const express = require('express');
+const cheerio = require('cheerio');
 const router = express.Router();
 
 const SCRAPE_TIMEOUT = 20000;
@@ -124,6 +125,105 @@ router.get('/manga-image', async (req, res) => {
   }
 
   res.status(502).json({ success: false, message: 'Failed to load manga image' });
+});
+
+// ---------- MangaNato Aggregator Scraper ----------
+
+async function fetchWithHeaders(url) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), SCRAPE_TIMEOUT);
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Referer': 'https://readmanganato.com/',
+      },
+    });
+    clearTimeout(id);
+    if (response.ok) return await response.text();
+  } catch { clearTimeout(id); }
+  return null;
+}
+
+router.get('/manga-alt-search', async (req, res) => {
+  const { q } = req.query;
+  if (!q) return res.status(400).json({ success: false, message: 'Missing q' });
+
+  try {
+    const query = q.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '_');
+    const html = await fetchWithHeaders(`https://readmanganato.com/search/story/${query}`);
+    if (!html) return res.json({ success: true, data: [] });
+
+    const $ = cheerio.load(html);
+    const results = [];
+    $('.search-story-item').each((i, el) => {
+      const link = $(el).find('a.item-img').attr('href') || '';
+      const id = link.split('/').pop() || '';
+      const title = $(el).find('.item-title').text().trim();
+      const img = $(el).find('img.img-loading').attr('src') || $(el).find('img').attr('src') || '';
+      const author = $(el).find('.item-author').text().replace('Author:', '').trim();
+      if (id && title) results.push({ id, title, cover: img, author, provider: 'manganato' });
+      if (results.length >= 5) return false;
+    });
+
+    res.json({ success: true, data: results });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+router.get('/manga-alt-chapters', async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
+
+  try {
+    const html = await fetchWithHeaders(`https://readmanganato.com/${id}`);
+    if (!html) return res.json({ success: true, data: [] });
+
+    const $ = cheerio.load(html);
+    const chapters = [];
+    $('ul.row-content-chapter li a.chapter-name').each((i, el) => {
+      const href = $(el).attr('href') || '';
+      const chapterId = href.split('/').pop() || '';
+      const label = $(el).text().trim();
+      const match = label.match(/(\d+(?:\.\d+)?)/);
+      chapters.push({
+        id: chapterId,
+        chapter: match ? match[1] : String(chapters.length + 1),
+        title: label,
+        pages: 0,
+        provider: 'manganato',
+      });
+    });
+
+    res.json({ success: true, data: chapters.reverse() });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+router.get('/manga-alt-pages', async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
+
+  try {
+    const html = await fetchWithHeaders(`https://readmanganato.com/${id}`);
+    if (!html) return res.json({ success: true, data: [] });
+
+    const $ = cheerio.load(html);
+    const pages = [];
+    $('.container-chapter-reader img').each((i, el) => {
+      const src = $(el).attr('src') || '';
+      if (src) pages.push(src);
+    });
+
+    res.json({ success: true, data: pages });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
 });
 
 module.exports = router;

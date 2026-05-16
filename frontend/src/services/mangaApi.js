@@ -141,12 +141,21 @@ export async function getChapterPagesWithFallback(chapterId) {
 }
 
 const COMICK_BASE = "https://api.comick.io";
+const ALT_API = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 async function comickFetch(path) {
   const now = Date.now();
   const wait = Math.max(0, 250 - (now - lastCall));
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   lastCall = Date.now();
+  const url = `${API_BASE}/scrape/fetch?url=${encodeURIComponent(COMICK_BASE + path)}`;
+  try {
+    const res = await fetch(url);
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) return JSON.parse(json.data);
+    }
+  } catch {}
   const res = await fetch(`${COMICK_BASE}${path}`, {
     headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
   });
@@ -155,9 +164,20 @@ async function comickFetch(path) {
 }
 
 export async function searchComick(query) {
-  const json = await comickFetch(`/search?q=${encodeURIComponent(query)}&limit=5`);
-  if (!json?.length) return [];
-  return json.map(m => ({
+  let allResults = [];
+  for (const q of mangaTitleVariants(query)) {
+    try {
+      const json = await comickFetch(`/search?q=${encodeURIComponent(q)}&limit=10`);
+      if (json?.length > 0) { allResults = json; break; }
+    } catch { continue; }
+  }
+  if (!allResults.length) return [];
+  const scored = allResults
+    .map(m => ({ m, score: titleScore(query, m.title || m.slug || "") }))
+    .sort((a, b) => b.score - a.score);
+  const top = scored.filter(s => s.score >= 30);
+  const use = top.length > 0 ? top : scored.slice(0, 3);
+  return use.map(({ m }) => ({
     id: m.slug,
     title: m.title || m.slug,
     slug: m.slug,
