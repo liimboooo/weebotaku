@@ -16,16 +16,28 @@ const titleVariants = (title) => {
 };
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const FALLBACK_PROXY = "https://api.codetabs.com/v1/proxy?quest=";
 
 async function fetchHtmlViaProxy(url) {
-  try {
-    const res = await fetch(`${API_BASE}/scrape/fetch?url=${encodeURIComponent(url)}`);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.success ? data.data : null;
-  } catch {
-    return null;
+  for (const p of [
+    async () => {
+      const res = await fetch(`${API_BASE}/scrape/fetch?url=${encodeURIComponent(url)}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.success ? data.data : null;
+    },
+    async () => {
+      const res = await Promise.race([
+        fetch(`${FALLBACK_PROXY}${encodeURIComponent(url)}`, { mode: "cors" }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 12000)),
+      ]);
+      if (res.ok) return await res.text();
+      return null;
+    },
+  ]) {
+    try { const result = await p(); if (result) return result; } catch {}
   }
+  return null;
 }
 
 // ─── AniPub ───
