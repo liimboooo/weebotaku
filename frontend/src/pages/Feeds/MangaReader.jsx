@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, X, Loader, Image, ArrowLeftRight } from "luc
 import { getChapterPages } from "../../services/mangaApi";
 import "./MangaReader.css";
 
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 const QUALITY_ICON = { data: "HD", "data-saver": "SD" };
 
 export default function MangaReader({ manga, chapters, initialChapter, onClose }) {
@@ -215,9 +216,9 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
             {error && <div className="reader-error">{error}</div>}
             {!loading && !error && pagesLen > 0 && !imgError && (
               <img
-                key={`${chapter?.id}_${pageIndex}_${imgRetry}`}
+                key={`${chapter?.id}_${pageIndex}_${imgRetry}_${cdnRef.current}`}
                 ref={imgRef}
-                src={imgRetry > 0 ? `${pages[pageIndex]}?retry=${imgRetry}` : pages[pageIndex]}
+                src={`${API_BASE}/scrape/manga-image?url=${encodeURIComponent(pages[pageIndex])}&chapterId=${chapter?.id || ''}`}
                 onError={() => {
                   if (imgRetry < 2) {
                     setImgRetry(r => r + 1);
