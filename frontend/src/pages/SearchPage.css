@@ -218,14 +218,15 @@
 
 .sr-card {
   position: relative;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--primary-border);
   border-radius: var(--radius-xl);
   overflow: hidden;
   cursor: pointer;
   transition: all var(--duration-normal) var(--ease-out);
   animation: br-card-in 0.4s var(--ease-out) both;
   isolation: isolate;
+  box-shadow: 0 0 20px rgba(230, 54, 54, 0.04);
 }
 
 .sr-card::before {
@@ -241,13 +242,13 @@
 }
 
 .sr-card:hover::before {
-  opacity: 0.4;
+  opacity: 0.5;
 }
 
 .sr-card:hover {
-  border-color: var(--primary-border);
+  border-color: var(--primary);
   transform: translateY(-6px);
-  box-shadow: 0 0 40px var(--primary-glow), 0 16px 48px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 50px var(--primary-glow), 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 .sr-card-thumb {

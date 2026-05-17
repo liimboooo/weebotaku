@@ -127,13 +127,19 @@
 .br-hero-accent {
   display: block;
   font-size: clamp(3rem, 6vw, 5rem);
-  color: #dc2626;
+  color: var(--primary);
   font-weight: 900;
   font-family: var(--font-display);
   text-transform: uppercase;
   line-height: 1;
   letter-spacing: -0.02em;
-  text-shadow: 0 0 40px rgba(220,38,38,0.4);
+  text-shadow: 0 0 40px rgba(230, 54, 54, 0.3);
+  animation: glow-pulse-text 3s ease-in-out infinite;
+}
+
+@keyframes glow-pulse-text {
+  0%, 100% { text-shadow: 0 0 30px rgba(230, 54, 54, 0.2); }
+  50% { text-shadow: 0 0 60px rgba(230, 54, 54, 0.5); }
 }
 
 .br-hero-desc {
@@ -548,14 +554,15 @@
 
 .br-card {
   position: relative;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--primary-border);
   border-radius: var(--radius-xl);
   overflow: hidden;
   cursor: pointer;
   transition: all var(--duration-normal) var(--ease-out);
   animation: br-card-in 0.4s var(--ease-out) both;
   isolation: isolate;
+  box-shadow: 0 0 20px rgba(230, 54, 54, 0.04);
 }
 
 .br-card::before {
@@ -571,13 +578,13 @@
 }
 
 .br-card:hover::before {
-  opacity: 0.4;
+  opacity: 0.5;
 }
 
 .br-card:hover {
-  border-color: var(--primary-border);
+  border-color: var(--primary);
   transform: translateY(-6px);
-  box-shadow: 0 0 40px var(--primary-glow), 0 16px 48px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 50px var(--primary-glow), 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 .br-card-thumb {
