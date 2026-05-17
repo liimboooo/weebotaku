@@ -80,7 +80,7 @@
 .br-hero-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #050505 0%, #050505 15%, rgba(5,5,5,0.9) 50%, rgba(5,5,5,0.3) 75%, transparent 100%);
+  background: linear-gradient(90deg, var(--bg-deep) 0%, var(--bg-deep) 15%, rgba(5,5,5,0.9) 50%, rgba(5,5,5,0.3) 75%, transparent 100%);
   z-index: 1;
 }
 
@@ -547,12 +547,13 @@
 
 .br-card {
   position: relative;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
   overflow: hidden;
   cursor: pointer;
   transition: all var(--duration-normal) var(--ease-out);
+  animation: br-card-in 0.4s var(--ease-out) both;
 }
 
 .br-card:hover {
@@ -883,8 +884,16 @@
 }
 
 @keyframes br-card-in {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes br-spin {
+  to { transform: rotate(360deg); }
+}
+
+.br-spin {
+  animation: br-spin 1s linear infinite;
 }
 
 /* ─── RESPONSIVE ─── */

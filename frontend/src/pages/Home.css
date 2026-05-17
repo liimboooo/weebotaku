@@ -41,9 +41,9 @@
 .home-skeleton-line {
   height: 22px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.06) 50%, rgba(255, 255, 255, 0.03) 100%);
+  background: linear-gradient(90deg, var(--skeleton-base) 0%, var(--skeleton-shine) 50%, var(--skeleton-base) 100%);
   background-size: 200% 100%;
-  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  animation: shimmer 1.8s ease-in-out infinite;
 }
 
 .home-skeleton-line.w-48 { width: 12rem; }
@@ -58,12 +58,12 @@
   height: 320px;
   border-radius: var(--radius-lg);
   flex-shrink: 0;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.02) 100%);
+  background: linear-gradient(90deg, var(--skeleton-base) 0%, var(--skeleton-shine) 50%, var(--skeleton-base) 100%);
   background-size: 200% 100%;
-  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  animation: shimmer 1.8s ease-in-out infinite;
 }
 
-@keyframes skeleton-shimmer {
+@keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
@@ -496,7 +496,13 @@
 /* ─── Section Header ─────────────────────────────────── */
 .home-section {
   margin: 56px 0;
+  animation: fade-in-up 0.6s var(--ease-out) both;
 }
+
+.home-section:nth-child(2) { animation-delay: 0.1s; }
+.home-section:nth-child(3) { animation-delay: 0.15s; }
+.home-section:nth-child(4) { animation-delay: 0.2s; }
+.home-section:nth-child(5) { animation-delay: 0.25s; }
 
 .home-section .section-title {
   display: flex;

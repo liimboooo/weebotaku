@@ -50,7 +50,7 @@
 .ad-hero-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #050505 0%, #050505 15%, rgba(5,5,5,0.9) 50%, rgba(5,5,5,0.3) 75%, transparent 100%);
+  background: linear-gradient(90deg, var(--bg-deep) 0%, var(--bg-deep) 15%, rgba(5,5,5,0.9) 50%, rgba(5,5,5,0.3) 75%, transparent 100%);
   z-index: 1;
 }
 
@@ -568,8 +568,14 @@
 
 /* ─── SECTION (Characters / Recommendations) ─── */
 .ad-section {
-  margin-top: 40px;
+  margin-bottom: 32px;
+  animation: fade-in-up 0.5s var(--ease-out) both;
 }
+
+.ad-section:nth-child(1) { animation-delay: 0.05s; }
+.ad-section:nth-child(2) { animation-delay: 0.1s; }
+.ad-section:nth-child(3) { animation-delay: 0.15s; }
+.ad-section:nth-child(4) { animation-delay: 0.2s; }
 
 .ad-section-title {
   color: #ef4444;

@@ -71,7 +71,7 @@
 .mv-hero-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #050505 0%, #050505 15%, rgba(5,5,5,0.9) 50%, rgba(5,5,5,0.3) 75%, transparent 100%);
+  background: linear-gradient(90deg, var(--bg-deep) 0%, var(--bg-deep) 15%, rgba(5,5,5,0.9) 50%, rgba(5,5,5,0.3) 75%, transparent 100%);
   z-index: 1;
 }
 
