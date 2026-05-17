@@ -426,6 +426,60 @@
   border-bottom-color: #ef4444;
 }
 
+/* ─── TRAILER TRIGGER ─── */
+.ad-trailer-trigger-wrap {
+  margin-bottom: 16px;
+}
+
+.ad-trailer-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.4);
+  color: #aaa;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.ad-trailer-trigger:hover {
+  background: rgba(220,38,38,0.1);
+  border-color: rgba(220,38,38,0.3);
+  color: #fff;
+}
+
+/* ─── COUR SECTIONS ─── */
+.ad-cour-section {
+  margin-bottom: 20px;
+}
+
+.ad-cour-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ad-cour-name {
+  color: #ef4444;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ad-cour-dates {
+  color: #666;
+  font-size: 0.72rem;
+}
+
 /* ─── EPISODES GRID ─── */
 .ad-episodes-grid {
   display: grid;
@@ -461,6 +515,7 @@
   background: rgba(220,38,38,0.12);
   border-color: rgba(220,38,38,0.4);
   color: #ef4444;
+  box-shadow: 0 0 12px rgba(220,38,38,0.12);
 }
 
 .ad-episode-btn.disabled {
@@ -493,13 +548,14 @@
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 12px;
   overflow: hidden;
-  transition: all 0.2s;
+  transition: all 0.25s var(--ease-out, ease);
 }
 
 .ad-character-card:hover {
   background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.12);
-  transform: translateY(-2px);
+  border-color: rgba(220,38,38,0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2), 0 0 12px rgba(220,38,38,0.06);
 }
 
 .ad-character-img {
@@ -508,6 +564,34 @@
   object-fit: cover;
   display: block;
   background: #111;
+}
+
+.ad-character-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(220,38,38,0.06), rgba(255,255,255,0.02));
+  color: rgba(255,255,255,0.12);
+}
+
+.ad-character-card:hover .ad-character-fallback {
+  color: rgba(220,38,38,0.4);
+}
+
+.ad-rec-fallback {
+  width: 72px;
+  height: 104px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.1);
+}
+
+.ad-recommendation-card:hover .ad-rec-fallback {
+  color: rgba(220,38,38,0.4);
 }
 
 .ad-character-info {
@@ -558,13 +642,14 @@
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s var(--ease-out, ease);
 }
 
 .ad-recommendation-card:hover {
   background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.12);
-  transform: translateY(-2px);
+  border-color: rgba(220,38,38,0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2), 0 0 12px rgba(220,38,38,0.06);
 }
 
 .ad-recommendation-card img {
@@ -697,6 +782,51 @@
   .ad-status-bar {
     gap: 12px;
   }
+}
+
+/* ─── ERROR / EMPTY STATES ─── */
+.ad-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+}
+
+.ad-error-state-text {
+  color: #ef4444;
+  font-size: 18px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.ad-error-state-btn {
+  padding: 10px 24px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.ad-error-state-btn:hover {
+  background: rgba(220,38,38,0.08);
+  border-color: rgba(220,38,38,0.3);
+  color: #ef4444;
+}
+
+.ad-tab-empty {
+  color: #666;
+  text-align: center;
+  padding: 48px 32px;
+  font-size: 0.85rem;
+  border: 1px dashed rgba(255,255,255,0.06);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.01);
 }
 
 /* ─── LOADING ─── */

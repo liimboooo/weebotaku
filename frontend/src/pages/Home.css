@@ -874,16 +874,6 @@
   transform: scale(1.2);
 }
 
-.scr-divider {
-  width: 1px;
-  height: 10px;
-  background: rgba(255,255,255,0.06);
-}
-
-.scr-hot {
-  font-size: 9px;
-  margin-left: auto;
-}
 
 /* ─── CTA Banner ─────────────────────────────────────── */
 .home-cta-banner {

@@ -186,10 +186,10 @@ async function searchAnilist(query) {
 
 // ─── Embed Providers ───
 const EMBED_PROVIDERS = [
-  { name: "DropFile", url: (id, ep = 1) => `https://dropfile.cc/player/tv/anilist-${id}/${ep}/1` },
+  { name: "VidSrc", url: (id, ep = 1) => `https://vidsrc.cc/v2/embed/anime/anilist-${id}/${ep}` },
+  { name: "2Embed", url: (id, ep = 1) => `https://2anime.xyz/embed/${id}-episode-${ep}` },
   { name: "MegaPlay", url: (id, ep = 1) => `https://megaplay.buzz/stream/ani/${id}/${ep}/sub` },
   { name: "AnimePlay", url: (id, ep = 1) => `https://animeplay.cfd/stream/ani/${id}/${ep}/sub` },
-  { name: "VidPlus", url: (id, ep = 1) => `https://player.vidplus.to/embed/anime/${id}/${ep}` },
   { name: "VidNest", url: (id, ep = 1) => `https://vidnest.fun/anime/${id}/${ep}/sub` },
 ];
 
@@ -213,7 +213,7 @@ async function makeEmbedFallback(animeName) {
 }
 
 // ─── WitAnime (WordPress-based, Arabic subtitles) ───
-const WITANIME = "https://witanime.you";
+const WITANIME = "https://witanime.one";
 
 function witanimeBase64ToBytes(str) {
   return Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
@@ -418,72 +418,81 @@ export async function getAnime3rbStreamUrl(episodeUrl) {
 }
 
 // ─── Consumet API (Gogoanime provider) ───
-const CONSUMET_API = "https://api.consumet.org";
+const CONSUMET_MIRRORS = [
+  "https://api.consumet.org",
+  "https://consumet-api.vercel.app",
+];
+const CONSUMET_API = CONSUMET_MIRRORS[0];
 
 async function searchConsumetGogoanime(query) {
-  for (const q of titleVariants(query)) {
-    try {
-      const res = await fetch(`${CONSUMET_API}/anime/gogoanime/${encodeURIComponent(q)}`, {
-        signal: AbortSignal.timeout(8000),
-      });
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (data?.results?.length > 0) {
-        const best = data.results.sort((a, b) => {
-          const aScore = scoreRelevance(a.title, query);
-          const bScore = scoreRelevance(b.title, query);
-          return bScore - aScore;
-        })[0];
-        return {
-          id: best.id,
-          title: best.title,
-          image: best.image,
-          anilistId: best.id, // Gogoanime ID from Consumet
-        };
-      }
-    } catch { continue; }
+  for (const mirror of CONSUMET_MIRRORS) {
+    for (const q of titleVariants(query)) {
+      try {
+        const res = await fetch(`${mirror}/anime/gogoanime/${encodeURIComponent(q)}`, {
+          signal: AbortSignal.timeout(6000),
+        });
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data?.results?.length > 0) {
+          const best = data.results.sort((a, b) => {
+            const aScore = scoreRelevance(a.title, query);
+            const bScore = scoreRelevance(b.title, query);
+            return bScore - aScore;
+          })[0];
+          return {
+            id: best.id,
+            title: best.title,
+            image: best.image,
+            anilistId: best.id,
+            _mirror: mirror,
+          };
+        }
+      } catch { continue; }
+    }
   }
   return null;
 }
 
-export async function getConsumetGogoanimeEpisodes(animeId) {
-  try {
-    const res = await fetch(`${CONSUMET_API}/anime/gogoanime/info/${encodeURIComponent(animeId)}`, {
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    if (!data?.episodes?.length) return [];
-    return data.episodes.map((ep, i) => ({
-      episode: ep.number || i + 1,
-      id: ep.id,
-      url: `https://gogoanime.consu.me/${ep.id}`,
-      title: ep.title || "",
-    }));
-  } catch {
-    return [];
+export async function getConsumetGogoanimeEpisodes(animeId, mirror) {
+  for (const base of mirror ? [mirror, ...CONSUMET_MIRRORS.filter(m => m !== mirror)] : CONSUMET_MIRRORS) {
+    try {
+      const res = await fetch(`${base}/anime/gogoanime/info/${encodeURIComponent(animeId)}`, {
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (!data?.episodes?.length) continue;
+      return data.episodes.map((ep, i) => ({
+        episode: ep.number || i + 1,
+        id: ep.id,
+        url: `${base}/anime/gogoanime/watch/${ep.id}`,
+        title: ep.title || "",
+        _mirror: base,
+      }));
+    } catch { continue; }
   }
+  return [];
 }
 
-export async function getConsumetGogoanimeStreamUrl(episodeId) {
-  try {
-    const res = await fetch(`${CONSUMET_API}/anime/gogoanime/watch/${encodeURIComponent(episodeId)}`, {
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data?.sources?.length > 0) {
-      const best = data.sources.sort((a, b) => {
-        const aQ = parseInt(a.quality) || 0;
-        const bQ = parseInt(b.quality) || 0;
-        return bQ - aQ;
-      })[0];
-      return best.url;
-    }
-    return null;
-  } catch {
-    return null;
+export async function getConsumetGogoanimeStreamUrl(episodeId, mirror) {
+  for (const base of mirror ? [mirror, ...CONSUMET_MIRRORS.filter(m => m !== mirror)] : CONSUMET_MIRRORS) {
+    try {
+      const res = await fetch(`${base}/anime/gogoanime/watch/${encodeURIComponent(episodeId)}`, {
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data?.sources?.length > 0) {
+        const best = data.sources.sort((a, b) => {
+          const aQ = parseInt(a.quality) || 0;
+          const bQ = parseInt(b.quality) || 0;
+          return bQ - aQ;
+        })[0];
+        return best.url;
+      }
+    } catch { continue; }
   }
+  return null;
 }
 
 // ─── Enhanced Embed Search (parallel fallback) ───
@@ -505,12 +514,12 @@ async function searchParallelEmbeds(animeName) {
 // ─── Multi-source search (parallel) ───
 export async function findStreamingSource(animeName) {
   const sources = [
-    searchWitanime(animeName).then(r => r ? { source: "witanime", slug: r.slug, id: r.slug, title: r.title } : null),
-    searchAnime3rb(animeName).then(r => r ? { source: "anime3rb", slug: r.slug, id: r.slug, title: r.title } : null),
     searchAnipub(animeName).then(r => r.length > 0 ? { source: "anipub", id: r[0].Id, title: r[0].Name } : null),
     searchAnitaku(animeName).then(r => r.length > 0 ? { source: "anitaku", slug: r[0].slug, id: r[0].slug, title: r[0].title } : null),
+    searchConsumetGogoanime(animeName).then(r => r ? { source: "consumet", id: r.id, title: r.title, anilistId: r.anilistId, _mirror: r._mirror } : null),
     searchParallelEmbeds(animeName).then(r => r),
-    searchConsumetGogoanime(animeName).then(r => r ? { source: "consumet", id: r.id, title: r.title, anilistId: r.anilistId } : null),
+    searchAnime3rb(animeName).then(r => r ? { source: "anime3rb", slug: r.slug, id: r.slug, title: r.title } : null),
+    searchWitanime(animeName).then(r => r ? { source: "witanime", slug: r.slug, id: r.slug, title: r.title } : null),
   ];
 
   const results = await Promise.allSettled(sources);

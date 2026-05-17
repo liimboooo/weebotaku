@@ -38,6 +38,7 @@ function SliderCard({ item, onClick }) {
           <img
             src={item.img}
             alt={item.name}
+            loading="lazy"
             onLoad={() => setLoaded(true)}
             onError={() => setImgErr(true)}
             style={{ opacity: loaded ? 1 : 0 }}

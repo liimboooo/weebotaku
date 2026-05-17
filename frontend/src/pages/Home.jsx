@@ -16,7 +16,6 @@ import {
   TrendingUp,
   Users,
   Zap,
-  MessageCircle,
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Skeleton from "../components/Skeleton";
@@ -302,25 +301,20 @@ function SectionHeader({ icon: Icon, title, subtitle, action }) {
 
 function SeasonCardReactions() {
   const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(() => Math.floor(Math.random() * 20) + 3);
-  const [commentCount] = useState(() => Math.floor(Math.random() * 8) + 1);
 
   const handleLike = (e) => {
     e.stopPropagation();
     setLiked(prev => !prev);
-    setLikeCount(prev => liked ? prev - 1 : prev + 1);
   };
 
   return (
     <div className="season-card-reactions">
       <button className={`scr-btn ${liked ? 'scr-liked' : ''}`} onClick={handleLike}>
-        <Heart size={10} fill={liked ? "currentColor" : "none"} /> {likeCount}
+        <Heart size={10} fill={liked ? "currentColor" : "none"} /> {liked ? "Liked" : "Like"}
       </button>
-      <button className="scr-btn" onClick={e => e.stopPropagation()}>
-        <MessageCircle size={10} /> {commentCount}
+      <button className="scr-btn" onClick={e => { e.stopPropagation(); }}>
+        <Bookmark size={10} /> Save
       </button>
-      <span className="scr-divider" />
-      <span className="scr-hot">🔥</span>
     </div>
   );
 }

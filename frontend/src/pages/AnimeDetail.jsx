@@ -190,9 +190,9 @@ export default function AnimeDetail() {
       <AnimatedPage>
         <div className="anime-detail-page">
           <Background />
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 16 }}>
-            <p style={{ color: "#e63636", fontSize: 18, textAlign: "center" }}>{animeError || "Anime not found"}</p>
-            <button onClick={() => navigate(-1)} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid #333", background: "transparent", color: "#fff", cursor: "pointer" }}>Go back</button>
+          <div className="ad-error-state">
+            <p className="ad-error-state-text">{animeError || "Anime not found"}</p>
+            <button className="ad-error-state-btn" onClick={() => navigate(-1)}>Go back</button>
           </div>
         </div>
       </AnimatedPage>
@@ -341,21 +341,17 @@ export default function AnimeDetail() {
             {activeTab === "episodes" && (
               <div>
                 {(anime.trailerUrl || anime.trailer?.embed_url) && (
-                  <div style={{ marginBottom: 16 }}>
-                    <button className="ad-hero-action-btn" onClick={() => setShowTrailer(true)} style={{ width: "auto", padding: "8px 16px", gap: 6, fontSize: "0.82rem", display: "inline-flex" }}>
+                  <div className="ad-trailer-trigger-wrap">
+                    <button className="ad-trailer-trigger" onClick={() => setShowTrailer(true)}>
                       <Play size={14} /> Watch Trailer
                     </button>
                   </div>
                 )}
                 {schedule?.cours ? schedule.cours.map((cour) => (
-                  <div key={cour.episodeStart} style={{ marginBottom: 20 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexWrap: "wrap", gap: 6 }}>
-                      <span style={{ color: "#ef4444", fontWeight: 700, fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                        {cour.name}
-                      </span>
-                      <span style={{ color: "#666", fontSize: "0.72rem" }}>
-                        {cour.startDate} → {cour.endDate}
-                      </span>
+                  <div key={cour.episodeStart} className="ad-cour-section">
+                    <div className="ad-cour-header">
+                      <span className="ad-cour-name">{cour.name}</span>
+                      <span className="ad-cour-dates">{cour.startDate} → {cour.endDate}</span>
                     </div>
                     <div className="ad-episodes-grid">
                       {episodeNumbers.filter(ep => ep >= cour.episodeStart && ep <= cour.episodeEnd).map((ep) => {
@@ -402,12 +398,18 @@ export default function AnimeDetail() {
             {/* ─── TAB: CHARACTERS ─── */}
             {activeTab === "characters" && (
               characters === null ? (
-                <p style={{ color: "#888", textAlign: "center", padding: 32 }}>Loading characters...</p>
+                <p className="ad-tab-empty">Loading characters...</p>
               ) : characters.length > 0 ? (
                 <div className="ad-characters-grid">
                   {characters.map((c) => (
                     <div key={c.id} className="ad-character-card">
-                      <img src={c.image || "/placeholder.svg"} alt={c.name} className="ad-character-img" />
+                      {c.image ? (
+                        <img src={c.image} alt={c.name} className="ad-character-img" />
+                      ) : (
+                        <div className="ad-character-img ad-character-fallback">
+                          <Users size={20} />
+                        </div>
+                      )}
                       <div className="ad-character-info">
                         <span className="ad-character-name">{c.name}</span>
                         <span className="ad-character-role">{c.role}</span>
@@ -417,7 +419,7 @@ export default function AnimeDetail() {
                   ))}
                 </div>
               ) : (
-                <p style={{ color: "#888", textAlign: "center", padding: 32 }}>No character data available.</p>
+                <p className="ad-tab-empty">No character data available.</p>
               )
             )}
 
@@ -427,13 +429,17 @@ export default function AnimeDetail() {
                 <div className="ad-recommendations-grid">
                   {recommendations.map((r) => (
                     <div key={r.id} className="ad-recommendation-card" onClick={() => { window.scrollTo(0, 0); navigate(`/anime/${r.id}`); }}>
-                      <img src={r.image || "/placeholder.svg"} alt={r.name} />
+                      {r.image ? (
+                        <img src={r.image} alt={r.name} />
+                      ) : (
+                        <div className="ad-rec-fallback"><Film size={20} /></div>
+                      )}
                       <span className="ad-recommendation-name">{r.name}</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p style={{ color: "#666", textAlign: "center", padding: 32 }}>No recommendations available.</p>
+                <p className="ad-tab-empty">No recommendations available.</p>
               )
             )}
 

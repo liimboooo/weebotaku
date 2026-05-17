@@ -32,7 +32,7 @@ export default function ProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState("");
   const [banner, setBanner] = useState("");
   const [bannerPreview, setBannerPreview] = useState("");
-  const [statusMsg, setStatusMsg] = useState("Watching anime...");
+  const [statusMsg, setStatusMsg] = useState("");
   const [editing, setEditing] = useState(false);
   const [editingStatus, setEditingStatus] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -359,7 +359,7 @@ export default function ProfilePage() {
                             setEditingStatus(false);
                           }
                           if (e.key === "Escape") {
-                            setStatusMsg(localStorage.getItem("userStatusMessage") || "Watching anime...");
+                            setStatusMsg(localStorage.getItem("userStatusMessage") || "");
                             setEditingStatus(false);
                           }
                         }}
@@ -370,7 +370,7 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <button className="profile-status-btn" onClick={() => setEditingStatus(true)}>
-                      <PenLine size={12} /> {statusMsg}
+                      <PenLine size={12} /> {statusMsg || "Set your status..."}
                     </button>
                   )}
                 </div>

@@ -264,6 +264,7 @@
   background: rgba(230,54,54,0.08);
   border-color: rgba(230,54,54,0.15);
   color: #e63636;
+  box-shadow: inset 3px 0 0 #e63636;
 }
 
 .watch-ep-item.watched .watch-ep-num {
@@ -441,6 +442,7 @@
   background: rgba(230,54,54,0.1);
   border-color: rgba(230,54,54,0.2);
   color: #e63636;
+  box-shadow: 0 0 8px rgba(230,54,54,0.1);
 }
 
 /* ─── STATES ─── */
