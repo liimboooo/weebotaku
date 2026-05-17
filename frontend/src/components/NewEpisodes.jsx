@@ -6,11 +6,13 @@ import "./NewEpisodes.css";
 export default function NewEpisodes() {
   const navigate = useNavigate();
   const [episodes, setEpisodes] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    getNewEpisodes().then(setEpisodes).catch(() => {});
+    getNewEpisodes().then(setEpisodes).catch((err) => setError(err.message || "Failed to load episodes"));
   }, []);
 
+  if (error) return <div className="new-episodes-error">Could not load new episodes.</div>;
   if (episodes.length === 0) return null;
 
   return (

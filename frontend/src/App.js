@@ -7,6 +7,7 @@ import ToastContainer from "./components/Toast";
 import { LoadingProvider } from "./components/LoadingProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AnimatedPage from "./components/AnimatedPage";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Home from "./pages/Home";
 import AnimeDetail from "./pages/AnimeDetail";
 import SearchPage from "./pages/SearchPage";
@@ -64,7 +65,9 @@ const routePageMap = {
 function RouteShell({ children }) {
   return (
     <AnimatedPage>
-      <main className="route-content">{children}</main>
+      <ErrorBoundary>
+        <main className="route-content">{children}</main>
+      </ErrorBoundary>
     </AnimatedPage>
   );
 }

@@ -5,14 +5,16 @@ import GenericRoutePage from "../../components/GenericRoutePage";
 export default function BestAnime() {
   const [topAnime, setTopAnime] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     getAllAnime().then((all) => {
       setTopAnime([...all].sort((a, b) => b.rating - a.rating).slice(0, 10));
-    }).catch(() => {}).finally(() => setLoading(false));
+    }).catch((err) => setError(err.message || "Failed to load rankings")).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div style={{ color: "#888", textAlign: "center", padding: 40 }}>Loading rankings...</div>;
+  if (error) return <div style={{ color: "#888", textAlign: "center", padding: 40 }}>{error}</div>;
   if (topAnime.length === 0) return <div style={{ color: "#888", textAlign: "center", padding: 40 }}>No data available.</div>;
 
   return (

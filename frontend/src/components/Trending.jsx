@@ -8,11 +8,13 @@ import "./Trending.css";
 export default function Trending() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    getTrendingAnime().then(setItems).catch(() => {});
+    getTrendingAnime().then(setItems).catch((err) => setError(err.message || "Failed to load trending"));
   }, []);
 
+  if (error) return <div className="trending-error">Could not load trending anime.</div>;
   if (items.length === 0) return null;
 
   return (
