@@ -122,9 +122,11 @@ function StatsBar() {
   const stats = useMemo(() => {
     const wl = loadWatchlist();
     const history = JSON.parse(localStorage.getItem("watchHistory") || "[]");
+    const ratings = Object.keys(JSON.parse(localStorage.getItem("userRatings") || "{}")).length;
     return [
       { icon: Bookmark, label: "Watchlist", value: wl.length, cls: "bookmark" },
       { icon: Eye, label: "Episodes Watched", value: history.length, cls: "eye" },
+      { icon: Star, label: "Anime Rated", value: ratings, cls: "trophy" },
     ];
   }, []);
 
@@ -213,8 +215,13 @@ function ContinueWatchingRow() {
     <section className="home-section">
       <SectionHeader icon={Clock} title="Continue Watching" subtitle="Pick up where you left off" />
       <div className="home-empty-state">
-        <Clock size={24} />
+        <div className="home-empty-icon-wrap">
+          <Play size={24} />
+        </div>
         <p>No watch history yet — start watching to see your progress here.</p>
+        <button className="home-empty-action" onClick={() => navigate("/browse/anime")}>
+          Browse Anime
+        </button>
       </div>
     </section>
   );
@@ -293,6 +300,31 @@ function SectionHeader({ icon: Icon, title, subtitle, action }) {
   );
 }
 
+function SeasonCardReactions() {
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(() => Math.floor(Math.random() * 20) + 3);
+  const [commentCount] = useState(() => Math.floor(Math.random() * 8) + 1);
+
+  const handleLike = (e) => {
+    e.stopPropagation();
+    setLiked(prev => !prev);
+    setLikeCount(prev => liked ? prev - 1 : prev + 1);
+  };
+
+  return (
+    <div className="season-card-reactions">
+      <button className={`scr-btn ${liked ? 'scr-liked' : ''}`} onClick={handleLike}>
+        <Heart size={10} fill={liked ? "currentColor" : "none"} /> {likeCount}
+      </button>
+      <button className="scr-btn" onClick={e => e.stopPropagation()}>
+        <MessageCircle size={10} /> {commentCount}
+      </button>
+      <span className="scr-divider" />
+      <span className="scr-hot">🔥</span>
+    </div>
+  );
+}
+
 function SeasonGrid({ animeList }) {
   const navigate = useNavigate();
   const [watchlist, setWatchlist] = useState(() => loadWatchlist().map(i => i.id));
@@ -359,16 +391,7 @@ function SeasonGrid({ animeList }) {
                 <span className="season-card-eps"><Film size={10} /> {anime.episodes} ep</span>
                 {anime.genres?.[0] && <span className="season-card-tag">{anime.genres[0]}</span>}
               </div>
-              <div className="season-card-reactions">
-                <button className="scr-btn" onClick={e => e.stopPropagation()}>
-                  <Heart size={10} /> 12
-                </button>
-                <button className="scr-btn" onClick={e => e.stopPropagation()}>
-                  <MessageCircle size={10} /> 4
-                </button>
-                <span className="scr-divider" />
-                <span className="scr-hot">🔥</span>
-              </div>
+              <SeasonCardReactions />
             </div>
           </motion.div>
         ))}

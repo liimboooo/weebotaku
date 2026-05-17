@@ -171,9 +171,9 @@ body {
 
 .search-form:focus-within {
   background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 0 0 3px rgba(230, 54, 54, 0.05);
-  max-width: 300px;
+  border-color: rgba(230, 54, 54, 0.2);
+  box-shadow: 0 0 0 3px rgba(230, 54, 54, 0.06), 0 4px 20px rgba(0, 0, 0, 0.2);
+  max-width: 320px;
 }
 
 .search-icon {
@@ -396,6 +396,12 @@ body {
   justify-content: center;
   box-shadow: 0 2px 8px rgba(230, 54, 54, 0.4);
   line-height: 1;
+  animation: notif-badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes notif-badge-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 2px 8px rgba(230, 54, 54, 0.4); }
+  50% { transform: scale(1.15); box-shadow: 0 2px 12px rgba(230, 54, 54, 0.6); }
 }
 
 /* ─── More Dropdown ──────────────────────────────────── */
@@ -1079,15 +1085,16 @@ body {
     padding: 12px;
     gap: 12px;
     z-index: 999;
-    transform: translateY(-8px);
+    transform: translateY(-12px);
     opacity: 0;
     pointer-events: none;
-    transition: transform var(--duration-normal) var(--ease-out), opacity var(--duration-normal) var(--ease-out);
+    transition: transform var(--duration-slow) var(--ease-out), opacity var(--duration-slow) var(--ease-out);
   }
   .header-panel.open {
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
   }
   .search-form { max-width: none; margin: 0; }
   .search-form:focus-within { max-width: none; }

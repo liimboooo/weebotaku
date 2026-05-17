@@ -427,7 +427,7 @@ export default function Header() {
                         onChange={(e) => setStatusMessage(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') { saveStatusMessage(statusMessage); clearTimeout(statusSaveTimeoutRef.current); statusSaveTimeoutRef.current = setTimeout(() => setIsEditingStatus(false), 1500); }
-                          if (e.key === 'Escape') { setIsEditingStatus(false); setStatusMessage(localStorage.getItem('userStatusMessage') || 'Watching One Piece...'); }
+                          if (e.key === 'Escape') { setIsEditingStatus(false); setStatusMessage(localStorage.getItem('userStatusMessage') || ''); }
                         }}
                         className="profile-status-input" placeholder="Update your status..." />
                       <button className="profile-status-button" onClick={() => { saveStatusMessage(statusMessage); clearTimeout(statusSaveTimeoutRef.current); statusSaveTimeoutRef.current = setTimeout(() => setIsEditingStatus(false), 1500); }}>Save</button>

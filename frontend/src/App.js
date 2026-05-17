@@ -22,6 +22,7 @@ import MangaVault from "./pages/MangaVault";
 import MangaDetail from "./pages/MangaDetail";
 import News from "./pages/News";
 import NotFound from "./pages/NotFound";
+import Footer from "./components/Footer";
 import AMVsEdits from "./pages/Feeds/AMVsEdits";
 import WatchTogetherCreative from "./pages/Community/WatchTogetherCreative";
 import Rankings from "./pages/Rankings/Rankings";
@@ -113,6 +114,7 @@ function AppLayout() {
           <Route path="*" element={<RouteShell><NotFound /></RouteShell>} />
         </Routes>
       </AnimatePresence>
+      {!isAuthPage && <Footer />}
     </>
   );
 }

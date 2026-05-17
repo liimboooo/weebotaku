@@ -877,27 +877,36 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 48px;
-  color: #888;
+  gap: 12px;
+  padding: 64px 32px;
+  color: var(--text-tertiary);
   text-align: center;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.01);
 }
 
-.br-empty svg { color: #555; }
-.br-empty h3 { margin: 0; color: #ddd; }
-.br-empty p { margin: 0; font-size: 0.85rem; }
+.br-empty svg { color: var(--text-muted); opacity: 0.5; }
+.br-empty h3 { margin: 0; color: var(--text-primary); font-size: 1.1rem; }
+.br-empty p { margin: 0; font-size: 0.85rem; max-width: 360px; line-height: 1.6; color: var(--text-tertiary); }
 .br-retry-btn {
   margin-top: 8px;
-  padding: 8px 24px;
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 8px;
-  background: rgba(255,255,255,0.05);
-  color: #fff;
+  padding: 10px 28px;
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-full);
+  background: var(--primary-surface);
+  color: var(--primary);
   cursor: pointer;
-  font-size: 0.85rem;
-  transition: background 0.2s;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all var(--duration-normal) var(--ease-out);
 }
-.br-retry-btn:hover { background: rgba(255,255,255,0.12); }
+.br-retry-btn:hover {
+  background: rgba(230, 54, 54, 0.15);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(230, 54, 54, 0.15);
+}
 
 /* ─── ANIMATIONS ─── */
 @keyframes br-spin {

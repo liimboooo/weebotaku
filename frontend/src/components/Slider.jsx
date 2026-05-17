@@ -80,6 +80,19 @@ function SliderCard({ item, onClick }) {
 export default function Slider({ sliderData, noHeader }) {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
+  };
+
+  useState(() => {
+    setTimeout(checkScroll, 100);
+  });
 
   const scroll = (dir) => {
     if (scrollRef.current) {
@@ -100,10 +113,24 @@ export default function Slider({ sliderData, noHeader }) {
           </div>
         </div>
       )}
-      <div className="slider-track" ref={scrollRef}>
-        {sliderData.map((item) => (
-          <SliderCard key={item.id} item={item} onClick={() => navigate(`/anime/${item.id}`)} />
-        ))}
+      <div className="slider-track-wrap">
+        <div className={`slider-fade-left ${canScrollLeft ? 'visible' : ''}`} />
+        <div className={`slider-fade-right ${canScrollRight ? 'visible' : ''}`} />
+        {canScrollLeft && (
+          <button className="slider-float-arrow slider-float-left" onClick={() => scroll(-1)}>
+            <ChevronLeft size={18} />
+          </button>
+        )}
+        {canScrollRight && (
+          <button className="slider-float-arrow slider-float-right" onClick={() => scroll(1)}>
+            <ChevronRight size={18} />
+          </button>
+        )}
+        <div className="slider-track" ref={scrollRef} onScroll={checkScroll}>
+          {sliderData.map((item) => (
+            <SliderCard key={item.id} item={item} onClick={() => navigate(`/anime/${item.id}`)} />
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -27,7 +27,13 @@ export default function LiveRooms({ rooms: externalRooms, onJoin, loading }) {
       {loading ? (
         <div className="live-rooms-loading">Scanning for active transmissions...</div>
       ) : rooms.length === 0 ? (
-        <div className="live-rooms-empty">No active rooms. Start your own broadcast!</div>
+        <div className="live-rooms-empty">
+          <Wifi size={24} />
+          <p>No active rooms right now.</p>
+          <button className="live-rooms-empty-btn" onClick={() => navigate("/watch-together")}>
+            Start a Room
+          </button>
+        </div>
       ) : (
         <div className="live-rooms-grid">
           {rooms.map((room, i) => (
