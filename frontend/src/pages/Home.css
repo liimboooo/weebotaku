@@ -27,45 +27,6 @@
 /* ─── Loading Skeletons ──────────────────────────────── */
 .home-loading {
   padding: 120px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 48px;
-}
-
-.home-skeleton-row {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.home-skeleton-line {
-  height: 22px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(90deg, var(--skeleton-base) 0%, var(--skeleton-shine) 50%, var(--skeleton-base) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.8s ease-in-out infinite;
-}
-
-.home-skeleton-line.w-48 { width: 12rem; }
-
-.home-skeleton-cards {
-  display: flex;
-  gap: 16px;
-}
-
-.home-skeleton-card {
-  width: 220px;
-  height: 320px;
-  border-radius: var(--radius-lg);
-  flex-shrink: 0;
-  background: linear-gradient(90deg, var(--skeleton-base) 0%, var(--skeleton-shine) 50%, var(--skeleton-base) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.8s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
 }
 
 /* ─── Hero Section ───────────────────────────────────── */

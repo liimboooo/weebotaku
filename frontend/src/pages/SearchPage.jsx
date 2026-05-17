@@ -6,6 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import AnimatedPage from "../components/AnimatedPage";
+import Skeleton from "../components/Skeleton";
 import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchSearchAnime, fetchTopAnime, fetchAnimeGenres } from "../services/jikanApi";
@@ -190,7 +191,7 @@ export default function SearchPage() {
               </div>
               <div className="sd-pills">
                 {trendingLoading ? (
-                  [1,2,3,4,5,6,7,8].map(i => <div key={i} className="sd-skeleton" />)
+                  Array.from({length:8}, (_,i) => <Skeleton key={i} variant="text" width="120px" height="38px" style={{borderRadius:10}} />)
                 ) : (
                   trendingData.map((anime) => {
                     const t = getTrend(anime);

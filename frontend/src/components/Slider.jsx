@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Heart, Play, Star, Zap } from "lucide-react";
 import { addToWatchlist, removeFromWatchlist, loadWatchlist } from "../services/storage";
+import Skeleton from "./Skeleton";
 import "./Slider.css";
 
 function SliderCard({ item, onClick }) {
@@ -30,7 +31,7 @@ function SliderCard({ item, onClick }) {
       transition={{ type: "spring", stiffness: 300 }}
     >
       <div className="slider-card-thumb">
-        {!loaded && <div className="slider-card-skeleton" />}
+        {!loaded && <Skeleton variant="image" style={{position:"absolute",inset:0,borderRadius:0}} />}
         {imgErr ? (
           <div className="slider-card-img-fallback">{item.name?.[0] || "?"}</div>
         ) : (

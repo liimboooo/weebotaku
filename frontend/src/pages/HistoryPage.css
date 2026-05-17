@@ -82,6 +82,7 @@
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(230, 54, 54, 0.2);
   transform: translateX(10px);
+  box-shadow: var(--shadow-md);
 }
 
 .history-img-wrap {

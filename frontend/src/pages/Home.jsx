@@ -18,6 +18,7 @@ import {
   Zap,
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
+import Skeleton from "../components/Skeleton";
 import Slider from "../components/Slider";
 import LiveRooms from "../components/LiveRooms";
 import Categories from "../components/Categories";
@@ -484,13 +485,13 @@ export default function Home() {
       <AnimatedPage>
         <div className="home-container">
           <Background />
-          <div className="home-loading">
+          <div className="home-loading" style={{ padding: "24px 0", display: "flex", flexDirection: "column", gap: 32 }}>
             {[1, 2, 3].map(i => (
-              <div key={i} className="home-skeleton-row">
-                <div className="home-skeleton-line w-48" />
-                <div className="home-skeleton-cards">
+              <div key={i} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <Skeleton variant="title" width="180px" />
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
                   {[1, 2, 3, 4].map(j => (
-                    <div key={j} className="home-skeleton-card" />
+                    <Skeleton key={j} variant="card" />
                   ))}
                 </div>
               </div>

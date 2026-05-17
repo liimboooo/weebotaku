@@ -1,4 +1,5 @@
 import api from './api';
+import { awardWatchEpisode, awardRateAnime, awardLikeAnime, awardWatchlistAdd, awardDailyBonus } from './progression';
 
 // ─── Helpers ────────────────────────────────────────────
 
@@ -53,6 +54,9 @@ export function addToWatchlist(item) {
       genres: item.genres,
     }).catch(() => {});
   }
+
+  awardWatchlistAdd();
+  awardDailyBonus();
 
   window.dispatchEvent(new CustomEvent("watchlist-updated"));
 
@@ -149,6 +153,9 @@ export function addToWatchHistory(animeId, episode, animeName, animeImg) {
     }).catch(() => {});
   }
 
+  awardWatchEpisode();
+  awardDailyBonus();
+
   window.dispatchEvent(new CustomEvent("profile-data-changed"));
 }
 
@@ -162,6 +169,9 @@ export function rateAnime(animeId, rating) {
   if (isLoggedIn()) {
     api.post(`/anime/${animeId}/rate`, { rating }).catch(() => {});
   }
+
+  awardRateAnime();
+  awardDailyBonus();
 
   window.dispatchEvent(new CustomEvent("profile-data-changed"));
 }
@@ -181,6 +191,9 @@ export function toggleLikeAnime(animeId) {
   if (isLoggedIn()) {
     api.post(`/anime/${animeId}/like`).catch(() => {});
   }
+
+  awardLikeAnime();
+  awardDailyBonus();
 
   window.dispatchEvent(new CustomEvent("profile-data-changed"));
 

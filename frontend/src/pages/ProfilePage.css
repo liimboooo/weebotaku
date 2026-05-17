@@ -208,6 +208,51 @@
   box-shadow: 0 0 10px rgba(230, 54, 54, 0.06);
 }
 
+.profile-xp-row {
+  margin-bottom: 12px;
+  max-width: 400px;
+}
+
+.profile-xp-bar-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.profile-xp-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--red), #ff6b6b);
+  transition: width 0.6s ease;
+  box-shadow: 0 0 8px rgba(230, 54, 54, 0.3);
+}
+
+.profile-xp-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-xp-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--red);
+}
+
+.profile-xp-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #f97316;
+}
+
 .profile-edit-trigger {
   display: inline-flex;
   align-items: center;

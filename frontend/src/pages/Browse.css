@@ -834,7 +834,7 @@
 .br-list .br-card-overlay,
 .br-list .br-card-glow { display: none; }
 
-.br-list .br-card:hover { transform: translateY(-1px); }
+.br-list .br-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--primary-border); }
 
 /* ─── SENTINEL ─── */
 .br-sentinel { height: 1px; }

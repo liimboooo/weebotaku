@@ -7,8 +7,9 @@ import authService from "../services/authService";
 import * as tierlistService from "../services/tierlistService";
 import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
-import { formatCount, timeAgo as formatTimeAgo } from "../utils/helpers";
-import { Bookmark, Heart, Star, Clock, PenLine, LogOut, Settings, Eye, Film, Users, Video, Sparkles, Layers } from "lucide-react";
+import { formatCount, timeAgo as formatTimeAgo, notify } from "../utils/helpers";
+import { getCurrentXP, getCurrentLevel, getLevelProgress, getStreak, getBadges } from "../services/progression";
+import { Bookmark, Heart, Star, Clock, PenLine, LogOut, Settings, Eye, Film, Users, Video, Sparkles, Layers, Zap, Trophy, Flame } from "lucide-react";
 import "./ProfilePage.css";
 
 const tabs = [
@@ -136,6 +137,12 @@ export default function ProfilePage() {
   const totalCreators = formatCount(new Set(storedEdits.map(e => e.creator)).size);
   const totalViews = formatCount(storedEdits.reduce((s, e) => s + (e.views || 0), 0));
 
+  const userXP = getCurrentXP();
+  const userLevel = getCurrentLevel();
+  const xpProgress = getLevelProgress(userXP);
+  const streakData = getStreak();
+  const earnedBadges = !isRemoteProfile ? getBadges({ watchlistCount: watchlist.length, episodesWatched, ratingCount: Object.keys(rated).length }) : [];
+
   const allStats = isRemoteProfile
     ? [
         { label: "Tier Lists", value: tierLists.length, icon: Layers },
@@ -146,6 +153,7 @@ export default function ProfilePage() {
         { label: "Avg Rating", value: userAvgRating, icon: Star },
         { label: "Liked", value: liked.length, icon: Heart },
         { label: "Watched", value: animeWatched, icon: Eye },
+        { label: "Level", value: userLevel, icon: Zap },
       ];
 
   const saveProfile = async () => {
@@ -199,19 +207,27 @@ export default function ProfilePage() {
       });
       loadProfileData();
       loadTierLists();
+      const onLevelUp = (e) => {
+        const { level } = e.detail;
+        notify(`🎉 Level ${level}! You're on fire!`, "success");
+      };
+      window.addEventListener("level-up", onLevelUp);
       window.addEventListener("storage", loadProfileData);
       window.addEventListener("profile-avatar-updated", loadProfileData);
       window.addEventListener("user-status-updated", loadProfileData);
       window.addEventListener("watchlist-updated", loadProfileData);
       window.addEventListener("profile-data-changed", loadProfileData);
+      window.addEventListener("progression-updated", loadProfileData);
       window.addEventListener("focus", loadProfileData);
       const interval = setInterval(loadProfileData, 5000);
       return () => {
+        window.removeEventListener("level-up", onLevelUp);
         window.removeEventListener("storage", loadProfileData);
         window.removeEventListener("profile-avatar-updated", loadProfileData);
         window.removeEventListener("user-status-updated", loadProfileData);
         window.removeEventListener("watchlist-updated", loadProfileData);
         window.removeEventListener("profile-data-changed", loadProfileData);
+        window.removeEventListener("progression-updated", loadProfileData);
         window.removeEventListener("focus", loadProfileData);
         clearInterval(interval);
       };
@@ -361,12 +377,23 @@ export default function ProfilePage() {
                 <div className="profile-badges-row">
                   <span className="profile-badge">Member since {remoteUser?.memberSince || localStorage.getItem("memberSince") || new Date().getFullYear()}</span>
                   {isRemoteProfile && (
-                    <span className="hud-clearance-badge">Level {((username?.length || 0) % 5) + 1} Operator</span>
+                    <span className="hud-clearance-badge">Level {userLevel} Otaku</span>
                   )}
-                  {!isRemoteProfile && watchlist.length >= 5 && <span className="profile-badge profile-badge-accent">Collector</span>}
-                  {!isRemoteProfile && watchlist.length >= 10 && <span className="profile-badge profile-badge-accent">Hardcore Fan</span>}
-                  {!isRemoteProfile && episodesWatched >= 30 && <span className="profile-badge profile-badge-accent">On Fire</span>}
+                  {!isRemoteProfile && earnedBadges.slice(0, 4).map(b => (
+                    <span key={b.key} className="profile-badge profile-badge-accent" title={b.desc}>{b.icon} {b.label}</span>
+                  ))}
                 </div>
+                {!isRemoteProfile && (
+                  <div className="profile-xp-row">
+                    <div className="profile-xp-bar-track">
+                      <div className="profile-xp-bar-fill" style={{ width: `${xpProgress}%` }} />
+                    </div>
+                    <div className="profile-xp-info">
+                      <span className="profile-xp-level"><Zap size={12} /> Level {userLevel}</span>
+                      <span className="profile-xp-streak">{streakData.current > 0 && <><Flame size={12} /> {streakData.current} day streak</>}</span>
+                    </div>
+                  </div>
+                )}
                 {currentWatch && (
                   <div className="profile-current-watch">
                     <div className="pcw-dot" />

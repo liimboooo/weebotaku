@@ -60,10 +60,6 @@
   transition: transform var(--duration-slow) var(--ease-out);
 }
 
-.live-room-card:hover .live-room-img img {
-  transform: scale(1.04);
-}
-
 .live-room-badge {
   position: absolute;
   top: 10px;

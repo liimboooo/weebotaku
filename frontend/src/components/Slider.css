@@ -298,15 +298,4 @@
 
 .slider-card:hover .slider-card-glow { opacity: 1; }
 
-.slider-card-skeleton {
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.03);
-  animation: skeleton-pulse 1.4s ease-in-out infinite;
-  z-index: 1;
-}
 
-@keyframes skeleton-pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.7; }
-}
