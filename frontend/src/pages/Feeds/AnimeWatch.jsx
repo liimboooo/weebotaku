@@ -16,6 +16,8 @@ function replaceEpInUrl(url, animeId, newEp) {
 
 const MAX_EMBED_EPISODES = 50;
 
+const EMBED_FAIL_EP_LIMIT = 3;
+
 export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange, totalEpisodes = 12 }) {
   const [episodes, setEpisodes] = useState([]);
   const [epIndex, setEpIndex] = useState(Math.max(0, startEp - 1));
@@ -25,6 +27,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [serverIndex, setServerIndex] = useState(0);
   const [streamUrl, setStreamUrl] = useState("");
   const [error, setError] = useState("");
+  const [iframeError, setIframeError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
   const [useEmbedFallback, setUseEmbedFallback] = useState(false);
@@ -32,6 +35,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const autoNextTimer = useRef(null);
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
+  const failedServers = useRef(new Set());
 
   const isEmbedSource = ["embed"].includes(anime.source) || useEmbedFallback;
 
@@ -72,6 +76,8 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   useEffect(() => {
     if (!isEmbedSource || !servers[serverIndex]) return;
     const ep = epIndex + 1;
+    setIframeError(false);
+    failedServers.current = new Set();
     setStreamUrl(replaceEpInUrl(servers[serverIndex].url, anime.anilistId || anime.id, ep));
   }, [epIndex, serverIndex, isEmbedSource, servers, anime.id]);
 
@@ -119,7 +125,36 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     }
   }, [epIndex, episodes]);
 
-  const switchServer = (idx) => { if (servers[idx]) { setServerIndex(idx); if (!isEmbedSource) setStreamUrl(servers[idx].url); } };
+  const switchServer = (idx) => {
+    if (servers[idx]) {
+      setServerIndex(idx);
+      setIframeError(false);
+      failedServers.current = new Set();
+      if (!isEmbedSource) setStreamUrl(servers[idx].url);
+    }
+  };
+
+  const tryNextServer = useCallback(() => {
+    const nextIdx = serverIndex + 1;
+    if (servers[nextIdx]) {
+      failedServers.current.add(serverIndex);
+      setServerIndex(nextIdx);
+      setIframeError(false);
+    } else {
+      setIframeError(true);
+    }
+  }, [serverIndex, servers]);
+
+  const handleIframeError = useCallback(() => {
+    failedServers.current.add(serverIndex);
+    const nextIdx = serverIndex + 1;
+    if (servers[nextIdx]) {
+      setIframeError(false);
+      setServerIndex(nextIdx);
+    } else {
+      setIframeError(true);
+    }
+  }, [serverIndex, servers]);
   const goPrev = () => setEpIndex(i => { const n = Math.max(0, i - 1); if (onEpisodeChange && episodes[n]) onEpisodeChange(episodes[n].episode); return n; });
   const goNext = () => setEpIndex(i => { const n = Math.min(episodes.length - 1, i + 1); if (onEpisodeChange && episodes[n]) onEpisodeChange(episodes[n].episode); return n; });
 
@@ -183,7 +218,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                   </div>
                 </div>
               )}
-              {!loading && !error && streamUrl && !streamLoading && (
+              {!loading && !error && streamUrl && !streamLoading && !iframeError && (
                 <iframe
                   ref={iframeRef}
                   key={`${episode?.episode || 0}-${serverIndex}`}
@@ -192,7 +227,37 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                   title={`Episode ${episode?.episode || ""}`}
                   allow="autoplay; fullscreen; encrypted-media"
                   allowFullScreen
+                  onError={handleIframeError}
                 />
+              )}
+              {!loading && !error && iframeError && streamUrl && (
+                <div className="watch-center">
+                  <div className="watch-err-badge">!</div>
+                  <p className="watch-err-text">Episode not available on this source.</p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {serverIndex < servers.length - 1 && (
+                      <button className="watch-btn" onClick={tryNextServer}>
+                        Try Next Source
+                      </button>
+                    )}
+                    {epIndex < episodes.length - 1 && (
+                      <button className="watch-btn watch-btn-ghost" onClick={() => {
+                        setIframeError(false);
+                        failedServers.current = new Set();
+                        setEpIndex(i => i + 1);
+                      }}>
+                        Skip to Next Episode
+                      </button>
+                    )}
+                    <button className="watch-btn watch-btn-ghost" onClick={() => {
+                      setIframeError(false);
+                      failedServers.current = new Set();
+                      setStreamRetryCount(c => c + 1);
+                    }}>
+                      Retry
+                    </button>
+                  </div>
+                </div>
               )}
               {!loading && !error && streamLoading && (
                 <div className="watch-center">
