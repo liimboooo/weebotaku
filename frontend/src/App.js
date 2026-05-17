@@ -6,6 +6,7 @@ import Header from "./components/Header";
 import ToastContainer from "./components/Toast";
 import { LoadingProvider } from "./components/LoadingProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AnimatedPage from "./components/AnimatedPage";
 import Home from "./pages/Home";
 import AnimeDetail from "./pages/AnimeDetail";
 import SearchPage from "./pages/SearchPage";
@@ -60,15 +61,18 @@ const routePageMap = {
 
 };
 
+function RouteShell({ children }) {
+  return (
+    <AnimatedPage>
+      <main className="route-content">{children}</main>
+    </AnimatedPage>
+  );
+}
+
 function AppLayout() {
   const location = useLocation();
   const isAuthPage = location.pathname === "/";
   const token = localStorage.getItem('token');
-
-  // TODO: re-enable auth guard after UI testing
-  // if (!token && !isAuthPage) {
-  //   return <Navigate to="/" state={{ from: location.pathname }} replace />;
-  // }
 
   return (
     <>
@@ -76,34 +80,34 @@ function AppLayout() {
       {!isAuthPage && <Header />}
       <ToastContainer />
       <AnimatePresence mode="wait">
-        <Routes>
+        <Routes location={location} key={location.pathname}>
           <Route path="/" element={token ? <Navigate to="/home" replace /> : <AuthPage />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/browse/anime" element={<Browse />} />
-          <Route path="/browse/manga" element={<MangaVault />} />
-          <Route path="/watch-together" element={<WatchTogetherCreative />} />
-          <Route path="/watch-together/new" element={<WatchTogetherCreative />} />
-          <Route path="/feeds/amvs" element={<AMVsEdits />} />
-          <Route path="/arena" element={<Rankings />} />
-          <Route path="/rankings/anime" element={<BestAnime />} />
-          <Route path="/rankings/manga" element={<TierLists />} />
-          <Route path="/arena/tier-lists" element={<TierLists />} />
-          <Route path="/arena/tier-lists/:id" element={<TierListView />} />
-          <Route path="/tierlist/:id" element={<TierListView />} />
-          <Route path="/settings" element={<GenericRoutePage {...routePageMap.settings} />} />
-          <Route path="/help" element={<GenericRoutePage {...routePageMap.help} />} />
-          <Route path="/system/rules" element={<Rules />} />
-          <Route path="/report" element={<Report />} />
-          <Route path="/anime/:id" element={<AnimeDetail />} />
-          <Route path="/manga/:id" element={<MangaDetail />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/news" element={<News />} />
-          <Route path="/watchlist" element={<ProtectedRoute><WatchlistPage /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-          <Route path="/profile/:username" element={<ProfilePage />} />
-          <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+          <Route path="/home" element={<RouteShell><Home /></RouteShell>} />
+          <Route path="/browse/anime" element={<RouteShell><Browse /></RouteShell>} />
+          <Route path="/browse/manga" element={<RouteShell><MangaVault /></RouteShell>} />
+          <Route path="/watch-together" element={<RouteShell><WatchTogetherCreative /></RouteShell>} />
+          <Route path="/watch-together/new" element={<RouteShell><WatchTogetherCreative /></RouteShell>} />
+          <Route path="/feeds/amvs" element={<RouteShell><AMVsEdits /></RouteShell>} />
+          <Route path="/arena" element={<RouteShell><Rankings /></RouteShell>} />
+          <Route path="/rankings/anime" element={<RouteShell><BestAnime /></RouteShell>} />
+          <Route path="/rankings/manga" element={<RouteShell><TierLists /></RouteShell>} />
+          <Route path="/arena/tier-lists" element={<RouteShell><TierLists /></RouteShell>} />
+          <Route path="/arena/tier-lists/:id" element={<RouteShell><TierListView /></RouteShell>} />
+          <Route path="/tierlist/:id" element={<RouteShell><TierListView /></RouteShell>} />
+          <Route path="/settings" element={<RouteShell><GenericRoutePage {...routePageMap.settings} /></RouteShell>} />
+          <Route path="/help" element={<RouteShell><GenericRoutePage {...routePageMap.help} /></RouteShell>} />
+          <Route path="/system/rules" element={<RouteShell><Rules /></RouteShell>} />
+          <Route path="/report" element={<RouteShell><Report /></RouteShell>} />
+          <Route path="/anime/:id" element={<RouteShell><AnimeDetail /></RouteShell>} />
+          <Route path="/manga/:id" element={<RouteShell><MangaDetail /></RouteShell>} />
+          <Route path="/search" element={<RouteShell><SearchPage /></RouteShell>} />
+          <Route path="/news" element={<RouteShell><News /></RouteShell>} />
+          <Route path="/watchlist" element={<RouteShell><ProtectedRoute><WatchlistPage /></ProtectedRoute></RouteShell>} />
+          <Route path="/profile" element={<RouteShell><ProtectedRoute><ProfilePage /></ProtectedRoute></RouteShell>} />
+          <Route path="/profile/:username" element={<RouteShell><ProfilePage /></RouteShell>} />
+          <Route path="/history" element={<RouteShell><ProtectedRoute><HistoryPage /></ProtectedRoute></RouteShell>} />
           <Route path="/following" element={<Navigate to="/home" replace />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<RouteShell><NotFound /></RouteShell>} />
         </Routes>
       </AnimatePresence>
     </>
