@@ -44,11 +44,30 @@ const itemVariants = {
 export default function HistoryPage() {
   const navigate = useNavigate();
   const [history, setHistory] = useState([]);
+  const [animeMap, setAnimeMap] = useState({});
 
   useEffect(() => {
     const storedHistory = JSON.parse(localStorage.getItem("watchHistory") || "[]");
     setHistory(storedHistory);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const ids = [...new Set(history.map((h) => h.animeId).filter(Boolean))];
+    if (ids.length === 0) return;
+    (async () => {
+      const results = await Promise.all(ids.map((id) => getAnimeById(id)));
+      if (cancelled) return;
+      const map = {};
+      ids.forEach((id, i) => {
+        if (results[i]) map[id] = results[i];
+      });
+      setAnimeMap((prev) => ({ ...prev, ...map }));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [history]);
 
   const clearHistory = () => {
     localStorage.removeItem("watchHistory");
@@ -125,8 +144,7 @@ export default function HistoryPage() {
           >
             <AnimatePresence mode="popLayout">
               {filteredHistory.map((item) => {
-                const staticAnime = getAnimeById(item.animeId);
-                const anime = staticAnime || (item.animeName ? { name: item.animeName, img: item.animeImg || "", episodes: null, id: item.animeId } : null);
+                const anime = animeMap[item.animeId] || (item.animeName ? { name: item.animeName, img: item.animeImg || "", episodes: null, id: item.animeId } : null);
                 if (!anime) return null;
 
                 const date = new Date(item.timestamp).toLocaleDateString(undefined, {

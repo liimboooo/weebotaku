@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Play, Bookmark, Heart, Share2, Bell, Star, Tv, Film, Users, MessageSquare } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
-import { fetchAnimeById as jikanFetchAnime, fetchAnimeCharacters, fetchAnimeRecommendations, fetchAiringSchedule } from "../services/jikanApi";
+import { fetchAnimeCharacters, fetchAnimeRecommendations, fetchAiringSchedule } from "../services/jikanApi";
 
 import { addToWatchlist, removeFromWatchlist, isInWatchlist, rateAnime as syncRateAnime, toggleLikeAnime, addToWatchHistory } from "../services/storage";
 import { addNotification } from "../services/notificationService";
@@ -26,12 +26,12 @@ export default function AnimeDetail() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const staticAnime = getAnimeById(parseInt(id));
-  const [jikanAnime, setJikanAnime] = useState(null);
+  const [apiAnime, setApiAnime] = useState(null);
+  const [animeLoading, setAnimeLoading] = useState(true);
+  const [animeError, setAnimeError] = useState("");
   const [characters, setCharacters] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
   const [schedule, setSchedule] = useState(null);
-  const [jikanError, setJikanError] = useState("");
 
   const [activeTab, setActiveTab] = useState("episodes");
   const [selectedEp, setSelectedEp] = useState(1);
@@ -49,8 +49,8 @@ export default function AnimeDetail() {
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
 
-  const anime = jikanAnime || staticAnime;
-  const malId = staticAnime?.malId || parseInt(id);
+  const anime = apiAnime;
+  const malId = anime?.malId || parseInt(id);
   const totalEps = anime?.episodes || 12;
 
   useEffect(() => {
@@ -62,14 +62,14 @@ export default function AnimeDetail() {
   }, [id, searchParams]);
 
   useEffect(() => {
-    setJikanError("");
-    if (!staticAnime) {
-      const timeout = setTimeout(() => setJikanError("Failed to load anime details. Check your connection."), 15000);
-      jikanFetchAnime(malId).then((r) => { clearTimeout(timeout); setJikanAnime(r); }).catch(() => { clearTimeout(timeout); setJikanError("Could not load this anime. It may not be available."); });
-    }
-    fetchAnimeCharacters(malId).then(setCharacters).catch(() => {});
-    fetchAnimeRecommendations(malId).then(setRecommendations).catch(() => {});
-  }, [id, staticAnime, malId]);
+    let cancelled = false;
+    setAnimeLoading(true);
+    setAnimeError("");
+    getAnimeById(id).then((a) => { if (!cancelled) { setApiAnime(a); setAnimeLoading(false); if (!a) setAnimeError("Could not load this anime."); } }).catch(() => { if (!cancelled) { setAnimeLoading(false); setAnimeError("Failed to load anime details."); } });
+    fetchAnimeCharacters(parseInt(id)).then(setCharacters).catch(() => {});
+    fetchAnimeRecommendations(parseInt(id)).then(setRecommendations).catch(() => {});
+    return () => { cancelled = true; };
+  }, [id]);
 
   useEffect(() => {
     if (!anime) return;
@@ -170,37 +170,29 @@ export default function AnimeDetail() {
     syncRateAnime(id, rating);
   };
 
-  if (!anime) {
-    if (!staticAnime && jikanAnime === null) {
-      return (
-        <AnimatedPage>
-          <div className="anime-detail-page">
-            <Background />
-            <div className="ad-loading">
-              {jikanError ? (
-                <>
-                  <p style={{ color: "#e63636", fontSize: 18, textAlign: "center" }}>{jikanError}</p>
-                  <button onClick={() => navigate(-1)} style={{ marginTop: 16, padding: "8px 20px", borderRadius: 8, border: "1px solid #333", background: "transparent", color: "#fff", cursor: "pointer" }}>Go back</button>
-                </>
-              ) : (
-                <>
-                  <div className="ad-loading-pulse" />
-                  <div className="ad-loading-pulse" />
-                  <div className="ad-loading-pulse" />
-                </>
-              )}
-            </div>
-          </div>
-        </AnimatedPage>
-      );
-    }
+  if (animeLoading) {
     return (
       <AnimatedPage>
         <div className="anime-detail-page">
           <Background />
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-            <h2 style={{ color: "#888" }}>Anime not found</h2>
-            <button onClick={() => navigate(-1)} style={{ marginTop: 12, padding: "8px 20px", borderRadius: 8, border: "1px solid #333", background: "transparent", color: "#fff", cursor: "pointer" }}>Go back</button>
+          <div className="ad-loading">
+            <div className="ad-loading-pulse" />
+            <div className="ad-loading-pulse" />
+            <div className="ad-loading-pulse" />
+          </div>
+        </div>
+      </AnimatedPage>
+    );
+  }
+
+  if (!anime || animeError) {
+    return (
+      <AnimatedPage>
+        <div className="anime-detail-page">
+          <Background />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 16 }}>
+            <p style={{ color: "#e63636", fontSize: 18, textAlign: "center" }}>{animeError || "Anime not found"}</p>
+            <button onClick={() => navigate(-1)} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid #333", background: "transparent", color: "#fff", cursor: "pointer" }}>Go back</button>
           </div>
         </div>
       </AnimatedPage>

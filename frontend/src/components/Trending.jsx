@@ -1,22 +1,23 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { TrendingUp } from "lucide-react";
+import { getTrendingAnime } from "../data/animeData";
 import "./Trending.css";
 
 export default function Trending() {
   const navigate = useNavigate();
+  const [items, setItems] = useState([]);
 
-  const trendingItems = [
-    { id: 2, name: "One Piece", img: "/beta-2.jpg", rating: 9.1 },
-    { id: 6, name: "Jujutsu Kaisen", img: "/beta-3.jpg", rating: 8.95 },
-    { id: 4, name: "Attack on Titan", img: "/beta-1.jpg", rating: 9.0 },
-    { id: 12, name: "Spy x Family", img: "/beta-3.jpg", rating: 8.6 },
-  ];
+  useEffect(() => {
+    getTrendingAnime().then(setItems).catch(() => {});
+  }, []);
+
+  if (items.length === 0) return null;
 
   return (
     <div className="trending-row">
-      {trendingItems.map((item, i) => (
+      {items.map((item, i) => (
         <motion.div
           key={item.id}
           className="trending-card"
@@ -28,10 +29,14 @@ export default function Trending() {
           whileHover={{ y: -6, scale: 1.02 }}
         >
           <div className="trending-rank">#{i + 1}</div>
-          <img src={item.img} alt={item.name} />
-          <div className="trending-info">
-            <h4>{item.name}</h4>
-            <span><TrendingUp size={12} color="#e63636" /> {item.rating}</span>
+          <div className="trending-card-img">
+            <img src={item.img} alt={item.name} loading="lazy" />
+          </div>
+          <div className="trending-card-info">
+            <div className="trending-card-title">{item.name}</div>
+            <div className="trending-card-rating">
+              <TrendingUp size={12} /> {item.rating.toFixed(1)}
+            </div>
           </div>
         </motion.div>
       ))}

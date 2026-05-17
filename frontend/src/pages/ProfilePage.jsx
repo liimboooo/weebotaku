@@ -42,6 +42,7 @@ export default function ProfilePage() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [remoteUser, setRemoteUser] = useState(null);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [loadedAnime, setLoadedAnime] = useState({});
 
   const loadTierLists = async () => {
     setTierListsLoading(true);
@@ -76,15 +77,35 @@ export default function ProfilePage() {
     setHistory(storedH.slice(0, 10));
   };
 
+  useEffect(() => {
+    const ids = new Set();
+    liked.forEach(id => ids.add(id));
+    Object.keys(rated).forEach(id => ids.add(parseInt(id)));
+    history.forEach(item => ids.add(item.animeId));
+    const idsArr = [...ids].filter(Boolean);
+    if (idsArr.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const results = await Promise.all(idsArr.map(id => getAnimeById(id)));
+      if (cancelled) return;
+      const map = {};
+      idsArr.forEach((id, i) => {
+        if (results[i]) map[id] = results[i];
+      });
+      setLoadedAnime(prev => ({ ...prev, ...map }));
+    })();
+    return () => { cancelled = true; };
+  }, [liked, rated, history]);
+
   const watchlistAnime = watchlist.filter(Boolean);
   const episodesWatched = history.length;
   const animeWatched = new Set(history.map(h => h.animeId)).size;
-  const likedAnime = liked.map((id) => getAnimeById(id)).filter(Boolean);
+  const likedAnime = liked.map((id) => loadedAnime[id]).filter(Boolean);
 
   const ratedAnime = Object.entries(rated)
     .map(([id, rating]) => {
       const numId = parseInt(id);
-      const anime = getAnimeById(numId) || watchlist.find((w) => w.id === numId);
+      const anime = loadedAnime[numId] || watchlist.find((w) => w.id === numId);
       return anime ? { anime, rating } : null;
     })
     .filter(Boolean);
@@ -498,7 +519,7 @@ export default function ProfilePage() {
                 {history.length > 0 ? (
                   <div className="activity-timeline">
                     {history.map((item, i) => {
-                      const staticAnime = getAnimeById(item.animeId);
+                      const staticAnime = loadedAnime[item.animeId];
                       const anime = staticAnime || (item.animeName ? { id: item.animeId, name: item.animeName, img: item.animeImg || "" } : null);
                       if (!anime) return null;
                       return (

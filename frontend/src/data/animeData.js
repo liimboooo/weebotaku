@@ -1,386 +1,287 @@
-export const animeDatabase = {
-  1: {
-    id: 1,
-    name: "Naruto",
-    malId: 20,
-    type: "TV",
-    img: "/beta-1.jpg",
-    rating: 8.8,
-    votes: 2540,
-    year: 2002,
-    episodes: 220,
-    status: "Completed",
-    genres: ["Action", "Adventure", "Shonen"],
-    synopsis:
-      "Naruto Uzumaki, a mischievous adolescent ninja, struggles as he searches for recognition and dreams of becoming the Hokage, the village's leader and strongest ninja.",
-    director: "Hayato Date",
-    studio: "Pierrot",
-    season: "Fall 2002",
-    trend: "+15%",
-    description: "A young ninja chasing his dream to become Hokage.",
-    currentEp: 220,
-    nextEpDate: "Ended",
-    imdbId: "tt0409591",
-    trailerUrl: "https://www.youtube-nocookie.com/embed/Rk6L7WvrE0c",
-    seasons: [
-      { name: "Original Series", episodes: 220 },
-      { name: "Shippuden", episodes: 500 }
-    ]
-  },
-  2: {
-    id: 2,
-    name: "One Piece",
-    malId: 21,
-    type: "TV",
-    img: "/beta-2.jpg",
-    rating: 9.1,
-    votes: 3120,
-    year: 1999,
-    episodes: 1100,
-    status: "Ongoing",
-    genres: ["Action", "Adventure", "Comedy", "Fantasy"],
-    synopsis:
-      "Gol D. Roger was known as the Pirate King, the strongest man in the world. His final words before his execution ignited the Great Age of Piracy, sending countless souls to the seas.",
-    director: "Konosuke Uda",
-    studio: "Toei Animation",
-    season: "Fall 1999",
-    trend: "+22%",
-    description: "The greatest adventure on the seas.",
-    currentEp: 1100,
-    nextEpDate: "May 4, 2026",
-    imdbId: "tt0388629",
-    trailerUrl: "https://www.youtube-nocookie.com/embed/S8_YwFLCh4U",
-    airingDay: "Sunday"
-  },
-  3: {
-    id: 3,
-    name: "Demon Slayer",
-    malId: 38000,
-    type: "TV",
-    img: "/beta-3.jpg",
-    rating: 8.9,
-    votes: 2890,
-    year: 2019,
-    episodes: 55,
-    status: "Ongoing",
-    genres: ["Action", "Adventure", "Shonen", "Supernatural"],
-    synopsis:
-      "Tanjiro returns home to find his entire family slaughtered by demons. To his surprise, his youngest sister Nezuko is still alive, but she has been transformed into a demon herself.",
-    director: "Haruo Sotozaki",
-    studio: "ufotable",
-    season: "Spring 2019",
-    trend: "+18%",
-    description: "A quest to save humanity from demons.",
-    currentEp: 55,
-    nextEpDate: "May 10, 2026",
-    imdbId: "tt9335440",
-    trailerUrl: "https://www.youtube-nocookie.com/embed/VQGC0Q3tZ4U",
-    airingDay: "Sunday",
-    seasons: [
-      { name: "Season 1", episodes: 26 },
-      { name: "Mugen Train Arc", episodes: 7 },
-      { name: "Entertainment District Arc", episodes: 11 },
-      { name: "Swordsmith Village Arc", episodes: 11 }
-    ]
-  },
-  4: {
-    id: 4,
-    name: "Attack on Titan",
-    malId: 16498,
-    type: "TV",
-    img: "/beta-1.jpg",
-    rating: 9.0,
-    votes: 3540,
-    year: 2013,
-    episodes: 87,
-    status: "Completed",
-    genres: ["Action", "Drama", "Fantasy", "Mystery"],
-    synopsis:
-      "In a world where humanity lives within cities surrounded by enormous walls, a young boy named Eren Yeager vows to destroy the Titans after they break through the wall and destroy his hometown.",
-    director: "Tetsurō Araki",
-    studio: "Wit Studio / MAPPA",
-    season: "Spring 2013",
-    trend: "+25%",
-    description: "Humanity's last stand against titans.",
-    currentEp: 87,
-    nextEpDate: "Ended",
-    imdbId: "tt2560140",
-    trailerUrl: "https://www.youtube-nocookie.com/embed/MGRmZyfzm_w",
-    seasons: [
-      { name: "Season 1", episodes: 25 },
-      { name: "Season 2", episodes: 12 },
-      { name: "Season 3 Part 1", episodes: 12 },
-      { name: "Season 3 Part 2", episodes: 10 },
-      { name: "The Final Season Part 1", episodes: 16 },
-      { name: "The Final Season Part 2", episodes: 12 }
-    ]
-  },
-  5: {
-    id: 5,
-    name: "Bleach",
-    malId: 269,
-    type: "TV",
-    img: "/beta-2.jpg",
-    rating: 8.7,
-    votes: 2210,
-    year: 2004,
-    episodes: 366,
-    status: "Ongoing",
-    genres: ["Action", "Adventure", "Shonen", "Supernatural"],
-    synopsis:
-      "Ichigo Kurosaki, a teenager with the ability to see ghosts, gains the power of a Soul Reaper and must defend the living world from evil spirits called Hollows.",
-    director: "Noriyuki Abe",
-    studio: "Pierrot",
-    season: "Fall 2004",
-    trend: "+12%",
-    description: "Protect the living world from spirits.",
-    currentEp: 366,
-    nextEpDate: "May 7, 2026",
-    imdbId: "tt0434665",
-    trailerUrl: "https://www.youtube-nocookie.com/embed/iIGnSsCCrGc",
-    airingDay: "Monday"
-  },
-  6: {
-    id: 6,
-    name: "Jujutsu Kaisen",
-    malId: 40748,
-    type: "TV",
-    img: "/beta-3.jpg",
-    rating: 8.95,
-    votes: 2780,
-    year: 2020,
-    episodes: 48,
-    status: "Ongoing",
-    genres: ["Action", "Shonen", "Supernatural", "Horror"],
-    synopsis:
-      "Yuji Itadori, an unnaturally fit high school student, joins a secret organization of sorcerers to kill a powerful curse named Ryomen Sukuna, of whom Yuji becomes the host.",
-    director: "Sunghoo Park",
-    studio: "MAPPA",
-    season: "Fall 2020",
-    trend: "+30%",
-    description: "Fight curses and protect humanity.",
-    currentEp: 48,
-    nextEpDate: "May 15, 2026",
-    imdbId: "tt12343534",
-    trailerUrl: "https://www.youtube-nocookie.com/embed/p5J2sYyHl4o",
-    airingDay: "Thursday"
-  },
-  7: {
-    id: 7,
-    name: "My Hero Academia",
-    malId: 31964,
-    type: "TV",
-    img: "/beta-1.jpg",
-    rating: 8.5,
-    votes: 2100,
-    year: 2016,
-    episodes: 138,
-    status: "Ongoing",
-    genres: ["Action", "Comedy", "Shonen", "Superhero"],
-    synopsis:
-      "In a world where most people have superpowers called Quirks, Izuku Midoriya is born without one. But his dream of becoming a hero like All Might never wavers.",
-    director: "Kenji Nagasaki",
-    studio: "Bones",
-    season: "Spring 2016",
-    trend: "+8%",
-    description: "A quirkless boy's journey to become the greatest hero.",
-    currentEp: 138,
-    nextEpDate: "May 3, 2026",
-    imdbId: "tt5626028",
-    trailerUrl: "https://www.youtube-nocookie.com/embed/CcooCHrnCSE",
-    airingDay: "Saturday"
-  },
-  8: {
-    id: 8,
-    name: "Steins;Gate",
-    malId: 9253,
-    type: "TV",
-    img: "/beta-2.jpg",
-    rating: 9.2,
-    votes: 2950,
-    year: 2011,
-    episodes: 24,
-    status: "Completed",
-    genres: ["Sci-Fi", "Thriller", "Drama", "Mystery"],
-    synopsis:
-      "Self-proclaimed mad scientist Rintaro Okabe accidentally discovers a method of time travel using a modified microwave. As he experiments, he finds himself entangled in a conspiracy.",
-    director: "Hiroshi Hamasaki",
-    studio: "White Fox",
-    season: "Spring 2011",
-    trend: "+35%",
-    description: "A mind-bending journey through time.",
-    currentEp: 24,
-    nextEpDate: "Ended",
-    imdbId: "tt1910272",
-    trailerUrl: "https://www.youtube-nocookie.com/embed/2IBxR0i_DI0"
-  },
-  9: {
-    id: 9,
-    name: "Fullmetal Alchemist",
-    malId: 5114,
-    type: "TV",
-    img: "/beta-3.jpg",
-    rating: 9.15,
-    votes: 3200,
-    year: 2009,
-    episodes: 64,
-    status: "Completed",
-    genres: ["Action", "Adventure", "Drama", "Fantasy"],
-    synopsis:
-      "Two brothers use alchemy to try to resurrect their dead mother, but the ritual goes horribly wrong. Now they must search for the Philosopher's Stone to restore their bodies.",
-    director: "Yasuhiro Irie",
-    studio: "Bones",
-    season: "Spring 2009",
-    trend: "+20%",
-    description: "Two brothers on a quest for redemption.",
-    currentEp: 64,
-    nextEpDate: "Ended",
-    imdbId: "tt1592154",
-    trailerUrl: "https://www.youtube-nocookie.com/embed/5E4E0RzwkEM"
-  },
-  10: {
-    id: 10,
-    name: "Death Note",
-    malId: 1535,
-    type: "TV",
-    img: "/beta-1.jpg",
-    rating: 9.0,
-    votes: 3400,
-    year: 2006,
-    episodes: 37,
-    status: "Completed",
-    genres: ["Mystery", "Thriller", "Supernatural", "Psychological"],
-    synopsis:
-      "Light Yagami, a brilliant student, discovers a supernatural notebook that grants its user the ability to kill anyone whose name and face they know. He decides to cleanse the world of criminals.",
-    director: "Tetsurō Araki",
-    studio: "Madhouse",
-    season: "Fall 2006",
-    trend: "+28%",
-    description: "A genius with the power to kill with a notebook.",
-    currentEp: 37,
-    nextEpDate: "Ended",
-    imdbId: "tt0877057",
-    trailerUrl: "https://www.youtube-nocookie.com/embed/TBPpL5qy4is"
-  },
-  11: {
-    id: 11,
-    name: "Hunter x Hunter",
-    malId: 11061,
-    type: "TV",
-    img: "/beta-2.jpg",
-    rating: 9.1,
-    votes: 2800,
-    year: 2011,
-    episodes: 148,
-    status: "Completed",
-    genres: ["Action", "Adventure", "Fantasy", "Shonen"],
-    synopsis:
-      "Gon Freecss discovers that his absent father is actually a world-renowned Hunter. He sets out on a journey to become a Hunter himself and eventually find his father.",
-    director: "Hiroshi Kōjina",
-    studio: "Madhouse",
-    season: "Fall 2011",
-    trend: "+19%",
-    description: "A boy's journey to find his legendary father.",
-    currentEp: 148,
-    nextEpDate: "Ended",
-    imdbId: "tt2098220",
-    trailerUrl: "https://www.youtube-nocookie.com/embed/d6kBeJj1R5I"
-  },
-  12: {
-    id: 12,
-    name: "Spy x Family",
-    malId: 50265,
-    type: "TV",
-    img: "/beta-3.jpg",
-    rating: 8.6,
-    votes: 2400,
-    year: 2022,
-    episodes: 37,
-    status: "Ongoing",
-    genres: ["Action", "Comedy", "Slice of Life", "Spy"],
-    synopsis:
-      "A spy must build a fake family to execute a mission, not realizing that the girl he adopts as his daughter is a telepath, and the woman he agrees to be in a sham marriage with is a skilled assassin.",
-    director: "Kazuhiro Furuhashi",
-    studio: "Wit Studio / CloverWorks",
-    season: "Spring 2022",
-    trend: "+26%",
-    description: "A family of secrets with a hilarious twist.",
-    currentEp: 37,
-    nextEpDate: "May 6, 2026",
-    imdbId: "tt13706018",
-    trailerUrl: "https://www.youtube-nocookie.com/embed/GjUQVwY_3iA"
-  },
-  13: {
-    id: 13,
-    name: "Re:Zero kara Hajimeru Isekai Seikatsu",
-    malId: 31240,
-    type: "TV",
-    img: "https://cdn.myanimelist.net/images/anime/1522/128038.jpg",
-    rating: 8.2,
-    votes: 1800,
-    year: 2016,
-    episodes: 25,
-    status: "Completed",
-    genres: ["Drama", "Fantasy", "Psychological", "Thriller"],
-    synopsis:
-      "Subaru Natsuki is suddenly transported to another world after leaving a convenience store. With no special powers, he discovers he has the ability to return by death, forcing him to relive traumatic events over and over.",
-    director: "Masaharu Watanabe",
-    studio: "White Fox",
-    season: "Spring 2016",
-    trend: "+28%",
-    description: "A boy's struggle to survive in a fantasy world.",
-    currentEp: 25,
-    nextEpDate: "Ended",
-    imdbId: "tt5114676",
-    trailerUrl: "https://www.youtube-nocookie.com/embed/ZS1RkP6dffQ"
-  },
-};
+const CACHE_TTL = 5 * 60 * 1000;
+const cache = new Map();
 
-export const getAllAnime = () => Object.values(animeDatabase);
-export const getAnimeById = (id) => animeDatabase[id] || Object.values(animeDatabase).find(a => a.malId === id);
-export const getAnimeType = (anime) => anime?.type || "TV";
-export const searchAnime = (query) => {
-  const q = query.toLowerCase();
-  return getAllAnime().filter(
-    (a) =>
-      a.name.toLowerCase().includes(q) ||
-      a.genres.some((g) => g.toLowerCase().includes(q)) ||
-      a.studio.toLowerCase().includes(q)
-  );
-};
-export const getTrendingAnime = () => getAllAnime().slice(0, 6);
-export const getFeaturedAnime = () => getAllAnime().slice(0, 4);
-export const getNewEpisodes = () => getAllAnime().filter(a => a.status === "Ongoing").slice(0, 4);
-export const getSeasonPicks = () =>
-  getAllAnime()
-    .filter((anime) => anime.status === "Ongoing")
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 6);
-export const getLatestAnime = () => getAllAnime().slice(-6).reverse();
-export const getAiringTodayAnime = () => {
-  const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
-  return getAllAnime().filter((anime) => anime.airingDay === today);
-};
-export const getAllGenres = () => {
-  const genres = new Set();
-  getAllAnime().forEach((a) => a.genres.forEach((g) => genres.add(g)));
-  return Array.from(genres);
-};
+function getCached(key) {
+  const entry = cache.get(key);
+  if (!entry || Date.now() - entry.time > CACHE_TTL) return null;
+  return entry.data;
+}
 
-export const getSchedule = () => {
-  const schedule = {
-    Monday: [],
-    Tuesday: [],
-    Wednesday: [],
-    Thursday: [],
-    Friday: [],
-    Saturday: [],
-    Sunday: [],
+function setCache(key, data) {
+  if (cache.size >= 50) { const oldest = cache.keys().next().value; cache.delete(oldest); }
+  cache.set(key, { data, time: Date.now() });
+}
+
+const JIKAN = "https://api.jikan.moe/v4";
+const ANILIST = "https://graphql.anilist.co";
+
+async function jikanFetch(endpoint) {
+  const cached = getCached(endpoint);
+  if (cached) return cached;
+  await new Promise(r => setTimeout(r, 1100));
+  const res = await fetch(`${JIKAN}${endpoint}`);
+  if (!res.ok) throw new Error(`Jikan error: ${res.status}`);
+  const json = await res.json();
+  setCache(endpoint, json);
+  return json;
+}
+
+async function anilistQuery(query) {
+  const cached = getCached(query);
+  if (cached) return cached;
+  const r = await fetch(ANILIST, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query }) });
+  const j = await r.json();
+  if (j.errors) throw new Error(j.errors[0]?.message);
+  setCache(query, j.data);
+  return j.data;
+}
+
+function mapFromJikan(a) {
+  return {
+    id: a.mal_id,
+    name: a.title_english || a.title,
+    malId: a.mal_id,
+    type: a.type || "TV",
+    img: a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || "",
+    rating: a.score || 0,
+    votes: a.scored_by || 0,
+    year: a.year || (a.aired?.from ? new Date(a.aired.from).getFullYear() : 0),
+    episodes: a.episodes || 0,
+    status: a.status === "Currently Airing" ? "Ongoing" : a.status === "Finished Airing" ? "Completed" : a.status || "Unknown",
+    genres: a.genres?.map(g => g.name) || [],
+    synopsis: a.synopsis || "",
+    studio: a.studios?.[0]?.name || "Unknown",
+    season: a.season ? `${a.season.charAt(0).toUpperCase() + a.season.slice(1)} ${a.year || ""}` : "Unknown",
+    director: "",
+    trend: "",
+    description: (a.synopsis || "").slice(0, 100),
+    currentEp: a.episodes || 0,
+    nextEpDate: a.status === "Currently Airing" ? "TBD" : "Ended",
+    imdbId: "",
+    trailerUrl: a.trailer?.embed_url || null,
+    airingDay: null,
+    seasons: [],
   };
-  Object.values(animeDatabase).forEach((anime) => {
-    if (anime.airingDay && schedule[anime.airingDay]) {
-      schedule[anime.airingDay].push(anime);
+}
+
+function mapFromAnilist(a) {
+  return {
+    id: a.id,
+    name: a.title?.english || a.title?.romaji || "",
+    malId: a.idMal || a.id,
+    type: a.format || "TV",
+    img: a.coverImage?.large || "",
+    rating: (a.averageScore || 0) / 10,
+    votes: 0,
+    year: a.seasonYear || 0,
+    episodes: a.episodes || 0,
+    status: a.status === "RELEASING" ? "Ongoing" : a.status === "FINISHED" ? "Completed" : a.status || "Unknown",
+    genres: a.genres || [],
+    synopsis: a.description || "",
+    studio: a.studios?.nodes?.[0]?.name || "Unknown",
+    season: a.season ? `${a.season.charAt(0) + a.season.slice(1).toLowerCase()} ${a.seasonYear || ""}` : "Unknown",
+    director: "",
+    trend: "",
+    description: (a.description || "").slice(0, 100),
+    currentEp: a.episodes || 0,
+    nextEpDate: a.status === "RELEASING" ? "TBD" : "Ended",
+    imdbId: "",
+    trailerUrl: a.trailer?.site === "youtube" ? `https://www.youtube.com/embed/${a.trailer.id}` : null,
+    airingDay: null,
+    seasons: [],
+  };
+}
+
+let topCache = null;
+let topCacheTime = 0;
+
+async function ensureTopLoaded() {
+  if (topCache && Date.now() - topCacheTime < CACHE_TTL) return topCache;
+  try {
+    const json = await jikanFetch("/top/anime?page=1");
+    topCache = json.data.map(mapFromJikan);
+    topCacheTime = Date.now();
+    return topCache;
+  } catch {
+    if (topCache) return topCache;
+    return [];
+  }
+}
+
+export async function getAllAnime() { return ensureTopLoaded(); }
+
+export async function getAnimeById(id) {
+  const cached = getCached(`animeById:${id}`);
+  if (cached) return cached;
+  const numId = Number(id);
+  const fromTop = (await ensureTopLoaded()).find(a => a.id === numId || a.malId === numId);
+  if (fromTop) return fromTop;
+  try {
+    const json = await jikanFetch(`/anime/${numId}`);
+    const mapped = mapFromJikan(json.data);
+    setCache(`animeById:${id}`, mapped);
+    return mapped;
+  } catch {}
+  try {
+    const q = `{Media(id:${numId},type:ANIME){id idMal title{romaji english}coverImage{large}bannerImage averageScore episodes genres description status season seasonYear studios(isMain:true){nodes{name}}trailer{site id}format}}`;
+    const d = await anilistQuery(q);
+    if (d?.Media) {
+      const mapped = mapFromAnilist(d.Media);
+      setCache(`animeById:${id}`, mapped);
+      return mapped;
     }
-  });
-  return schedule;
-};
+  } catch {}
+  try {
+    const q = `{Media(idMal:${numId},type:ANIME){id idMal title{romaji english}coverImage{large}bannerImage averageScore episodes genres description status season seasonYear studios(isMain:true){nodes{name}}trailer{site id}format}}`;
+    const d = await anilistQuery(q);
+    if (d?.Media) {
+      const mapped = mapFromAnilist(d.Media);
+      setCache(`animeById:${id}`, mapped);
+      return mapped;
+    }
+  } catch {}
+  return null;
+}
+
+export async function getAnimeType(anime) { return anime?.type || "TV"; }
+
+export async function searchAnime(query) {
+  const cached = getCached(`search:${query}`);
+  if (cached) return cached;
+  const results = [];
+  try {
+    const json = await jikanFetch(`/anime?q=${encodeURIComponent(query)}&page=1&order_by=score&sort=desc&limit=25`);
+    results.push(...json.data.map(mapFromJikan));
+  } catch {}
+  if (results.length < 25) {
+    try {
+      const q = `{Page(page:1,perPage:25){media(search:"${query.replace(/"/g, "")}",type:ANIME,sort:SEARCH_MATCH){id idMal title{romaji english}coverImage{large}averageScore episodes genres description status season seasonYear studios(isMain:true){nodes{name}}trailer{site id}format}}}`;
+      const d = await anilistQuery(q);
+      for (const m of d?.Page?.media || []) {
+        if (!results.some(r => r.id === m.id || r.malId === m.idMal)) {
+          results.push(mapFromAnilist(m));
+        }
+      }
+    } catch {}
+  }
+  setCache(`search:${query}`, results);
+  return results;
+}
+
+export async function getTrendingAnime() {
+  const cached = getCached("trending");
+  if (cached) return cached;
+  try {
+    const q = `{Page(page:1,perPage:10){media(sort:TRENDING_DESC,type:ANIME){id idMal title{romaji english}coverImage{large}averageScore episodes genres description status season seasonYear studios(isMain:true){nodes{name}}trailer{site id}format}}}`;
+    const d = await anilistQuery(q);
+    const results = (d?.Page?.media || []).map(mapFromAnilist);
+    setCache("trending", results);
+    return results;
+  } catch {
+    const top = await ensureTopLoaded();
+    return top.slice(0, 6);
+  }
+}
+
+export async function getFeaturedAnime() {
+  const cached = getCached("featured");
+  if (cached) return cached;
+  try {
+    const json = await jikanFetch("/top/anime?page=1&filter=bypopularity");
+    const results = json.data.slice(0, 4).map(mapFromJikan);
+    setCache("featured", results);
+    return results;
+  } catch {
+    const top = await ensureTopLoaded();
+    return top.slice(0, 4);
+  }
+}
+
+export async function getNewEpisodes() {
+  const cached = getCached("newEpisodes");
+  if (cached) return cached;
+  try {
+    const json = await jikanFetch("/top/anime?page=1&filter=airing");
+    const results = json.data.slice(0, 4).map(mapFromJikan);
+    setCache("newEpisodes", results);
+    return results;
+  } catch {
+    const top = await ensureTopLoaded();
+    return top.filter(a => a.status === "Ongoing").slice(0, 4);
+  }
+}
+
+export async function getSeasonPicks() {
+  const cached = getCached("seasonPicks");
+  if (cached) return cached;
+  try {
+    const now = new Date();
+    const season = ["winter", "spring", "summer", "fall"][Math.floor(now.getMonth() / 3)];
+    const json = await jikanFetch(`/seasons/${now.getFullYear()}/${season}`);
+    const results = json.data.sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, 6).map(mapFromJikan);
+    setCache("seasonPicks", results);
+    return results;
+  } catch {
+    const top = await ensureTopLoaded();
+    return top.slice(0, 6);
+  }
+}
+
+export async function getLatestAnime() {
+  const cached = getCached("latest");
+  if (cached) return cached;
+  try {
+    const json = await jikanFetch("/top/anime?page=1");
+    const all = json.data.map(mapFromJikan);
+    const results = all.sort((a, b) => b.year - a.year).slice(0, 6);
+    setCache("latest", results);
+    return results;
+  } catch {
+    const top = await ensureTopLoaded();
+    return top.slice(-6).reverse();
+  }
+}
+
+export async function getAiringTodayAnime() {
+  const cached = getCached("airingToday");
+  if (cached) return cached;
+  try {
+    const now = new Date();
+    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+    const dayName = days[now.getDay()];
+    const json = await jikanFetch(`/schedules?filter=${dayName}&limit=10`);
+    const results = json.data.map(mapFromJikan);
+    setCache("airingToday", results);
+    return results;
+  } catch { return []; }
+}
+
+export async function getAllGenres() {
+  const cached = getCached("genres");
+  if (cached) return cached;
+  try {
+    const json = await jikanFetch("/genres/anime");
+    const results = json.data.map(g => g.name);
+    setCache("genres", results);
+    return results;
+  } catch {
+    return ["Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Romance", "Sci-Fi", "Slice of Life", "Sports", "Thriller"];
+  }
+}
+
+export async function getSchedule() {
+  const cached = getCached("schedule");
+  if (cached) return cached;
+  const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+  const result = {};
+  for (const day of days) {
+    try {
+      const json = await jikanFetch(`/schedules?filter=${day}&limit=10`);
+      result[day.charAt(0).toUpperCase() + day.slice(1)] = json.data.map(mapFromJikan);
+    } catch {
+      result[day.charAt(0).toUpperCase() + day.slice(1)] = [];
+    }
+  }
+  setCache("schedule", result);
+  return result;
+}

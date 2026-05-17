@@ -5,7 +5,6 @@ import { Play, Bookmark, Star, Calendar } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { addToWatchlist, removeFromWatchlist, isInWatchlist, loadWatchlist } from "../services/storage";
-import { getAnimeType } from "../data/animeData";
 import "./FeaturedAnime.css";
 
 const containerVariants = {
@@ -130,7 +129,7 @@ export default function FeaturedAnime({ animeList }) {
                 </button>
                 <div className="card-badges">
                   <div className="badges-left">
-                    <span className="badge type">{getAnimeType(anime)}</span>
+                    <span className="badge type">{anime?.type || "TV"}</span>
                     {anime.rating && (
                       <span className="badge rating">
                         <Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating}

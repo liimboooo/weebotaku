@@ -1,16 +1,17 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getNewEpisodes } from "../data/animeData";
 import "./NewEpisodes.css";
 
 export default function NewEpisodes() {
   const navigate = useNavigate();
+  const [episodes, setEpisodes] = useState([]);
 
-  const episodes = [
-    { id: 6, name: "Jujutsu Kaisen", ep: "Episode 48", img: "/beta-3.jpg" },
-    { id: 3, name: "Demon Slayer", ep: "Episode 55", img: "/beta-3.jpg" },
-    { id: 2, name: "One Piece", ep: "Episode 1100", img: "/beta-2.jpg" },
-    { id: 7, name: "My Hero Academia", ep: "Episode 138", img: "/beta-1.jpg" },
-  ];
+  useEffect(() => {
+    getNewEpisodes().then(setEpisodes).catch(() => {});
+  }, []);
+
+  if (episodes.length === 0) return null;
 
   return (
     <div className="new-episodes-grid">
@@ -22,14 +23,14 @@ export default function NewEpisodes() {
           style={{ animationDelay: `${i * 0.1}s` }}
         >
           <div className="new-ep-img">
-            <img src={ep.img} alt={ep.name} />
+            <img src={ep.img} alt={ep.name} loading="lazy" />
             <div className="new-ep-overlay">
               <span className="new-ep-play">▶</span>
             </div>
           </div>
           <div className="new-ep-info">
-            <h4>{ep.name}</h4>
-            <span>{ep.ep}</span>
+            <div className="new-ep-title">{ep.name}</div>
+            <div className="new-ep-number">Episode {ep.currentEp || "?"}</div>
           </div>
         </div>
       ))}
