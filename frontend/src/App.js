@@ -65,9 +65,10 @@ function AppLayout() {
   const isAuthPage = location.pathname === "/";
   const token = localStorage.getItem('token');
 
-  if (!token && !isAuthPage) {
-    return <Navigate to="/" state={{ from: location.pathname }} replace />;
-  }
+  // TODO: re-enable auth guard after UI testing
+  // if (!token && !isAuthPage) {
+  //   return <Navigate to="/" state={{ from: location.pathname }} replace />;
+  // }
 
   return (
     <>

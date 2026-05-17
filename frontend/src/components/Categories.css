@@ -1,5 +1,9 @@
+/* ═══════════════════════════════════════════════════════
+   CATEGORIES — Premium Dark Mode
+   ═══════════════════════════════════════════════════════ */
+
 .categories-section {
-  margin: 50px 0;
+  margin: 56px 0;
 }
 
 .categories-section .section-title {
@@ -7,15 +11,16 @@
 }
 
 .categories-section .section-title h2 {
-  font-size: 24px;
-  font-weight: 800;
-  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
   margin: 0 0 6px;
+  letter-spacing: -0.01em;
 }
 
 .categories-section .section-title p {
-  color: #888;
-  font-size: 14px;
+  color: var(--text-tertiary);
+  font-size: 13px;
   margin: 0;
 }
 
@@ -26,18 +31,20 @@
 }
 
 .category-chip {
-  padding: 10px 18px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
-  color: #ccc;
+  padding: 9px 18px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-secondary);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--duration-normal) var(--ease-out);
 }
 
 .category-chip:hover {
-  background: rgba(230, 54, 54, 0.1);
-  color: #fff;
+  background: var(--primary-surface);
+  border-color: var(--primary-border);
+  color: var(--text-primary);
+  transform: translateY(-1px);
 }

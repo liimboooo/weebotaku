@@ -6,6 +6,7 @@
   padding: 40px;
   max-width: 1200px;
   margin: 0 auto;
+  color: var(--text-primary);
 }
 
 .history-hero {
@@ -14,10 +15,10 @@
   align-items: center;
   margin-bottom: 40px;
   padding: 30px;
-  background: linear-gradient(135deg, rgba(230, 54, 54, 0.1) 0%, rgba(20, 20, 23, 0.8) 100%);
-  border: 1px solid rgba(230, 54, 54, 0.2);
-  border-radius: 20px;
-  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, rgba(230, 54, 54, 0.06) 0%, rgba(14, 14, 18, 0.8) 100%);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(12px);
 }
 
 .history-header-content h1 {

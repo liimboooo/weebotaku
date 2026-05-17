@@ -4,11 +4,19 @@ const router = express.Router();
 
 const SCRAPE_TIMEOUT = 20000;
 
-async function fetchWithNative(url) {
+async function fetchWithNative(url, extraHeaders = {}) {
   try {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), SCRAPE_TIMEOUT);
-    const response = await fetch(url, { signal: controller.signal });
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml,application/json;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        ...extraHeaders,
+      },
+    });
     clearTimeout(id);
     if (response.ok) {
       return await response.text();

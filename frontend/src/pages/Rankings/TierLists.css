@@ -3,7 +3,7 @@
   height: 100vh;
   overflow: hidden;
   padding-top: 64px;
-  background: #0a0a0a;
+  background: var(--bg-deep);
   display: flex;
   flex-direction: column;
 }

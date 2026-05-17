@@ -1,4 +1,4 @@
-.news-page{min-height:100vh;background:var(--bg-color,#0b0b0f);color:var(--text-color,#e0e0e0)}
+.news-page{min-height:100vh;background:var(--bg-deep,#0b0b0f);color:var(--text-primary,#e0e0e0)}
 .news-container{max-width:1200px;margin:0 auto;padding:100px 24px 60px}
 
 .news-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}

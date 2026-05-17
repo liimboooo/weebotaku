@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm start *)",
+      "Bash(npx react-scripts *)",
+      "Bash(node server.js)"
+    ]
+  }
+}

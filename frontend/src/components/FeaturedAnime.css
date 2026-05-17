@@ -1,28 +1,29 @@
 .featured-section {
-  margin: 20px 0 40px;
+  margin: 20px 0 48px;
 }
 
 .anime-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
 }
 
 .anime-card {
   position: relative;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  background: rgba(18, 18, 20, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
   cursor: pointer;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: all var(--duration-normal) var(--ease-out);
   transform-style: preserve-3d;
   will-change: transform;
 }
 
 .anime-card:hover {
-  border-color: rgba(230, 54, 54, 0.25);
-  box-shadow: 0 12px 40px rgba(230, 54, 54, 0.1);
+  border-color: var(--border-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3), var(--shadow-glow);
 }
 
 .card-img-wrapper {

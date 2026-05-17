@@ -6,6 +6,7 @@
   padding: 40px;
   max-width: 1400px;
   margin: 0 auto;
+  color: var(--text-primary);
 }
 
 .discovery-header {
@@ -28,20 +29,21 @@
 
 .search-page-input {
   flex: 1;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  padding: 0 40px 0 42px;
-  color: #fff;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0 40px 0 44px;
+  color: var(--text-primary);
   font-size: 15px;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: all var(--duration-normal) var(--ease-out);
 }
 
 .search-page-input:focus {
-  border-color: rgba(230, 54, 54, 0.3);
-  box-shadow: 0 0 0 3px rgba(230, 54, 54, 0.08);
+  border-color: var(--primary-border);
+  box-shadow: 0 0 0 3px rgba(230, 54, 54, 0.06);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .search-page-input-clear {
@@ -215,18 +217,18 @@
 
 .sr-card {
   position: relative;
-  background: rgba(18, 18, 18, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
   overflow: hidden;
   cursor: pointer;
-  transition: border-color 0.3s, transform 0.2s, box-shadow 0.3s;
+  transition: all var(--duration-normal) var(--ease-out);
 }
 
 .sr-card:hover {
-  border-color: #e63636;
-  transform: translateY(-8px);
-  box-shadow: 0 15px 40px rgba(230, 54, 54, 0.3);
+  border-color: var(--border-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3), var(--shadow-glow);
 }
 
 .sr-card-thumb {
