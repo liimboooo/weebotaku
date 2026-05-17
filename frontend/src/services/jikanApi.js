@@ -100,36 +100,42 @@ function mapManga(m) {
   };
 }
 
-export async function fetchTopAnime(page = 1, filter = "") {
-  const params = `/top/anime?page=${page}${filter ? `&filter=${filter}` : ""}`;
-  const json = await jikanFetch(params);
-  return {
-    data: json.data.map(mapAnime),
-    pagination: json.pagination,
-  };
+export async function fetchSearchAnime(query, page = 1) {
+  try {
+    const json = await jikanFetch(`/anime?q=${encodeURIComponent(query)}&page=${page}&order_by=score&sort=desc`);
+    return { data: json.data.map(mapAnime), pagination: json.pagination };
+  } catch {
+    return anilistSearchAnime(query);
+  }
 }
 
-export async function fetchSearchAnime(query, page = 1) {
-  const json = await jikanFetch(`/anime?q=${encodeURIComponent(query)}&page=${page}&order_by=score&sort=desc`);
-  return {
-    data: json.data.map(mapAnime),
-    pagination: json.pagination,
-  };
+export async function fetchTopAnime(page = 1, filter = "") {
+  try {
+    const json = await jikanFetch(`/top/anime?page=${page}${filter ? `&filter=${filter}` : ""}`);
+    return { data: json.data.map(mapAnime), pagination: json.pagination };
+  } catch {
+    return anilistTopAnime();
+  }
 }
 
 export async function fetchSeasonalAnime(year, season) {
-  const y = year || new Date().getFullYear();
-  const s = season || getCurrentSeason();
-  const json = await jikanFetch(`/seasons/${y}/${s}`);
-  return {
-    data: json.data.map(mapAnime),
-    pagination: json.pagination,
-  };
+  try {
+    const y = year || new Date().getFullYear();
+    const s = season || getCurrentSeason();
+    const json = await jikanFetch(`/seasons/${y}/${s}`);
+    return { data: json.data.map(mapAnime), pagination: json.pagination };
+  } catch {
+    return anilistSeasonalAnime(year, season);
+  }
 }
 
 export async function fetchAnimeGenres() {
-  const json = await jikanFetch("/genres/anime");
-  return json.data.map(g => g.name);
+  try {
+    const json = await jikanFetch("/genres/anime");
+    return json.data.map(g => g.name);
+  } catch {
+    return ["Action","Adventure","Comedy","Drama","Fantasy","Horror","Mystery","Romance","Sci-Fi","Slice of Life","Sports","Thriller"];
+  }
 }
 
 export async function fetchAnimeById(id) {
@@ -164,19 +170,82 @@ export async function fetchAnimeRecommendations(id) {
 }
 
 export async function fetchTopManga(page = 1) {
-  const json = await jikanFetch(`/top/manga?page=${page}`);
-  return {
-    data: json.data.map(mapManga),
-    pagination: json.pagination,
-  };
+  try {
+    const json = await jikanFetch(`/top/manga?page=${page}`);
+    return { data: json.data.map(mapManga), pagination: json.pagination };
+  } catch {
+    return anilistTopManga();
+  }
 }
 
 export async function fetchSearchManga(query, page = 1) {
-  const json = await jikanFetch(`/manga?q=${encodeURIComponent(query)}&page=${page}&order_by=score&sort=desc`);
+  try {
+    const json = await jikanFetch(`/manga?q=${encodeURIComponent(query)}&page=${page}&order_by=score&sort=desc`);
+    return { data: json.data.map(mapManga), pagination: json.pagination };
+  } catch {
+    return anilistSearchManga(query);
+  }
+}
+
+const ANILIST = "https://graphql.anilist.co";
+async function anilistGraphQL(query) {
+  const r = await fetch(ANILIST, {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query})});
+  const j = await r.json();
+  if (j.errors) throw new Error(j.errors[0]?.message);
+  return j.data;
+}
+
+function anilistMapAnime(a) {
   return {
-    data: json.data.map(mapManga),
-    pagination: json.pagination,
+    id: a.id, name: a.title?.english||a.title?.romaji||"", img: a.coverImage?.large||"",
+    rating: (a.averageScore||0)/10, votes: 0, year: a.seasonYear||0,
+    episodes: a.episodes||0, status: a.status==="RELEASING"?"Ongoing":a.status==="FINISHED"?"Completed":a.status||"Unknown",
+    genres: a.genres||[], synopsis: a.description||"", studio: a.studios?.nodes?.[0]?.name||"Unknown",
+    season: a.season?a.season.charAt(0)+a.season.slice(1).toLowerCase()+" "+(a.seasonYear||""):"Unknown",
+    type: "TV", trailerUrl: null, airingDay: null, currentEp: a.episodes||0, nextEpDate: "TBD", readProgress: 0,
   };
+}
+
+function anilistMapManga(m) {
+  return {
+    id: m.id, title: m.title?.english||m.title?.romaji||"", author: m.author?.[0]?.name||"Unknown",
+    cover: m.coverImage?.large||"", demo: "Unknown",
+    status: m.status==="RELEASING"?"Ongoing":m.status==="FINISHED"?"Completed":m.status||"Unknown",
+    ch: m.chapters||0, volumes: m.volumes||0, last: Math.floor((m.chapters||0)*0.8)||0,
+    rating: (m.averageScore||0)/10, genres: m.genres||[], desc: m.description||"", progress: 0,
+  };
+}
+
+async function anilistSearchAnime(query) {
+  const q = `{Page(page:1,perPage:25){media(search:"${query.replace(/"/g,'')}",type:ANIME,sort:SEARCH_MATCH){id title{romaji english}coverImage{large}averageScore episodes genres description status season seasonYear studios(isMain:true){nodes{name}}}}}`;
+  const d = await anilistGraphQL(q);
+  return {data: (d?.Page?.media||[]).map(anilistMapAnime), pagination: {hasNextPage:false, currentPage:1}};
+}
+
+async function anilistTopAnime() {
+  const q = `{Page(page:1,perPage:25){media(sort:TRENDING_DESC,type:ANIME){id title{romaji english}coverImage{large}averageScore episodes genres description status season seasonYear studios(isMain:true){nodes{name}}}}}`;
+  const d = await anilistGraphQL(q);
+  return {data: (d?.Page?.media||[]).map(anilistMapAnime), pagination: {hasNextPage:false, currentPage:1}};
+}
+
+async function anilistSeasonalAnime(year, season) {
+  const seas = (season||getCurrentSeason()).toUpperCase();
+  const yr = year||new Date().getFullYear();
+  const q = `{Page(page:1,perPage:25){media(season:${seas},seasonYear:${yr},type:ANIME,sort:POPULARITY_DESC){id title{romaji english}coverImage{large}averageScore episodes genres description status season seasonYear studios(isMain:true){nodes{name}}}}}`;
+  const d = await anilistGraphQL(q);
+  return {data: (d?.Page?.media||[]).map(anilistMapAnime), pagination: {hasNextPage:false, currentPage:1}};
+}
+
+async function anilistSearchManga(query) {
+  const q = `{Page(page:1,perPage:25){media(search:"${query.replace(/"/g,'')}",type:MANGA,sort:SEARCH_MATCH){id title{romaji english}coverImage{large}averageScore chapters volumes genres description status authors{name}}}}`;
+  const d = await anilistGraphQL(q);
+  return {data: (d?.Page?.media||[]).map(anilistMapManga), pagination: {hasNextPage:false, currentPage:1}};
+}
+
+async function anilistTopManga() {
+  const q = `{Page(page:1,perPage:25){media(sort:TRENDING_DESC,type:MANGA){id title{romaji english}coverImage{large}averageScore chapters volumes genres description status authors{name}}}}`;
+  const d = await anilistGraphQL(q);
+  return {data: (d?.Page?.media||[]).map(anilistMapManga), pagination: {hasNextPage:false, currentPage:1}};
 }
 
 function getCurrentSeason() {
