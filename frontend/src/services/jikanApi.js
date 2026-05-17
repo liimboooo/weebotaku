@@ -1,8 +1,6 @@
-const BASE_URL = "https://api.jikan.moe/v4";
-
-const cache = new Map();
 const CACHE_TTL = 5 * 60 * 1000;
 const CACHE_MAX = 50;
+const cache = new Map();
 
 function getCached(key) {
   const entry = cache.get(key);
@@ -19,40 +17,46 @@ function setCache(key, data) {
   cache.set(key, { data, time: Date.now() });
 }
 
-let requestQueue = Promise.resolve();
-
-const MIN_INTERVAL = 1100;
-const RETRY_DELAY = 2000;
-const MAX_RETRIES = 2;
-
-function delay(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 async function jikanFetch(endpoint) {
   const cached = getCached(endpoint);
   if (cached) return cached;
 
-  const myTurn = requestQueue.then(async () => {
-    await delay(MIN_INTERVAL);
+  // Try backend proxy first (handles CORS, longer timeout)
+  try {
+    const proxyUrl = `${API_BASE}/scrape/jikan-proxy?path=${encodeURIComponent(endpoint)}`;
+    const proxyRes = await fetch(proxyUrl, { signal: AbortSignal.timeout(25000) });
+    if (proxyRes.ok) {
+      const json = await proxyRes.json();
+      if (json.success) {
+        const data = json.data;
+        setCache(endpoint, data);
+        return data;
+      }
+    }
+  } catch {}
 
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+  // Fallback to direct Jikan API with rate limiting
+  const BASE_URL = "https://api.jikan.moe/v4";
+  const MIN_INTERVAL = 1100;
+  const RETRY_DELAY = 2000;
+  const MAX_RETRIES = 2;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    if (attempt > 0) await new Promise(r => setTimeout(r, RETRY_DELAY * attempt));
+    await new Promise(r => setTimeout(r, MIN_INTERVAL));
+    try {
       const res = await fetch(`${BASE_URL}${endpoint}`);
       if (res.ok) {
         const json = await res.json();
         setCache(endpoint, json);
         return json;
       }
-      if (res.status === 429 && attempt < MAX_RETRIES) {
-        await delay(RETRY_DELAY * (attempt + 1));
-        continue;
-      }
-      throw new Error(`Jikan error: ${res.status}`);
-    }
-  });
-
-  requestQueue = myTurn.then(() => {}).catch(() => {});
-  return myTurn;
+      if (res.status !== 429) throw new Error(`Jikan error: ${res.status}`);
+    } catch {}
+  }
+  throw new Error('Jikan unavailable');
 }
 
 function mapAnime(a) {

@@ -433,4 +433,44 @@ router.get('/manga-bato-pages', async (req, res) => {
   }
 });
 
+router.get('/anipub-proxy', async (req, res) => {
+  const { path } = req.query;
+  if (!path) return res.status(400).json({ success: false, message: 'Missing path' });
+  try {
+    const url = `https://anipub.xyz${path}`;
+    const response = await nodeFetch(url, {
+      timeout: 15000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json',
+      },
+    });
+    const text = await response.text();
+    if (text && response.ok) return res.json({ success: true, data: text });
+    res.status(502).json({ success: false, message: `anipub returned ${response.status}` });
+  } catch (e) {
+    res.status(502).json({ success: false, message: e?.message });
+  }
+});
+
+router.get('/jikan-proxy', async (req, res) => {
+  const { path } = req.query;
+  if (!path) return res.status(400).json({ success: false, message: 'Missing path' });
+  try {
+    const url = `https://api.jikan.moe/v4${path}`;
+    const response = await nodeFetch(url, {
+      timeout: 20000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Accept': 'application/json',
+      },
+    });
+    const text = await response.text();
+    if (text && response.ok) return res.json({ success: true, data: text });
+    res.status(502).json({ success: false, message: `jikan returned ${response.status}` });
+  } catch (e) {
+    res.status(502).json({ success: false, message: e?.message });
+  }
+});
+
 module.exports = router;

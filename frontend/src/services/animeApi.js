@@ -40,22 +40,33 @@ async function fetchHtmlViaProxy(url) {
   return null;
 }
 
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
 // ─── AniPub ───
+async function anipubFetch(path) {
+  const url = `${API_BASE}/scrape/anipub-proxy?path=${encodeURIComponent(path)}`;
+  try {
+    const res = await fetch(url);
+    if (res.ok) { const json = await res.json(); if (json.success) return JSON.parse(json.data); }
+  } catch {}
+  const direct = await fetch(`https://anipub.xyz${path}`);
+  if (direct.ok) return await direct.json();
+  throw new Error('anipub failed');
+}
+
 async function searchAnipub(query) {
   for (const q of titleVariants(query)) {
     try {
-      const res = await fetch(`https://anipub.xyz/api/search/${encodeURIComponent(q)}`);
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (data.length > 0) return data;
-    } catch {}
+      const data = await anipubFetch(`/api/search/${encodeURIComponent(q)}`);
+      if (data?.length > 0) return data;
+    } catch { continue; }
   }
   return [];
 }
 
 export async function getAnimeEpisodes(id) {
   try {
-    const res = await fetch(`https://anipub.xyz/v1/api/details/${id}`);
+    const data = await anipubFetch(`/v1/api/details/${id}`);
     if (!res.ok) return [];
     const data = await res.json();
     const local = data.local;
