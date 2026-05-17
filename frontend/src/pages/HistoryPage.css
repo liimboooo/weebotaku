@@ -14,11 +14,27 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 40px;
-  padding: 30px;
-  background: linear-gradient(135deg, rgba(230, 54, 54, 0.06) 0%, rgba(14, 14, 18, 0.8) 100%);
+  padding: 36px 40px;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(230, 54, 54, 0.1), transparent 50%),
+    linear-gradient(135deg, rgba(14, 14, 18, 0.9), rgba(10, 10, 12, 0.85));
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  backdrop-filter: blur(12px);
+  border-radius: var(--radius-2xl);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  position: relative;
+  overflow: hidden;
+}
+
+.history-hero::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(230, 54, 54, 0.06), transparent 70%);
+  pointer-events: none;
 }
 
 .history-header-content h1 {
@@ -26,15 +42,21 @@
   align-items: center;
   gap: 15px;
   color: #fff;
-  font-size: 36px;
-  margin: 0 0 10px 0;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  margin: 0 0 8px 0;
   font-weight: 800;
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.history-header-content h1 svg {
+  color: var(--primary);
 }
 
 .history-header-content p {
-  color: #aaa;
+  color: var(--text-tertiary);
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .clear-history-btn {
@@ -42,18 +64,22 @@
   align-items: center;
   gap: 8px;
   background: transparent;
-  border: 1px solid rgba(255, 82, 82, 0.5);
-  color: #ff5252;
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  color: #ff8a8a;
   padding: 10px 20px;
-  border-radius: 12px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--duration-normal) var(--ease-out);
+  flex-shrink: 0;
 }
 
 .clear-history-btn:hover {
-  background: #ff5252;
+  background: rgba(255, 82, 82, 0.1);
+  border-color: #ff5252;
   color: #fff;
+  transform: translateY(-1px);
 }
 
 .history-list {
@@ -69,20 +95,20 @@
   gap: 20px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 15px;
-  border-radius: 16px;
-  transition: all 0.3s ease;
+  border-left: 3px solid var(--primary);
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  transition: all var(--duration-normal) var(--ease-out);
   position: relative;
-  opacity: 1;
-  transform: none;
   cursor: pointer;
 }
 
 .history-card:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
   border-color: rgba(230, 54, 54, 0.2);
-  transform: translateX(10px);
-  box-shadow: var(--shadow-md);
+  border-left-color: var(--primary-hover);
+  transform: translateX(6px);
+  box-shadow: 0 0 24px rgba(230, 54, 54, 0.06), var(--shadow-md);
 }
 
 .history-img-wrap {
@@ -180,6 +206,7 @@
   height: 100%;
   background: linear-gradient(90deg, #e63636, #ff5252);
   border-radius: 6px;
+  box-shadow: 0 0 8px rgba(230, 54, 54, 0.3);
 }
 
 .history-progress span {
@@ -205,32 +232,46 @@
 .history-empty {
   text-align: center;
   padding: 80px 20px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-xl);
   margin-bottom: 50px;
 }
 
 .history-empty .empty-icon-wrap {
-  font-size: 64px;
-  color: #444;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(230, 54, 54, 0.06);
+  border: 1px solid rgba(230, 54, 54, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 20px;
+  color: var(--primary);
+  opacity: 0.6;
 }
 
 .history-empty .empty-icon-wrap svg {
-  width: 64px;
-  height: 64px;
+  width: 32px;
+  height: 32px;
 }
 
 .history-empty h3 {
-  color: #fff;
-  font-size: 24px;
+  color: var(--text-primary);
+  font-size: 1.3rem;
   margin: 0 0 10px 0;
 }
 
 .history-empty p {
-  color: #888;
+  color: var(--text-tertiary);
   margin: 0 0 30px 0;
+  font-size: 14px;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 24px;
+  line-height: 1.6;
 }
 
 .browse-btn {

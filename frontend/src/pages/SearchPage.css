@@ -29,21 +29,24 @@
 
 .search-page-input {
   flex: 1;
-  height: 50px;
+  height: 56px;
   background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   padding: 0 40px 0 44px;
   color: var(--text-primary);
-  font-size: 15px;
+  font-size: 16px;
+  font-weight: 500;
   outline: none;
   transition: all var(--duration-normal) var(--ease-out);
 }
 
 .search-page-input:focus {
   border-color: var(--primary-border);
-  box-shadow: 0 0 0 3px rgba(230, 54, 54, 0.06);
-  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 0 0 3px rgba(230, 54, 54, 0.06), 0 8px 32px rgba(0,0,0,0.2);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .search-page-input-clear {
@@ -467,6 +470,9 @@
 .no-results {
   text-align: center;
   padding: 80px 20px;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.01);
 }
 
 .no-results-icon {
@@ -475,29 +481,52 @@
 }
 
 .no-results h3 {
-  color: #e63636;
+  color: var(--text-primary);
   font-size: 24px;
   margin-bottom: 10px;
 }
 
 .no-results p {
-  color: #777;
+  color: var(--text-tertiary);
   font-size: 15px;
+  max-width: 360px;
+  margin: 0 auto;
+  line-height: 1.6;
 }
 
 @media (max-width: 768px) {
   .search-page {
-    padding: 20px;
+    padding: 20px 16px;
   }
 
-  .search-results-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  .sr-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
   .filter-row {
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .genre-filter {
+    gap: 6px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+  }
+
+  .genre-pill {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .discovery-sub { font-size: 14px; }
+}
+
+@media (max-width: 480px) {
+  .sr-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .sr-card-body { padding: 10px; }
+  .sr-card-head h3 { font-size: 0.78rem; }
 }
 
 /* Search Loading */
@@ -618,14 +647,16 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--duration-normal) var(--ease-out);
   font-family: inherit;
 }
 
 .sd-pill:hover {
-  background: var(--red-subtle, rgba(230, 54, 54, 0.08));
+  background: rgba(230, 54, 54, 0.08);
   border-color: rgba(230, 54, 54, 0.2);
   color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .sd-pill-remove {

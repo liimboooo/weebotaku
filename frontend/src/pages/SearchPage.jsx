@@ -191,7 +191,7 @@ export default function SearchPage() {
               </div>
               <div className="sd-pills">
                 {trendingLoading ? (
-                  Array.from({length:8}, (_,i) => <Skeleton key={i} variant="text" width="120px" height="38px" style={{borderRadius:10}} />)
+                  Array.from({length:8}, (_,i) => <Skeleton key={i} variant="text" width="120px" height="38px" />)
                 ) : (
                   trendingData.map((anime) => {
                     const t = getTrend(anime);
