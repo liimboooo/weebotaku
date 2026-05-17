@@ -149,7 +149,7 @@ async function comickFetch(path) {
   const wait = Math.max(0, 250 - (now - lastCall));
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   lastCall = Date.now();
-  const url = `${API_BASE}/scrape/fetch?url=${encodeURIComponent(COMICK_BASE + path)}`;
+  const url = `${API_BASE}/scrape/comick-proxy?path=${encodeURIComponent(path)}`;
   try {
     const res = await fetch(url);
     if (res.ok) {
@@ -157,11 +157,11 @@ async function comickFetch(path) {
       if (json.success) return JSON.parse(json.data);
     }
   } catch {}
-  const res = await fetch(`${COMICK_BASE}${path}`, {
+  const fallback = await fetch(`${COMICK_BASE}${path}`, {
     headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
   });
-  if (!res.ok) throw new Error(`Comick error: ${res.status}`);
-  return res.json();
+  if (!fallback.ok) throw new Error(`Comick error: ${fallback.status}`);
+  return fallback.json();
 }
 
 export async function searchComick(query) {
