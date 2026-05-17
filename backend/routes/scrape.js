@@ -330,14 +330,6 @@ router.get('/animechan-proxy', async (req, res) => {
     res.status(502).json({ success: false, message: e?.message || 'Animechan fetch failed' });
   }
 });
-    const text = await response.text();
-    if (text && response.ok) return res.json({ success: true, data: text });
-    res.status(502).json({ success: false, message: `Animechan returned ${response.status}` });
-  } catch (e) {
-    console.error('Animechan proxy error:', e?.message);
-    res.status(502).json({ success: false, message: e?.message || 'Animechan fetch failed' });
-  }
-});
 
 router.get('/fetch-health', async (req, res) => {
   const targets = [
