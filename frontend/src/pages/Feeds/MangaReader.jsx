@@ -39,6 +39,11 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
       setLoading(false);
       return;
     }
+    if (chapter.provider === "manganato" && chapter.pagesList?.length) {
+      setPages(chapter.pagesList);
+      setLoading(false);
+      return;
+    }
 
     let actualQuality = quality;
     let urls;
@@ -225,7 +230,7 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
               <img
                 key={`${chapter?.id}_${pageIndex}_${imgRetry}_${cdnRef.current}`}
                 ref={imgRef}
-                src={chapter?.provider === "comick" ? pages[pageIndex] : `${API_BASE}/scrape/manga-image?url=${encodeURIComponent(pages[pageIndex])}&chapterId=${chapter?.id || ''}`}
+                src={chapter?.provider === "comick" || chapter?.provider === "manganato" ? pages[pageIndex] : `${API_BASE}/scrape/manga-image?url=${encodeURIComponent(pages[pageIndex])}&chapterId=${chapter?.id || ''}`}
                 onError={() => {
                   if (imgRetry < 2) {
                     setImgRetry(r => r + 1);

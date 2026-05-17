@@ -115,6 +115,7 @@ export async function getMangaChapters(mangaId, lang = "en") {
       pages: ch.attributes.pages || 0,
       publishAt: ch.attributes.publishAt,
       group: ch.relationships?.find(r => r.type === "scanlation_group")?.attributes?.name || "",
+      provider: "mangadex",
     }));
 }
 
@@ -210,6 +211,30 @@ export async function getComickChapterPages(chapterHid) {
   const images = json?.chapter?.md_images;
   if (!images?.length) throw new Error("No Comick pages found");
   return images.map(img => `https://meo.comick.pics/${img.b2key}`);
+}
+
+export async function searchMangaNato(query) {
+  const res = await fetch(`${API_BASE}/scrape/manga-alt-search?q=${encodeURIComponent(query)}`);
+  if (!res.ok) return [];
+  const json = await res.json();
+  if (!json.success) return [];
+  return json.data.map(m => ({ ...m, provider: 'manganato' }));
+}
+
+export async function getMangaNatoChapters(id) {
+  const res = await fetch(`${API_BASE}/scrape/manga-alt-chapters?id=${encodeURIComponent(id)}`);
+  if (!res.ok) return [];
+  const json = await res.json();
+  if (!json.success) return [];
+  return json.data;
+}
+
+export async function getMangaNatoPages(id) {
+  const res = await fetch(`${API_BASE}/scrape/manga-alt-pages?id=${encodeURIComponent(id)}`);
+  if (!res.ok) throw new Error("Failed to fetch pages");
+  const json = await res.json();
+  if (!json.success || !json.data.length) throw new Error("No pages found");
+  return json.data;
 }
 
 export async function getMangaById(mangaId) {

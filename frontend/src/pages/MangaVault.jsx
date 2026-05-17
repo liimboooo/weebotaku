@@ -8,7 +8,7 @@ import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchTopManga, fetchSearchManga } from "../services/jikanApi";
 import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
-import { searchManga as mdSearch, getMangaChapters, searchComick, getComickChapters, getComickChapterPages } from "../services/mangaApi";
+import { searchManga as mdSearch, getMangaChapters, searchComick, getComickChapters, getComickChapterPages, searchMangaNato, getMangaNatoChapters, getMangaNatoPages } from "../services/mangaApi";
 import MangaReader from "./Feeds/MangaReader";
 import "./MangaVault.css";
 
@@ -191,6 +191,29 @@ export default function MangaVault() {
           const validChapters = chapters.filter(ch => ch.pages > 0);
           if (validChapters.length > 0) {
             setReaderManga(cm);
+            setReaderChapters(validChapters);
+            setReaderChapter(validChapters[0]);
+            setReaderOpen(true);
+            return;
+          }
+        }
+      }
+
+      const natoResults = await searchMangaNato(manga.title);
+      if (natoResults.length > 0) {
+        const nm = natoResults[0];
+        const chapters = await getMangaNatoChapters(nm.id);
+        if (chapters.length > 0) {
+          for (const ch of chapters) {
+            try {
+              ch.pagesList = await getMangaNatoPages(ch.id);
+              ch.pages = ch.pagesList.length;
+              ch.provider = 'manganato';
+            } catch { continue; }
+          }
+          const validChapters = chapters.filter(ch => ch.pages > 0);
+          if (validChapters.length > 0) {
+            setReaderManga(nm);
             setReaderChapters(validChapters);
             setReaderChapter(validChapters[0]);
             setReaderOpen(true);
