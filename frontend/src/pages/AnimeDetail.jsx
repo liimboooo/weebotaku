@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Play, Bookmark, Heart, Share2, Bell, Star, Tv, Film, Users, MessageSquare } from "lucide-react";
-import { getAnimeById } from "../data/animeData";
+import { getAnimeById, getCoursForAnime, isEpisodeAvailable } from "../data/animeData";
 import { fetchAnimeById as jikanFetchAnime, fetchAnimeCharacters, fetchAnimeRecommendations } from "../services/jikanApi";
 
 import { addToWatchlist, removeFromWatchlist, isInWatchlist, rateAnime as syncRateAnime, toggleLikeAnime, addToWatchHistory } from "../services/storage";
@@ -51,6 +51,7 @@ export default function AnimeDetail() {
   const anime = jikanAnime || staticAnime;
   const malId = staticAnime?.malId || parseInt(id);
   const totalEps = anime?.episodes || 12;
+  const cours = useMemo(() => getCoursForAnime(anime), [anime]);
 
   useEffect(() => {
     const epFromUrl = searchParams.get("ep");
@@ -348,18 +349,48 @@ export default function AnimeDetail() {
                     </button>
                   </div>
                 )}
-                <div className="ad-episodes-grid">
-                  {episodeNumbers.map((ep) => (
-                    <button
-                      key={ep}
-                      className={`ad-episode-btn ${ep === selectedEp ? "active" : ""}`}
-                      onClick={() => handleWatch(ep)}
-                    >
-                      <span className="ad-episode-num">{ep}</span>
-                      <span className="ad-episode-label">EP</span>
-                    </button>
-                  ))}
-                </div>
+                {cours ? cours.map((cour) => (
+                  <div key={cour.name} style={{ marginBottom: 20 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, flexWrap: "wrap", gap: 6 }}>
+                      <span style={{ color: "#ef4444", fontWeight: 700, fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        {cour.name}
+                      </span>
+                      <span style={{ color: "#666", fontSize: "0.72rem" }}>
+                        {cour.startDate} → {cour.endDate}
+                      </span>
+                    </div>
+                    <div className="ad-episodes-grid">
+                      {episodeNumbers.filter(ep => ep >= cour.episodeStart && ep <= cour.episodeEnd).map((ep) => {
+                        const available = isEpisodeAvailable(ep, cours);
+                        return (
+                          <button
+                            key={ep}
+                            className={`ad-episode-btn ${ep === selectedEp ? "active" : ""} ${!available ? "disabled" : ""}`}
+                            onClick={() => available && handleWatch(ep)}
+                            disabled={!available}
+                            title={available ? `Episode ${ep}` : `Airs ${cour.startDate}`}
+                          >
+                            <span className="ad-episode-num">{ep}</span>
+                            <span className="ad-episode-label">{available ? "EP" : "Soon"}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )) : (
+                  <div className="ad-episodes-grid">
+                    {episodeNumbers.map((ep) => (
+                      <button
+                        key={ep}
+                        className={`ad-episode-btn ${ep === selectedEp ? "active" : ""}`}
+                        onClick={() => handleWatch(ep)}
+                      >
+                        <span className="ad-episode-num">{ep}</span>
+                        <span className="ad-episode-label">EP</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

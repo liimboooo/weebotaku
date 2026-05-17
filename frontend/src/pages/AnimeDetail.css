@@ -437,6 +437,12 @@
   color: #ef4444;
 }
 
+.ad-episode-btn.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .ad-episode-num {
   font-size: 1rem;
   font-weight: 800;
