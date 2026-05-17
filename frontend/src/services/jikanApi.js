@@ -173,6 +173,14 @@ export async function fetchAnimeCharacters(id) {
         lang: c.voice_actors[0].language,
       } : null,
     }));
+  } catch {}
+  try {
+    const q = `query{Media(id:${id},type:ANIME){characters(page:1,perPage:10){edges{role node{id name{full}image{large}}voiceActors(language:JAPANESE){id name{full}image{large}language}}}}}`;
+    const d = await anilistGraphQL(q);
+    return (d.Media?.characters?.edges || []).map(e => ({
+      id: e.node.id, name: e.node.name?.full || "", image: e.node.image?.large || "", role: e.role,
+      voiceActor: e.voiceActors?.[0] ? { name: e.voiceActors[0].name?.full || "", image: e.voiceActors[0].image?.large || "", lang: e.voiceActors[0].language } : null,
+    }));
   } catch { return []; }
 }
 
@@ -182,6 +190,14 @@ export async function fetchAnimeRecommendations(id) {
     return json.data.slice(0, 8).map(r => ({
       id: r.entry.mal_id, name: r.entry.title, image: r.entry.images?.jpg?.image_url || "",
       url: r.url, votes: r.votes || 0,
+    }));
+  } catch {}
+  try {
+    const q = `query{Media(id:${id},type:ANIME){recommendations(page:1,perPage:8){edges{node{mediaRecommendation{id title{romaji english}coverImage{large}}}}}}}`;
+    const d = await anilistGraphQL(q);
+    return (d.Media?.recommendations?.edges || []).map(e => ({
+      id: e.node.mediaRecommendation.id, name: e.node.mediaRecommendation.title?.english || e.node.mediaRecommendation.title?.romaji || "",
+      image: e.node.mediaRecommendation.coverImage?.large || "", votes: 0,
     }));
   } catch { return []; }
 }

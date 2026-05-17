@@ -66,7 +66,7 @@ export default function AnimeDetail() {
       const timeout = setTimeout(() => setJikanError("Failed to load anime details. Check your connection."), 15000);
       jikanFetchAnime(malId).then((r) => { clearTimeout(timeout); setJikanAnime(r); }).catch(() => { clearTimeout(timeout); setJikanError("Could not load this anime. It may not be available."); });
     }
-    fetchAnimeCharacters(malId).then((c) => { console.log(`Characters loaded: ${c?.length || 0}`); setCharacters(c); }).catch((e) => { console.warn("Characters fetch failed:", e); });
+    fetchAnimeCharacters(malId).then(setCharacters).catch(() => {});
     fetchAnimeRecommendations(malId).then(setRecommendations).catch(() => {});
   }, [id, staticAnime, malId]);
 
@@ -381,11 +381,7 @@ export default function AnimeDetail() {
                   ))}
                 </div>
               ) : (
-                <p style={{ color: "#888", textAlign: "center", padding: 32 }}>
-                  No character data from API. Try fetching directly:
-                  <br />
-                  <code style={{ fontSize: "0.75rem", color: "#666" }}>https://api.jikan.moe/v4/anime/{malId}/characters</code>
-                </p>
+                <p style={{ color: "#888", textAlign: "center", padding: 32 }}>No character data available.</p>
               )
             )}
 
