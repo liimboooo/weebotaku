@@ -367,33 +367,6 @@ export const getAllGenres = () => {
   return Array.from(genres);
 };
 
-const animeCours = [
-  {
-    match: (a) => a?.name?.toLowerCase().includes("re:zero") && (a?.episodes === 19 || a?.name?.toLowerCase().includes("season 4")),
-    cours: [
-      { name: "The Loss Arc", episodeStart: 1, episodeEnd: 11, startDate: "2026-04-08", endDate: "2026-06-17" },
-      { name: "The Recapture Arc", episodeStart: 12, episodeEnd: 19, startDate: "2026-08-12", endDate: "2026-09-30" },
-    ],
-  },
-];
-
-export const getCoursForAnime = (anime) => {
-  if (!anime) return null;
-  const entry = animeCours.find((c) => c.match(anime));
-  return entry?.cours || null;
-};
-
-export const isEpisodeAvailable = (episode, cours) => {
-  if (!cours) return true;
-  const now = new Date();
-  for (const cour of cours) {
-    if (episode >= cour.episodeStart && episode <= cour.episodeEnd) {
-      return now >= new Date(cour.startDate);
-    }
-  }
-  return false;
-};
-
 export const getSchedule = () => {
   const schedule = {
     Monday: [],

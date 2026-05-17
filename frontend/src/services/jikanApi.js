@@ -289,4 +289,46 @@ function getCurrentSeason() {
   return "fall";
 }
 
+export async function fetchAiringSchedule({ anilistId, malId } = {}) {
+  const SPLIT_GAP_DAYS = 21;
+  try {
+    let idFilter = "";
+    if (anilistId) idFilter = `id:${anilistId}`;
+    else if (malId) idFilter = `idMal:${malId}`;
+    else return { episodes: [], cours: null, nextAiring: null };
+    const q = `{Media(${idFilter},type:ANIME){id nextAiringEpisode{episode airingAt timeUntilAiring}airingSchedule(perPage:50){nodes{episode airingAt timeUntilAiring}}}}`;
+    const d = await anilistGraphQL(q);
+    const media = d.Media;
+    if (!media) return { episodes: [], cours: null, nextAiring: null };
+
+    const now = Math.floor(Date.now() / 1000);
+    const nodes = media.airingSchedule?.nodes || [];
+    const episodes = nodes
+      .filter(n => n.episode)
+      .sort((a, b) => a.episode - b.episode)
+      .map(n => ({ episode: n.episode, airingAt: n.airingAt, aired: n.airingAt <= now }));
+
+    let cours = null;
+    if (episodes.length > 0) {
+      const splits = [{ name: "", episodeStart: episodes[0].episode }];
+      for (let i = 1; i < episodes.length; i++) {
+        const gap = (episodes[i].airingAt - episodes[i - 1].airingAt) / 86400;
+        if (gap > SPLIT_GAP_DAYS) {
+          splits[splits.length - 1].episodeEnd = episodes[i - 1].episode;
+          splits.push({ name: "", episodeStart: episodes[i].episode });
+        }
+      }
+      splits[splits.length - 1].episodeEnd = episodes[episodes.length - 1].episode;
+      cours = splits.map((s, i) => ({
+        ...s,
+        name: i === 0 ? "Cour 1" : `Cour ${i + 1}`,
+        startDate: new Date(episodes.find(e => e.episode === s.episodeStart)?.airingAt * 1000).toISOString().split("T")[0],
+        endDate: new Date(episodes.find(e => e.episode === s.episodeEnd)?.airingAt * 1000).toISOString().split("T")[0],
+      }));
+    }
+
+    return { episodes, cours, nextAiring: media.nextAiringEpisode || null };
+  } catch { return { episodes: [], cours: null, nextAiring: null }; }
+}
+
 export function clearCache() { cache.clear(); }
