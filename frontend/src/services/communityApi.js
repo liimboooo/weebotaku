@@ -3,7 +3,7 @@ const WAIFU_BASE = "https://api.waifu.pics/sfw";
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 export async function fetchRandomQuote() {
-  const url = `${API_BASE}/scrape/fetch?url=${encodeURIComponent(`${QUOTES_BASE}/random`)}`;
+  const url = `${API_BASE}/scrape/animechan-proxy?path=${encodeURIComponent('/random')}`;
   try {
     const res = await fetch(url);
     if (res.ok) {
@@ -11,9 +11,7 @@ export async function fetchRandomQuote() {
       if (json.success) return JSON.parse(json.data);
     }
   } catch {}
-  const res = await fetch(`${QUOTES_BASE}/random`);
-  if (!res.ok) throw new Error(`Quote error: ${res.status}`);
-  return res.json();
+  throw new Error("Quote unavailable");
 }
 
 export async function fetchWaifuImage(category = "waifu") {

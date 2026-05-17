@@ -343,11 +343,36 @@ router.get('/comick-proxy', async (req, res) => {
     });
     clearTimeout(id);
     const text = await response.text();
-    if (text) return res.json({ success: true, data: text });
-    res.status(502).json({ success: false, message: 'Empty response' });
+    if (text && response.ok) return res.json({ success: true, data: text });
+    console.error('Comick proxy bad response:', response.status, text?.slice(0, 200));
+    res.status(502).json({ success: false, message: `Comick returned ${response.status}`, status: response.status });
   } catch (e) {
     console.error('Comick proxy error:', e?.message);
     res.status(502).json({ success: false, message: e?.message || 'Comick fetch failed' });
+  }
+});
+
+router.get('/animechan-proxy', async (req, res) => {
+  const { path } = req.query;
+  if (!path) return res.status(400).json({ success: false, message: 'Missing path' });
+  try {
+    const url = `https://animechan.xyz/api${path}`;
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 15000);
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json',
+      },
+    });
+    clearTimeout(id);
+    const text = await response.text();
+    if (text && response.ok) return res.json({ success: true, data: text });
+    res.status(502).json({ success: false, message: `Animechan returned ${response.status}` });
+  } catch (e) {
+    console.error('Animechan proxy error:', e?.message);
+    res.status(502).json({ success: false, message: e?.message || 'Animechan fetch failed' });
   }
 });
 

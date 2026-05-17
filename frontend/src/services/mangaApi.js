@@ -157,11 +157,7 @@ async function comickFetch(path) {
       if (json.success) return JSON.parse(json.data);
     }
   } catch {}
-  const fallback = await fetch(`${COMICK_BASE}${path}`, {
-    headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
-  });
-  if (!fallback.ok) throw new Error(`Comick error: ${fallback.status}`);
-  return fallback.json();
+  throw new Error(`Comick unavailable via proxy`);
 }
 
 export async function searchComick(query) {
