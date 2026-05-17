@@ -2,8 +2,41 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X, Loader, Play, Monitor, Maximize2, Globe, SkipForward } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, getWitanimeEpisodes, getWitanimeStreamUrl, getAnime3rbEpisodes, getAnime3rbStreamUrl } from "../../services/animeApi";
+import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, getWitanimeEpisodes, getWitanimeStreamUrl, getAnime3rbEpisodes, getAnime3rbStreamUrl, getConsumetGogoanimeEpisodes, getConsumetGogoanimeStreamUrl } from "../../services/animeApi";
 import "./AnimeWatch.css";
+
+function ConsumetPlayer({ streamUrl }) {
+  const videoRef = useRef(null);
+  const hlsRef = useRef(null);
+
+  useEffect(() => {
+    if (!videoRef.current || !streamUrl) return;
+    if (!streamUrl.includes(".m3u8")) { videoRef.current.src = streamUrl; return; }
+
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js";
+    script.onload = () => {
+      if (window.Hls && window.Hls.isSupported()) {
+        hlsRef.current = new window.Hls();
+        hlsRef.current.loadSource(streamUrl);
+        hlsRef.current.attachMedia(videoRef.current);
+      } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
+        videoRef.current.src = streamUrl;
+      }
+    };
+    document.body.appendChild(script);
+    return () => {
+      hlsRef.current?.destroy();
+      document.body.removeChild(script);
+    };
+  }, [streamUrl]);
+
+  return (
+    <video ref={videoRef} className="watch-frame" controls autoPlay playsInline>
+      <source src={streamUrl} type="application/x-mpegURL" />
+    </video>
+  );
+}
 
 function replaceEpInUrl(url, animeId, newEp) {
   let result = url.replace(new RegExp(`/${animeId}/(\\d+)`), `/${animeId}/${newEp}`);
@@ -61,6 +94,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         if (anime.source === "anitaku") eps = await getAnitakuEpisodes(anime.slug);
         else if (anime.source === "witanime") eps = await getWitanimeEpisodes(anime.slug);
         else if (anime.source === "anime3rb") eps = await getAnime3rbEpisodes(anime.slug);
+        else if (anime.source === "consumet") eps = await getConsumetGogoanimeEpisodes(anime.id);
         else eps = await getAnimeEpisodes(anime.id);
         if (eps.length === 0) { setError("No streaming links available."); return; }
         setEpisodes(eps);
@@ -110,6 +144,18 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
           const url = await getAnime3rbStreamUrl(episode.url);
           if (url) setStreamUrl(url);
           else setError("No stream URL found.");
+        } catch { setError("Failed to load stream."); }
+        finally { setStreamLoading(false); }
+      })();
+    } else if (anime.source === "consumet") {
+      (async () => {
+        setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]);
+        try {
+          const url = await getConsumetGogoanimeStreamUrl(episode.id);
+          if (url) {
+            setStreamUrl(url);
+            setServers([{ label: "HD", url }]);
+          } else setError("No stream URL found.");
         } catch { setError("Failed to load stream."); }
         finally { setStreamLoading(false); }
       })();
@@ -219,16 +265,20 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                 </div>
               )}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && (
-                <iframe
-                  ref={iframeRef}
-                  key={`${episode?.episode || 0}-${serverIndex}`}
-                  className="watch-frame"
-                  src={streamUrl}
-                  title={`Episode ${episode?.episode || ""}`}
-                  allow="autoplay; fullscreen; encrypted-media"
-                  allowFullScreen
-                  onError={handleIframeError}
-                />
+                anime.source === "consumet" && streamUrl.includes(".m3u8") ? (
+                  <ConsumetPlayer key={`${episode?.episode || 0}-${serverIndex}`} streamUrl={streamUrl} />
+                ) : (
+                  <iframe
+                    ref={iframeRef}
+                    key={`${episode?.episode || 0}-${serverIndex}`}
+                    className="watch-frame"
+                    src={streamUrl}
+                    title={`Episode ${episode?.episode || ""}`}
+                    allow="autoplay; fullscreen; encrypted-media"
+                    allowFullScreen
+                    onError={handleIframeError}
+                  />
+                )
               )}
               {!loading && !error && iframeError && streamUrl && (
                 <div className="watch-center">

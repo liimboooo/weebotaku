@@ -417,6 +417,75 @@ export async function getAnime3rbStreamUrl(episodeUrl) {
   }
 }
 
+// ─── Consumet API (Gogoanime provider) ───
+const CONSUMET_API = "https://api.consumet.org";
+
+async function searchConsumetGogoanime(query) {
+  for (const q of titleVariants(query)) {
+    try {
+      const res = await fetch(`${CONSUMET_API}/anime/gogoanime/${encodeURIComponent(q)}`, {
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data?.results?.length > 0) {
+        const best = data.results.sort((a, b) => {
+          const aScore = scoreRelevance(a.title, query);
+          const bScore = scoreRelevance(b.title, query);
+          return bScore - aScore;
+        })[0];
+        return {
+          id: best.id,
+          title: best.title,
+          image: best.image,
+          anilistId: best.id, // Gogoanime ID from Consumet
+        };
+      }
+    } catch { continue; }
+  }
+  return null;
+}
+
+export async function getConsumetGogoanimeEpisodes(animeId) {
+  try {
+    const res = await fetch(`${CONSUMET_API}/anime/gogoanime/info/${encodeURIComponent(animeId)}`, {
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!data?.episodes?.length) return [];
+    return data.episodes.map((ep, i) => ({
+      episode: ep.number || i + 1,
+      id: ep.id,
+      url: `https://gogoanime.consu.me/${ep.id}`,
+      title: ep.title || "",
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getConsumetGogoanimeStreamUrl(episodeId) {
+  try {
+    const res = await fetch(`${CONSUMET_API}/anime/gogoanime/watch/${encodeURIComponent(episodeId)}`, {
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data?.sources?.length > 0) {
+      const best = data.sources.sort((a, b) => {
+        const aQ = parseInt(a.quality) || 0;
+        const bQ = parseInt(b.quality) || 0;
+        return bQ - aQ;
+      })[0];
+      return best.url;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // ─── Enhanced Embed Search (parallel fallback) ───
 async function searchParallelEmbeds(animeName) {
   const anilistResult = await searchAnilist(animeName);
@@ -441,6 +510,7 @@ export async function findStreamingSource(animeName) {
     searchAnipub(animeName).then(r => r.length > 0 ? { source: "anipub", id: r[0].Id, title: r[0].Name } : null),
     searchAnitaku(animeName).then(r => r.length > 0 ? { source: "anitaku", slug: r[0].slug, id: r[0].slug, title: r[0].title } : null),
     searchParallelEmbeds(animeName).then(r => r),
+    searchConsumetGogoanime(animeName).then(r => r ? { source: "consumet", id: r.id, title: r.title, anilistId: r.anilistId } : null),
   ];
 
   const results = await Promise.allSettled(sources);
@@ -452,9 +522,16 @@ export async function findStreamingSource(animeName) {
   if (fulfilled.length > 0) {
     const best = fulfilled[0];
     const embedInfo = fulfilled.find(f => f.source === "embed");
+    const consumetInfo = fulfilled.find(f => f.source === "consumet");
     if (embedInfo) {
       best.embedProviders = embedInfo.embedProviders;
       best.anilistId = embedInfo.anilistId;
+    } else if (consumetInfo?.anilistId) {
+      best.anilistId = consumetInfo.anilistId;
+      best.embedProviders = EMBED_PROVIDERS.map((p) => ({
+        name: p.name,
+        url: p.url(consumetInfo.anilistId),
+      }));
     }
     return best;
   }
