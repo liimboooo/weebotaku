@@ -41,7 +41,7 @@ export default function Header() {
   const isMoreActive = ['/settings', '/help', '/system/rules', '/report'].some(p => path.startsWith(p));
   const [searchTerm, setSearchTerm] = useState('');
   const [profileImage, setProfileImage] = useState(() => localStorage.getItem('userAvatar') || '');
-  const [statusMessage, setStatusMessage] = useState(() => localStorage.getItem('userStatusMessage') || 'Watching One Piece...');
+  const [statusMessage, setStatusMessage] = useState(() => localStorage.getItem('userStatusMessage') || '');
   const [isEditingStatus, setIsEditingStatus] = useState(false);
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -126,7 +126,7 @@ export default function Header() {
 
   useEffect(() => {
     const syncAvatar = () => setProfileImage(localStorage.getItem('userAvatar') || '');
-    const syncStatus = () => setStatusMessage(localStorage.getItem('userStatusMessage') || 'Watching One Piece...');
+    const syncStatus = () => setStatusMessage(localStorage.getItem('userStatusMessage') || '');
     const syncOnline = () => setIsOnline(navigator.onLine);
     window.addEventListener('storage', syncAvatar);
     window.addEventListener('profile-avatar-updated', syncAvatar);
@@ -172,7 +172,7 @@ export default function Header() {
   useEffect(() => () => clearTimeout(statusSaveTimeoutRef.current), []);
 
   const saveStatusMessage = (nextStatus) => {
-    const value = nextStatus.trim() || 'Watching One Piece...';
+    const value = nextStatus.trim() || '';
     localStorage.setItem('userStatusMessage', value);
     window.dispatchEvent(new Event('user-status-updated'));
     setStatusMessage(value);

@@ -51,7 +51,7 @@ export default function AnimeDetail() {
 
   const anime = apiAnime;
   const malId = anime?.malId || parseInt(id);
-  const totalEps = anime?.episodes || 12;
+  const totalEps = anime?.episodes ?? 12;
 
   useEffect(() => {
     const epFromUrl = searchParams.get("ep");
@@ -98,8 +98,8 @@ export default function AnimeDetail() {
   }, [showPlayer, selectedEp, id, anime]);
 
   const episodeNumbers = useMemo(() => {
-    const count = totalEps && totalEps < 300 ? totalEps : 12;
-    return Array.from({ length: count }, (_, i) => i + 1);
+    if (totalEps > 0 && totalEps < 300) return Array.from({ length: totalEps }, (_, i) => i + 1);
+    return Array.from({ length: 12 }, (_, i) => i + 1);
   }, [totalEps]);
 
   const handleWatch = async (ep) => {
@@ -266,7 +266,7 @@ export default function AnimeDetail() {
             <div className="ad-status-bar">
               <div className="ad-status-item">
                 <span className="label">Status</span>
-                <span className="value white">{anime.status || "Unknown"}</span>
+                <span className="value white">{anime.status || "—"}</span>
               </div>
               <div className="ad-status-item">
                 <span className="label">Season</span>

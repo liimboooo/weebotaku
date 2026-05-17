@@ -47,9 +47,7 @@ function replaceEpInUrl(url, animeId, newEp) {
   return result;
 }
 
-const MAX_EMBED_EPISODES = 50;
 
-const EMBED_FAIL_EP_LIMIT = 3;
 
 export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange, totalEpisodes = 12 }) {
   const [episodes, setEpisodes] = useState([]);
@@ -76,13 +74,13 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     if (isEmbedSource) {
       setLoading(false);
       if (!anime.embedProviders?.length) { setError("No streaming source found."); return; }
-      const epCount = Math.min(totalEpisodes, MAX_EMBED_EPISODES);
+      const epCount = totalEpisodes > 0 ? Math.min(totalEpisodes, 50) : Math.max(12, startEp);
       const virtualEps = Array.from({ length: epCount }, (_, i) => ({ episode: i + 1, id: i + 1 }));
       setEpisodes(virtualEps);
       const providers = anime.embedProviders.map(p => ({ label: p.name, url: p.url }));
       setServers(providers);
       setServerIndex(0);
-      const initialEp = Math.min(Math.max(1, startEp), totalEpisodes);
+      const initialEp = Math.min(Math.max(1, startEp), epCount);
       setEpIndex(initialEp - 1);
       setStreamUrl(replaceEpInUrl(providers[0].url, anime.anilistId || anime.id, initialEp));
       return;
