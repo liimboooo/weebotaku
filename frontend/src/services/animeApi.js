@@ -187,10 +187,10 @@ async function searchAnilist(query) {
 // ─── Embed Providers ───
 const EMBED_PROVIDERS = [
   { name: "MegaPlay", url: (id, ep = 1) => `https://megaplay.buzz/stream/ani/${id}/${ep}/sub` },
-  { name: "2Embed", url: (id, ep = 1) => `https://www.2embed.to/embed/anime?id=${id}&episode=${ep}` },
-  { name: "MultiEmbed", url: (id, ep = 1) => `https://multiembed.mov/directstream.php?video_id=${id}&s=ani&ep=${ep}` },
-  { name: "AnimEmbed", url: (id, ep = 1) => `https://animembed.com/embed/${id}/${ep}` },
-  { name: "GoEmbed", url: (id, ep = 1) => `https://gogoembed.com/embed/anime/${id}/${ep}` },
+  { name: "AnimePlay", url: (id, ep = 1) => `https://animeplay.cfd/stream/ani/${id}/${ep}/sub` },
+  { name: "DropFile", url: (id, ep = 1) => `https://dropfile.cc/player/tv/anilist-${id}/${ep}/1` },
+  { name: "VidSrc", url: (id, ep = 1) => `https://vidsrc.icu/embed/anime/${id}/${ep}/0` },
+  { name: "VidNest", url: (id, ep = 1) => `https://vidnest.fun/anime/${id}/${ep}/sub` },
 ];
 
 async function makeEmbedFallback(animeName) {
