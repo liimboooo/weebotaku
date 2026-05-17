@@ -11,18 +11,16 @@ async function mdFetch(path) {
   lastCall = Date.now();
 
   const url = `${API_BASE}/scrape/fetch?url=${encodeURIComponent(BASE + path)}`;
-  const res = await fetch(url);
-  if (res.ok) {
-    const json = await res.json();
-    if (json.success) return JSON.parse(json.data);
-  }
-
-  const isLocal = API_BASE.includes('localhost') || API_BASE.includes('127.0.0.1');
-  if (isLocal) {
-    const direct = await fetch(`${BASE}${path}`);
-    if (direct.ok) return await direct.json();
-  }
-  throw new Error('MangaDex unavailable');
+  try {
+    const res = await fetch(url);
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) return JSON.parse(json.data);
+    }
+  } catch {}
+  const direct = await fetch(`${BASE}${path}`);
+  if (direct.ok) return await direct.json();
+  throw new Error(`MangaDex error: ${direct.status}`);
 }
 
 function cleanTitle(title) {
