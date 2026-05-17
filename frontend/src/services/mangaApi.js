@@ -10,28 +10,19 @@ async function mdFetch(path) {
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   lastCall = Date.now();
 
-  // Always route through backend proxy to avoid CORS
   const url = `${API_BASE}/scrape/fetch?url=${encodeURIComponent(BASE + path)}`;
-  try {
-    const res = await fetch(url);
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        return JSON.parse(json.data);
-      }
-    }
-  } catch {}
-
-  // Fallback: direct MangaDex fetch (works for local dev without backend)
-  let err;
-  try {
-    const res = await fetch(`${BASE}${path}`);
-    if (res.ok) return await res.json();
-    err = new Error(`MangaDex error: ${res.status}`);
-  } catch (e) {
-    err = e;
+  const res = await fetch(url);
+  if (res.ok) {
+    const json = await res.json();
+    if (json.success) return JSON.parse(json.data);
   }
-  throw err;
+
+  const isLocal = API_BASE.includes('localhost') || API_BASE.includes('127.0.0.1');
+  if (isLocal) {
+    const direct = await fetch(`${BASE}${path}`);
+    if (direct.ok) return await direct.json();
+  }
+  throw new Error('MangaDex unavailable');
 }
 
 function cleanTitle(title) {

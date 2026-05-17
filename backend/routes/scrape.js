@@ -1,5 +1,6 @@
 const express = require('express');
 const cheerio = require('cheerio');
+const nodeFetch = require('node-fetch');
 const router = express.Router();
 
 const SCRAPE_TIMEOUT = 20000;
@@ -8,7 +9,7 @@ async function fetchWithNative(url, extraHeaders = {}) {
   try {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), 30000);
-    const response = await fetch(url, {
+    const response = await nodeFetch(url, {
       signal: controller.signal,
       redirect: 'follow',
       headers: {
@@ -20,7 +21,7 @@ async function fetchWithNative(url, extraHeaders = {}) {
     });
     clearTimeout(id);
     const text = await response.text();
-    if (text) return text;
+    if (text && response.ok) return text;
   } catch (e) {
     console.error('fetchWithNative error:', e?.message);
   }
@@ -64,7 +65,7 @@ async function tryFetchImage(url) {
   try {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), 15000);
-    const response = await fetch(url, {
+    const response = await nodeFetch(url, {
       signal: controller.signal,
       headers: {
         'Referer': 'https://mangadex.org/',
@@ -141,7 +142,7 @@ async function fetchWithHeaders(url) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), SCRAPE_TIMEOUT);
   try {
-    const response = await fetch(url, {
+    const response = await nodeFetch(url, {
       signal: controller.signal,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -330,7 +331,7 @@ router.get('/comick-proxy', async (req, res) => {
     const url = `https://api.comick.io${path}`;
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), 30000);
-    const response = await fetch(url, {
+    const response = await nodeFetch(url, {
       signal: controller.signal,
       redirect: 'follow',
       headers: {
@@ -359,7 +360,7 @@ router.get('/animechan-proxy', async (req, res) => {
     const url = `https://animechan.xyz/api${path}`;
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), 15000);
-    const response = await fetch(url, {
+    const response = await nodeFetch(url, {
       signal: controller.signal,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
