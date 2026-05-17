@@ -8,7 +8,7 @@ import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchTopManga, fetchSearchManga } from "../services/jikanApi";
 import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
-import { searchManga as mdSearch, getMangaChapters, searchComick, getComickChapters, getComickChapterPages, searchMangaNato, getMangaNatoChapters, getMangaNatoPages } from "../services/mangaApi";
+import { searchManga as mdSearch, getMangaChapters, searchComick, getComickChapters, getComickChapterPages, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages } from "../services/mangaApi";
 import MangaReader from "./Feeds/MangaReader";
 import "./MangaVault.css";
 
@@ -214,6 +214,29 @@ export default function MangaVault() {
           const validChapters = chapters.filter(ch => ch.pages > 0);
           if (validChapters.length > 0) {
             setReaderManga(nm);
+            setReaderChapters(validChapters);
+            setReaderChapter(validChapters[0]);
+            setReaderOpen(true);
+            return;
+          }
+        }
+      }
+
+      const toonilyResults = await searchToonily(manga.title);
+      if (toonilyResults.length > 0) {
+        const tm = toonilyResults[0];
+        const chapters = await getToonilyChapters(tm.id);
+        if (chapters.length > 0) {
+          for (const ch of chapters) {
+            try {
+              ch.pagesList = await getToonilyPages(ch.id);
+              ch.pages = ch.pagesList.length;
+              ch.provider = 'toonily';
+            } catch { continue; }
+          }
+          const validChapters = chapters.filter(ch => ch.pages > 0);
+          if (validChapters.length > 0) {
+            setReaderManga(tm);
             setReaderChapters(validChapters);
             setReaderChapter(validChapters[0]);
             setReaderOpen(true);

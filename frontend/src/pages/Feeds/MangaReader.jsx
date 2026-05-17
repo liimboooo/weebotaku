@@ -34,12 +34,7 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
     setPreloaded([]);
     setImgRetry(0);
 
-    if (chapter.provider === "comick" && chapter.pagesList?.length) {
-      setPages(chapter.pagesList);
-      setLoading(false);
-      return;
-    }
-    if (chapter.provider === "manganato" && chapter.pagesList?.length) {
+    if (chapter.provider !== "mangadex" && chapter.pagesList?.length) {
       setPages(chapter.pagesList);
       setLoading(false);
       return;

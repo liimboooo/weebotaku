@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ArrowLeft, BookOpen, Heart, Star, ChevronDown, Loader } from "lucide-react";
-import { getMangaById, getMangaChapters, searchComick, getComickChapters, getComickChapterPages, searchMangaNato, getMangaNatoChapters, getMangaNatoPages } from "../services/mangaApi";
+import { getMangaById, getMangaChapters, searchComick, getComickChapters, getComickChapterPages, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages } from "../services/mangaApi";
 import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
 import MangaReader from "./Feeds/MangaReader";
 import ErrorBoundary from "../components/ErrorBoundary";
@@ -77,6 +77,20 @@ export default function MangaDetail() {
                 c.pagesList = await getMangaNatoPages(c.id);
                 c.pages = c.pagesList.length;
                 c.provider = 'manganato';
+              } catch { continue; }
+            }
+            ch = ch.filter(c => c.pages > 0);
+          }
+        }
+        if (ch.length === 0) {
+          const toonilyResults = await searchToonily(manga?.title || "");
+          if (toonilyResults.length > 0) {
+            ch = await getToonilyChapters(toonilyResults[0].id);
+            for (const c of ch) {
+              try {
+                c.pagesList = await getToonilyPages(c.id);
+                c.pages = c.pagesList.length;
+                c.provider = 'toonily';
               } catch { continue; }
             }
             ch = ch.filter(c => c.pages > 0);

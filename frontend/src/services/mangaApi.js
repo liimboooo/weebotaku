@@ -214,11 +214,24 @@ export async function getComickChapterPages(chapterHid) {
 }
 
 export async function searchMangaNato(query) {
-  const res = await fetch(`${API_BASE}/scrape/manga-alt-search?q=${encodeURIComponent(query)}`);
-  if (!res.ok) return [];
-  const json = await res.json();
-  if (!json.success) return [];
-  return json.data.map(m => ({ ...m, provider: 'manganato' }));
+  const queries = mangaTitleVariants(query);
+  const seen = new Set();
+  for (const q of queries) {
+    try {
+      const res = await fetch(`${API_BASE}/scrape/manga-alt-search?q=${encodeURIComponent(q)}`);
+      if (!res.ok) continue;
+      const json = await res.json();
+      if (json.success && json.data.length > 0) {
+        return json.data.filter(m => {
+          const key = m.id || m.title;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        }).map(m => ({ ...m, provider: 'manganato' }));
+      }
+    } catch { continue; }
+  }
+  return [];
 }
 
 export async function getMangaNatoChapters(id) {
@@ -231,6 +244,42 @@ export async function getMangaNatoChapters(id) {
 
 export async function getMangaNatoPages(id) {
   const res = await fetch(`${API_BASE}/scrape/manga-alt-pages?id=${encodeURIComponent(id)}`);
+  if (!res.ok) throw new Error("Failed to fetch pages");
+  const json = await res.json();
+  if (!json.success || !json.data.length) throw new Error("No pages found");
+  return json.data;
+}
+
+export async function searchToonily(query) {
+  const queries = mangaTitleVariants(query);
+  const seen = new Set();
+  for (const q of queries) {
+    try {
+      const res = await fetch(`${API_BASE}/scrape/manga-toonily-search?q=${encodeURIComponent(q)}`);
+      if (!res.ok) continue;
+      const json = await res.json();
+      if (json.success && json.data.length > 0) {
+        return json.data.filter(m => {
+          if (seen.has(m.id)) return false;
+          seen.add(m.id);
+          return true;
+        }).map(m => ({ ...m, provider: 'toonily' }));
+      }
+    } catch { continue; }
+  }
+  return [];
+}
+
+export async function getToonilyChapters(id) {
+  const res = await fetch(`${API_BASE}/scrape/manga-toonily-chapters?id=${encodeURIComponent(id)}`);
+  if (!res.ok) return [];
+  const json = await res.json();
+  if (!json.success) return [];
+  return json.data;
+}
+
+export async function getToonilyPages(id) {
+  const res = await fetch(`${API_BASE}/scrape/manga-toonily-pages?id=${encodeURIComponent(id)}`);
   if (!res.ok) throw new Error("Failed to fetch pages");
   const json = await res.json();
   if (!json.success || !json.data.length) throw new Error("No pages found");

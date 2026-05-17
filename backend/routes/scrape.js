@@ -187,7 +187,8 @@ router.get('/manga-alt-chapters', async (req, res) => {
     const chapters = [];
     $('ul.row-content-chapter li a.chapter-name').each((i, el) => {
       const href = $(el).attr('href') || '';
-      const chapterId = href.split('/').pop() || '';
+      const parts = href.split('/').filter(Boolean);
+      const chapterId = parts.slice(-2).join('/');
       const label = $(el).text().trim();
       const match = label.match(/(\d+(?:\.\d+)?)/);
       chapters.push({
@@ -220,6 +221,94 @@ router.get('/manga-alt-pages', async (req, res) => {
       if (src) pages.push(src);
     });
 
+    res.json({ success: true, data: pages });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// ---------- Toonily Aggregator Scraper ----------
+
+router.get('/manga-toonily-search', async (req, res) => {
+  const { q } = req.query;
+  if (!q) return res.status(400).json({ success: false, message: 'Missing q' });
+  try {
+    const query = q.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '+');
+    const html = await fetchWithHeaders(`https://toonily.com/?s=${query}&post_type=wp-manga`);
+    if (!html) return res.json({ success: true, data: [] });
+    const $ = cheerio.load(html);
+    const results = [];
+    $('.c-tabs-item__content').each((i, el) => {
+      const link = $(el).find('a').first().attr('href') || '';
+      const id = link.split('/').filter(Boolean).pop() || '';
+      const title = $(el).find('.post-title h3 a').text().trim() || $(el).find('.post-title').text().trim();
+      const img = $(el).find('img').attr('src') || $(el).find('img').attr('data-src') || '';
+      const author = $(el).find('.mg_author a').text().trim();
+      if (id && title) results.push({ id, title, cover: img, author, provider: 'toonily' });
+      if (results.length >= 5) return false;
+    });
+    if (!results.length) {
+      $('.tab-content-wrap .row .col-12').each((i, el) => {
+        const link = $(el).find('a').attr('href') || '';
+        const id = link.split('/').filter(Boolean).pop() || '';
+        const title = $(el).find('h3').text().trim() || $(el).find('.post-title').text().trim();
+        const img = $(el).find('img').attr('src') || '';
+        if (id && title) results.push({ id, title, cover: img, author: '', provider: 'toonily' });
+        if (results.length >= 5) return false;
+      });
+    }
+    res.json({ success: true, data: results });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+router.get('/manga-toonily-chapters', async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
+  try {
+    const html = await fetchWithHeaders(`https://toonily.com/manga/${id}/`);
+    if (!html) return res.json({ success: true, data: [] });
+    const $ = cheerio.load(html);
+    const chapters = [];
+    $('li.wp-manga-chapter a').each((i, el) => {
+      const href = $(el).attr('href') || '';
+      const chapterId = href.split('/').filter(Boolean).pop() || href.split('/').slice(-2).join('/');
+      const label = $(el).text().trim();
+      const match = label.match(/(\d+(?:\.\d+)?)/);
+      chapters.push({
+        id: chapterId,
+        chapter: match ? match[1] : String(chapters.length + 1),
+        title: label,
+        pages: 0,
+        provider: 'toonily',
+      });
+    });
+    res.json({ success: true, data: chapters.reverse() });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+router.get('/manga-toonily-pages', async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
+  try {
+    const url = id.includes('toonily.com') ? id : `https://toonily.com/${id}/`;
+    const html = await fetchWithHeaders(url);
+    if (!html) return res.json({ success: true, data: [] });
+    const $ = cheerio.load(html);
+    const pages = [];
+    $('.reading-content img').each((i, el) => {
+      const src = $(el).attr('src') || $(el).attr('data-src') || '';
+      if (src && !src.includes('data:image')) pages.push(src);
+    });
+    if (!pages.length) {
+      $('.page-break img, .chapter-image img').each((i, el) => {
+        const src = $(el).attr('src') || $(el).attr('data-src') || '';
+        if (src && !src.includes('data:image')) pages.push(src);
+      });
+    }
     res.json({ success: true, data: pages });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
