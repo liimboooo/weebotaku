@@ -7,39 +7,20 @@ const SCRAPE_TIMEOUT = 20000;
 
 async function fetchWithNative(url, extraHeaders = {}) {
   try {
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 30000);
     const response = await nodeFetch(url, {
-      signal: controller.signal,
       redirect: 'follow',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml,application/json;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        ...extraHeaders,
-      },
+      timeout: 20000,
+      headers: Object.assign({
+        'User-Agent': 'Mozilla/5.0',
+        'Accept': '*/*',
+      }, extraHeaders),
     });
-    clearTimeout(id);
     const text = await response.text();
-    if (text && response.ok) return text;
+    if (text) return text;
   } catch (e) {
     console.error('fetchWithNative error:', e?.message);
   }
   return null;
-}
-
-async function fetchWithWreq(url) {
-  try {
-    const wreq = require('wreq-js');
-    const response = await wreq.fetch(url, { timeout: SCRAPE_TIMEOUT });
-    if (response.status === 200) {
-      const text = await response.text();
-      return text || null;
-    }
-    return null;
-  } catch {
-    return null;
-  }
 }
 
 router.get('/fetch', async (req, res) => {
@@ -51,7 +32,11 @@ router.get('/fetch', async (req, res) => {
   let html = await fetchWithNative(url);
 
   if (!html) {
-    html = await fetchWithWreq(url);
+    try {
+      const wreq = require('wreq-js');
+      const wr = await wreq.fetch(url, { timeout: 20000 });
+      if (wr.status === 200) html = await wr.text();
+    } catch {}
   }
 
   if (html) {
@@ -86,7 +71,8 @@ async function tryFetchImage(url) {
 
 async function fetchAtHome(chapterId) {
   try {
-    const res = await fetch(`https://api.mangadex.org/at-home/server/${chapterId}`, {
+    const res = await nodeFetch(`https://api.mangadex.org/at-home/server/${chapterId}`, {
+      timeout: 15000,
       headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
     });
     if (!res.ok) return null;
@@ -375,6 +361,27 @@ router.get('/animechan-proxy', async (req, res) => {
     console.error('Animechan proxy error:', e?.message);
     res.status(502).json({ success: false, message: e?.message || 'Animechan fetch failed' });
   }
+});
+
+router.get('/fetch-health', async (req, res) => {
+  const targets = [
+    'https://api.mangadex.org/ping',
+    'https://api.comick.io/search?q=test&limit=1',
+    'https://animechan.xyz/api/random',
+    'https://httpbin.org/get',
+  ];
+  const results = [];
+  for (const target of targets) {
+    try {
+      const start = Date.now();
+      const r = await nodeFetch(target, { timeout: 10000 });
+      const ms = Date.now() - start;
+      results.push({ target, status: r.status, ok: r.ok, ms, text: (await r.text()).slice(0, 100) });
+    } catch (e) {
+      results.push({ target, error: e.message });
+    }
+  }
+  res.json({ success: true, data: results });
 });
 
 module.exports = router;
