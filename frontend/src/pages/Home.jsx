@@ -31,6 +31,7 @@ import {
   loadWatchlist,
   isInWatchlist,
 } from "../services/storage";
+import { getCurrentLevel, getStreak } from "../services/progression";
 import "./Home.css";
 
 function useAnimeData() {
@@ -122,11 +123,18 @@ function StatsBar() {
     const wl = loadWatchlist();
     const history = JSON.parse(localStorage.getItem("watchHistory") || "[]");
     const ratings = Object.keys(JSON.parse(localStorage.getItem("userRatings") || "{}")).length;
-    return [
+    const level = getCurrentLevel();
+    const streak = getStreak();
+    const items = [
       { icon: Bookmark, label: "Watchlist", value: wl.length, cls: "bookmark" },
       { icon: Eye, label: "Episodes Watched", value: history.length, cls: "eye" },
       { icon: Star, label: "Anime Rated", value: ratings, cls: "trophy" },
+      { icon: Zap, label: "Level", value: level, cls: "level" },
     ];
+    if (streak.current > 0) {
+      items.push({ icon: TrendingUp, label: "Day Streak", value: streak.current, cls: "streak" });
+    }
+    return items;
   }, []);
 
   return (

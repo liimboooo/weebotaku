@@ -8,7 +8,7 @@ import * as tierlistService from "../services/tierlistService";
 import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
 import { formatCount, timeAgo as formatTimeAgo, notify } from "../utils/helpers";
-import { getCurrentXP, getCurrentLevel, getLevelProgress, getStreak, getBadges } from "../services/progression";
+import { getCurrentXP, getCurrentLevel, getLevelProgress, getStreak, getBadges, getLevel, getAllBadgeDefs } from "../services/progression";
 import { Bookmark, Heart, Star, Clock, PenLine, LogOut, Settings, Eye, Film, Users, Video, Sparkles, Layers, Zap, Trophy, Flame } from "lucide-react";
 import "./ProfilePage.css";
 
@@ -467,6 +467,62 @@ export default function ProfilePage() {
             {activeTab === "overview" && (
               <div className="tab-panel">
                 <div className="overview-grid">
+                  {!isRemoteProfile && (
+                    <div className="overview-card overview-card--progression">
+                      <h3><Zap size={12} /> Your Progression</h3>
+                      <div className="prog-summary">
+                        <div className="prog-level-circle">
+                          <svg viewBox="0 0 80 80" className="prog-ring-svg">
+                            <circle cx="40" cy="40" r="36" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="4" />
+                            <circle cx="40" cy="40" r="36" fill="none" stroke="#e63636" strokeWidth="4"
+                              strokeDasharray={`${(xpProgress / 100) * 226} 226`}
+                              strokeLinecap="round" transform="rotate(-90 40 40)" />
+                          </svg>
+                          <span className="prog-level-num">{userLevel}</span>
+                        </div>
+                        <div className="prog-details">
+                          <span className="prog-xp-text">{userXP} XP total</span>
+                          <span className="prog-next-text">{Math.ceil(100 * userLevel ** 2) - userXP} XP to Level {userLevel + 1}</span>
+                          {streakData.current > 0 && (
+                            <span className="prog-streak-text"><Flame size={12} /> {streakData.current} day streak {streakData.longest > streakData.current && <>(best: {streakData.longest})</>}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="prog-how">
+                        <span className="prog-how-title">How to earn XP</span>
+                        <div className="prog-how-list">
+                          <span><Eye size={10} /> Watch an episode <strong>+10</strong></span>
+                          <span><Star size={10} /> Rate an anime <strong>+5</strong></span>
+                          <span><Bookmark size={10} /> Add to watchlist <strong>+3</strong></span>
+                          <span><Heart size={10} /> Like an anime <strong>+2</strong></span>
+                          <span><Zap size={10} /> Daily login bonus <strong>+20</strong></span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!isRemoteProfile && (() => {
+                    const allDefs = getAllBadgeDefs();
+                    const earnedKeys = new Set(earnedBadges.map(b => b.key));
+                    return (
+                      <div className="overview-card overview-card--badges">
+                        <h3><Trophy size={12} /> Badges ({earnedBadges.length}/{Object.keys(allDefs).length})</h3>
+                        <div className="badges-grid">
+                          {Object.entries(allDefs).map(([key, def]) => {
+                            const earned = earnedKeys.has(key);
+                            return (
+                              <div key={key} className={`badge-item ${earned ? 'earned' : 'locked'}`} title={def.desc}>
+                                <span className="badge-icon">{def.icon}</span>
+                                <span className="badge-label">{def.label}</span>
+                                <span className="badge-desc">{def.desc}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   <div className="overview-card overview-card--genres">
                     <h3>Top Genres</h3>
                     {topGenres.length > 0 ? (
@@ -487,6 +543,20 @@ export default function ProfilePage() {
                       <p className="empty-msg">Add anime to see genre stats</p>
                     )}
                   </div>
+
+                  {dominantGenre && (
+                    <div className="overview-card overview-card--aura">
+                      <h3>Your Aura</h3>
+                      <div className="aura-explain">
+                        <div className="aura-color-swatch" style={{ background: auraColor }} />
+                        <div className="aura-explain-text">
+                          <strong>{dominantGenre} Aura</strong>
+                          <span>Your profile glow is based on your most-watched genre. Watch more anime to shift your aura color.</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="overview-card overview-card--quick">
                     <h3>Quick Links</h3>
                     <div className="quick-links">
@@ -495,6 +565,7 @@ export default function ProfilePage() {
                       <button onClick={() => navigate("/browse/anime")}><Film size={16} /> Browse</button>
                     </div>
                   </div>
+
                   <div className="overview-card overview-card--recent">
                     <h3>Recently Added</h3>
                     {watchlistAnime.length > 0 ? (

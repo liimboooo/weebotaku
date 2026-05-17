@@ -105,6 +105,10 @@ const BADGE_DEFS = {
   Curator: { label: "Curator", desc: "25 anime in watchlist", icon: "🗂️", check: (stats) => stats.watchlistCount >= 25 },
 };
 
+export function getAllBadgeDefs() {
+  return BADGE_DEFS;
+}
+
 export function getBadges(stats = {}) {
   const prog = getProgression();
   const level = getLevel(prog.xp || 0);
@@ -118,20 +122,32 @@ export function getBadges(stats = {}) {
   return earned;
 }
 
+function notifyXP(amount, label) {
+  window.dispatchEvent(new CustomEvent("xp-gain", { detail: { amount, label } }));
+}
+
 export function awardWatchEpisode() {
-  return addXP(XP_WATCH_EPISODE, "watch");
+  const result = addXP(XP_WATCH_EPISODE, "watch");
+  notifyXP(XP_WATCH_EPISODE, "Episode watched");
+  return result;
 }
 
 export function awardRateAnime() {
-  return addXP(XP_RATE_ANIME, "rate");
+  const result = addXP(XP_RATE_ANIME, "rate");
+  notifyXP(XP_RATE_ANIME, "Anime rated");
+  return result;
 }
 
 export function awardLikeAnime() {
-  return addXP(XP_LIKE_ANIME, "like");
+  const result = addXP(XP_LIKE_ANIME, "like");
+  notifyXP(XP_LIKE_ANIME, "Anime liked");
+  return result;
 }
 
 export function awardWatchlistAdd() {
-  return addXP(XP_WATCHLIST_ADD, "watchlist");
+  const result = addXP(XP_WATCHLIST_ADD, "watchlist");
+  notifyXP(XP_WATCHLIST_ADD, "Added to watchlist");
+  return result;
 }
 
 export function awardDailyBonus() {
@@ -141,5 +157,7 @@ export function awardDailyBonus() {
   if (lastDaily === today) return null;
   prog.lastDailyBonus = today;
   saveProgression(prog);
-  return addXP(XP_DAILY_BONUS, "daily");
+  const result = addXP(XP_DAILY_BONUS, "daily");
+  notifyXP(XP_DAILY_BONUS, "Daily bonus");
+  return result;
 }
