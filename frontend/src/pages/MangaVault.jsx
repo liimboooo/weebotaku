@@ -8,7 +8,7 @@ import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchTopManga, fetchSearchManga } from "../services/jikanApi";
 import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
-import { searchManga as mdSearch, getMangaChapters, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages } from "../services/mangaApi";
+import { searchManga as mdSearch, getMangaChapters, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages, searchBato, getBatoChapters, getBatoPages } from "../services/mangaApi";
 import MangaReader from "./Feeds/MangaReader";
 import "./MangaVault.css";
 
@@ -215,6 +215,29 @@ export default function MangaVault() {
           const validChapters = chapters.filter(ch => ch.pages > 0);
           if (validChapters.length > 0) {
             setReaderManga(tm);
+            setReaderChapters(validChapters);
+            setReaderChapter(validChapters[0]);
+            setReaderOpen(true);
+            return;
+          }
+        }
+      }
+
+      const batoResults = await searchBato(manga.title);
+      if (batoResults.length > 0) {
+        const bm = batoResults[0];
+        const chapters = await getBatoChapters(bm.id);
+        if (chapters.length > 0) {
+          for (const ch of chapters) {
+            try {
+              ch.pagesList = await getBatoPages(ch.id);
+              ch.pages = ch.pagesList.length;
+              ch.provider = 'bato';
+            } catch { continue; }
+          }
+          const validChapters = chapters.filter(ch => ch.pages > 0);
+          if (validChapters.length > 0) {
+            setReaderManga(bm);
             setReaderChapters(validChapters);
             setReaderChapter(validChapters[0]);
             setReaderOpen(true);

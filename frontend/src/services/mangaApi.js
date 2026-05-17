@@ -217,6 +217,42 @@ export async function getToonilyPages(id) {
   return json.data;
 }
 
+export async function searchBato(query) {
+  const queries = mangaTitleVariants(query);
+  const seen = new Set();
+  for (const q of queries) {
+    try {
+      const res = await fetch(`${API_BASE}/scrape/manga-bato-search?q=${encodeURIComponent(q)}`);
+      if (!res.ok) continue;
+      const json = await res.json();
+      if (json.success && json.data.length > 0) {
+        return json.data.filter(m => {
+          if (seen.has(m.id)) return false;
+          seen.add(m.id);
+          return true;
+        }).map(m => ({ ...m, provider: 'bato' }));
+      }
+    } catch { continue; }
+  }
+  return [];
+}
+
+export async function getBatoChapters(id) {
+  const res = await fetch(`${API_BASE}/scrape/manga-bato-chapters?id=${encodeURIComponent(id)}`);
+  if (!res.ok) return [];
+  const json = await res.json();
+  if (!json.success) return [];
+  return json.data;
+}
+
+export async function getBatoPages(id) {
+  const res = await fetch(`${API_BASE}/scrape/manga-bato-pages?id=${encodeURIComponent(id)}`);
+  if (!res.ok) throw new Error("Failed to fetch pages");
+  const json = await res.json();
+  if (!json.success || !json.data.length) throw new Error("No pages found");
+  return json.data;
+}
+
 export async function getMangaById(mangaId) {
   const json = await mdFetch(`/manga/${mangaId}?includes[]=cover_art&includes[]=author`);
   if (!json?.data) throw new Error("Manga not found");

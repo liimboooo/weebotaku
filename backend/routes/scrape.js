@@ -352,4 +352,85 @@ router.get('/fetch-health', async (req, res) => {
   res.json({ success: true, data: results });
 });
 
+// ---------- Bato.to Aggregator Scraper ----------
+
+router.get('/manga-bato-search', async (req, res) => {
+  const { q } = req.query;
+  if (!q) return res.status(400).json({ success: false, message: 'Missing q' });
+  try {
+    const word = q.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '+');
+    const html = await fetchWithHeaders(`https://bato.to/search?word=${word}`);
+    if (!html) return res.json({ success: true, data: [] });
+    const $ = cheerio.load(html);
+    const results = [];
+    $('.item').each((i, el) => {
+      const link = $(el).find('a').first().attr('href') || '';
+      const id = link.split('/').filter(Boolean).pop() || link;
+      const title = $(el).find('.item-title').text().trim() || $(el).find('a').first().text().trim();
+      const img = $(el).find('img').attr('src') || '';
+      if (id && title) results.push({ id, title, cover: img, author: '', provider: 'bato' });
+      if (results.length >= 5) return false;
+    });
+    if (!results.length) {
+      $('a[href*="/series/"]').each((i, el) => {
+        const link = $(el).attr('href') || '';
+        if (!link.includes('/series/')) return;
+        const id = link.split('/').filter(Boolean).pop();
+        const title = $(el).text().trim() || $(el).attr('title') || '';
+        if (id && title && !results.some(r => r.id === id)) results.push({ id, title, cover: '', author: '', provider: 'bato' });
+        if (results.length >= 5) return false;
+      });
+    }
+    res.json({ success: true, data: results });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+router.get('/manga-bato-chapters', async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
+  try {
+    const html = await fetchWithHeaders(`https://bato.to/series/${id}`);
+    if (!html) return res.json({ success: true, data: [] });
+    const $ = cheerio.load(html);
+    const chapters = [];
+    $('.chapter-list a[href*="/series/"], a[href*="/chapter/"]').each((i, el) => {
+      const href = $(el).attr('href') || '';
+      if (!href.includes(id)) return;
+      const chId = href.split('/').filter(Boolean).pop();
+      const label = $(el).text().trim();
+      const match = label.match(/(\d+(?:\.\d+)?)/);
+      if (chId) chapters.push({
+        id: `${id}/${chId}`,
+        chapter: match ? match[1] : String(chapters.length + 1),
+        title: label,
+        pages: 0,
+        provider: 'bato',
+      });
+    });
+    res.json({ success: true, data: chapters.reverse() });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+router.get('/manga-bato-pages', async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
+  try {
+    const html = await fetchWithHeaders(`https://bato.to/series/${id}`);
+    if (!html) return res.json({ success: true, data: [] });
+    const $ = cheerio.load(html);
+    const pages = [];
+    $('img.page-image, .reader-container img, #reader img').each((i, el) => {
+      const src = $(el).attr('src') || $(el).attr('data-src') || '';
+      if (src && !src.includes('data:image')) pages.push(src);
+    });
+    res.json({ success: true, data: pages });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
 module.exports = router;
