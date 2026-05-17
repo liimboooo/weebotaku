@@ -8,7 +8,7 @@ import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchTopManga, fetchSearchManga } from "../services/jikanApi";
 import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
-import { searchManga as mdSearch, getMangaChapters, searchComick, getComickChapters, getComickChapterPages, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages } from "../services/mangaApi";
+import { searchManga as mdSearch, getMangaChapters, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages } from "../services/mangaApi";
 import MangaReader from "./Feeds/MangaReader";
 import "./MangaVault.css";
 
@@ -174,28 +174,6 @@ export default function MangaVault() {
           setReaderChapter(chapters[0]);
           setReaderOpen(true);
           return;
-        }
-      }
-
-      const comickResults = await searchComick(manga.title);
-      if (comickResults.length > 0) {
-        const cm = comickResults[0];
-        const chapters = await getComickChapters(cm.slug);
-        if (chapters.length > 0) {
-          for (const ch of chapters) {
-            try {
-              ch.pagesList = await getComickChapterPages(ch.id);
-              ch.pages = ch.pagesList.length;
-            } catch { continue; }
-          }
-          const validChapters = chapters.filter(ch => ch.pages > 0);
-          if (validChapters.length > 0) {
-            setReaderManga(cm);
-            setReaderChapters(validChapters);
-            setReaderChapter(validChapters[0]);
-            setReaderOpen(true);
-            return;
-          }
         }
       }
 

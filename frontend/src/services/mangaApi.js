@@ -132,72 +132,16 @@ export async function getChapterPagesWithFallback(chapterId) {
   }
 }
 
-const COMICK_BASE = "https://api.comick.io";
-const ALT_API = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
-async function comickFetch(path) {
-  const now = Date.now();
-  const wait = Math.max(0, 250 - (now - lastCall));
-  if (wait > 0) await new Promise(r => setTimeout(r, wait));
-  lastCall = Date.now();
-  const url = `${API_BASE}/scrape/comick-proxy?path=${encodeURIComponent(path)}`;
-  try {
-    const res = await fetch(url);
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) return JSON.parse(json.data);
-    }
-  } catch {}
-  throw new Error(`Comick unavailable via proxy`);
-}
-
 export async function searchComick(query) {
-  let allResults = [];
-  for (const q of mangaTitleVariants(query)) {
-    try {
-      const json = await comickFetch(`/search?q=${encodeURIComponent(q)}&limit=10`);
-      if (json?.length > 0) { allResults = json; break; }
-    } catch { continue; }
-  }
-  if (!allResults.length) return [];
-  const scored = allResults
-    .map(m => ({ m, score: titleScore(query, m.title || m.slug || "") }))
-    .sort((a, b) => b.score - a.score);
-  const top = scored.filter(s => s.score >= 30);
-  const use = top.length > 0 ? top : scored.slice(0, 3);
-  return use.map(({ m }) => ({
-    id: m.slug,
-    title: m.title || m.slug,
-    slug: m.slug,
-    coverUrl: m.md_covers?.[0] ? `https://meo.comick.pics/${m.md_covers[0]}` : null,
-    year: m.year,
-    country: m.country,
-    provider: "comick",
-  }));
+  return [];
 }
 
-export async function getComickChapters(slug, lang = "en") {
-  const json = await comickFetch(`/comic/${slug}/chapters?lang=${lang}&limit=500`);
-  if (!json?.chapters?.length) return [];
-  return json.chapters
-    .filter(ch => ch.lang === lang)
-    .map(ch => ({
-      id: ch.hid,
-      chapter: ch.chap,
-      title: ch.title || "",
-      volume: ch.vol || "",
-      pages: 0,
-      group: ch.group_name?.[0] || "",
-      provider: "comick",
-    }))
-    .sort((a, b) => parseFloat(b.chapter) - parseFloat(a.chapter));
+export async function getComickChapters(slug) {
+  return [];
 }
 
 export async function getComickChapterPages(chapterHid) {
-  const json = await comickFetch(`/chapter/${chapterHid}`);
-  const images = json?.chapter?.md_images;
-  if (!images?.length) throw new Error("No Comick pages found");
-  return images.map(img => `https://meo.comick.pics/${img.b2key}`);
+  throw new Error('Comick unavailable');
 }
 
 export async function searchMangaNato(query) {

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ArrowLeft, BookOpen, Heart, Star, ChevronDown, Loader } from "lucide-react";
-import { getMangaById, getMangaChapters, searchComick, getComickChapters, getComickChapterPages, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages } from "../services/mangaApi";
+import { getMangaById, getMangaChapters, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages } from "../services/mangaApi";
 import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
 import MangaReader from "./Feeds/MangaReader";
 import ErrorBoundary from "../components/ErrorBoundary";
@@ -55,19 +55,6 @@ export default function MangaDetail() {
       setChLoading(true);
       try {
         let ch = await getMangaChapters(id);
-        if (ch.length === 0) {
-          const comickResults = await searchComick(manga?.title || "");
-          if (comickResults.length > 0) {
-            ch = await getComickChapters(comickResults[0].slug);
-            for (const c of ch) {
-              try {
-                c.pagesList = await getComickChapterPages(c.id);
-                c.pages = c.pagesList.length;
-              } catch { continue; }
-            }
-            ch = ch.filter(c => c.pages > 0);
-          }
-        }
         if (ch.length === 0) {
           const natoResults = await searchMangaNato(manga?.title || "");
           if (natoResults.length > 0) {
