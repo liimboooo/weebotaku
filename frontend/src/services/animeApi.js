@@ -186,9 +186,9 @@ async function searchAnilist(query) {
 
 // ─── Embed Providers ───
 const EMBED_PROVIDERS = [
+  { name: "DropFile", url: (id, ep = 1) => `https://dropfile.cc/player/tv/anilist-${id}/${ep}/1` },
   { name: "MegaPlay", url: (id, ep = 1) => `https://megaplay.buzz/stream/ani/${id}/${ep}/sub` },
   { name: "AnimePlay", url: (id, ep = 1) => `https://animeplay.cfd/stream/ani/${id}/${ep}/sub` },
-  { name: "DropFile", url: (id, ep = 1) => `https://dropfile.cc/player/tv/anilist-${id}/${ep}/1` },
   { name: "VidPlus", url: (id, ep = 1) => `https://player.vidplus.to/embed/anime/${id}/${ep}` },
   { name: "VidNest", url: (id, ep = 1) => `https://vidnest.fun/anime/${id}/${ep}/sub` },
 ];
