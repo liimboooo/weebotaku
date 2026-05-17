@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, X, Loader, Play, Monitor, Maximize2, Globe } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Loader, Play, Monitor, Maximize2, Globe, SkipForward } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, getWitanimeEpisodes, getWitanimeStreamUrl, getAnime3rbEpisodes, getAnime3rbStreamUrl } from "../../services/animeApi";
 import "./AnimeWatch.css";
@@ -28,7 +28,10 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
   const [useEmbedFallback, setUseEmbedFallback] = useState(false);
+  const [autoNext, setAutoNext] = useState(false);
+  const autoNextTimer = useRef(null);
   const scrollRef = useRef(null);
+  const iframeRef = useRef(null);
 
   const isEmbedSource = ["embed"].includes(anime.source) || useEmbedFallback;
 
@@ -120,6 +123,8 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const goPrev = () => setEpIndex(i => { const n = Math.max(0, i - 1); if (onEpisodeChange && episodes[n]) onEpisodeChange(episodes[n].episode); return n; });
   const goNext = () => setEpIndex(i => { const n = Math.min(episodes.length - 1, i + 1); if (onEpisodeChange && episodes[n]) onEpisodeChange(episodes[n].episode); return n; });
 
+  const hasMultipleServers = servers.length > 1 || (anime.embedProviders?.length > 0 && useEmbedFallback);
+
   return createPortal(
     <motion.div className="watch-overlay" onClick={onClose}
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
@@ -143,6 +148,10 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
             <span className="watch-source-badge">{anime.source}</span>
           </div>
           <div className="watch-topbar-right">
+            <button className="watch-topbar-btn" onClick={() => setAutoNext(!autoNext)} title="Auto-next episode">
+              <SkipForward size={14} />
+              <span className={`watch-topbar-indicator ${autoNext ? "on" : ""}`} />
+            </button>
             <button className="watch-close" onClick={onClose}><X size={18} /></button>
           </div>
         </header>
@@ -175,7 +184,9 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                 </div>
               )}
               {!loading && !error && streamUrl && !streamLoading && (
-                <iframe key={`${episode?.episode || 0}-${serverIndex}`}
+                <iframe
+                  ref={iframeRef}
+                  key={`${episode?.episode || 0}-${serverIndex}`}
                   className="watch-frame"
                   src={streamUrl}
                   title={`Episode ${episode?.episode || ""}`}
@@ -243,7 +254,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
               ) : (
                 episodes.map((ep, i) => (
                   <motion.button key={ep.id || i} data-ep={i}
-                    className={`watch-ep-item ${i === epIndex ? "active" : ""}`}
+                    className={`watch-ep-item ${i === epIndex ? "active" : ""} ${ep.watched ? "watched" : ""}`}
                     whileHover={{ x: 4 }}
                     transition={{ type: "spring", stiffness: 300 }}
                     onClick={() => { setEpIndex(i); if (onEpisodeChange) onEpisodeChange(ep.episode); }}

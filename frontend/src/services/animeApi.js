@@ -125,7 +125,7 @@ export async function getAnitakuEpisodes(slug) {
   const html = await fetchHtmlViaProxy(`${ANITAKU}/category/${slug}`);
   if (!html) return [];
   const episodes = [];
-  const re = /<a href="\/([^"]+\-episode\-(\d+))"[^>]*?data-num="(\d+)"/g;
+  const re = /<a href="\/([^"]+-episode-(\d+))"[^>]*?data-num="(\d+)"/g;
   let m;
   while ((m = re.exec(html)) !== null) {
     const epNum = parseInt(m[3], 10);
@@ -134,7 +134,7 @@ export async function getAnitakuEpisodes(slug) {
     }
   }
   if (episodes.length === 0) {
-    const re2 = /<a href="\/([^"]+\-episode\-(\d+))"/g;
+    const re2 = /<a href="\/([^"]+-episode-(\d+))"/g;
     while ((m = re2.exec(html)) !== null) {
       const epNum = parseInt(m[2], 10);
       if (!episodes.find((e) => e.episode === epNum)) {
@@ -161,8 +161,6 @@ export async function getAnitakuStreamUrls(episodeUrl) {
   return servers;
 }
 
-
-
 // ─── AniList search (GraphQL) ───
 const ANILIST_QL = "https://graphql.anilist.co";
 
@@ -186,8 +184,13 @@ async function searchAnilist(query) {
   return null;
 }
 
+// ─── Embed Providers ───
 const EMBED_PROVIDERS = [
   { name: "MegaPlay", url: (id, ep = 1) => `https://megaplay.buzz/stream/ani/${id}/${ep}/sub` },
+  { name: "2Embed", url: (id, ep = 1) => `https://www.2embed.to/embed/anime?id=${id}&episode=${ep}` },
+  { name: "MultiEmbed", url: (id, ep = 1) => `https://multiembed.mov/directstream.php?video_id=${id}&s=ani&ep=${ep}` },
+  { name: "AnimEmbed", url: (id, ep = 1) => `https://animembed.com/embed/${id}/${ep}` },
+  { name: "GoEmbed", url: (id, ep = 1) => `https://gogoembed.com/embed/anime/${id}/${ep}` },
 ];
 
 async function makeEmbedFallback(animeName) {
@@ -414,29 +417,46 @@ export async function getAnime3rbStreamUrl(episodeUrl) {
   }
 }
 
+// ─── Enhanced Embed Search (parallel fallback) ───
+async function searchParallelEmbeds(animeName) {
+  const anilistResult = await searchAnilist(animeName);
+  if (anilistResult) {
+    return {
+      source: "embed",
+      slug: animeName,
+      id: anilistResult.anilistId,
+      anilistId: anilistResult.anilistId,
+      title: anilistResult.title,
+      embedProviders: EMBED_PROVIDERS.map((p) => ({ name: p.name, url: p.url(anilistResult.anilistId) })),
+    };
+  }
+  return null;
+}
+
 // ─── Multi-source search (parallel) ───
 export async function findStreamingSource(animeName) {
-  const embedResult = searchAnilist(animeName).catch(() => null);
   const sources = [
     searchWitanime(animeName).then(r => r ? { source: "witanime", slug: r.slug, id: r.slug, title: r.title } : null),
     searchAnime3rb(animeName).then(r => r ? { source: "anime3rb", slug: r.slug, id: r.slug, title: r.title } : null),
     searchAnipub(animeName).then(r => r.length > 0 ? { source: "anipub", id: r[0].Id, title: r[0].Name } : null),
     searchAnitaku(animeName).then(r => r.length > 0 ? { source: "anitaku", slug: r[0].slug, id: r[0].slug, title: r[0].title } : null),
+    searchParallelEmbeds(animeName).then(r => r),
   ];
 
-  const all = await Promise.allSettled([...sources, embedResult]);
-  const embedInfo = all[4].status === "fulfilled" ? all[4].value : null;
+  const results = await Promise.allSettled(sources);
 
-  for (let i = 0; i < 4; i++) {
-    const r = all[i];
-    if (r.status === "fulfilled" && r.value) {
-      const out = r.value;
-      if (embedInfo) {
-        out.embedProviders = EMBED_PROVIDERS.map(p => ({ name: p.name, url: p.url(embedInfo.anilistId) }));
-        out.anilistId = embedInfo.anilistId;
-      }
-      return out;
+  const fulfilled = results
+    .filter(r => r.status === "fulfilled" && r.value)
+    .map(r => r.value);
+
+  if (fulfilled.length > 0) {
+    const best = fulfilled[0];
+    const embedInfo = fulfilled.find(f => f.source === "embed");
+    if (embedInfo) {
+      best.embedProviders = embedInfo.embedProviders;
+      best.anilistId = embedInfo.anilistId;
     }
+    return best;
   }
 
   return await makeEmbedFallback(animeName);
