@@ -139,34 +139,51 @@ export async function fetchAnimeGenres() {
 }
 
 export async function fetchAnimeById(id) {
-  const json = await jikanFetch(`/anime/${id}`);
-  return mapAnime(json.data);
+  try {
+    const json = await jikanFetch(`/anime/${id}`);
+    return mapAnime(json.data);
+  } catch {
+    const q = `{Media(id:${id},type:ANIME){id title{romaji english}coverImage{large}bannerImage averageScore episodes genres description status season seasonYear studios(isMain:true){nodes{name}}trailer{site}}}}`;
+    try {
+      const d = await anilistGraphQL(q);
+      const a = d.Media;
+      if (!a) throw new Error('not found');
+      return {
+        id: a.id, name: a.title?.english||a.title?.romaji||"", img: a.coverImage?.large||"",
+        banner: a.bannerImage||"", rating: (a.averageScore||0)/10, votes: 0, year: a.seasonYear||0,
+        episodes: a.episodes||0, status: a.status==="RELEASING"?"Ongoing":a.status==="FINISHED"?"Completed":a.status||"Unknown",
+        genres: a.genres||[], synopsis: a.description||"", studio: a.studios?.nodes?.[0]?.name||"Unknown",
+        season: a.season?a.season.charAt(0)+a.season.slice(1).toLowerCase()+" "+(a.seasonYear||""):"Unknown",
+        type: "TV", trailerUrl: a.trailer?.site==="youtube"?`https://www.youtube.com/embed/${(a.trailer.id)}`:null,
+        airingDay: null, currentEp: a.episodes||0, nextEpDate: "TBD", readProgress: 0,
+      };
+    } catch {}
+    throw new Error('Anime unavailable');
+  }
 }
 
 export async function fetchAnimeCharacters(id) {
-  const json = await jikanFetch(`/anime/${id}/characters`);
-  return json.data.slice(0, 10).map(c => ({
-    id: c.character.mal_id,
-    name: c.character.name,
-    image: c.character.images?.jpg?.image_url || "",
-    role: c.role,
-    voiceActor: c.voice_actors?.[0] ? {
-      name: c.voice_actors[0].person.name,
-      image: c.voice_actors[0].person.images?.jpg?.image_url || "",
-      lang: c.voice_actors[0].language,
-    } : null,
-  }));
+  try {
+    const json = await jikanFetch(`/anime/${id}/characters`);
+    return json.data.slice(0, 10).map(c => ({
+      id: c.character.mal_id, name: c.character.name,
+      image: c.character.images?.jpg?.image_url || "", role: c.role,
+      voiceActor: c.voice_actors?.[0] ? {
+        name: c.voice_actors[0].person.name, image: c.voice_actors[0].person.images?.jpg?.image_url || "",
+        lang: c.voice_actors[0].language,
+      } : null,
+    }));
+  } catch { return []; }
 }
 
 export async function fetchAnimeRecommendations(id) {
-  const json = await jikanFetch(`/anime/${id}/recommendations`);
-  return json.data.slice(0, 8).map(r => ({
-    id: r.entry.mal_id,
-    name: r.entry.title,
-    image: r.entry.images?.jpg?.image_url || "",
-    url: r.url,
-    votes: r.votes || 0,
-  }));
+  try {
+    const json = await jikanFetch(`/anime/${id}/recommendations`);
+    return json.data.slice(0, 8).map(r => ({
+      id: r.entry.mal_id, name: r.entry.title, image: r.entry.images?.jpg?.image_url || "",
+      url: r.url, votes: r.votes || 0,
+    }));
+  } catch { return []; }
 }
 
 export async function fetchTopManga(page = 1) {
