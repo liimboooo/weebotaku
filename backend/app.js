@@ -11,15 +11,9 @@ const rawOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean)
   : [];
 
-const corsOrigin = rawOrigins.includes('*')
-  ? '*'
-  : rawOrigins.length > 0
-    ? rawOrigins
-    : ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://liimboooo-animewch.vercel.app', 'https://frontend-beryl-theta-14.vercel.app'];
-
 app.use(cors({
-  origin: corsOrigin,
-  credentials: corsOrigin !== '*',
+  origin: true,
+  credentials: true,
 }));
 
 app.use(express.json({ limit: '10mb' }));

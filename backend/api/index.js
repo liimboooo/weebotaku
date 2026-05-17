@@ -21,16 +21,10 @@ const allowedOrigins = rawOrigins.length > 0
 
 const setCorsHeaders = (req, res) => {
   const origin = req.headers.origin;
-  if (!origin) return;
-
-  const isAllowed = allowedOrigins.includes('*') || allowedOrigins.includes(origin);
-
-  if (isAllowed) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-  }
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
 };
 
 const sendJSON = (res, status, data) => {
