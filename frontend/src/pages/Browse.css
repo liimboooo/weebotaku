@@ -100,16 +100,17 @@
   align-items: center;
   gap: 8px;
   padding: 7px 14px;
-  background: rgba(220,38,38,0.1);
-  border: 1px solid rgba(220,38,38,0.3);
-  border-radius: 99px;
+  background: var(--primary-surface);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-full);
   font-size: 0.7rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: #ef4444;
+  color: var(--primary-hover);
   margin-bottom: 20px;
   width: fit-content;
+  box-shadow: 0 0 20px rgba(230, 54, 54, 0.1);
 }
 
 .br-hero-main {
@@ -554,12 +555,29 @@
   cursor: pointer;
   transition: all var(--duration-normal) var(--ease-out);
   animation: br-card-in 0.4s var(--ease-out) both;
+  isolation: isolate;
+}
+
+.br-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover), transparent 60%);
+  opacity: 0;
+  transition: opacity var(--duration-slow) var(--ease-in-out);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.br-card:hover::before {
+  opacity: 0.4;
 }
 
 .br-card:hover {
-  border-color: var(--border-hover);
-  transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3), var(--shadow-glow);
+  border-color: var(--primary-border);
+  transform: translateY(-6px);
+  box-shadow: 0 0 40px var(--primary-glow), 0 16px 48px rgba(0, 0, 0, 0.4);
 }
 
 .br-card-thumb {

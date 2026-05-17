@@ -667,16 +667,33 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border-subtle);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-card);
   cursor: pointer;
   transition: all var(--duration-normal) var(--ease-out);
   position: relative;
+  isolation: isolate;
+}
+
+.season-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover), transparent 60%);
+  opacity: 0;
+  transition: opacity var(--duration-slow) var(--ease-in-out);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.season-card:hover::before {
+  opacity: 0.4;
 }
 
 .season-card:hover {
-  border-color: var(--border-hover);
-  transform: translateY(-4px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3), var(--shadow-glow);
+  border-color: var(--primary-border);
+  transform: translateY(-6px);
+  box-shadow: 0 0 40px var(--primary-glow), 0 16px 48px rgba(0, 0, 0, 0.4);
 }
 
 .season-card-img {
