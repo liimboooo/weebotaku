@@ -143,7 +143,7 @@ export async function fetchAnimeById(id) {
     const json = await jikanFetch(`/anime/${id}`);
     return mapAnime(json.data);
   } catch {
-    const q = `{Media(id:${id},type:ANIME){id title{romaji english}coverImage{large}bannerImage averageScore episodes genres description status season seasonYear studios(isMain:true){nodes{name}}trailer{site}}}}`;
+    const q = `{Media(id:${id},type:ANIME){id title{romaji english}coverImage{large}bannerImage averageScore episodes genres description status season seasonYear studios(isMain:true){nodes{name}}trailer{site}}}`;
     try {
       const d = await anilistGraphQL(q);
       const a = d.Media;
