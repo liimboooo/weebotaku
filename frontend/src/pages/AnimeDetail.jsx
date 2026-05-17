@@ -307,7 +307,7 @@ export default function AnimeDetail() {
               </div>
               <div className="ad-rating-info">
                 <span className="ad-rating-global">{anime.rating?.toFixed(1) || "?"}</span>
-                <span className="ad-rating-votes">({anime.votes?.toLocaleString() || 0})</span>
+                {anime.votes > 0 && <span className="ad-rating-votes">({anime.votes.toLocaleString()})</span>}
                 {userRating > 0 && <span className="ad-rating-user">You: {userRating}/5</span>}
               </div>
             </div>
