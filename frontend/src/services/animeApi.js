@@ -187,7 +187,10 @@ async function searchAnilist(query) {
 // ─── Embed Providers ───
 const EMBED_PROVIDERS = [
   { name: "VidSrc", url: (id, ep = 1) => `https://vidsrc.cc/v2/embed/anime/anilist-${id}/${ep}` },
-  { name: "2Embed", url: (id, ep = 1) => `https://2anime.xyz/embed/${id}-episode-${ep}` },
+  { name: "VidSrc pro", url: (id, ep = 1) => `https://vidsrc.pro/embed/anime/anilist-${id}/${ep}` },
+  { name: "VidBinge", url: (id, ep = 1) => `https://vidbinge.cc/embed/anime/anilist-${id}/${ep}` },
+  { name: "2Anime", url: (id, ep = 1) => `https://2anime.xyz/embed/${id}-episode-${ep}` },
+  { name: "AnimeCat", url: (id, ep = 1) => `https://animecat.xyz/embed/${id}/${ep}` },
   { name: "MegaPlay", url: (id, ep = 1) => `https://megaplay.buzz/stream/ani/${id}/${ep}/sub` },
   { name: "AnimePlay", url: (id, ep = 1) => `https://animeplay.cfd/stream/ani/${id}/${ep}/sub` },
   { name: "VidNest", url: (id, ep = 1) => `https://vidnest.fun/anime/${id}/${ep}/sub` },
@@ -419,6 +422,10 @@ export async function getAnime3rbStreamUrl(episodeUrl) {
 
 // ─── Consumet API (Gogoanime provider) ───
 const CONSUMET_MIRRORS = [
+  "https://consumet-api-rouge.vercel.app",
+  "https://aniwatch-api-8v55.onrender.com",
+  "https://consumet-extreme.vercel.app",
+  "https://consumet-api-puce.vercel.app",
   "https://api.consumet.org",
   "https://consumet-api.vercel.app",
 ];
