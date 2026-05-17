@@ -113,15 +113,8 @@ export default function SearchPage() {
 
   function getTrend(item) {
     const score = item.rating || 0;
-    if (score > 8.0) {
-      const num = 50 + (item.id % 200);
-      return { arrow: '↑', value: `+${num}`, cls: 'up' };
-    } else if (score >= 7.5) {
-      return { arrow: '→', value: `${10 + (item.id % 40)}`, cls: 'neutral' };
-    } else {
-      const num = 10 + (item.id % 50);
-      return { arrow: '↓', value: `-${num}`, cls: 'down' };
-    }
+    if (score > 0) return { arrow: '★', value: score.toFixed(1), cls: 'neutral' };
+    return null;
   }
 
   useGSAP(() => {
@@ -205,7 +198,7 @@ export default function SearchPage() {
                     return (
                       <button key={anime.id} className="sd-pill" onClick={() => searchFromPill(anime.name)}>
                         <span>{label}</span>
-                        <span className={`trending-indicator ${t.cls}`}>{t.arrow} {t.value}</span>
+                        {t && <span className={`trending-indicator ${t.cls}`}>{t.arrow} {t.value}</span>}
                       </button>
                     );
                   })

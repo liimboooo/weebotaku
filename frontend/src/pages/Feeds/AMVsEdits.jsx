@@ -142,7 +142,7 @@ export default function AMVsEdits() {
       const stored = loadFromStorage(STORAGE_KEY, []);
       const hydrated = await Promise.all(stored.map(async (e) => ({
         ...e,
-        status: e.status || ["Ongoing","Completed"][Math.floor(Math.random()*2)],
+        status: e.status || "Ongoing",
         cover: e.cover && !e.cover.startsWith("data:") ? e.cover : await loadCover(e.id),
         videoUrl: await loadVideoBlob(e.id) || "",
       })));
@@ -383,8 +383,8 @@ export default function AMVsEdits() {
       hashtags: tags.length > 0 ? tags : ["#AnimeEdit"],
       duration: Math.round(finalDuration),
       timestamp: Date.now(),
-      aspectRatio: ["9/16","3/4","1/1","4/3","16/9"][Math.floor(Math.random()*5)],
-      status: ["Ongoing","Completed"][Math.floor(Math.random()*2)],
+      aspectRatio: "16/9",
+      status: "Ongoing",
     };
     setEdits([newEdit, ...edits]);
     notify("Edit uploaded successfully!", "success");

@@ -265,7 +265,7 @@ export async function getAllGenres() {
     setCache("genres", results);
     return results;
   } catch {
-    return ["Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Romance", "Sci-Fi", "Slice of Life", "Sports", "Thriller"];
+    return ["Action","Adventure","Comedy","Drama","Fantasy","Horror","Mystery","Romance","Sci-Fi","Slice of Life","Sports","Thriller"];
   }
 }
 

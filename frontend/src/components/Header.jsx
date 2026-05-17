@@ -72,7 +72,7 @@ export default function Header() {
   const headerPanelRef = useRef(null);
   const searchRef = useRef(null);
 
-  const username = localStorage.getItem('username') || 'zabi';
+  const username = localStorage.getItem('username') || 'Guest';
   const episodesWatched = (JSON.parse(localStorage.getItem('watchHistory') || '[]')).length;
   const hasUnclaimedRewards = localStorage.getItem('userUnclaimedRewards') === 'true';
 
