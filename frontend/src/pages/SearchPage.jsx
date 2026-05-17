@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, Heart, Play, RotateCcw, Search, Sparkles, Star, TrendingUp, Clock, Tv, Zap, X } from "lucide-react";
+import { Heart, Play, RotateCcw, Search, Sparkles, Star, TrendingUp, Clock, Zap, X } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -61,11 +61,9 @@ export default function SearchPage() {
     setIsLoading(true);
     setHasSearched(true);
     try {
-      const res = await fetchSearchAnime(query, 1);
+      const res = await fetchSearchAnime(query, 1, { type, status });
       let filtered = res.data;
       if (genre) filtered = filtered.filter(a => a.genres.some(g => g.toLowerCase() === genre.toLowerCase()));
-      if (type !== "All") filtered = filtered.filter(a => a.type === type);
-      if (status !== "All") filtered = filtered.filter(a => a.status === status);
       setResults(filtered);
     } catch { setResults([]); }
     setIsLoading(false);

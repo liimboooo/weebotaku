@@ -100,9 +100,16 @@ function mapManga(m) {
   };
 }
 
-export async function fetchSearchAnime(query, page = 1) {
+export async function fetchSearchAnime(query, page = 1, options = {}) {
   try {
-    const json = await jikanFetch(`/anime?q=${encodeURIComponent(query)}&page=${page}&order_by=score&sort=desc`);
+    let url = `/anime?q=${encodeURIComponent(query)}&page=${page}&order_by=score&sort=desc&limit=25`;
+    if (options.type && options.type !== "All") url += `&type=${options.type.toLowerCase()}`;
+    if (options.status && options.status !== "All") {
+      const s = { "Ongoing": "airing", "Completed": "complete", "Upcoming": "upcoming" };
+      url += `&status=${s[options.status] || options.status.toLowerCase()}`;
+    }
+    if (options.genreIds?.length) url += `&genres=${options.genreIds.join(",")}`;
+    const json = await jikanFetch(url);
     return { data: json.data.map(mapAnime), pagination: json.pagination };
   } catch {
     return anilistSearchAnime(query);

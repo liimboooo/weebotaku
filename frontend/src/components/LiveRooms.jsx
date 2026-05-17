@@ -4,11 +4,7 @@ import { motion } from "framer-motion";
 import { Eye, Users, Wifi, User } from "lucide-react";
 import "./LiveRooms.css";
 
-const fallbackRooms = [
-  { id: 1, name: "Jujutsu Kaisen Night Room", participantCount: 4821, host: { username: "stormframe" }, privacy: "private" },
-  { id: 2, name: "One Piece Watch Tower", participantCount: 6912, host: { username: "noirwave" }, privacy: "public" },
-  { id: 3, name: "Solo Night Session", participantCount: 1380, host: { username: "limami" }, privacy: "private" },
-];
+const fallbackRooms = [];
 
 export default function LiveRooms({ rooms: externalRooms, onJoin, loading }) {
   const navigate = useNavigate();

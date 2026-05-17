@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useLoading } from "../components/LoadingProvider";
 import {
   Activity,
-  BookOpen,
   Building2,
   Calendar,
   ChevronDown,
@@ -16,7 +15,6 @@ import {
   Library,
   Play,
   Search,
-  SlidersHorizontal,
   Sparkles,
   Star,
   Tag,

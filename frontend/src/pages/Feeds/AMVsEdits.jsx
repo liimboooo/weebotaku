@@ -19,16 +19,11 @@ import {
 import AnimatedPage from "../../components/AnimatedPage";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import { formatCount, timeAgo, notify } from "../../utils/helpers";
+import { fetchTopAnime } from "../../services/jikanApi";
 
 import "./AMVsEdits.css";
 
 const HERO_VIDEO_ID = "-Ek_MAxM6cY";
-
-const allAnimeTitles = [
-  "Jujutsu Kaisen", "One Piece", "Attack on Titan", "Demon Slayer",
-  "Naruto", "Bleach", "My Hero Academia", "Dragon Ball",
-  "Chainsaw Man", "Vinland Saga", "Solo Leveling", "Tokyo Revengers",
-];
 
 const STORAGE_KEY = "amv_edits";
 const LIKED_KEY = "amv_liked";
@@ -122,6 +117,7 @@ function generateThumbnail(file) {
 }
 
 export default function AMVsEdits() {
+  const [animeTitles, setAnimeTitles] = useState(["Jujutsu Kaisen", "One Piece", "Attack on Titan", "Demon Slayer", "Naruto", "Bleach", "My Hero Academia", "Chainsaw Man", "Solo Leveling"]);
   const [ready, setReady] = useState(false);
   const [edits, setEdits] = useState([]);
   const [selectedEdit, setSelectedEdit] = useState(null);
@@ -197,30 +193,13 @@ export default function AMVsEdits() {
 
   // Reset video state when switching edits in pin modal
   useEffect(() => {
-    setVideoPlaying(false);
-    setVideoStarted(false);
-    setVideoProgress(0);
-    setVideoHover(false);
-    setVideoError(false);
-  }, [selectedEdit?.id]);
-
-  // Scroll masonry to top when filters change
-  useEffect(() => {
-    if (ready && masonryRef.current) {
-      masonryRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [sortBy, category, searchQuery, ready]);
-
-  // Parallax effect on hero background
-  useEffect(() => {
-    const handleScroll = () => {
-      if (heroBgRef.current) {
-        const offset = window.scrollY;
-        heroBgRef.current.style.transform = `translateY(${offset * 0.3}px)`;
-      }
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    const stored = loadFromStorage(STORAGE_KEY, []);
+    setEdits(stored);
+    setReady(true);
+    fetchTopAnime(1, "bypopularity").then(r => {
+      const titles = r.data.map(a => a.name).filter(Boolean);
+      if (titles.length) setAnimeTitles(titles.slice(0, 25));
+    }).catch(() => {});
   }, []);
 
   const filteredEdits = [...edits]
@@ -1015,7 +994,7 @@ export default function AMVsEdits() {
                         <label>Anime</label>
                         <select value={newAnime} onChange={(e) => setNewAnime(e.target.value)}>
                           <option value="">Select anime</option>
-                          {allAnimeTitles.map(t => <option key={t}>{t}</option>)}
+                          {animeTitles.map(t => <option key={t}>{t}</option>)}
                         </select>
                       </div>
 

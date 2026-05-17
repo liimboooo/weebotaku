@@ -17,13 +17,8 @@ import LiveRooms from "../../components/LiveRooms";
 import * as roomService from "../../services/roomService";
 import authService from "../../services/authService";
 import { addNotification } from "../../services/notificationService";
+import { fetchTopAnime } from "../../services/jikanApi";
 import "./WatchTogetherCreative.css";
-
-const ANIME_OPTIONS = [
-  "Jujutsu Kaisen", "One Piece", "Demon Slayer",
-  "Attack on Titan", "Naruto", "Chainsaw Man",
-  "Solo Leveling", "My Hero Academia", "Other Broadcast",
-];
 
 function getEmbedSource(urlString) {
   if (!urlString) return null;
@@ -70,6 +65,7 @@ export default function WatchTogetherCreative() {
   const currentUser = authService.getCurrentUser();
   const isLoggedIn = authService.isLoggedIn();
 
+  const [animeOptions, setAnimeOptions] = useState(["Jujutsu Kaisen", "One Piece", "Demon Slayer", "Attack on Titan", "Naruto", "Chainsaw Man", "Solo Leveling", "My Hero Academia", "Other Broadcast"]);
   const [roomName, setRoomName] = useState("Zenith Watch Room");
   const [setupVideoUrl, setSetupVideoUrl] = useState("");
   const [currentSourceUrl, setCurrentSourceUrl] = useState("");
@@ -106,6 +102,10 @@ export default function WatchTogetherCreative() {
       } catch { /* use fallback */ }
       setRoomsLoading(false);
     })();
+    fetchTopAnime(1, "bypopularity").then(r => {
+      const titles = r.data.map(a => a.name).filter(Boolean);
+      if (titles.length) setAnimeOptions([...titles.slice(0, 15), "Other Broadcast"]);
+    }).catch(() => {});
   }, []);
 
   const handleDataReceived = useCallback((payload) => {
@@ -458,7 +458,7 @@ export default function WatchTogetherCreative() {
                     <div className="field">
                       <label>Target Anime</label>
                       <select value={selectedAnime} onChange={(e) => setSelectedAnime(e.target.value)}>
-                        {ANIME_OPTIONS.map((a) => <option key={a}>{a}</option>)}
+                        {animeOptions.map((a) => <option key={a}>{a}</option>)}
                       </select>
                     </div>
                     <div className="field">
