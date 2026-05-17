@@ -307,7 +307,7 @@ function SectionHeader({ icon: Icon, title, subtitle, action }) {
   );
 }
 
-function SeasonCardReactions() {
+function SeasonCardReactions({ anime, watchlist, onToggleWishlist }) {
   const [liked, setLiked] = useState(false);
 
   const handleLike = (e) => {
@@ -315,13 +315,15 @@ function SeasonCardReactions() {
     setLiked(prev => !prev);
   };
 
+  const inWatchlist = watchlist?.includes(anime?.id);
+
   return (
     <div className="season-card-reactions">
       <button className={`scr-btn ${liked ? 'scr-liked' : ''}`} onClick={handleLike}>
         <Heart size={10} fill={liked ? "currentColor" : "none"} /> {liked ? "Liked" : "Like"}
       </button>
-      <button className="scr-btn" onClick={e => { e.stopPropagation(); }}>
-        <Bookmark size={10} /> Save
+      <button className={`scr-btn ${inWatchlist ? 'scr-saved' : ''}`} onClick={(e) => onToggleWishlist?.(e, anime)}>
+        <Bookmark size={10} fill={inWatchlist ? "currentColor" : "none"} /> {inWatchlist ? "Saved" : "Save"}
       </button>
     </div>
   );
@@ -381,8 +383,9 @@ function SeasonGrid({ animeList }) {
               <button
                 className={`season-wish-btn ${watchlist.includes(anime.id) ? "active" : ""}`}
                 onClick={e => toggleWishlist(e, anime)}
+                title={watchlist.includes(anime.id) ? "Remove from watchlist" : "Add to watchlist"}
               >
-                <Heart size={12} fill={watchlist.includes(anime.id) ? "currentColor" : "none"} />
+                <Bookmark size={12} fill={watchlist.includes(anime.id) ? "currentColor" : "none"} />
               </button>
               <div className="season-card-badge">{anime.status === "Ongoing" ? <Zap size={10} /> : null}{anime.status || "TV"}</div>
             </div>
@@ -393,7 +396,7 @@ function SeasonGrid({ animeList }) {
                 <span className="season-card-eps"><Film size={10} /> {anime.episodes} ep</span>
                 {anime.genres?.[0] && <span className="season-card-tag">{anime.genres[0]}</span>}
               </div>
-              <SeasonCardReactions />
+              <SeasonCardReactions anime={anime} watchlist={watchlist} onToggleWishlist={toggleWishlist} />
             </div>
           </motion.div>
         ))}
