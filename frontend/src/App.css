@@ -498,6 +498,188 @@ html, body {
   letter-spacing: 0.04em;
 }
 
+/* ─── Auth Image — Brand Logo Row ──────────────────────── */
+.auth-image-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  animation: auth-field-in 0.5s var(--ease-out) forwards;
+}
+
+.auth-image-logo-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 24px var(--accent-purple-glow), 0 4px 20px rgba(0,0,0,0.3);
+  animation: glow-spread 3s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.auth-image-logo-letter {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.auth-image-logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.auth-image-logo-title {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.auth-image-logo-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--accent-purple);
+  text-transform: uppercase;
+}
+
+/* ─── Auth Image — Tagline ──────────────────────────────── */
+.auth-image-tagline {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 2.8vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 12px;
+  color: #fff;
+  animation: auth-field-in 0.5s var(--ease-out) 0.1s forwards;
+  opacity: 0;
+}
+
+.auth-image-description {
+  font-size: clamp(0.82rem, 1.1vw, 0.92rem);
+  color: rgba(255,255,255,0.45);
+  line-height: 1.6;
+  max-width: 420px;
+  margin-bottom: 28px;
+  animation: auth-field-in 0.5s var(--ease-out) 0.15s forwards;
+  opacity: 0;
+}
+
+/* ─── Auth Image — Glow Orbs ─────────────────────────────── */
+.auth-image-glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.3;
+}
+
+.auth-image-glow-orb--1 {
+  width: 350px;
+  height: 350px;
+  background: var(--accent-purple);
+  filter: blur(100px);
+  top: -100px;
+  right: -80px;
+  animation: aurora-drift 10s ease-in-out infinite;
+}
+
+.auth-image-glow-orb--2 {
+  width: 250px;
+  height: 250px;
+  background: var(--accent-pink);
+  filter: blur(80px);
+  bottom: -60px;
+  left: -60px;
+  animation: aurora-drift 12s ease-in-out infinite reverse;
+}
+
+/* ─── Auth Image — Feature Cards Enhanced ───────────────── */
+.auth-image-features {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.auth-image-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  animation: auth-field-in 0.4s var(--ease-out) forwards;
+  opacity: 0;
+  transition: all var(--duration-normal) var(--ease-out);
+  cursor: default;
+}
+.auth-image-feature:nth-child(1) { animation-delay: 0.5s; }
+.auth-image-feature:nth-child(2) { animation-delay: 0.6s; }
+.auth-image-feature:nth-child(3) { animation-delay: 0.7s; }
+.auth-image-feature:nth-child(4) { animation-delay: 0.8s; }
+
+.auth-image-feature:hover {
+  background: rgba(168, 85, 247, 0.06);
+  border-color: rgba(168, 85, 247, 0.15);
+  transform: translateX(6px);
+}
+
+.aif-emoji {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+  transition: all var(--duration-normal);
+}
+
+.auth-image-feature:hover .aif-emoji {
+  background: rgba(168, 85, 247, 0.1);
+  border-color: rgba(168, 85, 247, 0.2);
+  transform: scale(1.05);
+}
+
+.aif-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.aif-text strong {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+}
+.aif-text span {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.5);
+}
+
+/* ─── Auth Image — CTA Row ──────────────────────────────── */
+.auth-image-cta-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  animation: auth-field-in 0.5s var(--ease-out) 0.85s forwards;
+  opacity: 0;
+}
+
 /* ─── Auth Enter Animations ──────────────────────────── */
 @keyframes auth-card-in {
   from { opacity: 0; transform: translateX(-30px); }

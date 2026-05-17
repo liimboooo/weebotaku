@@ -811,6 +811,56 @@
   color: #f87171;
 }
 
+/* ─── Season Card Reactions ───────────────────────────── */
+.season-card-reactions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.03);
+}
+
+.scr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: none;
+  background: rgba(255,255,255,0.02);
+  color: var(--text-tertiary);
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  font-family: inherit;
+}
+
+.scr-btn:hover {
+  background: rgba(236, 72, 153, 0.08);
+  color: var(--accent-pink);
+}
+
+.scr-btn svg {
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.scr-btn:hover svg {
+  transform: scale(1.2);
+}
+
+.scr-divider {
+  width: 1px;
+  height: 10px;
+  background: rgba(255,255,255,0.06);
+}
+
+.scr-hot {
+  font-size: 9px;
+  margin-left: auto;
+}
+
 /* ─── CTA Banner ─────────────────────────────────────── */
 .home-cta-banner {
   position: relative;

@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Users,
   Zap,
+  MessageCircle,
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Skeleton from "../components/Skeleton";
@@ -358,6 +359,16 @@ function SeasonGrid({ animeList }) {
                 <span className="season-card-eps"><Film size={10} /> {anime.episodes} ep</span>
                 {anime.genres?.[0] && <span className="season-card-tag">{anime.genres[0]}</span>}
               </div>
+              <div className="season-card-reactions">
+                <button className="scr-btn" onClick={e => e.stopPropagation()}>
+                  <Heart size={10} /> 12
+                </button>
+                <button className="scr-btn" onClick={e => e.stopPropagation()}>
+                  <MessageCircle size={10} /> 4
+                </button>
+                <span className="scr-divider" />
+                <span className="scr-hot">🔥</span>
+              </div>
             </div>
           </motion.div>
         ))}
@@ -535,6 +546,10 @@ export default function Home() {
           <SeasonGrid animeList={seasonPicks} />
         )}
 
+        <div className="section-divider">
+          <span>Community</span>
+        </div>
+
         <section className="home-section" id="live-rooms">
           <LiveRooms />
         </section>
@@ -542,6 +557,10 @@ export default function Home() {
         {categories.length > 0 && (
           <Categories categories={categories} />
         )}
+
+        <div className="section-divider" style={{ marginTop: 0 }}>
+          <span>Join the movement</span>
+        </div>
 
         <motion.div
           className="home-cta-banner"

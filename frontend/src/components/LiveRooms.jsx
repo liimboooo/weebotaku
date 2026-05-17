@@ -44,6 +44,12 @@ export default function LiveRooms({ rooms: externalRooms, onJoin, loading }) {
               <div className="live-room-img">
                 <div className="live-room-img-fallback">
                   <Users size={28} />
+                  <div className="live-fallback-avatars">
+                    <span className="live-fallback-avatar">M</span>
+                    <span className="live-fallback-avatar">K</span>
+                    <span className="live-fallback-avatar">R</span>
+                    <span className="live-fallback-avatar-more">+3</span>
+                  </div>
                 </div>
                 <span className="live-room-badge">{room.privacy === 'public' ? 'LIVE' : 'PRIVATE'}</span>
               </div>

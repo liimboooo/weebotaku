@@ -12,8 +12,26 @@ export default function AuthImage() {
     <div className="auth-image">
       <img src="/beta-1.jpg" alt="" aria-hidden />
       <div className="auth-image-overlay" />
+      <div className="auth-image-glow-orb auth-image-glow-orb--1" />
+      <div className="auth-image-glow-orb auth-image-glow-orb--2" />
       <div className="auth-image-brand">
-        <span className="auth-image-tagline">The social platform for anime fans.</span>
+        <div className="auth-image-logo-row">
+          <div className="auth-image-logo-mark">
+            <span className="auth-image-logo-letter">A</span>
+          </div>
+          <div className="auth-image-logo-text">
+            <span className="auth-image-logo-title">AnimeWch</span>
+            <span className="auth-image-logo-badge">SOCIAL</span>
+          </div>
+        </div>
+
+        <h1 className="auth-image-tagline">
+          The social platform for <span className="text-gradient-neon">anime fans</span>.
+        </h1>
+
+        <p className="auth-image-description">
+          Watch together, track your journey, earn your aura — everything anime, one community.
+        </p>
 
         <div className="auth-image-features">
           {features.map((f) => (
@@ -25,6 +43,11 @@ export default function AuthImage() {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="auth-image-cta-row">
+          <span className="trending-pill">1.2K watching now</span>
+          <span className="trending-pill">Live rooms active</span>
         </div>
 
         <div className="auth-image-footer">
