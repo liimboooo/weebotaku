@@ -64,10 +64,9 @@ async function searchAnipub(query) {
 
 export async function getAnimeEpisodes(id) {
   try {
-    const data = await anipubFetch(`/v1/api/details/${id}`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    const local = data.local;
+    const anipubRes = await anipubFetch(`/v1/api/details/${id}`);
+    if (!anipubRes) return [];
+    const local = anipubRes.local;
     const episodes = [];
     if (local.link) episodes.push({ episode: 1, url: local.link.replace("src=", "") });
     if (local.ep) {
