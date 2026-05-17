@@ -403,34 +403,99 @@ html, body {
 
 .auth-image-brand {
   position: absolute;
-  bottom: 56px;
-  left: 56px;
+  bottom: 48px;
+  left: 48px;
+  right: 48px;
   z-index: 3;
   pointer-events: none;
 }
 
-.auth-image-brand h2 {
-  font-family: var(--font-display);
-  font-size: clamp(1.6rem, 2.5vw, 2.4rem);
-  color: #fff;
-  margin: 0;
-  line-height: 1.15;
-}
-
-.auth-image-brand span {
+.auth-image-tagline {
   display: block;
-  color: var(--primary);
-  font-size: clamp(0.7rem, 1vw, 0.85rem);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  margin-top: 10px;
+  font-family: var(--font-display);
+  font-size: clamp(1.3rem, 2vw, 1.8rem);
+  color: #fff;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 28px;
 }
 
-.auth-image-brand p {
-  color: var(--text-tertiary);
+.auth-image-features {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.auth-image-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: auth-field-in 0.4s var(--ease-out) forwards;
+  opacity: 0;
+}
+.auth-image-feature:nth-child(1) { animation-delay: 0.5s; }
+.auth-image-feature:nth-child(2) { animation-delay: 0.6s; }
+.auth-image-feature:nth-child(3) { animation-delay: 0.7s; }
+.auth-image-feature:nth-child(4) { animation-delay: 0.8s; }
+
+.aif-emoji {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.aif-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.aif-text strong {
   font-size: 0.82rem;
-  margin: 8px 0 0;
+  font-weight: 700;
+  color: #fff;
+}
+.aif-text span {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.5);
+}
+
+.auth-image-footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  animation: auth-field-in 0.4s var(--ease-out) 0.9s forwards;
+  opacity: 0;
+}
+
+.aif-dots {
+  display: flex;
+  gap: 5px;
+}
+.aif-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  transition: all 0.3s;
+}
+.aif-dot.active {
+  background: var(--primary);
+  width: 18px;
+  border-radius: 3px;
+}
+
+.aif-stat {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.04em;
 }
 
 /* ─── Auth Enter Animations ──────────────────────────── */

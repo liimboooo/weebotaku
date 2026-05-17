@@ -29,6 +29,8 @@ export default function ProfilePage() {
   const [username, setUsername] = useState("Anime Fan");
   const [avatar, setAvatar] = useState("");
   const [avatarPreview, setAvatarPreview] = useState("");
+  const [banner, setBanner] = useState("");
+  const [bannerPreview, setBannerPreview] = useState("");
   const [statusMsg, setStatusMsg] = useState("Watching anime...");
   const [editing, setEditing] = useState(false);
   const [editingStatus, setEditingStatus] = useState(false);
@@ -66,6 +68,8 @@ export default function ProfilePage() {
     if (storedUser) setUsername(storedUser);
     const storedAvatar = localStorage.getItem("userAvatar");
     if (storedAvatar) { setAvatar(storedAvatar); setAvatarPreview(storedAvatar); }
+    const storedBanner = localStorage.getItem("userBanner");
+    if (storedBanner) { setBanner(storedBanner); setBannerPreview(storedBanner); }
     const storedStatus = localStorage.getItem("userStatusMessage");
     if (storedStatus) setStatusMsg(storedStatus);
     setWatchlist(loadWatchlist());
@@ -109,6 +113,8 @@ export default function ProfilePage() {
       return anime ? { anime, rating } : null;
     })
     .filter(Boolean);
+  const currentWatch = history[0] && loadedAnime[history[0].animeId] ? { ...loadedAnime[history[0].animeId], episode: history[0].episode } : null;
+
   const userAvgRating = ratedAnime.length
     ? (ratedAnime.reduce((s, r) => s + r.rating, 0) / ratedAnime.length).toFixed(1)
     : "—";
@@ -116,6 +122,14 @@ export default function ProfilePage() {
   const favoriteGenres = {};
   watchlistAnime.forEach((a) => a.genres?.forEach((g) => { favoriteGenres[g] = (favoriteGenres[g] || 0) + 1; }));
   const topGenres = Object.entries(favoriteGenres).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  const auraColors = {
+    Action: "#e63636", Adventure: "#f59e0b", Comedy: "#22c55e", Drama: "#a855f7",
+    Fantasy: "#3b82f6", Horror: "#881337", Romance: "#ec4899", "Sci-Fi": "#06b6d4",
+    "Slice of Life": "#f97316", Sports: "#14b8a6", Thriller: "#64748b", Mystery: "#8b5cf6",
+  };
+  const dominantGenre = topGenres[0]?.[0];
+  const auraColor = auraColors[dominantGenre] || "#e63636";
 
   const storedEdits = (() => { try { return JSON.parse(localStorage.getItem("amv_edits") || "[]"); } catch { return []; } })();
   const totalEdits = formatCount(storedEdits.length);
@@ -148,7 +162,11 @@ export default function ProfilePage() {
     } else {
       localStorage.removeItem("userAvatar");
     }
-    // Sync to backend
+    if (banner) {
+      try { localStorage.setItem("userBanner", banner); } catch {}
+    } else {
+      localStorage.removeItem("userBanner");
+    }
     try {
       await authService.updateProfile({ username, avatar, bio: statusMsg });
     } catch {}
@@ -212,6 +230,18 @@ export default function ProfilePage() {
     reader.readAsDataURL(file);
   };
 
+  const handleBannerUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const r = String(reader.result || "");
+      setBanner(r);
+      setBannerPreview(r);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const generateAvatar = async () => {
     const apis = [
       "https://nekos.best/api/v2/neko",
@@ -257,16 +287,19 @@ export default function ProfilePage() {
         <Background />
 
         <div className="profile-hero">
-          <div className="profile-hero-bg" />
+          <div className="profile-hero-bg" style={bannerPreview || banner ? { backgroundImage: `url(${bannerPreview || banner})`, backgroundSize: "cover", backgroundPosition: "center" } : {}} />
+          {(bannerPreview || banner) && <div className="profile-hero-overlay" />}
           <div className="profile-hero-content">
             <div className="profile-avatar-wrap" onClick={() => (avatarPreview || avatar) && setPreviewOpen(true)} style={{ cursor: (avatarPreview || avatar) ? "pointer" : "default" }}>
-              <div className="profile-avatar-circle">
+              <div className="profile-aura-ring" style={{ background: `radial-gradient(circle, ${auraColor}33 0%, transparent 70%)`, boxShadow: `0 0 80px ${auraColor}22` }} />
+              <div className="profile-avatar-circle" style={{ background: `linear-gradient(135deg, ${auraColor}, ${auraColor}dd)` }}>
                 {avatarPreview || avatar ? (
                   <img src={avatarPreview || avatar} alt={username} />
                 ) : (
                   <span>{username.charAt(0).toUpperCase()}</span>
                 )}
               </div>
+              {dominantGenre && <span className="profile-aura-label" style={{ background: auraColor }}>{dominantGenre}</span>}
             </div>
 
             {editing ? (
@@ -280,10 +313,17 @@ export default function ProfilePage() {
                   <button className="profile-btn profile-btn-secondary" onClick={generateAvatar}>Generate</button>
                   {avatar && <button className="profile-btn profile-btn-ghost" onClick={() => { setAvatar(""); setAvatarPreview(""); }}>Remove</button>}
                 </div>
-                <div className="profile-edit-row">
-                  <button className="profile-btn profile-btn-primary" onClick={saveProfile}>Save</button>
-                  <button className="profile-btn profile-btn-ghost" onClick={() => { setEditing(false); setUsername(localStorage.getItem("username") || "Anime Fan"); setAvatar(localStorage.getItem("userAvatar") || ""); setAvatarPreview(localStorage.getItem("userAvatar") || ""); }}>Cancel</button>
-                </div>
+                  <div className="profile-edit-row">
+                    <label className="profile-btn profile-btn-secondary">
+                      Banner Image
+                      <input type="file" accept="image/*" hidden onChange={handleBannerUpload} />
+                    </label>
+                    {banner && <button className="profile-btn profile-btn-ghost" onClick={() => { setBanner(""); setBannerPreview(""); }}>Remove Banner</button>}
+                  </div>
+                  <div className="profile-edit-row">
+                    <button className="profile-btn profile-btn-primary" onClick={saveProfile}>Save</button>
+                    <button className="profile-btn profile-btn-ghost" onClick={() => { setEditing(false); setUsername(localStorage.getItem("username") || "Anime Fan"); setAvatar(localStorage.getItem("userAvatar") || ""); setAvatarPreview(localStorage.getItem("userAvatar") || ""); setBanner(localStorage.getItem("userBanner") || ""); setBannerPreview(localStorage.getItem("userBanner") || ""); }}>Cancel</button>
+                  </div>
               </div>
             ) : (
               <div className="profile-info-area" onClick={() => setInfoOpen(true)} style={{ cursor: 'pointer' }}>
@@ -327,6 +367,19 @@ export default function ProfilePage() {
                   {!isRemoteProfile && watchlist.length >= 10 && <span className="profile-badge profile-badge-accent">Hardcore Fan</span>}
                   {!isRemoteProfile && episodesWatched >= 30 && <span className="profile-badge profile-badge-accent">On Fire</span>}
                 </div>
+                {currentWatch && (
+                  <div className="profile-current-watch">
+                    <div className="pcw-dot" />
+                    <div className="pcw-info">
+                      <span className="pcw-label">WATCHING</span>
+                      <span className="pcw-title">{currentWatch.name}</span>
+                      <span className="pcw-ep">Episode {currentWatch.episode}</span>
+                    </div>
+                    <div className="pcw-img">
+                      <img src={currentWatch.img} alt={currentWatch.name} />
+                    </div>
+                  </div>
+                )}
                 {!isRemoteProfile && (
                   <div className="profile-actions-row">
                     <button className="profile-edit-trigger" onClick={() => setEditing(true)}><Settings size={14} /> Edit Profile</button>
