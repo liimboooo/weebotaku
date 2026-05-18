@@ -25,15 +25,14 @@ async function jikanFetch(endpoint) {
   const cached = getCached(endpoint);
   if (cached) return cached;
 
-  // Skip slow proxy on localhost (no backend running)
   if (!IS_LOCALHOST) {
     try {
       const proxyUrl = `${API_BASE}/scrape/jikan-proxy?path=${encodeURIComponent(endpoint)}`;
-      const proxyRes = await fetch(proxyUrl, { signal: AbortSignal.timeout(5000) });
+      const proxyRes = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
       if (proxyRes.ok) {
         const json = await proxyRes.json();
-        if (json.success) {
-          const data = json.data;
+        if (json.success && json.data) {
+          const data = typeof json.data === 'string' ? JSON.parse(json.data) : json.data;
           setCache(endpoint, data);
           return data;
         }

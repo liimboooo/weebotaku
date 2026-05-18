@@ -5,6 +5,19 @@ const router = express.Router();
 
 const SCRAPE_TIMEOUT = 20000;
 
+function safeHandler(fn) {
+  return async (req, res) => {
+    try {
+      await fn(req, res);
+    } catch (e) {
+      console.error(`[scrape] ${req.path} crashed:`, e?.message);
+      if (!res.headersSent) {
+        res.status(500).json({ success: false, data: [], error: e?.message || 'Internal server error' });
+      }
+    }
+  };
+}
+
 async function fetchWithNative(url, extraHeaders = {}) {
   try {
     const response = await nodeFetch(url, {
@@ -23,7 +36,7 @@ async function fetchWithNative(url, extraHeaders = {}) {
   return null;
 }
 
-router.get('/fetch', async (req, res) => {
+router.get('/fetch', safeHandler(async (req, res) => {
   const { url } = req.query;
   if (!url) {
     return res.status(400).json({ success: false, message: 'Missing url query param' });
@@ -42,9 +55,9 @@ router.get('/fetch', async (req, res) => {
   if (html) {
     res.json({ success: true, data: html });
   } else {
-    res.status(502).json({ success: false, message: 'Failed to fetch URL' });
+    res.status(502).json({ success: false, data: null, error: 'Failed to fetch URL' });
   }
-});
+}));
 
 async function tryFetchImage(url) {
   try {
@@ -82,7 +95,7 @@ async function fetchAtHome(chapterId) {
   }
 }
 
-router.get('/manga-image', async (req, res) => {
+router.get('/manga-image', safeHandler(async (req, res) => {
   const { url, chapterId } = req.query;
   if (!url) {
     return res.status(400).json({ success: false, message: 'Missing url' });
@@ -119,8 +132,8 @@ router.get('/manga-image', async (req, res) => {
     }
   }
 
-  res.status(502).json({ success: false, message: 'Failed to load manga image' });
-});
+  res.status(502).json({ success: false, data: null, error: 'Failed to load manga image' });
+}));
 
 // ---------- MangaNato Aggregator Scraper ----------
 
@@ -143,7 +156,7 @@ async function fetchWithHeaders(url) {
   return null;
 }
 
-router.get('/manga-alt-search', async (req, res) => {
+router.get('/manga-alt-search', safeHandler(async (req, res) => {
   const { q } = req.query;
   if (!q) return res.status(400).json({ success: false, message: 'Missing q' });
 
@@ -166,11 +179,11 @@ router.get('/manga-alt-search', async (req, res) => {
 
     res.json({ success: true, data: results });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.json({ success: false, data: [], error: e.message });
   }
-});
+}));
 
-router.get('/manga-alt-chapters', async (req, res) => {
+router.get('/manga-alt-chapters', safeHandler(async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
 
@@ -197,11 +210,11 @@ router.get('/manga-alt-chapters', async (req, res) => {
 
     res.json({ success: true, data: chapters.reverse() });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.json({ success: false, data: [], error: e.message });
   }
-});
+}));
 
-router.get('/manga-alt-pages', async (req, res) => {
+router.get('/manga-alt-pages', safeHandler(async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
 
@@ -218,13 +231,13 @@ router.get('/manga-alt-pages', async (req, res) => {
 
     res.json({ success: true, data: pages });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.json({ success: false, data: [], error: e.message });
   }
-});
+}));
 
 // ---------- Toonily Aggregator Scraper ----------
 
-router.get('/manga-toonily-search', async (req, res) => {
+router.get('/manga-toonily-search', safeHandler(async (req, res) => {
   const { q } = req.query;
   if (!q) return res.status(400).json({ success: false, message: 'Missing q' });
   try {
@@ -254,11 +267,11 @@ router.get('/manga-toonily-search', async (req, res) => {
     }
     res.json({ success: true, data: results });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.json({ success: false, data: [], error: e.message });
   }
-});
+}));
 
-router.get('/manga-toonily-chapters', async (req, res) => {
+router.get('/manga-toonily-chapters', safeHandler(async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
   try {
@@ -281,11 +294,11 @@ router.get('/manga-toonily-chapters', async (req, res) => {
     });
     res.json({ success: true, data: chapters.reverse() });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.json({ success: false, data: [], error: e.message });
   }
-});
+}));
 
-router.get('/manga-toonily-pages', async (req, res) => {
+router.get('/manga-toonily-pages', safeHandler(async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
   try {
@@ -306,11 +319,11 @@ router.get('/manga-toonily-pages', async (req, res) => {
     }
     res.json({ success: true, data: pages });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.json({ success: false, data: [], error: e.message });
   }
-});
+}));
 
-router.get('/animechan-proxy', async (req, res) => {
+router.get('/animechan-proxy', safeHandler(async (req, res) => {
   const { path } = req.query;
   if (!path) return res.status(400).json({ success: false, message: 'Missing path' });
   try {
@@ -324,14 +337,14 @@ router.get('/animechan-proxy', async (req, res) => {
     });
     const text = await response.text();
     if (text && response.ok) return res.json({ success: true, data: text });
-    res.status(502).json({ success: false, message: `animechan returned ${response.status}` });
+    res.status(502).json({ success: false, data: null, error: `animechan returned ${response.status}` });
   } catch (e) {
     console.error('Animechan proxy error:', e?.message);
-    res.status(502).json({ success: false, message: e?.message || 'Animechan fetch failed' });
+    res.status(502).json({ success: false, data: null, error: e?.message || 'Animechan fetch failed' });
   }
-});
+}));
 
-router.get('/fetch-health', async (req, res) => {
+router.get('/fetch-health', safeHandler(async (req, res) => {
   const targets = [
     'https://api.mangadex.org/ping',
     'https://api.comick.io/search?q=test&limit=1',
@@ -350,11 +363,11 @@ router.get('/fetch-health', async (req, res) => {
     }
   }
   res.json({ success: true, data: results });
-});
+}));
 
 // ---------- Bato.to Aggregator Scraper ----------
 
-router.get('/manga-bato-search', async (req, res) => {
+router.get('/manga-bato-search', safeHandler(async (req, res) => {
   const { q } = req.query;
   if (!q) return res.status(400).json({ success: false, message: 'Missing q' });
   try {
@@ -383,11 +396,11 @@ router.get('/manga-bato-search', async (req, res) => {
     }
     res.json({ success: true, data: results });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.json({ success: false, data: [], error: e.message });
   }
-});
+}));
 
-router.get('/manga-bato-chapters', async (req, res) => {
+router.get('/manga-bato-chapters', safeHandler(async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
   try {
@@ -411,11 +424,11 @@ router.get('/manga-bato-chapters', async (req, res) => {
     });
     res.json({ success: true, data: chapters.reverse() });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.json({ success: false, data: [], error: e.message });
   }
-});
+}));
 
-router.get('/manga-bato-pages', async (req, res) => {
+router.get('/manga-bato-pages', safeHandler(async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
   try {
@@ -429,11 +442,11 @@ router.get('/manga-bato-pages', async (req, res) => {
     });
     res.json({ success: true, data: pages });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.json({ success: false, data: [], error: e.message });
   }
-});
+}));
 
-router.get('/anipub-proxy', async (req, res) => {
+router.get('/anipub-proxy', safeHandler(async (req, res) => {
   const { path } = req.query;
   if (!path) return res.status(400).json({ success: false, message: 'Missing path' });
   try {
@@ -447,13 +460,13 @@ router.get('/anipub-proxy', async (req, res) => {
     });
     const text = await response.text();
     if (text && response.ok) return res.json({ success: true, data: text });
-    res.status(502).json({ success: false, message: `anipub returned ${response.status}` });
+    res.status(502).json({ success: false, data: null, error: `anipub returned ${response.status}` });
   } catch (e) {
-    res.status(502).json({ success: false, message: e?.message });
+    res.status(502).json({ success: false, data: null, error: e?.message });
   }
-});
+}));
 
-router.get('/jikan-proxy', async (req, res) => {
+router.get('/jikan-proxy', safeHandler(async (req, res) => {
   const { path } = req.query;
   if (!path) return res.status(400).json({ success: false, message: 'Missing path' });
   try {
@@ -465,12 +478,19 @@ router.get('/jikan-proxy', async (req, res) => {
         'Accept': 'application/json',
       },
     });
+    if (response.status === 429) {
+      return res.status(429).json({ success: false, data: null, error: 'Jikan rate limited' });
+    }
     const text = await response.text();
-    if (text && response.ok) return res.json({ success: true, data: text });
-    res.status(502).json({ success: false, message: `jikan returned ${response.status}` });
+    if (text && response.ok) {
+      let parsed;
+      try { parsed = JSON.parse(text); } catch { parsed = text; }
+      return res.json({ success: true, data: parsed });
+    }
+    res.status(502).json({ success: false, data: null, error: `jikan returned ${response.status}` });
   } catch (e) {
-    res.status(502).json({ success: false, message: e?.message });
+    res.status(502).json({ success: false, data: null, error: e?.message });
   }
-});
+}));
 
 module.exports = router;

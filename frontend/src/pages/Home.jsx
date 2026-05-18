@@ -30,6 +30,7 @@ import {
   removeFromWatchlist,
   loadWatchlist,
   isInWatchlist,
+  toggleLikeAnime,
 } from "../services/storage";
 import { getCurrentLevel, getStreak } from "../services/progression";
 import "./Home.css";
@@ -307,10 +308,16 @@ function SectionHeader({ icon: Icon, title, subtitle, action }) {
 }
 
 function SeasonCardReactions({ anime, watchlist, onToggleWishlist }) {
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("likedAnime") || "[]");
+      return stored.includes(anime?.id);
+    } catch { return false; }
+  });
 
   const handleLike = (e) => {
     e.stopPropagation();
+    toggleLikeAnime(anime.id);
     setLiked(prev => !prev);
   };
 

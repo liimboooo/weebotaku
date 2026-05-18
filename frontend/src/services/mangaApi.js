@@ -10,17 +10,23 @@ async function mdFetch(path) {
   if (wait > 0) await new Promise(r => setTimeout(r, wait));
   lastCall = Date.now();
 
-  const url = `${API_BASE}/scrape/fetch?url=${encodeURIComponent(BASE + path)}`;
+  // Try direct MangaDex API first (supports CORS from browser)
   try {
+    const direct = await fetch(`${BASE}${path}`);
+    if (direct.ok) return await direct.json();
+  } catch {}
+
+  // Fallback to backend proxy (for production with running backend)
+  try {
+    const url = `${API_BASE}/scrape/fetch?url=${encodeURIComponent(BASE + path)}`;
     const res = await fetch(url);
     if (res.ok) {
       const json = await res.json();
       if (json.success) return JSON.parse(json.data);
     }
   } catch {}
-  const direct = await fetch(`${BASE}${path}`);
-  if (direct.ok) return await direct.json();
-  throw new Error(`MangaDex error: ${direct.status}`);
+
+  throw new Error('MangaDex unavailable');
 }
 
 function cleanTitle(title) {
@@ -251,10 +257,18 @@ export async function getBatoPages(id) {
   return json.data;
 }
 
+const isMangaDexUUID = (id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
 export async function getMangaById(mangaId) {
-  const json = await mdFetch(`/manga/${mangaId}?includes[]=cover_art&includes[]=author`);
-  if (!json?.data) throw new Error("Manga not found");
-  const m = json.data;
+  if (isMangaDexUUID(mangaId)) {
+    const json = await mdFetch(`/manga/${mangaId}?includes[]=cover_art&includes[]=author`);
+    if (!json?.data) throw new Error("Manga not found");
+    return parseMangaDexManga(json.data);
+  }
+  throw new Error("Non-UUID manga ID — use searchAndGetManga for title-based lookup");
+}
+
+function parseMangaDexManga(m) {
   const coverRel = m.relationships?.find(r => r.type === "cover_art");
   const coverFile = coverRel?.attributes?.fileName;
   const title = m.attributes?.title?.en || Object.values(m.attributes?.title || {})[0] || "Unknown";
@@ -268,4 +282,13 @@ export async function getMangaById(mangaId) {
     tags: m.attributes?.tags?.map(t => t.attributes.name.en) || [],
     author: m.relationships?.find(r => r.type === "author")?.attributes?.name || "Unknown",
   };
+}
+
+export async function searchAndGetManga(titleOrId) {
+  if (isMangaDexUUID(titleOrId)) {
+    return getMangaById(titleOrId);
+  }
+  const results = await searchManga(titleOrId);
+  if (results.length > 0) return results[0];
+  throw new Error("Manga not found on MangaDex");
 }

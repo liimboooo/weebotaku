@@ -4,8 +4,9 @@ import { motion } from "framer-motion";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ArrowLeft, BookOpen, Heart, Star, ChevronDown, Loader } from "lucide-react";
-import { getMangaById, getMangaChapters, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages, searchBato, getBatoChapters, getBatoPages } from "../services/mangaApi";
+import { getMangaById, getMangaChapters, searchManga, searchAndGetManga, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages, searchBato, getBatoChapters, getBatoPages } from "../services/mangaApi";
 import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
+import { addNotification } from "../services/notificationService";
 import MangaReader from "./Feeds/MangaReader";
 import ErrorBoundary from "../components/ErrorBoundary";
 import Background from "../components/Background";
@@ -42,7 +43,16 @@ export default function MangaDetail() {
         const m = await getMangaById(id);
         setManga(m);
       } catch {
-        setError("Failed to load manga details.");
+        try {
+          const titleFromStorage = localStorage.getItem(`manga_title_${id}`);
+          if (titleFromStorage) {
+            const m = await searchAndGetManga(titleFromStorage);
+            if (m) { setManga(m); return; }
+          }
+          setError("Failed to load manga details. The ID may not be a MangaDex UUID.");
+        } catch {
+          setError("Failed to load manga details.");
+        }
       } finally {
         setLoading(false);
       }
@@ -54,7 +64,8 @@ export default function MangaDetail() {
     (async () => {
       setChLoading(true);
       try {
-        let ch = await getMangaChapters(id);
+        const mangaDexId = manga.id || id;
+        let ch = await getMangaChapters(mangaDexId);
         if (ch.length === 0) {
           const natoResults = await searchMangaNato(manga?.title || "");
           if (natoResults.length > 0) {
@@ -108,7 +119,10 @@ export default function MangaDetail() {
   }, [manga, id, chapterLimit]);
 
   const openReader = async (ch) => {
-    if (!ch) return;
+    if (!ch) {
+      addNotification({ title: "No Chapters", body: "No readable chapters found for this manga.", type: "error" });
+      return;
+    }
     setReaderManga(manga);
     setReaderChapters(chapters);
     setReaderChapter(ch);
@@ -202,8 +216,17 @@ export default function MangaDetail() {
               )}
               <div className="md-actions">
                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                  className="md-btn md-btn-primary" onClick={() => openReader(chapters[0])}>
-                  <BookOpen size={16} /> Start Reading
+                  className="md-btn md-btn-primary"
+                  disabled={chLoading}
+                  onClick={() => {
+                    if (chLoading) return;
+                    if (chapters.length === 0) {
+                      addNotification({ title: "No Chapters", body: "No readable chapters found for this manga.", type: "error" });
+                      return;
+                    }
+                    openReader(chapters[0]);
+                  }}>
+                  <BookOpen size={16} /> {chLoading ? "Loading..." : chapters.length === 0 && !chLoading ? "No Chapters" : "Start Reading"}
                 </motion.button>
                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   className={`md-btn md-btn-secondary ${isInList ? "active" : ""}`} onClick={toggleReadlist}>

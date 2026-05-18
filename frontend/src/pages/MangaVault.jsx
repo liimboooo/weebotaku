@@ -8,6 +8,7 @@ import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchTopManga, fetchSearchManga } from "../services/jikanApi";
 import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
+import { addNotification } from "../services/notificationService";
 import { searchManga as mdSearch, getMangaChapters, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages, searchBato, getBatoChapters, getBatoPages } from "../services/mangaApi";
 import MangaReader from "./Feeds/MangaReader";
 import "./MangaVault.css";
@@ -247,6 +248,7 @@ export default function MangaVault() {
       }
 
       setReaderError("No readable chapters found on any provider.");
+      addNotification({ title: "No Chapters", body: "No readable chapters found for this manga.", type: "error" });
     } catch (e) {
       setReaderError(`Error: ${e?.message || "Unknown"}`);
     } finally {

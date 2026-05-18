@@ -141,12 +141,11 @@ export default function AnimeDetail() {
   };
 
   const toggleLiked = () => {
-    const stored = JSON.parse(localStorage.getItem("likedAnime") || "[]");
     const aid = parseInt(id);
-    if (stored.includes(aid)) { localStorage.setItem("likedAnime", JSON.stringify(stored.filter((l) => l !== aid))); }
-    else { localStorage.setItem("likedAnime", JSON.stringify([...stored, aid])); addNotification({ title: "Liked", body: anime.name, type: "follow" }); }
-    setIsLiked(!isLiked);
-    toggleLikeAnime(aid);
+    const result = toggleLikeAnime(aid);
+    const nowLiked = result.includes(aid);
+    setIsLiked(nowLiked);
+    if (nowLiked) addNotification({ title: "Liked", body: anime.name, type: "follow" });
   };
 
   const toggleFollowing = () => {

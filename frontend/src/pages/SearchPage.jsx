@@ -32,6 +32,7 @@ export default function SearchPage() {
     try { return JSON.parse(localStorage.getItem("recentSearches") || "[]"); }
     catch { return []; }
   });
+  const [watchlistIds, setWatchlistIds] = useState(() => loadWatchlist().map(i => i.id));
   const searchRef = useRef(null);
 
   const types = ["All", "TV", "Movie", "Special", "OVA", "ONA"];
@@ -261,8 +262,7 @@ export default function SearchPage() {
               key={activeGenre + activeType + activeStatus}
             >
               {results.map((anime) => {
-                const wishlist = loadWatchlist();
-                const inList = wishlist.some(i => i.id === anime.id);
+                const inList = watchlistIds.includes(anime.id);
                 return (
                   <motion.div className="sr-card" key={anime.id}
                     initial={{ y: 20, opacity: 0 }}
@@ -293,7 +293,13 @@ export default function SearchPage() {
                         <h3>{anime.name}</h3>
                         <button className={`sr-wish-btn ${inList ? "active" : ""}`} onClick={(e) => {
                           e.stopPropagation();
-                          if (inList) { removeFromWatchlist(anime.id); } else { addToWatchlist(anime); }
+                          if (inList) {
+                            removeFromWatchlist(anime.id);
+                            setWatchlistIds(prev => prev.filter(i => i !== anime.id));
+                          } else {
+                            addToWatchlist(anime);
+                            setWatchlistIds(prev => [...prev, anime.id]);
+                          }
                         }}>
                           <Bookmark size={12} fill={inList ? "currentColor" : "none"} />
                         </button>
