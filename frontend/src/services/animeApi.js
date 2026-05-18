@@ -2,16 +2,36 @@ function cleanTitle(title) {
   return title.replace(/\s*\([^)]*\)/g, "").replace(/[^\w\s-]/g, "").trim();
 }
 
+function stripSeasonSuffixes(title) {
+  return title
+    .replace(/\s+\d+(?:st|nd|rd|th)?\s+Season\b.*$/i, "")
+    .replace(/\s+Season\s+\d+.*$/i, "")
+    .replace(/\s+Part\s+\d+.*$/i, "")
+    .replace(/\s+Cour\s+\d+.*$/i, "")
+    .replace(/[:\-–—]+\s*[^:\-–—]*$/, "")
+    .trim();
+}
+
 const titleVariants = (title) => {
-  const clean = cleanTitle(title);
+  const base = stripSeasonSuffixes(title);
+  const clean = cleanTitle(base || title);
+  const words = title.split(/[\s\-–—]+/).filter(w => w.length > 3);
+  const uniqueWords = [...new Set(words.map(w => w.toLowerCase()))];
+  const keywordSets = [];
+  if (uniqueWords.length >= 2) keywordSets.push(uniqueWords.slice(0, 2).join(" "));
+  if (uniqueWords.length >= 3) keywordSets.push(uniqueWords.slice(0, 3).join(" "));
+  if (uniqueWords.length >= 4) keywordSets.push(uniqueWords.slice(-2).join(" "));
+
   return [
     title,
+    base !== title ? base : null,
     clean,
     title.split(":")[0].trim(),
     title.split("(")[0].trim(),
     title.split("Season")[0].trim(),
     title.replace(/\s+Part\s+\d+$/i, "").trim(),
     title.replace(/'/g, ""),
+    ...keywordSets,
   ].filter((s, i, a) => s && s.length > 2 && a.indexOf(s) === i);
 };
 
@@ -101,14 +121,27 @@ async function searchRistoAnime(query) {
     } catch {}
   }
 
-  // Strategy 2: WP REST API fallback — finds episodes even when HTML search misses the series
-  for (const q of titleVariants(query)) {
-    try {
-      const apiUrl = `${RISTOANIME}/wp-json/wp/v2/posts?search=${encodeURIComponent(q)}&per_page=5`;
-      const jsonStr = await fetchHtmlViaProxy(apiUrl);
-      if (!jsonStr) continue;
-      const posts = JSON.parse(jsonStr);
-      if (posts.length > 0) {
+  // Strategy 2: WP REST API search with full name variants
+  const foundViaApi = await searchRistoApi(query);
+  if (foundViaApi) return foundViaApi;
+
+  // Strategy 3: Keyword-only search — extract unique words, search ristoanime directly
+  const keywords = query.split(/[\s\-–—]+/).filter(w => w.length > 3 && !/^(the|and|or|for|of|in|on|at|to|a|an|is|it|its|be|by|with|from|as)$/i.test(w));
+  if (keywords.length >= 2) {
+    const kwResults = await searchRistoApi(keywords.slice(0, 4).join(" "));
+    if (kwResults) return kwResults;
+  }
+
+  return [];
+
+  async function searchRistoApi(searchTerm) {
+    for (const q of titleVariants(searchTerm)) {
+      try {
+        const apiUrl = `${RISTOANIME}/wp-json/wp/v2/posts?search=${encodeURIComponent(q)}&per_page=5`;
+        const jsonStr = await fetchHtmlViaProxy(apiUrl);
+        if (!jsonStr) continue;
+        const posts = JSON.parse(jsonStr);
+        if (posts.length === 0) continue;
         const seriesSlugs = new Set();
         for (const post of posts) {
           try {
@@ -118,13 +151,12 @@ async function searchRistoAnime(query) {
             if (seriesIdx !== -1 && segs[seriesIdx + 1]) seriesSlugs.add(segs[seriesIdx + 1]);
           } catch {}
         }
-        const slug = seriesSlugs.size > 0 ? [...seriesSlugs][0] : query.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase().replace(/-+/g, "-").replace(/^-|-$/g, "");
-        return [{ slug, title: query, _score: 100 }];
-      }
-    } catch {}
+        const slug = seriesSlugs.size > 0 ? [...seriesSlugs][0] : searchTerm.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase().replace(/-+/g, "-").replace(/^-|-$/g, "");
+        return [{ slug, title: searchTerm, _score: 100 }];
+      } catch {}
+    }
+    return null;
   }
-
-  return [];
 }
 
 function extractEpisodeNumberFromTitle(title) {
@@ -143,22 +175,23 @@ function extractEpisodeNumberFromTitle(title) {
 
 export async function getRistoAnimeEpisodes(animeName) {
   try {
-    // Generate search terms: original name, cleaned variants, and English-only extraction
     const searchTerms = [];
     const addTerm = (t) => { if (t && !searchTerms.includes(t)) searchTerms.push(t); };
 
     addTerm(animeName.replace(/\s*\([^)]*\)/g, "").replace(/[^\w\s-]/g, "").trim());
 
-    // Extract English/Latin words from Arabic titles
     const englishWords = animeName.split(/[\s-]+/).filter(w => /[a-zA-Z]/.test(w)).join(" ");
     if (englishWords) addTerm(englishWords);
-    // Also try removing Arabic characters completely
     const noArabic = animeName.replace(/[\u0600-\u06FF\u0750-\u077F]/g, "").replace(/\s+/g, " ").trim();
     if (noArabic && noArabic !== englishWords) addTerm(noArabic);
 
     for (const v of titleVariants(animeName)) {
       addTerm(v);
     }
+
+    // Keyword fallback: extract meaningful keywords
+    const keywords = animeName.split(/[\s\-–—]+/).filter(w => w.length > 2 && !/^(the|and|or|for|of|in|on|at|to|a|an|is|it|its|be|by|with|from|as)$/i.test(w));
+    if (keywords.length >= 2) addTerm(keywords.slice(0, 4).join(" "));
 
     const allEpisodes = [];
     const seenUrls = new Set();
@@ -180,7 +213,6 @@ export async function getRistoAnimeEpisodes(animeName) {
           }
         }
 
-        // Fetch up to 3 pages for long series (max 300 episodes)
         for (let page = 2; page <= 3; page++) {
           try {
             const pageUrl = `${RISTOANIME}/wp-json/wp/v2/posts?search=${encodeURIComponent(term)}&per_page=100&page=${page}&orderby=date&order=asc`;
@@ -242,9 +274,16 @@ export async function getRistoAnimeStreamUrls(episodeUrl) {
 }
 
 async function fetchJapaneseTitle(englishName) {
+  // Generate search variants: add a stripped base name without season suffixes
+  const variants = [...new Set([
+    ...titleVariants(englishName),
+    stripSeasonSuffixes(englishName),
+    englishName.replace(/[\d]+$/, "").trim(),
+  ].filter(Boolean))];
+
   // Try AniList GraphQL first
   const q = `query ($s: String) { Media(search: $s, type: ANIME) { title { romaji english } } }`;
-  for (const v of titleVariants(englishName)) {
+  for (const v of variants) {
     try {
       const res = await fetch("https://graphql.anilist.co", {
         method: "POST",
@@ -261,10 +300,11 @@ async function fetchJapaneseTitle(englishName) {
     } catch {}
   }
 
-  // Fallback: Jikan API for Japanese title
-  for (const v of titleVariants(englishName)) {
+  // Fallback: Jikan API for Japanese title (with delay for rate limit)
+  for (const v of variants) {
     try {
-      const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(v)}&limit=1`, { signal: AbortSignal.timeout(5000) });
+      await new Promise(r => setTimeout(r, 700));
+      const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(v)}&limit=1`, { signal: AbortSignal.timeout(8000) });
       if (!res.ok) continue;
       const data = await res.json();
       if (data.data?.[0]) {
