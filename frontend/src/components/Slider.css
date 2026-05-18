@@ -108,8 +108,33 @@
   transform: scale(1.06);
 }
 
-.slider-card-overlay,
-.slider-card-play { display: none; }
+.slider-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  display: grid;
+  place-items: center;
+  transition: opacity var(--duration-normal);
+}
+.slider-card:hover .slider-card-overlay { opacity: 1; }
+.slider-card-play {
+  color: #fff;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  display: grid;
+  place-items: center;
+  transition: all var(--duration-normal) var(--ease-out);
+  background: transparent;
+  cursor: pointer;
+}
+.slider-card:hover .slider-card-play {
+  background: rgba(230, 54, 54, 0.2);
+  border-color: var(--primary);
+  transform: scale(1.08);
+}
 
 .slider-card-tech {
   position: absolute;
@@ -220,7 +245,16 @@
   100% { transform: scale(1); }
 }
 
-.slider-card-desc { display: none; }
+.slider-card-desc {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
 .slider-card-foot {
   display: flex;
@@ -256,7 +290,15 @@
   color: #f87171;
 }
 
-.slider-card-glow { display: none; }
+.slider-card-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 0%, rgba(230, 54, 54, 0.08), transparent 60%);
+  opacity: 0;
+  transition: opacity var(--duration-slow);
+}
+.slider-card:hover .slider-card-glow { opacity: 1; }
 
 /* ─── Slider Track Wrapper & Edge Fades ──────────────── */
 .slider-track-wrap {

@@ -275,8 +275,30 @@
   transform: scale(1.06);
 }
 
-.wl-card-overlay,
-.wl-card-play { display: none; }
+.wl-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  opacity: 0;
+  display: grid;
+  place-items: center;
+  transition: opacity 0.3s;
+}
+.wl-card:hover .wl-card-overlay { opacity: 1; }
+.wl-card-play {
+  color: #fff;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.8);
+  display: grid;
+  place-items: center;
+  transition: all 0.3s;
+}
+.wl-card:hover .wl-card-play {
+  background: rgba(220,38,38,0.2);
+  border-color: #dc2626;
+}
 
 .wl-card-tech {
   position: absolute;
@@ -396,7 +418,15 @@
   font-weight: 600;
 }
 
-.wl-card-glow { display: none; }
+.wl-card-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 0%, rgba(230,54,54,0.12), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.wl-card:hover .wl-card-glow { opacity: 1; }
 
 .wl-empty {
   text-align: center;

@@ -614,8 +614,30 @@
   transform: scale(1.06);
 }
 
-.br-card-overlay,
-.br-card-play { display: none; }
+.br-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  opacity: 0;
+  display: grid;
+  place-items: center;
+  transition: opacity 0.3s;
+}
+.br-card:hover .br-card-overlay { opacity: 1; }
+.br-card-play {
+  color: #fff;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.8);
+  display: grid;
+  place-items: center;
+  transition: all 0.3s;
+}
+.br-card:hover .br-card-play {
+  background: rgba(220,38,38,0.2);
+  border-color: #dc2626;
+}
 
 .br-card-tech {
   position: absolute;
