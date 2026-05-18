@@ -596,11 +596,157 @@ async function searchParallelEmbeds(animeName) {
   return null;
 }
 
+// ─── RistoAnime (WordPress-based, Arabic subtitles, no Cloudflare) ───
+const RISTOANIME = "https://ristoanime.co";
+
+async function searchRistoAnime(query) {
+  for (const q of titleVariants(query)) {
+    try {
+      const html = await fetchHtmlViaProxy(`${RISTOANIME}/?s=${encodeURIComponent(q)}`);
+      if (!html) continue;
+      const seriesRe = /<a[^>]*href="https:\/\/ristoanime\.co\/series\/([^"]+)"[^>]*>([\s\S]{0,2000}?)<\/a>/gi;
+      const results = [];
+      const seen = new Set();
+      let m;
+      while ((m = seriesRe.exec(html)) !== null) {
+        const slug = decodeURIComponent(m[1]).replace(/\/$/, "");
+        if (seen.has(slug)) continue;
+        seen.add(slug);
+        const linkContent = m[2];
+        const headingMatch = linkContent.match(/<h[2-4][^>]*>([^<]+)<\/h[2-4]>/);
+        const altMatch = linkContent.match(/alt=["']([^"']+)["']/);
+        const title = headingMatch ? headingMatch[1].trim()
+                    : altMatch ? altMatch[1].trim()
+                    : slug.split("-").slice(1, -1).join(" ");
+        const score = scoreRelevance(title, q);
+        results.push({ slug, title, _score: score });
+      }
+      if (results.length > 0) return results.sort((a, b) => b._score - a._score);
+    } catch {}
+  }
+  return [];
+}
+
+function extractEpisodeNumberFromTitle(title) {
+  const patterns = [
+    /الحلقة\s*(\d+)/i,
+    /episode\s*(\d+)/i,
+    /(\d+)\s*الحلقة/i,
+    /(\d+)\s*episode/i,
+  ];
+  for (const p of patterns) {
+    const m = title.match(p);
+    if (m) return parseInt(m[1], 10);
+  }
+  return 0;
+}
+
+export async function getRistoAnimeEpisodes(animeName) {
+  try {
+    // Generate search terms: original name, cleaned variants, and English-only extraction
+    const searchTerms = [];
+    const addTerm = (t) => { if (t && !searchTerms.includes(t)) searchTerms.push(t); };
+
+    addTerm(animeName.replace(/\s*\([^)]*\)/g, "").replace(/[^\w\s-]/g, "").trim());
+
+    // Extract English/Latin words from Arabic titles
+    const englishWords = animeName.split(/[\s-]+/).filter(w => /[a-zA-Z]/.test(w)).join(" ");
+    if (englishWords) addTerm(englishWords);
+    // Also try removing Arabic characters completely
+    const noArabic = animeName.replace(/[\u0600-\u06FF\u0750-\u077F]/g, "").replace(/\s+/g, " ").trim();
+    if (noArabic && noArabic !== englishWords) addTerm(noArabic);
+
+    for (const v of titleVariants(animeName)) {
+      addTerm(v);
+    }
+
+    const allEpisodes = [];
+    const seenUrls = new Set();
+
+    for (const term of searchTerms) {
+      if (allEpisodes.length > 0) break;
+      try {
+        const apiUrl = `${RISTOANIME}/wp-json/wp/v2/posts?search=${encodeURIComponent(term)}&per_page=100&orderby=date&order=asc`;
+        const jsonStr = await fetchHtmlViaProxy(apiUrl);
+        if (!jsonStr) continue;
+        const posts = JSON.parse(jsonStr);
+        if (!posts.length) continue;
+
+        for (const post of posts) {
+          const epNum = extractEpisodeNumberFromTitle(post.title.rendered);
+          if (epNum > 0 && !seenUrls.has(post.link)) {
+            seenUrls.add(post.link);
+            allEpisodes.push({ episode: epNum, url: post.link, title: post.title.rendered });
+          }
+        }
+
+        // Fetch up to 3 pages for long series (max 300 episodes)
+        for (let page = 2; page <= 3; page++) {
+          try {
+            const pageUrl = `${RISTOANIME}/wp-json/wp/v2/posts?search=${encodeURIComponent(term)}&per_page=100&page=${page}&orderby=date&order=asc`;
+            const pageJson = await fetchHtmlViaProxy(pageUrl);
+            if (!pageJson) break;
+            const pagePosts = JSON.parse(pageJson);
+            if (!pagePosts.length) break;
+            for (const post of pagePosts) {
+              const epNum = extractEpisodeNumberFromTitle(post.title.rendered);
+              if (epNum > 0 && !seenUrls.has(post.link)) {
+                seenUrls.add(post.link);
+                allEpisodes.push({ episode: epNum, url: post.link, title: post.title.rendered });
+              }
+            }
+          } catch { break; }
+        }
+      } catch {}
+    }
+
+    return allEpisodes.sort((a, b) => a.episode - b.episode);
+  } catch {
+    return [];
+  }
+}
+
+export async function getRistoAnimeStreamUrls(episodeUrl) {
+  try {
+    const watchUrl = episodeUrl.replace(/\/?$/, "/watch");
+    const html = await fetchHtmlViaProxy(watchUrl);
+    if (!html) return [];
+
+    const servers = [];
+    const re = /data-watch=["']([^"']+)["']/g;
+    let m;
+    while ((m = re.exec(html)) !== null) {
+      const url = m[1];
+      let label = "Server " + (servers.length + 1);
+      if (url.includes("vidmoly")) label = "VidMoly";
+      else if (url.includes("mega.nz")) label = "Mega";
+      else if (url.includes("sibnet")) label = "Sibnet";
+      else if (url.includes("sendvid")) label = "SendVid";
+      else if (url.includes("mp4upload")) label = "MP4Upload";
+      else if (url.includes("uqload")) label = "Uqload";
+      else if (url.includes("turbovid")) label = "TurboVid";
+      else if (url.includes("hgcloud")) label = "HGCloud";
+      else if (url.includes("yonaplay")) label = "Yonaplay";
+      else if (url.includes("yourupload")) label = "YourUpload";
+      else if (url.includes("videa")) label = "Videa";
+      else if (url.includes("vidhide")) label = "VidHide";
+      else if (url.includes("gomostream")) label = "GomoStream";
+      if (!servers.find((s) => s.url === url)) {
+        servers.push({ label, url });
+      }
+    }
+    return servers;
+  } catch {
+    return [];
+  }
+}
+
 // ─── Multi-source search (parallel) ───
-const SOURCE_PRIORITY = ["anime3rb", "witanime", "anitaku", "consumet", "anipub", "embed"];
+const SOURCE_PRIORITY = ["ristoanime", "anime3rb", "witanime", "anitaku", "consumet", "anipub", "embed"];
 
 export async function findStreamingSource(animeName) {
   const sources = [
+    searchRistoAnime(animeName).then(r => r.length > 0 ? { source: "ristoanime", slug: r[0].slug, id: r[0].slug, title: r[0].title } : null),
     searchAnime3rb(animeName).then(r => r ? { source: "anime3rb", slug: r.slug, id: r.slug, title: r.title } : null),
     searchWitanime(animeName).then(r => r ? { source: "witanime", slug: r.slug, id: r.slug, title: r.title } : null),
     searchAnitaku(animeName).then(r => r.length > 0 ? { source: "anitaku", slug: r[0].slug, id: r[0].slug, title: r[0].title } : null),

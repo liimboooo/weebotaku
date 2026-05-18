@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X, Loader, Play, Monitor, Globe, SkipForward } from "lucide-react";
 import { motion } from "framer-motion";
-import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, getWitanimeEpisodes, getWitanimeStreamUrl, getWitanimeServers, getAnime3rbEpisodes, getAnime3rbStreamUrl, getConsumetGogoanimeEpisodes, getConsumetGogoanimeStreamUrl } from "../../services/animeApi";
+import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, getWitanimeEpisodes, getWitanimeStreamUrl, getWitanimeServers, getAnime3rbEpisodes, getAnime3rbStreamUrl, getConsumetGogoanimeEpisodes, getConsumetGogoanimeStreamUrl, getRistoAnimeEpisodes, getRistoAnimeStreamUrls } from "../../services/animeApi";
 import "./AnimeWatch.css";
 
 function ConsumetPlayer({ streamUrl }) {
@@ -89,7 +89,8 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       setLoading(true); setError("");
       try {
         let eps = [];
-        if (anime.source === "anitaku") eps = await getAnitakuEpisodes(anime.slug);
+        if (anime.source === "ristoanime") eps = await getRistoAnimeEpisodes(anime.title || anime.slug);
+        else if (anime.source === "anitaku") eps = await getAnitakuEpisodes(anime.slug);
         else if (anime.source === "witanime") eps = await getWitanimeEpisodes(anime.slug);
         else if (anime.source === "anime3rb") eps = await getAnime3rbEpisodes(anime.slug);
         else if (anime.source === "consumet") eps = await getConsumetGogoanimeEpisodes(anime.id);
@@ -115,7 +116,17 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
 
   useEffect(() => {
     if (!episode || isEmbedSource) return;
-    if (anime.source === "anitaku") {
+    if (anime.source === "ristoanime") {
+      (async () => {
+        setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
+        try {
+          const urls = await getRistoAnimeStreamUrls(episode.url);
+          if (urls.length > 0) { setServers(urls); setStreamUrl(urls[0].url); }
+          else setError("No video servers found.");
+        } catch { setError("Failed to load stream."); }
+        finally { setStreamLoading(false); }
+      })();
+    } else if (anime.source === "anitaku") {
       (async () => {
         setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
         try {
