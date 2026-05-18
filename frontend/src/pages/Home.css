@@ -669,34 +669,15 @@
 .season-card {
   border-radius: var(--radius-lg);
   overflow: hidden;
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-card);
+  border: 1px solid var(--card-border);
+  background: var(--card-surface);
   cursor: pointer;
   transition: all var(--duration-normal) var(--ease-out);
-  position: relative;
-  isolation: isolate;
-}
-
-.season-card::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, var(--primary), var(--primary-hover), transparent 60%);
-  opacity: 0;
-  transition: opacity var(--duration-slow) var(--ease-in-out);
-  z-index: -1;
-  pointer-events: none;
-}
-
-.season-card:hover::before {
-  opacity: 0.4;
 }
 
 .season-card:hover {
-  border-color: var(--primary-border);
-  transform: translateY(-6px);
-  box-shadow: 0 0 40px var(--primary-glow), 0 16px 48px rgba(0, 0, 0, 0.4);
+  border-color: rgba(230, 54, 54, 0.25);
+  box-shadow: 0 8px 32px rgba(230, 54, 54, 0.08);
 }
 
 .season-card-img {
@@ -810,26 +791,28 @@
 }
 
 .season-card-body {
-  padding: 10px 12px 14px;
+  padding: 10px 12px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .season-card-body h3 {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-primary);
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .season-card-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -837,27 +820,27 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  font-size: 11px;
-  color: #fbbf24;
-  font-weight: 600;
+  font-size: 10px;
+  color: #ffd700;
+  font-weight: 700;
 }
 
 .season-card-eps {
   display: flex;
   align-items: center;
   gap: 3px;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-tertiary);
   font-weight: 500;
 }
 
 .season-card-tag {
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
   font-weight: 600;
-  background: rgba(230, 54, 54, 0.08);
-  color: #f87171;
+  background: rgba(255,255,255,0.04);
+  color: var(--text-tertiary);
 }
 
 /* ─── Season Card Reactions ───────────────────────────── */
@@ -865,9 +848,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255,255,255,0.03);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.04);
 }
 
 .scr-btn {

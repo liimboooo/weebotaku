@@ -93,16 +93,16 @@ export function getStreak() {
 }
 
 const BADGE_DEFS = {
-  Collector: { label: "Collector", desc: "10 anime in watchlist", icon: "📚", check: (stats) => stats.watchlistCount >= 10 },
-  "Hardcore Fan": { label: "Hardcore Fan", desc: "50 episodes watched", icon: "🔥", check: (stats) => stats.episodesWatched >= 50 },
-  "On Fire": { label: "On Fire", desc: "7-day streak", icon: "⚡", check: (stats) => (stats.streak || 0) >= 7 },
-  Rater: { label: "Rater", desc: "10 anime rated", icon: "⭐", check: (stats) => stats.ratingCount >= 10 },
-  Critic: { label: "Critic", desc: "50 anime rated", icon: "📝", check: (stats) => stats.ratingCount >= 50 },
-  Otaku: { label: "Otaku", desc: "Level 10", icon: "🎮", check: (stats) => (stats.level || 0) >= 10 },
-  Legend: { label: "Legend", desc: "Level 25", icon: "🏆", check: (stats) => (stats.level || 0) >= 25 },
-  Dedicated: { label: "Dedicated", desc: "30-day streak", icon: "💎", check: (stats) => (stats.streak || 0) >= 30 },
-  Loyal: { label: "Loyal", desc: "100 episodes watched", icon: "👑", check: (stats) => stats.episodesWatched >= 100 },
-  Curator: { label: "Curator", desc: "25 anime in watchlist", icon: "🗂️", check: (stats) => stats.watchlistCount >= 25 },
+  Collector: { label: "Collector", desc: "10 anime in watchlist", icon: "Library", check: (stats) => stats.watchlistCount >= 10 },
+  "Hardcore Fan": { label: "Hardcore Fan", desc: "50 episodes watched", icon: "Flame", check: (stats) => stats.episodesWatched >= 50 },
+  "On Fire": { label: "On Fire", desc: "7-day streak", icon: "Zap", check: (stats) => (stats.streak || 0) >= 7 },
+  Rater: { label: "Rater", desc: "10 anime rated", icon: "Star", check: (stats) => stats.ratingCount >= 10 },
+  Critic: { label: "Critic", desc: "50 anime rated", icon: "MessageSquare", check: (stats) => stats.ratingCount >= 50 },
+  Otaku: { label: "Otaku", desc: "Level 10", icon: "Gamepad2", check: (stats) => (stats.level || 0) >= 10 },
+  Legend: { label: "Legend", desc: "Level 25", icon: "Trophy", check: (stats) => (stats.level || 0) >= 25 },
+  Dedicated: { label: "Dedicated", desc: "30-day streak", icon: "Gem", check: (stats) => (stats.streak || 0) >= 30 },
+  Loyal: { label: "Loyal", desc: "100 episodes watched", icon: "Crown", check: (stats) => stats.episodesWatched >= 100 },
+  Curator: { label: "Curator", desc: "25 anime in watchlist", icon: "FolderOpen", check: (stats) => stats.watchlistCount >= 25 },
 };
 
 export function getAllBadgeDefs() {

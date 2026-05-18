@@ -349,7 +349,7 @@ export default function MangaVault() {
                 <div className="mv-active-pills">
                   {selectedPills.map(p => (
                     <button key={p.key} type="button" className="mv-active-pill" onClick={p.remove}>
-                      {p.label} <span>×</span>
+                      {p.label} <span className="mv-active-pill-x"><X size={10} /></span>
                     </button>
                   ))}
                   <button type="button" className="mv-active-pill mv-active-pill-clear" onClick={() => { setActiveDemo([]); setActiveStatus([]); }}>

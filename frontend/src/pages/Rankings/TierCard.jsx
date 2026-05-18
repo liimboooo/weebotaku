@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import { X } from 'lucide-react';
 
 export default function TierCard({ id, item, isDragOverlay = false, onRemove }) {
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -53,7 +54,7 @@ export default function TierCard({ id, item, isDragOverlay = false, onRemove }) 
         )}
         {!isDragOverlay && onRemove && (
           <button className="tier-card-remove" onClick={(e) => { e.stopPropagation(); onRemove(item.id); }} title="Remove">
-            ×
+            <X size={12} />
           </button>
         )}
       </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Play, Bookmark, Heart, Share2, Bell, Star, Tv, Film, Users, MessageSquare } from "lucide-react";
+import { ArrowLeft, Play, Bookmark, Heart, Share2, Bell, Star, Tv, Film, Users, MessageSquare, Calendar, X } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
 import { fetchAnimeCharacters, fetchAnimeRecommendations, fetchAiringSchedule } from "../services/jikanApi";
 
@@ -220,8 +220,8 @@ export default function AnimeDetail() {
                 <div className="ad-hero-metrics">
                   <div className="ad-metric"><Tv size={14} /> <strong>{anime.episodes || "?"}</strong> Episodes</div>
                   <div className="ad-metric"><Star size={14} /> <strong>{anime.rating?.toFixed(1) || "?"}</strong></div>
-                  <div className="ad-metric"><span role="img" aria-label="year">📅</span> <strong>{anime.year || "?"}</strong></div>
-                  <div className="ad-metric"><span role="img" aria-label="studio">🎬</span> <strong>{anime.studio || "?"}</strong></div>
+                  <div className="ad-metric"><Calendar size={14} /> <strong>{anime.year || "?"}</strong></div>
+                  <div className="ad-metric"><Film size={14} /> <strong>{anime.studio || "?"}</strong></div>
                 </div>
               </div>
               <div className="ad-hero-right">
@@ -301,7 +301,7 @@ export default function AnimeDetail() {
                     onClick={() => handleRate(num === userRating ? num - 1 : num)}
                     onMouseEnter={() => setHoverRating(num)}
                     onMouseLeave={() => setHoverRating(0)}
-                  >★</span>
+                  ><Star size={16} fill={num <= userRating ? "currentColor" : "none"} /></span>
                 ))}
               </div>
               <div className="ad-rating-info">
@@ -350,7 +350,7 @@ export default function AnimeDetail() {
                   <div key={cour.episodeStart} className="ad-cour-section">
                     <div className="ad-cour-header">
                       <span className="ad-cour-name">{cour.name}</span>
-                      <span className="ad-cour-dates">{cour.startDate} → {cour.endDate}</span>
+                      <span className="ad-cour-dates">{cour.startDate} &ndash; {cour.endDate}</span>
                     </div>
                     <div className="ad-episodes-grid">
                       {episodeNumbers.filter(ep => ep >= cour.episodeStart && ep <= cour.episodeEnd).map((ep) => {
@@ -464,7 +464,7 @@ export default function AnimeDetail() {
           {showTrailer && (anime.trailerUrl || anime.trailer?.embed_url) && (
             <div className="ad-trailer-overlay" onClick={() => setShowTrailer(false)}>
               <div className="ad-trailer-modal" onClick={(e) => e.stopPropagation()}>
-                <button className="ad-trailer-close" onClick={() => setShowTrailer(false)}>✕</button>
+                <button className="ad-trailer-close" onClick={() => setShowTrailer(false)}><X size={16} /></button>
                 <div className="ad-trailer-embed">
                   <iframe
                     src={anime.trailerUrl || anime.trailer.embed_url}

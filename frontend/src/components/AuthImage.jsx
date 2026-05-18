@@ -1,10 +1,11 @@
 import React from "react";
+import { Film, Users, TrendingUp, Trophy } from "lucide-react";
 
 const features = [
-  { emoji: "🎬", title: "Join Watch Parties", desc: "Synchronized rooms with live chat & reactions" },
-  { emoji: "👥", title: "Meet Anime Fans", desc: "Match profiles by taste, build your community" },
-  { emoji: "📊", title: "Track Everything", desc: "Watchlist, ratings, history — all synced" },
-  { emoji: "🏆", title: "Earn Your Aura", desc: "Levels, badges, streaks, and reputation" },
+  { icon: Film, title: "Join Watch Parties", desc: "Synchronized rooms with live chat & reactions" },
+  { icon: Users, title: "Meet Anime Fans", desc: "Match profiles by taste, build your community" },
+  { icon: TrendingUp, title: "Track Everything", desc: "Watchlist, ratings, history — all synced" },
+  { icon: Trophy, title: "Earn Your Aura", desc: "Levels, badges, streaks, and reputation" },
 ];
 
 export default function AuthImage() {
@@ -36,7 +37,7 @@ export default function AuthImage() {
         <div className="auth-image-features">
           {features.map((f) => (
             <div key={f.title} className="auth-image-feature">
-              <span className="aif-emoji">{f.emoji}</span>
+              <span className="aif-emoji">{React.createElement(f.icon, { size: 20 })}</span>
               <div className="aif-text">
                 <strong>{f.title}</strong>
                 <span>{f.desc}</span>

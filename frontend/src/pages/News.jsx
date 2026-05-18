@@ -8,14 +8,14 @@ import { motion } from "framer-motion";
 import "./News.css";
 
 const TYPE_CONFIG = {
-  new_episode: { label: "New Episode", className: "tag-airing", icon: "▶" },
-  trending: { label: "Trending", className: "tag-trending", icon: "🔥" },
-  announcement: { label: "Announcement", className: "tag-announce", icon: "📢" },
-  popular: { label: "Popular", className: "tag-popular", icon: "⭐" },
-  new_chapter: { label: "New Chapter", className: "tag-chapter", icon: "📖" },
-  manga_trending: { label: "Manga Trending", className: "tag-manga-trend", icon: "🔥" },
-  manga_announcement: { label: "New Manga", className: "tag-manga-announce", icon: "📢" },
-  manga_popular: { label: "Popular Manga", className: "tag-manga-pop", icon: "⭐" },
+  new_episode: { label: "New Episode", className: "tag-airing" },
+  trending: { label: "Trending", className: "tag-trending" },
+  announcement: { label: "Announcement", className: "tag-announce" },
+  popular: { label: "Popular", className: "tag-popular" },
+  new_chapter: { label: "New Chapter", className: "tag-chapter" },
+  manga_trending: { label: "Manga Trending", className: "tag-manga-trend" },
+  manga_announcement: { label: "New Manga", className: "tag-manga-announce" },
+  manga_popular: { label: "Popular Manga", className: "tag-manga-pop" },
 };
 
 const MEDIA_TABS = {
@@ -216,7 +216,7 @@ export default function News() {
               ) : (
                 <motion.div className="news-feed" variants={container} initial="hidden" animate="show">
                   {visibleNews.map((item) => {
-                    const config = TYPE_CONFIG[item.type] || { label: item.type, className: "", icon: "" };
+                    const config = TYPE_CONFIG[item.type] || { label: item.type, className: "" };
                     return (
                       <motion.article
                         key={item.id}
@@ -231,7 +231,7 @@ export default function News() {
                         </div>
                         <div className="news-card-body">
                           <div className="news-card-header">
-                            <span className={`news-tag ${config.className}`}>{config.icon} {config.label}</span>
+                            <span className={`news-tag ${config.className}`}>{config.label}</span>
                             {item.score && <span className="news-score">{item.score}</span>}
                           </div>
                           <h3 className="news-card-title">{item.title}</h3>

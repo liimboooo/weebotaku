@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { ChevronLeft, ChevronRight, X, Loader, Image as ImageIcon, ArrowLeftRight, Maximize2, Minus, Plus, BookOpen } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Loader, Image as ImageIcon, ArrowLeftRight, Maximize2, Minus, Plus, BookOpen, ArrowDown } from "lucide-react";
 import { getChapterPages } from "../../services/mangaApi";
 import "./MangaReader.css";
 
@@ -374,7 +374,7 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
               {!scrollMode ? (
                 <span>{currentPage} / {totalPages}</span>
               ) : (
-                <span className="reader-scroll-hint">Scroll ↓</span>
+                <span className="reader-scroll-hint">Scroll <ArrowDown size={12} /></span>
               )}
               <button
                 disabled={scrollMode || (direction === "ltr" ? pageIndex >= pagesLen - 1 && !hasNextCh : pageIndex <= 0 && !hasPrevCh)}

@@ -417,7 +417,7 @@ export default function Browse() {
             <div className="br-active-pills">
               {selectedPills.map(p => (
                 <button key={p.key} type="button" className="br-active-pill" onClick={p.remove}>
-                  {p.label} <span>×</span>
+                  {p.label} <span className="br-active-pill-x"><X size={10} /></span>
                 </button>
               ))}
               <button type="button" className="br-active-pill br-active-pill-clear" onClick={() => { setActiveGenres([]); setActiveFormats([]); setActiveStatuses([]); setActiveSeasons([]); setActiveYears([]); setActiveStudios([]); }}>

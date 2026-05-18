@@ -5,6 +5,9 @@ import {
   Bell,
   Bookmark,
   ChevronDown,
+  Film,
+  Gift,
+  BookOpen,
   LogOut,
   PenLine,
   Globe,
@@ -15,6 +18,7 @@ import {
   Settings,
   Star,
   Swords,
+  TrendingUp,
   Users,
   Video,
   X,
@@ -216,7 +220,7 @@ export default function Header() {
                 >
                   <motion.button className="explore-item" onClick={() => navigateTo('/browse/anime')}
                     initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 }}>
-                    <span className="explore-item-icon">🎬</span>
+                    <span className="explore-item-icon"><Film size={16} /></span>
                     <div>
                       <span className="explore-item-label">Browse Anime</span>
                       <span className="explore-item-description">All anime, filters & tags</span>
@@ -224,7 +228,7 @@ export default function Header() {
                   </motion.button>
                   <motion.button className="explore-item" onClick={() => navigateTo('/browse/manga')}
                     initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-                    <span className="explore-item-icon">📚</span>
+                    <span className="explore-item-icon"><BookOpen size={16} /></span>
                     <div>
                       <span className="explore-item-label">Browse Manga</span>
                       <span className="explore-item-description">Manga vault & chapters</span>
@@ -293,7 +297,7 @@ export default function Header() {
                       <div className="column-header"><Star size={14} /> Community Tiers</div>
                       <div className="column-items">
                         <button className="arena-item" onClick={() => navigateTo('/arena/tier-lists')}>
-                          <span className="arena-item-icon">📊</span>
+                          <span className="arena-item-icon"><TrendingUp size={16} /></span>
                           <span className="arena-item-label">View Tier Lists</span>
                         </button>
                       </div>
@@ -407,9 +411,9 @@ export default function Header() {
                       <div className="profile-mini-name">{username}</div>
                       <div className="profile-mini-meta">
                         <span className={`profile-mini-meta-pill ${isOnline ? 'online' : 'offline'}`}>
-                          {isOnline ? '🟢 Online' : '⚫ Offline'}
+                          <span className={`status-dot ${isOnline ? 'online' : 'offline'}`} /> {isOnline ? 'Online' : 'Offline'}
                         </span>
-                        {hasUnclaimedRewards && <span className="profile-mini-meta-pill profile-mini-meta-pill--glow">🎁 Rewards</span>}
+                        {hasUnclaimedRewards && <span className="profile-mini-meta-pill profile-mini-meta-pill--glow"><Gift size={12} /> Rewards</span>}
                       </div>
                     </div>
                   </div>
@@ -456,7 +460,7 @@ export default function Header() {
 
       {previewOpen && profileImage && (
         <div className="profile-preview-overlay" onClick={() => setPreviewOpen(false)}>
-          <button className="profile-preview-close" onClick={() => setPreviewOpen(false)}>✕</button>
+          <button className="profile-preview-close" onClick={() => setPreviewOpen(false)}><X size={16} /></button>
           <img src={profileImage} alt={username} className="profile-preview-img" />
         </div>
       )}

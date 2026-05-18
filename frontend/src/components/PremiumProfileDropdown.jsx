@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Play, User, Bookmark, Settings, LogOut } from 'lucide-react';
 import authService from '../services/authService';
 import './PremiumProfileDropdown.css';
 
@@ -53,7 +54,7 @@ export default function PremiumProfileDropdown() {
 
           <div className="premium-stats-grid">
             <div className="premium-stat-card">
-              <div className="premium-stat-icon">▶️</div>
+              <div className="premium-stat-icon"><Play size={14} /></div>
               <div className="premium-stat-info">
                 <div className="premium-stat-value">{episodesWatched}</div>
                 <div className="premium-stat-label">Episodes Watched</div>
@@ -63,15 +64,15 @@ export default function PremiumProfileDropdown() {
 
           <div className="premium-nav-menu">
             <button className="premium-nav-item" onClick={() => { setIsOpen(false); navigate('/profile'); }}>
-              <span className="premium-nav-icon">👤</span>
+              <span className="premium-nav-icon"><User size={14} /></span>
               <span className="premium-nav-text">My Profile</span>
             </button>
             <button className="premium-nav-item" onClick={() => { setIsOpen(false); navigate('/watchlist'); }}>
-              <span className="premium-nav-icon">📋</span>
+              <span className="premium-nav-icon"><Bookmark size={14} /></span>
               <span className="premium-nav-text">Watchlist</span>
             </button>
             <button className="premium-nav-item" onClick={() => { setIsOpen(false); navigate('/settings'); }}>
-              <span className="premium-nav-icon">🔧</span>
+              <span className="premium-nav-icon"><Settings size={14} /></span>
               <span className="premium-nav-text">Settings</span>
             </button>
           </div>
@@ -82,7 +83,7 @@ export default function PremiumProfileDropdown() {
             await authService.logout();
             navigate('/');
           }}>
-            <span className="premium-logout-icon">🚪</span>
+            <span className="premium-logout-icon"><LogOut size={14} /></span>
             <span className="premium-logout-text">Sign Out</span>
           </button>
         </div>

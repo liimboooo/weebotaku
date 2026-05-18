@@ -221,37 +221,18 @@
 
 .sr-card {
   position: relative;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid var(--primary-border);
-  border-radius: var(--radius-xl);
+  background: var(--card-surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
   transition: all var(--duration-normal) var(--ease-out);
   animation: br-card-in 0.4s var(--ease-out) both;
-  isolation: isolate;
-  box-shadow: 0 0 20px rgba(230, 54, 54, 0.04);
-}
-
-.sr-card::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, var(--primary), var(--primary-hover), transparent 60%);
-  opacity: 0;
-  transition: opacity var(--duration-slow) var(--ease-in-out);
-  z-index: -1;
-  pointer-events: none;
-}
-
-.sr-card:hover::before {
-  opacity: 0.5;
 }
 
 .sr-card:hover {
-  border-color: var(--primary);
-  transform: translateY(-6px);
-  box-shadow: 0 0 50px var(--primary-glow), 0 20px 60px rgba(0, 0, 0, 0.5);
+  border-color: rgba(230, 54, 54, 0.25);
+  box-shadow: 0 8px 32px rgba(230, 54, 54, 0.08);
 }
 
 .sr-card-thumb {
@@ -354,27 +335,29 @@
 }
 
 .sr-card-body {
-  padding: 14px;
+  padding: 10px 12px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .sr-card-head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 8px;
+  gap: 6px;
 }
 
 .sr-card-head h3 {
   margin: 0;
-  font-size: 0.85rem;
-  color: #fff;
+  font-size: 0.8rem;
+  color: var(--text-primary);
   font-weight: 700;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.3;
   flex: 1;
 }
 
@@ -443,16 +426,7 @@
   color: #ef4444;
 }
 
-.sr-card-glow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(ellipse at 50% 0%, rgba(230, 54, 54, 0.12), transparent 60%);
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-
-.sr-card:hover .sr-card-glow { opacity: 1; }
+.sr-card-glow { display: none; }
 
 /* Results info */
 .results-info {

@@ -115,7 +115,7 @@ export default function SearchPage() {
 
   function getTrend(item) {
     const score = item.rating || 0;
-    if (score > 0) return { arrow: '★', value: score.toFixed(1), cls: 'neutral' };
+    if (score > 0) return { arrow: '*', value: score.toFixed(1), cls: 'neutral' };
     return null;
   }
 
@@ -182,7 +182,7 @@ export default function SearchPage() {
                       <button className="sd-pill" onClick={() => searchFromPill(s)}>
                         <span>{s}</span>
                       </button>
-                      <button className="sd-pill-remove" aria-label={`Remove ${s}`} onClick={(e) => { e.stopPropagation(); removeRecent(s); }}>✕</button>
+                      <button className="sd-pill-remove" aria-label={`Remove ${s}`} onClick={(e) => { e.stopPropagation(); removeRecent(s); }}><X size={10} /></button>
                     </div>
                   ))}
                 </div>

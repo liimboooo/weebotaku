@@ -9,8 +9,18 @@ import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
 import { formatCount, timeAgo as formatTimeAgo, notify } from "../utils/helpers";
 import { getCurrentXP, getCurrentLevel, getLevelProgress, getStreak, getBadges, getLevel, getAllBadgeDefs } from "../services/progression";
-import { Bookmark, Heart, Star, Clock, PenLine, LogOut, Settings, Eye, Film, Users, Video, Sparkles, Layers, Zap, Trophy, Flame } from "lucide-react";
+import { Bookmark, Heart, Star, Clock, PenLine, LogOut, Settings, Eye, Film, Users, Video, Sparkles, Layers, Zap, Trophy, Flame, Crown, Gem, Gamepad2, Library, MessageSquare, FolderOpen, X } from "lucide-react";
 import "./ProfilePage.css";
+
+const badgeIconMap = {
+  Library: Library, Flame: Flame, Zap: Zap, Star: Star,
+  MessageSquare: MessageSquare, Gamepad2: Gamepad2, Trophy: Trophy,
+  Gem: Gem, Crown: Crown, FolderOpen: FolderOpen,
+};
+function BadgeIcon({ name, size = 12 }) {
+  const Icon = badgeIconMap[name];
+  return Icon ? <Icon size={size} /> : null;
+}
 
 const tabs = [
   { key: "overview", label: "Overview", icon: Eye },
@@ -209,7 +219,7 @@ export default function ProfilePage() {
       loadTierLists();
       const onLevelUp = (e) => {
         const { level } = e.detail;
-        notify(`🎉 Level ${level}! You're on fire!`, "success");
+        notify(`Level ${level}! You're on fire!`, "success");
       };
       window.addEventListener("level-up", onLevelUp);
       window.addEventListener("storage", loadProfileData);
@@ -380,7 +390,7 @@ export default function ProfilePage() {
                     <span className="hud-clearance-badge">Level {userLevel} Otaku</span>
                   )}
                   {!isRemoteProfile && earnedBadges.slice(0, 4).map(b => (
-                    <span key={b.key} className="profile-badge profile-badge-accent" title={b.desc}>{b.icon} {b.label}</span>
+                    <span key={b.key} className="profile-badge profile-badge-accent" title={b.desc}><BadgeIcon name={b.icon} size={10} /> {b.label}</span>
                   ))}
                 </div>
                 {!isRemoteProfile && (
@@ -512,7 +522,7 @@ export default function ProfilePage() {
                             const earned = earnedKeys.has(key);
                             return (
                               <div key={key} className={`badge-item ${earned ? 'earned' : 'locked'}`} title={def.desc}>
-                                <span className="badge-icon">{def.icon}</span>
+                                <span className="badge-icon"><BadgeIcon name={def.icon} size={14} /></span>
                                 <span className="badge-label">{def.label}</span>
                                 <span className="badge-desc">{def.desc}</span>
                               </div>
@@ -615,7 +625,7 @@ export default function ProfilePage() {
                           )}
                         </div>
                         <button className="list-item-remove" onClick={(e) => { e.stopPropagation(); removeFromWatchlist(anime.id); loadProfileData(); }} title="Remove from watchlist">
-                          ✕
+                          <X size={14} />
                         </button>
                       </motion.div>
                     ))}
@@ -812,7 +822,7 @@ export default function ProfilePage() {
 
         {previewOpen && (avatarPreview || avatar) && (
           <div className="profile-preview-overlay" onClick={() => setPreviewOpen(false)}>
-            <button className="profile-preview-close" onClick={() => setPreviewOpen(false)}>✕</button>
+            <button className="profile-preview-close" onClick={() => setPreviewOpen(false)}><X size={16} /></button>
             <img src={avatarPreview || avatar} alt={username} className="profile-preview-img" />
           </div>
         )}
@@ -826,7 +836,7 @@ export function ProfileInfoModal({ username, avatar, onClose }) {
   return (
     <motion.div className="profile-info-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
       <motion.div className="profile-info-modal" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} onClick={e => e.stopPropagation()}>
-        <button className="profile-info-close" onClick={onClose}>✕</button>
+        <button className="profile-info-close" onClick={onClose}><X size={16} /></button>
         <div className="profile-info-avatar">
           {avatar ? <img src={avatar} alt={username} /> : <span>{username?.charAt(0)?.toUpperCase()}</span>}
         </div>

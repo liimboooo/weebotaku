@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Star, Send } from "lucide-react";
+import { Star, Send, Heart } from "lucide-react";
 import reviewService from "../services/reviewService";
 import "./Reviews.css";
 
@@ -86,7 +86,7 @@ export default function Reviews({ animeId, selectedEp }) {
             key={n}
             className={`review-star-picker ${reviewRating >= n ? "active" : ""}`}
             onClick={() => setReviewRating(reviewRating === n ? 0 : n)}
-          >★</span>
+          ><Star size={14} /></span>
         ))}
         {reviewRating > 0 && <span className="review-rating-label">{reviewRating}/10</span>}
       </div>
@@ -126,7 +126,7 @@ export default function Reviews({ animeId, selectedEp }) {
                 </div>
                 <p>{r.text}</p>
                 {r.isBackend && r.likes > 0 && (
-                  <span className="review-likes">❤️ {r.likes}</span>
+                  <span className="review-likes"><Heart size={12} fill="currentColor" /> {r.likes}</span>
                 )}
               </div>
             </motion.div>
