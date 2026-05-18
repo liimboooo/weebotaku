@@ -36,7 +36,9 @@ const titleVariants = (title) => {
 };
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const CF_WORKER = "https://anime-proxy.mohamedlimam80000.workers.dev/?url=";
 const PROXIES = [
+  CF_WORKER,
   "https://api.codetabs.com/v1/proxy?quest=",
   "https://corsproxy.io/?url=",
   "https://api.allorigins.win/raw?url=",
@@ -66,6 +68,10 @@ async function fetchHtmlViaProxy(url) {
       if (!res.ok) return null;
       const text = await res.text();
       if (text.length < 50 && /error|invalid|not found/i.test(text)) return null;
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed.success && typeof parsed.data === "string") return parsed.data;
+      } catch {}
       return text;
     });
   }
