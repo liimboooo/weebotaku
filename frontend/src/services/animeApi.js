@@ -19,7 +19,7 @@ const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 const CF_WORKER_PROXY = process.env.REACT_APP_CF_PROXY_URL || '';
 const FALLBACK_PROXY = "https://api.codetabs.com/v1/proxy?quest=";
 
-const CF_PROTECTED_DOMAINS = ["anime3rb.com", "witanime.you", "witanime.one", "ristoanime.co"];
+const CF_PROTECTED_DOMAINS = ["anime3rb.com", "witanime.you", "witanime.one"];
 
 function isCfProtected(url) {
   try { const h = new URL(url).hostname; return CF_PROTECTED_DOMAINS.some(d => h === d || h.endsWith("." + d)); } catch { return false; }
