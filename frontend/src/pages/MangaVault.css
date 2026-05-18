@@ -524,7 +524,7 @@
 
 .mv-card-thumb {
   position: relative;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 3/4;
   overflow: hidden;
   background: var(--card-surface);
 }
@@ -702,8 +702,8 @@
 }
 
 .mv-row-thumb {
-  aspect-ratio: 1 / 1;
-  border-radius: 10px;
+  aspect-ratio: 3/4;
+  border-radius: 8px;
   overflow: hidden;
 }
 
@@ -711,11 +711,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s var(--ease-out);
 }
 
 .mv-row-card:hover .mv-row-thumb img {
-  transform: scale(1.08);
+  transform: scale(1.06);
 }
 
 .mv-row-body h3 {
