@@ -25,6 +25,10 @@ function isCfProtected(url) {
   try { const h = new URL(url).hostname; return CF_PROTECTED_DOMAINS.some(d => h === d || h.endsWith("." + d)); } catch { return false; }
 }
 
+function isCfChallenge(html) {
+  return html && typeof html === "string" && (html.includes("Just a moment") || html.includes("cf_chl") || html.includes("challenge-platform"));
+}
+
 async function fetchViaWorker(url) {
   if (!CF_WORKER_PROXY) return null;
   try {
@@ -50,19 +54,18 @@ async function fetchHtmlViaProxy(url) {
     const res = await fetch(`${API_BASE}/scrape/fetch?url=${encodeURIComponent(url)}`);
     if (!res.ok) return null;
     const data = await res.json();
-    return data.success ? data.data : null;
+    if (!data.success || isCfChallenge(data.data)) return null;
+    return data.data;
   });
 
-  if (!cfSite) {
-    strategies.push(async () => {
-      const res = await Promise.race([
-        fetch(`${FALLBACK_PROXY}${encodeURIComponent(url)}`, { mode: "cors" }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 12000)),
-      ]);
-      if (res.ok) return await res.text();
-      return null;
-    });
-  }
+  strategies.push(async () => {
+    const res = await Promise.race([
+      fetch(`${FALLBACK_PROXY}${encodeURIComponent(url)}`, { mode: "cors" }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 12000)),
+    ]);
+    if (res.ok) return await res.text();
+    return null;
+  });
 
   for (const p of strategies) {
     try { const result = await p(); if (result) return result; } catch {}
@@ -510,14 +513,17 @@ const CONSUMET_MIRRORS = [
 const CONSUMET_API = CONSUMET_MIRRORS[0];
 
 async function searchConsumetGogoanime(query) {
-  for (const mirror of CONSUMET_MIRRORS) {
-    for (const q of titleVariants(query)) {
+  for (const q of titleVariants(query)) {
+    for (const mirror of CONSUMET_MIRRORS) {
       try {
-        const res = await fetch(`${mirror}/anime/gogoanime/${encodeURIComponent(q)}`, {
-          signal: AbortSignal.timeout(6000),
+        const url = `${mirror}/anime/gogoanime/${encodeURIComponent(q)}`;
+        const res = await fetch(`${API_BASE}/scrape/fetch?url=${encodeURIComponent(url)}`, {
+          signal: AbortSignal.timeout(10000),
         });
         if (!res.ok) continue;
-        const data = await res.json();
+        const wrapper = await res.json();
+        if (!wrapper.success) continue;
+        const data = JSON.parse(wrapper.data);
         if (data?.results?.length > 0) {
           const best = data.results.sort((a, b) => {
             const aScore = scoreRelevance(a.title, query);
