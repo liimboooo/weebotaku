@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { ChevronLeft, ChevronRight, X, Loader, Image, ArrowLeftRight, Maximize2, Minus, Plus, BookOpen } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Loader, Image as ImageIcon, ArrowLeftRight, Maximize2, Minus, Plus, BookOpen } from "lucide-react";
 import { getChapterPages } from "../../services/mangaApi";
 import "./MangaReader.css";
 
@@ -286,7 +286,7 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
               <span>{direction.toUpperCase()}</span>
             </button>
             <button className="reader-action-btn" onClick={toggleQuality} title={`Quality: ${quality}`}>
-              <Image size={16} />
+              <ImageIcon size={16} />
               <span>{QUALITY_ICON[quality]}</span>
             </button>
             <button className="reader-close-btn" onClick={onClose}>
