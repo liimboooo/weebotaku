@@ -111,7 +111,7 @@ export async function getAnimeEpisodes(id) {
 }
 
 // ─── Anitaku.to (Gogoanime successor) ───
-const ANITAKU = "https://anitaku.to";
+const ANITAKU = "https://anineko.to";
 
 function scoreRelevance(title, searchQuery) {
   const t = title.toLowerCase();

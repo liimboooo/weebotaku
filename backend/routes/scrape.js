@@ -55,16 +55,12 @@ router.get('/fetch', safeHandler(async (req, res) => {
 
   let html = await fetchWithNative(url);
 
-  if (!html) {
+  if (!html || isCloudflareChallenge(html)) {
     try {
       const wreq = require('wreq-js');
-      const wr = await wreq.fetch(url, { timeout: 20000 });
+      const wr = await wreq.fetch(url, { timeout: 20000, headers: { 'User-Agent': BROWSER_UA, 'Accept': 'text/html,*/*' } });
       if (wr.status === 200) html = await wr.text();
     } catch {}
-  }
-
-  if (html && isCloudflareChallenge(html)) {
-    return res.status(503).json({ success: false, data: null, error: 'Cloudflare challenge - use CF Worker proxy' });
   }
 
   if (html) {

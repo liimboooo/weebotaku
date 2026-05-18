@@ -15,35 +15,56 @@ export default {
       return json({ success: false, error: "Missing ?url= param" }, 400);
     }
 
-    const allowed = ["anime3rb.com", "witanime.you", "witanime.one"];
+    const allowed = ["anime3rb.com", "witanime.you", "witanime.one", "anineko.to"];
     let hostname;
     try { hostname = new URL(targetUrl).hostname; } catch { return json({ success: false, error: "Invalid URL" }, 400); }
     if (!allowed.some(d => hostname === d || hostname.endsWith("." + d))) {
       return json({ success: false, error: "Domain not allowed" }, 403);
     }
 
-    try {
-      const resp = await fetch(targetUrl, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.9,ar;q=0.8",
-          "Sec-Fetch-Dest": "document",
-          "Sec-Fetch-Mode": "navigate",
-          "Sec-Fetch-Site": "none",
-        },
-        redirect: "follow",
-      });
+    const uas = [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
+    ];
+    const ua = uas[Math.floor(Math.random() * uas.length)];
 
-      const html = await resp.text();
-      if (html.includes("Just a moment") && html.includes("cf_chl")) {
-        return json({ success: false, error: "Cloudflare challenge detected" }, 503);
+    const fetchOpts = {
+      headers: {
+        "User-Agent": ua,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,ar;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
+        "Referer": "https://www.google.com/",
+        "DNT": "1",
+      },
+      redirect: "follow",
+    };
+
+    let resp;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      resp = await fetch(targetUrl, fetchOpts);
+      const contentType = resp.headers.get("content-type") || "";
+      if (contentType.includes("text") || contentType.includes("html")) {
+        const html = await resp.text();
+        if (!html.includes("Just a moment") || (!html.includes("cf_chl") && !html.includes("challenge-platform"))) {
+          return json({ success: true, data: html }, 200);
+        }
+      } else {
+        const text = await resp.text();
+        return json({ success: true, data: text }, 200);
       }
-
-      return json({ success: true, data: html }, 200);
-    } catch (e) {
-      return json({ success: false, error: e.message }, 502);
+      fetchOpts.headers["User-Agent"] = uas[Math.floor(Math.random() * uas.length)];
     }
+
+    return json({ success: false, error: "Cloudflare challenge detected" }, 503);
   },
 };
 
