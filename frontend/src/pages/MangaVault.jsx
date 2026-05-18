@@ -388,28 +388,73 @@ export default function MangaVault() {
                   {filtered.map((m, i) => (
                     <motion.article
                       key={m.id}
-                      className="upcoming-card"
+                      className={view === "grid" ? "mv-card" : "mv-row-card"}
                       layout
                       initial={{ opacity: 0, scale: 0.92 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.92 }}
                       transition={{ delay: (i % 12) * 0.025 }}
-                      onClick={() => { setPreview(m); setReaderError(""); }}
                     >
-                      <div className="upcoming-card-img">
-                        <img src={m.cover} alt={m.title} loading="lazy" />
-                        <div className="upcoming-card-badge">
-                          {m.status === "Ongoing" ? <Zap size={10} /> : null}
-                          {m.status}
-                        </div>
-                      </div>
-                      <div className="upcoming-card-body">
-                        <h3>{m.title}</h3>
-                        <div className="upcoming-card-meta">
-                          <span className="upcoming-card-tag">{m.demo}</span>
-                          <span className="upcoming-card-type">{m.ch} ch</span>
-                        </div>
-                      </div>
+                      {view === "grid" ? (
+                        <>
+                          <div className="mv-card-thumb" onClick={() => { setPreview(m); setReaderError(""); }}>
+                            <img src={m.cover} alt={m.title} loading="lazy" />
+                            <div className="mv-card-overlay">
+                              <div className="mv-card-play"><Eye size={20} /></div>
+                              <div className="mv-card-tech">
+                                <span>Ch. {m.last}</span>
+                                <span>{m.demo}</span>
+                              </div>
+                            </div>
+                            <div className="mv-card-badge">
+                              {m.status === "Ongoing" ? <Zap size={10} /> : null}
+                              {m.status}
+                            </div>
+                            <div className="mv-card-progress" style={{ width: '0%' }} />
+                          </div>
+                          <div className="mv-card-body">
+                            <div className="mv-card-head">
+                              <div>
+                                <h3>{m.title}</h3>
+                                <span className="mv-card-author">{m.author}</span>
+                              </div>
+                              <button className={`mv-wish-btn ${wishlist.some(i => i.id === m.id) ? "active" : ""}`} onClick={() => toggleWishlist(m.id)}>
+                                <Bookmark size={14} fill={wishlist.some(i => i.id === m.id) ? "currentColor" : "none"} />
+                              </button>
+                            </div>
+                            <p className="mv-card-desc">{m.desc}</p>
+                            <div className="mv-card-foot">
+                              <span className="mv-card-rating"><Star size={11} fill="currentColor" /> {m.rating}</span>
+                              <span className="mv-card-ch"><BookOpen size={11} /> {m.ch} ch</span>
+                              <span className="mv-card-tag">{m.demo}</span>
+                            </div>
+                          </div>
+                          <div className="mv-card-glow" />
+                        </>
+                      ) : (
+                        <>
+                          <div className="mv-row-thumb" onClick={() => { setPreview(m); setReaderError(""); }}>
+                            <img src={m.cover} alt={m.title} loading="lazy" />
+                          </div>
+                          <div className="mv-row-body" onClick={() => { setPreview(m); setReaderError(""); }}>
+                            <div className="mv-row-head">
+                              <h3>{m.title}</h3>
+                              <span className="mv-row-author">{m.author}</span>
+                            </div>
+                            <p className="mv-row-desc">{m.desc}</p>
+                            <div className="mv-row-meta">
+                              <span><Star size={11} /> {m.rating}</span>
+                              <span><BookOpen size={11} /> {m.ch} chapters</span>
+                              <span className="mv-row-tag">{m.demo}</span>
+                              <span className={`mv-row-status ${(m.status || "").toLowerCase()}`}>{m.status}</span>
+                            </div>
+                          </div>
+                          <button className={`mv-row-wish ${wishlist.some(i => i.id === m.id) ? "active" : ""}`} onClick={() => toggleWishlist(m.id)}>
+                            <Bookmark size={15} fill={wishlist.some(i => i.id === m.id) ? "currentColor" : "none"} />
+                          </button>
+                          <div className="mv-card-glow" />
+                        </>
+                      )}
                     </motion.article>
                   ))}
                 </AnimatePresence>

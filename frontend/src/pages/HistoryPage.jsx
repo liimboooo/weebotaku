@@ -160,24 +160,48 @@ export default function HistoryPage() {
 
                 return (
                   <motion.div
-                    className="upcoming-card"
+                    className="history-card"
                     key={item.timestamp}
                     variants={itemVariants}
                     exit="exit"
+                    whileHover={{
+                      y: -10,
+                      boxShadow: "0 20px 40px rgba(230, 54, 54, 0.18)",
+                      borderColor: "rgba(230, 54, 54, 0.28)",
+                    }}
                     whileTap={{ scale: 0.98 }}
                     onClick={(e) => navigateWithViewTransition(anime, item.episode, e)}
                   >
-                    <div className="upcoming-card-img">
-                      <img src={anime.img} alt={anime.name} loading="lazy" />
-                      <div className="upcoming-card-badge">Ep {item.episode}</div>
-                    </div>
-                    <div className="upcoming-card-body">
-                      <h3>{anime.name}</h3>
-                      <div className="upcoming-card-meta">
-                        <span className="upcoming-card-tag">{date}</span>
-                        <span className="upcoming-card-type">{progress > 0 ? `${Math.round(progress)}%` : "Watching"}</span>
+                    <div className="history-img-wrap">
+                      <img src={anime.img} alt={anime.name} />
+                      <div className="play-overlay">
+                        <PlayCircle size={28} />
                       </div>
                     </div>
+                    <div className="history-details">
+                      <div className="history-title-row">
+                        <h3>{anime.name}</h3>
+                        <span className="history-date">{date}</span>
+                      </div>
+                      <p className="history-ep">Episode {item.episode}</p>
+                      {progress > 0 && (
+                        <div className="history-progress">
+                          <div className="progress-bar">
+                            <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                          </div>
+                          <span>Watching</span>
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      className="remove-item-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeHistoryItem(item.timestamp);
+                      }}
+                    >
+                      <X size={16} />
+                    </button>
                   </motion.div>
                 );
               })}

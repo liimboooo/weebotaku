@@ -13,6 +13,7 @@ import {
   List,
   Grid3x3,
   Library,
+  Play,
   Search,
   Sparkles,
   Star,
@@ -108,21 +109,46 @@ function FilterDropdown({ label, icon: Icon, items, active, children, searchable
   );
 }
 
-function AnimeCard({ anime }) {
+function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchLoading }) {
+  const inWishlist = wishlist.some(i => i.id === anime.id);
   const [imgErr, setImgErr] = useState(false);
   return (
     <>
-      <div className="upcoming-card-img">
+      <div className="br-card-thumb">
         {imgErr ? <div className="br-card-img-fallback">{anime.name?.[0] || "?"}</div> : <img src={anime.img} alt={anime.name} loading="lazy" onError={() => setImgErr(true)} />}
-        <div className="upcoming-card-badge">{anime.status === "Ongoing" ? <Zap size={10} /> : null}{anime.status || "Unknown"}</div>
+        <div className="br-card-overlay">
+          <button className="br-card-play" onClick={(e) => { e.stopPropagation(); onWatch(anime); }} disabled={watchLoading}>
+            <Play size={20} fill="currentColor" />
+          </button>
+          <div className="br-card-tech">
+            <span>{anime.episodes} eps</span>
+            <span>{anime.type || "TV"}</span>
+          </div>
+        </div>
+        <div className="br-card-badge">
+          {anime.status === "Ongoing" ? <Zap size={10} /> : null}
+          {anime.status || "Unknown"}
+        </div>
+        <div className="br-card-progress" style={{ width: `${Math.round((anime.readProgress || 0) * 100)}%` }} />
       </div>
-      <div className="upcoming-card-body">
-        <h3>{anime.name}</h3>
-        <div className="upcoming-card-meta">
-          {anime.genres?.[0] && <span className="upcoming-card-tag">{anime.genres[0]}</span>}
-          <span className="upcoming-card-type">{anime.type || "TV"}</span>
+      <div className="br-card-body">
+        <div className="br-card-head">
+          <div>
+            <h3>{anime.name}</h3>
+            <span className="br-card-studio">{anime.studio}</span>
+          </div>
+          <button className={`br-wish-btn ${inWishlist ? "active" : ""}`} onClick={(e) => { e.stopPropagation(); onWishlist(anime.id); }}>
+            <Bookmark size={14} fill={inWishlist ? "currentColor" : "none"} />
+          </button>
+        </div>
+        <p className="br-card-desc">{anime.synopsis}</p>
+        <div className="br-card-foot">
+          <span className="br-card-rating"><Star size={11} fill="currentColor" /> {anime.rating?.toFixed(1)}</span>
+          <span className="br-card-ch"><Play size={11} /> {anime.episodes} eps</span>
+          {anime.genres?.[0] && <span className="br-card-tag">{anime.genres[0]}</span>}
         </div>
       </div>
+      <div className="br-card-glow" />
     </>
   );
 }
@@ -409,7 +435,7 @@ export default function Browse() {
                   {filteredAnime.map((anime, i) => (
                     <motion.article
                       key={anime.id}
-                      className="upcoming-card"
+                      className="br-card"
                       layout
                       initial={{ opacity: 0, scale: 0.92 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -417,7 +443,13 @@ export default function Browse() {
                       transition={{ delay: (i % 12) * 0.025 }}
                       onClick={() => navigate(`/anime/${anime.id}`)}
                     >
-                      <AnimeCard anime={anime} />
+                      <AnimeCard
+                        anime={anime}
+                        wishlist={watchlist}
+                        onWishlist={toggleWishlist}
+                        onWatch={openWatch}
+                        watchLoading={watchLoading}
+                      />
                     </motion.article>
                   ))}
                 </AnimatePresence>

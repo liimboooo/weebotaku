@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { RotateCcw, Search, Sparkles, TrendingUp, Clock, Zap, X } from "lucide-react";
+import { Bookmark, Play, RotateCcw, Search, Sparkles, Star, TrendingUp, Clock, Zap, X } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -264,26 +264,54 @@ export default function SearchPage() {
               {results.map((anime) => {
                 const inList = watchlistIds.includes(anime.id);
                 return (
-                  <motion.div className="upcoming-card"
+                  <motion.div className="sr-card" key={anime.id}
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 100, damping: 12 }}
+                    whileHover={{ y: -8 }}
                     onClick={() => navigate(`/anime/${anime.id}`)}
                   >
-                    <div className="upcoming-card-img">
+                    <div className="sr-card-thumb">
                       <img src={anime.img} alt={anime.name} loading="lazy" />
-                      <div className="upcoming-card-badge">
+                      <div className="sr-card-overlay">
+                        <button className="sr-card-play" onClick={(e) => { e.stopPropagation(); navigate(`/anime/${anime.id}`); }}>
+                          <Play size={20} fill="currentColor" />
+                        </button>
+                        <div className="sr-card-tech">
+                          <span>{anime.episodes} eps</span>
+                          <span>{anime.type || "TV"}</span>
+                        </div>
+                      </div>
+                      <div className="sr-card-badge">
                         {anime.status === "Ongoing" && <Zap size={10} />}
                         {anime.status || "Unknown"}
                       </div>
+                      <div className="sr-card-progress" style={{ width: `${Math.round((anime.readProgress || 0) * 100)}%` }} />
                     </div>
-                    <div className="upcoming-card-body">
-                      <h3>{anime.name}</h3>
-                      <div className="upcoming-card-meta">
-                        {anime.genres?.[0] && <span className="upcoming-card-tag">{anime.genres[0]}</span>}
-                        <span className="upcoming-card-type">{anime.type || "TV"}</span>
+                    <div className="sr-card-body">
+                      <div className="sr-card-head">
+                        <h3>{anime.name}</h3>
+                        <button className={`sr-wish-btn ${inList ? "active" : ""}`} onClick={(e) => {
+                          e.stopPropagation();
+                          if (inList) {
+                            removeFromWatchlist(anime.id);
+                            setWatchlistIds(prev => prev.filter(i => i !== anime.id));
+                          } else {
+                            addToWatchlist(anime);
+                            setWatchlistIds(prev => [...prev, anime.id]);
+                          }
+                        }}>
+                          <Bookmark size={12} fill={inList ? "currentColor" : "none"} />
+                        </button>
+                      </div>
+                      <p className="sr-card-desc">{anime.synopsis || ""}</p>
+                      <div className="sr-card-foot">
+                        <span className="sr-card-rating"><Star size={10} fill="currentColor" /> {anime.rating?.toFixed(1)}</span>
+                        <span className="sr-card-ch"><Play size={10} /> {anime.episodes} eps</span>
+                        {anime.genres?.[0] && <span className="sr-card-tag">{anime.genres[0]}</span>}
                       </div>
                     </div>
+                    <div className="sr-card-glow" />
                   </motion.div>
                 );
               })}
