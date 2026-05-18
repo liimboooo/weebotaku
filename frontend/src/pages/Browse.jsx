@@ -4,12 +4,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useLoading } from "../components/LoadingProvider";
 import {
   Activity,
+  Bookmark,
   Building2,
   Calendar,
   ChevronDown,
   Film,
   Hash,
-  Heart,
   List,
   Grid3x3,
   Library,
@@ -138,7 +138,7 @@ function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchLoading }) {
             <span className="br-card-studio">{anime.studio}</span>
           </div>
           <button className={`br-wish-btn ${inWishlist ? "active" : ""}`} onClick={(e) => { e.stopPropagation(); onWishlist(anime.id); }}>
-            <Heart size={14} fill={inWishlist ? "currentColor" : "none"} />
+            <Bookmark size={14} fill={inWishlist ? "currentColor" : "none"} />
           </button>
         </div>
         <p className="br-card-desc">{anime.synopsis}</p>
@@ -409,7 +409,7 @@ export default function Browse() {
 
           <div className="br-summary">
             <span>{filteredAnime.length} results</span>
-            <span><Heart size={12} /> {watchlist.length} in watchlist</span>
+            <span><Bookmark size={12} /> {watchlist.length} in watchlist</span>
             {activeCount > 0 && <span>{activeCount} active</span>}
           </div>
 

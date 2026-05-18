@@ -23,7 +23,7 @@ import Slider from "../components/Slider";
 import LiveRooms from "../components/LiveRooms";
 import Categories from "../components/Categories";
 import Background from "../components/Background";
-import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres } from "../services/jikanApi";
+import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/jikanApi";
 import { fetchRandomQuote } from "../services/communityApi";
 import {
   addToWatchlist,
@@ -196,18 +196,17 @@ function ContinueWatchingRow() {
     Promise.allSettled(
       recent.map(async item => {
         try {
-          const res = await fetch(`https://api.jikan.moe/v4/anime/${item.animeId}`);
-          const json = await res.json();
-          if (json.data) {
+          const data = await fetchAnimeById(item.animeId);
+          if (data) {
             return {
               animeId: item.animeId,
               episode: item.episode,
               timestamp: item.timestamp,
-              id: json.data.mal_id,
-              name: json.data.title_english || json.data.title,
-              img: json.data.images?.jpg?.large_image_url || json.data.images?.jpg?.image_url || "",
-              rating: json.data.score,
-              episodes: json.data.episodes,
+              id: data.id,
+              name: data.name,
+              img: data.img,
+              rating: data.rating,
+              episodes: data.episodes,
             };
           }
         } catch {}

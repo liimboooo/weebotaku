@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLoading } from "../components/LoadingProvider";
-import { Search, X, Star, BookOpen, Eye, Heart, Sparkles, Zap, Library, List, Grid3x3, Users, Activity, ChevronDown, SlidersHorizontal } from "lucide-react";
+import { Search, X, Star, BookOpen, Eye, Bookmark, Sparkles, Zap, Library, List, Grid3x3, Users, Activity, ChevronDown } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Loader from "../components/Loader";
 import Background from "../components/Background";
@@ -417,7 +417,7 @@ export default function MangaVault() {
                                 <span className="mv-card-author">{m.author}</span>
                               </div>
                               <button className={`mv-wish-btn ${wishlist.some(i => i.id === m.id) ? "active" : ""}`} onClick={() => toggleWishlist(m.id)}>
-                                <Heart size={14} fill={wishlist.some(i => i.id === m.id) ? "currentColor" : "none"} />
+                                <Bookmark size={14} fill={wishlist.some(i => i.id === m.id) ? "currentColor" : "none"} />
                               </button>
                             </div>
                             <p className="mv-card-desc">{m.desc}</p>
@@ -448,7 +448,7 @@ export default function MangaVault() {
                             </div>
                           </div>
                           <button className={`mv-row-wish ${wishlist.some(i => i.id === m.id) ? "active" : ""}`} onClick={() => toggleWishlist(m.id)}>
-                            <Heart size={15} fill={wishlist.some(i => i.id === m.id) ? "currentColor" : "none"} />
+                            <Bookmark size={15} fill={wishlist.some(i => i.id === m.id) ? "currentColor" : "none"} />
                           </button>
                           <div className="mv-card-glow" />
                         </>
@@ -534,7 +534,7 @@ export default function MangaVault() {
                     </div>
                     {readerError && <div className="mv-modal-error">{readerError}</div>}
                     <button className="mv-modal-btn" onClick={() => toggleWishlist(preview.id)}>
-                      <Heart size={16} fill={wishlist.some(i => i.id === preview.id) ? "currentColor" : "none"} />
+                      <Bookmark size={16} fill={wishlist.some(i => i.id === preview.id) ? "currentColor" : "none"} />
                       {wishlist.some(i => i.id === preview.id) ? "In Your List" : "Add to List"}
                     </button>
                     <button className="mv-modal-btn mv-modal-btn-primary" onClick={() => openReader(preview)} disabled={chapterLoading}>

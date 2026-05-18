@@ -659,14 +659,28 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
+.sd-pill-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
 .sd-pill-remove {
   font-size: 10px;
   opacity: 0.4;
   transition: opacity 0.2s;
   line-height: 1;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 8px 10px 8px 2px;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
 }
 
-.sd-pill:hover .sd-pill-remove { opacity: 0.8; }
+.sd-pill-wrap:hover .sd-pill-remove { opacity: 0.8; }
 
 .trending-indicator {
   font-family: var(--font-mono, monospace);

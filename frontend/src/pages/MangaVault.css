@@ -1110,6 +1110,18 @@
   background: #dc2626;
 }
 
+.mv-modal-btn-secondary {
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.mv-modal-btn-secondary:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  border-color: rgba(255,255,255,0.3);
+}
+
 /* ─── ANIMATIONS ─── */
 @keyframes mv-card-in {
   from { opacity: 0; transform: translateY(20px) scale(0.95); }

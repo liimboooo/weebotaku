@@ -18,44 +18,39 @@ function setCache(key, data) {
 }
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const IS_LOCALHOST = !process.env.REACT_APP_API_URL || process.env.REACT_APP_API_URL.includes('localhost');
+const JIKAN_BASE = "https://api.jikan.moe/v4";
 
 async function jikanFetch(endpoint) {
   const cached = getCached(endpoint);
   if (cached) return cached;
 
-  // Try backend proxy first (handles CORS, longer timeout)
-  try {
-    const proxyUrl = `${API_BASE}/scrape/jikan-proxy?path=${encodeURIComponent(endpoint)}`;
-    const proxyRes = await fetch(proxyUrl, { signal: AbortSignal.timeout(25000) });
-    if (proxyRes.ok) {
-      const json = await proxyRes.json();
-      if (json.success) {
-        const data = json.data;
-        setCache(endpoint, data);
-        return data;
+  // Skip slow proxy on localhost (no backend running)
+  if (!IS_LOCALHOST) {
+    try {
+      const proxyUrl = `${API_BASE}/scrape/jikan-proxy?path=${encodeURIComponent(endpoint)}`;
+      const proxyRes = await fetch(proxyUrl, { signal: AbortSignal.timeout(5000) });
+      if (proxyRes.ok) {
+        const json = await proxyRes.json();
+        if (json.success) {
+          const data = json.data;
+          setCache(endpoint, data);
+          return data;
+        }
       }
+    } catch {}
+  }
+
+  // Try direct Jikan API (one quick attempt — fails on CORS from browser, works via proxy)
+  try {
+    const res = await fetch(`${JIKAN_BASE}${endpoint}`);
+    if (res.ok) {
+      const json = await res.json();
+      setCache(endpoint, json);
+      return json;
     }
   } catch {}
 
-  // Fallback to direct Jikan API with rate limiting
-  const BASE_URL = "https://api.jikan.moe/v4";
-  const MIN_INTERVAL = 1100;
-  const RETRY_DELAY = 2000;
-  const MAX_RETRIES = 2;
-
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    if (attempt > 0) await new Promise(r => setTimeout(r, RETRY_DELAY * attempt));
-    await new Promise(r => setTimeout(r, MIN_INTERVAL));
-    try {
-      const res = await fetch(`${BASE_URL}${endpoint}`);
-      if (res.ok) {
-        const json = await res.json();
-        setCache(endpoint, json);
-        return json;
-      }
-      if (res.status !== 429) throw new Error(`Jikan error: ${res.status}`);
-    } catch {}
-  }
   throw new Error('Jikan unavailable');
 }
 
@@ -247,8 +242,9 @@ function anilistMapAnime(a) {
 }
 
 function anilistMapManga(m) {
+  const authorName = m.staff?.edges?.[0]?.node?.name?.full || "Unknown";
   return {
-    id: m.id, title: m.title?.english||m.title?.romaji||"", author: m.author?.[0]?.name||"Unknown",
+    id: m.id, title: m.title?.english||m.title?.romaji||"", author: authorName,
     cover: m.coverImage?.large||"", demo: "Unknown",
     status: m.status==="RELEASING"?"Ongoing":m.status==="FINISHED"?"Completed":m.status||"Unknown",
     ch: m.chapters||0, volumes: m.volumes||0, last: Math.floor((m.chapters||0)*0.8)||0,
@@ -277,13 +273,13 @@ async function anilistSeasonalAnime(year, season) {
 }
 
 async function anilistSearchManga(query) {
-  const q = `{Page(page:1,perPage:25){media(search:"${query.replace(/"/g,'')}",type:MANGA,sort:SEARCH_MATCH){id title{romaji english}coverImage{large}averageScore chapters volumes genres description status authors{name}}}}`;
+  const q = `{Page(page:1,perPage:25){media(search:"${query.replace(/"/g,'')}",type:MANGA,sort:SEARCH_MATCH){id title{romaji english}coverImage{large}averageScore chapters volumes genres description status staff(perPage:3){edges{node{name{full}}role}}}}}`;
   const d = await anilistGraphQL(q);
   return {data: (d?.Page?.media||[]).map(anilistMapManga), pagination: {hasNextPage:false, currentPage:1}};
 }
 
 async function anilistTopManga() {
-  const q = `{Page(page:1,perPage:25){media(sort:TRENDING_DESC,type:MANGA){id title{romaji english}coverImage{large}averageScore chapters volumes genres description status authors{name}}}}`;
+  const q = `{Page(page:1,perPage:25){media(sort:TRENDING_DESC,type:MANGA){id title{romaji english}coverImage{large}averageScore chapters volumes genres description status staff(perPage:3){edges{node{name{full}}role}}}}}`;
   const d = await anilistGraphQL(q);
   return {data: (d?.Page?.media||[]).map(anilistMapManga), pagination: {hasNextPage:false, currentPage:1}};
 }

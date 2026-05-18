@@ -1,7 +1,7 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Heart, Play, Star, Zap } from "lucide-react";
+import { ChevronLeft, ChevronRight, Bookmark, Play, Star, Zap } from "lucide-react";
 import { addToWatchlist, removeFromWatchlist, loadWatchlist } from "../services/storage";
 import Skeleton from "./Skeleton";
 import "./Slider.css";
@@ -63,7 +63,7 @@ function SliderCard({ item, onClick }) {
         <div className="slider-card-head">
           <h3>{item.name}</h3>
           <button className={`slider-wish-btn ${inWishlist ? "active" : ""}`} onClick={toggleWishlist}>
-            <Heart size={12} fill={inWishlist ? "currentColor" : "none"} />
+            <Bookmark size={12} fill={inWishlist ? "currentColor" : "none"} />
           </button>
         </div>
         <p className="slider-card-desc">{item.synopsis || ""}</p>
@@ -91,9 +91,10 @@ export default function Slider({ sliderData, noHeader }) {
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
   };
 
-  useState(() => {
-    setTimeout(checkScroll, 100);
-  });
+  useEffect(() => {
+    const t = setTimeout(checkScroll, 100);
+    return () => clearTimeout(t);
+  }, []);
 
   const scroll = (dir) => {
     if (scrollRef.current) {

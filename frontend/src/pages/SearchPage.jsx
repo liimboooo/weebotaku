@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Heart, Play, RotateCcw, Search, Sparkles, Star, TrendingUp, Clock, Zap, X } from "lucide-react";
+import { Bookmark, Play, RotateCcw, Search, Sparkles, Star, TrendingUp, Clock, Zap, X } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -177,10 +177,12 @@ export default function SearchPage() {
                 </div>
                 <div className="sd-pills">
                   {recentSearches.map((s) => (
-                    <button key={s} className="sd-pill" onClick={() => searchFromPill(s)}>
-                      <span>{s}</span>
-                      <span className="sd-pill-remove" onClick={(e) => { e.stopPropagation(); removeRecent(s); }}>✕</span>
-                    </button>
+                    <div key={s} className="sd-pill-wrap">
+                      <button className="sd-pill" onClick={() => searchFromPill(s)}>
+                        <span>{s}</span>
+                      </button>
+                      <button className="sd-pill-remove" aria-label={`Remove ${s}`} onClick={(e) => { e.stopPropagation(); removeRecent(s); }}>✕</button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -293,7 +295,7 @@ export default function SearchPage() {
                           e.stopPropagation();
                           if (inList) { removeFromWatchlist(anime.id); } else { addToWatchlist(anime); }
                         }}>
-                          <Heart size={12} fill={inList ? "currentColor" : "none"} />
+                          <Bookmark size={12} fill={inList ? "currentColor" : "none"} />
                         </button>
                       </div>
                       <p className="sr-card-desc">{anime.synopsis || ""}</p>
