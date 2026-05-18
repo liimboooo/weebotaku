@@ -26,7 +26,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     (async () => {
       setLoading(true); setError("");
       try {
-        const eps = await getRistoAnimeEpisodes(anime.title || anime.slug);
+        const eps = await getRistoAnimeEpisodes(anime.title || anime.slug, anime.tagSlug);
         if (eps.length === 0) { setError("No streaming links available."); return; }
         setEpisodes(eps);
         setEpIndex(Math.min(Math.max(0, startEp - 1), eps.length - 1));
