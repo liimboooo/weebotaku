@@ -1,55 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, X, Loader, Play, Monitor, Globe, SkipForward } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Loader, Play, Monitor, SkipForward } from "lucide-react";
 import { motion } from "framer-motion";
-import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, getWitanimeEpisodes, getWitanimeStreamUrl, getWitanimeServers, getAnime3rbEpisodes, getAnime3rbStreamUrl, getConsumetGogoanimeEpisodes, getConsumetGogoanimeStreamUrl, getRistoAnimeEpisodes, getRistoAnimeStreamUrls } from "../../services/animeApi";
+import { getRistoAnimeEpisodes, getRistoAnimeStreamUrls } from "../../services/animeApi";
 import "./AnimeWatch.css";
 
-function ConsumetPlayer({ streamUrl }) {
-  const videoRef = useRef(null);
-  const hlsRef = useRef(null);
-
-  useEffect(() => {
-    if (!videoRef.current || !streamUrl) return;
-    if (!streamUrl.includes(".m3u8")) { videoRef.current.src = streamUrl; return; }
-
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js";
-    script.onload = () => {
-      if (window.Hls && window.Hls.isSupported()) {
-        hlsRef.current = new window.Hls();
-        hlsRef.current.loadSource(streamUrl);
-        hlsRef.current.attachMedia(videoRef.current);
-      } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
-        videoRef.current.src = streamUrl;
-      }
-    };
-    document.body.appendChild(script);
-    return () => {
-      hlsRef.current?.destroy();
-      document.body.removeChild(script);
-    };
-  }, [streamUrl]);
-
-  return (
-    <video ref={videoRef} className="watch-frame" controls autoPlay playsInline>
-      <source src={streamUrl} type="application/x-mpegURL" />
-    </video>
-  );
-}
-
-function replaceEpInUrl(url, animeId, newEp) {
-  let result = url.replace(new RegExp(`/${animeId}/(\\d+)`), `/${animeId}/${newEp}`);
-  result = result.replace(/([?&]ep=)\d+/g, `$1${newEp}`);
-  if (animeId && !Number.isNaN(Number(animeId))) {
-    result = result.replace(new RegExp(`anilist-${animeId}/(\\d+)`), `anilist-${animeId}/${newEp}`);
-  }
-  return result;
-}
-
-
-
-export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange, totalEpisodes = 12 }) {
+export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange }) {
   const [episodes, setEpisodes] = useState([]);
   const [epIndex, setEpIndex] = useState(Math.max(0, startEp - 1));
   const [loading, setLoading] = useState(true);
@@ -61,123 +17,38 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [iframeError, setIframeError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
-  const [useEmbedFallback, setUseEmbedFallback] = useState(false);
   const [autoNext, setAutoNext] = useState(false);
-  const autoNextTimer = useRef(null);
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
   const failedServers = useRef(new Set());
 
-  const isEmbedSource = ["embed"].includes(anime.source) || useEmbedFallback;
-
   useEffect(() => {
-    if (isEmbedSource) {
-      setLoading(false);
-      if (!anime.embedProviders?.length) { setError("No streaming source found."); return; }
-      const epCount = totalEpisodes > 0 ? Math.min(totalEpisodes, 50) : Math.max(12, startEp);
-      const virtualEps = Array.from({ length: epCount }, (_, i) => ({ episode: i + 1, id: i + 1 }));
-      setEpisodes(virtualEps);
-      const providers = anime.embedProviders.map(p => ({ label: p.name, url: p.url }));
-      setServers(providers);
-      setServerIndex(0);
-      const initialEp = Math.min(Math.max(1, startEp), epCount);
-      setEpIndex(initialEp - 1);
-      setStreamUrl(replaceEpInUrl(providers[0].url, anime.anilistId || anime.id, initialEp));
-      return;
-    }
     (async () => {
       setLoading(true); setError("");
       try {
-        let eps = [];
-        if (anime.source === "ristoanime") eps = await getRistoAnimeEpisodes(anime.title || anime.slug);
-        else if (anime.source === "anitaku") eps = await getAnitakuEpisodes(anime.slug);
-        else if (anime.source === "witanime") eps = await getWitanimeEpisodes(anime.slug);
-        else if (anime.source === "anime3rb") eps = await getAnime3rbEpisodes(anime.slug);
-        else if (anime.source === "consumet") eps = await getConsumetGogoanimeEpisodes(anime.id);
-        else eps = await getAnimeEpisodes(anime.id);
+        const eps = await getRistoAnimeEpisodes(anime.title || anime.slug);
         if (eps.length === 0) { setError("No streaming links available."); return; }
         setEpisodes(eps);
         setEpIndex(Math.min(Math.max(0, startEp - 1), eps.length - 1));
       } catch { setError("Failed to load episodes."); }
       finally { setLoading(false); }
     })();
-  }, [anime.id, anime.slug, anime.source, startEp, isEmbedSource, anime.embedProviders, totalEpisodes, retryCount]);
+  }, [anime.title, anime.slug, startEp, retryCount]);
 
   const episode = episodes[epIndex];
 
-  // Rebuild embed URL when episode or server changes
   useEffect(() => {
-    if (!isEmbedSource || !servers[serverIndex]) return;
-    const ep = epIndex + 1;
-    setIframeError(false);
-    failedServers.current = new Set();
-    setStreamUrl(replaceEpInUrl(servers[serverIndex].url, anime.anilistId || anime.id, ep));
-  }, [epIndex, serverIndex, isEmbedSource, servers, anime.id]);
-
-  useEffect(() => {
-    if (!episode || isEmbedSource) return;
-    if (anime.source === "ristoanime") {
-      (async () => {
-        setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
-        try {
-          const urls = await getRistoAnimeStreamUrls(episode.url);
-          if (urls.length > 0) { setServers(urls); setStreamUrl(urls[0].url); }
-          else setError("No video servers found.");
-        } catch { setError("Failed to load stream."); }
-        finally { setStreamLoading(false); }
-      })();
-    } else if (anime.source === "anitaku") {
-      (async () => {
-        setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
-        try {
-          const urls = await getAnitakuStreamUrls(episode.url);
-      if (urls.length > 0) { setServers(urls); setStreamUrl(urls[0].url); }
+    if (!episode) return;
+    (async () => {
+      setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
+      try {
+        const urls = await getRistoAnimeStreamUrls(episode.url);
+        if (urls.length > 0) { setServers(urls); setStreamUrl(urls[0].url); }
         else setError("No video servers found.");
       } catch { setError("Failed to load stream."); }
       finally { setStreamLoading(false); }
-      })();
-    } else if (anime.source === "witanime") {
-      (async () => {
-        setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
-        try {
-          const srvs = await getWitanimeServers(episode.url);
-          if (srvs.length > 0) {
-            setServers(srvs);
-            setStreamUrl(srvs[0].url);
-          } else {
-            const url = await getWitanimeStreamUrl(episode.url);
-            if (url) setStreamUrl(url);
-            else setError("No stream URL found.");
-          }
-        } catch { setError("Failed to load stream."); }
-        finally { setStreamLoading(false); }
-      })();
-    } else if (anime.source === "anime3rb") {
-      (async () => {
-        setError(""); setStreamLoading(true); setStreamUrl("");
-        try {
-          const url = await getAnime3rbStreamUrl(episode.url);
-          if (url) setStreamUrl(url);
-          else setError("No stream URL found.");
-        } catch { setError("Failed to load stream."); }
-        finally { setStreamLoading(false); }
-      })();
-    } else if (anime.source === "consumet") {
-      (async () => {
-        setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]);
-        try {
-          const url = await getConsumetGogoanimeStreamUrl(episode.id);
-          if (url) {
-            setStreamUrl(url);
-            setServers([{ label: "HD", url }]);
-          } else setError("No stream URL found.");
-        } catch { setError("Failed to load stream."); }
-        finally { setStreamLoading(false); }
-      })();
-    } else {
-      setStreamUrl(episode.url);
-    }
-  }, [episode, anime.source, isEmbedSource, streamRetryCount]);
+    })();
+  }, [episode, streamRetryCount]);
 
   useEffect(() => {
     if (scrollRef.current && episodes[epIndex]) {
@@ -191,7 +62,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       setServerIndex(idx);
       setIframeError(false);
       failedServers.current = new Set();
-      if (!isEmbedSource) setStreamUrl(servers[idx].url);
+      setStreamUrl(servers[idx].url);
     }
   };
 
@@ -218,8 +89,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   }, [serverIndex, servers]);
   const goPrev = () => setEpIndex(i => { const n = Math.max(0, i - 1); if (onEpisodeChange && episodes[n]) onEpisodeChange(episodes[n].episode); return n; });
   const goNext = () => setEpIndex(i => { const n = Math.min(episodes.length - 1, i + 1); if (onEpisodeChange && episodes[n]) onEpisodeChange(episodes[n].episode); return n; });
-
-  const hasMultipleServers = servers.length > 1 || (anime.embedProviders?.length > 0 && useEmbedFallback);
 
   return createPortal(
     <motion.div className="watch-overlay" onClick={onClose}
@@ -271,29 +140,21 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                       if (episodes.length === 0) setRetryCount(c => c + 1);
                       else setStreamRetryCount(c => c + 1);
                     }}>Retry</button>
-                    {anime.embedProviders?.length > 0 && !useEmbedFallback && (
-                      <button className="watch-btn" onClick={() => setUseEmbedFallback(true)}>
-                        <Globe size={14} /> Embed Player
-                      </button>
-                    )}
+
                   </div>
                 </div>
               )}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && (
-                anime.source === "consumet" && streamUrl.includes(".m3u8") ? (
-                  <ConsumetPlayer key={`${episode?.episode || 0}-${serverIndex}`} streamUrl={streamUrl} />
-                ) : (
-                  <iframe
-                    ref={iframeRef}
-                    key={`${episode?.episode || 0}-${serverIndex}`}
-                    className="watch-frame"
-                    src={streamUrl}
-                    title={`Episode ${episode?.episode || ""}`}
-                    allow="autoplay; fullscreen; encrypted-media"
-                    allowFullScreen
-                    onError={handleIframeError}
-                  />
-                )
+                <iframe
+                  ref={iframeRef}
+                  key={`${episode?.episode || 0}-${serverIndex}`}
+                  className="watch-frame"
+                  src={streamUrl}
+                  title={`Episode ${episode?.episode || ""}`}
+                  allow="autoplay; fullscreen; encrypted-media"
+                  allowFullScreen
+                  onError={handleIframeError}
+                />
               )}
               {!loading && !error && iframeError && streamUrl && (
                 <div className="watch-center">
@@ -331,7 +192,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                   <p className="watch-muted">Loading stream...</p>
                 </div>
               )}
-              {!loading && !error && !streamLoading && !streamUrl && !isEmbedSource && episode && (
+              {!loading && !error && !streamLoading && !streamUrl && episode && (
                 <div className="watch-center"><p className="watch-muted">Preparing stream...</p></div>
               )}
             </div>
@@ -362,11 +223,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                   </div>
                 </div>
               )}
-              {!isEmbedSource && anime.embedProviders?.length > 0 && (
-                <button className="watch-btn" onClick={() => setUseEmbedFallback(true)} style={{ fontSize: 11, flexShrink: 0 }}>
-                  <Globe size={12} /> Embed
-                </button>
-              )}
+
             </div>
           </div>
 
