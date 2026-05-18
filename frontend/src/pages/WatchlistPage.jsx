@@ -107,52 +107,27 @@ export default function WatchlistPage() {
                     <AnimatePresence mode="popLayout">
                       {animeList.map((anime, i) => (
                         <motion.article
-                          className="wl-card"
+                          className="upcoming-card"
                           key={anime.id}
                           layout
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.9 }}
                           transition={{ delay: (i % 12) * 0.03, type: "spring", stiffness: 100, damping: 14 }}
-                          whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(230,54,54,0.3)", borderColor: "#e63636" }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => navigate(`/anime/${anime.id}`)}
                         >
-                          <div className="wl-card-thumb">
+                          <div className="upcoming-card-img">
                             <img src={anime.img} alt={anime.name} loading="lazy" />
-                            <div className="wl-card-overlay">
-                              <div className="wl-card-play"><Play size={20} fill="currentColor" /></div>
-                              <div className="wl-card-tech">
-                                <span>{anime.episodes} eps</span>
-                                {getProgress(anime.id) > 0 && <span>Ep {getProgress(anime.id)}</span>}
-                              </div>
-                            </div>
-                            {getProgress(anime.id) > 0 && (
-                              <div className="wl-card-progress" style={{ width: `${(getProgress(anime.id) / (anime.episodes || 1)) * 100}%` }} />
-                            )}
-                            <span className={`wl-badge ${(anime.status || "").toLowerCase()}`}>{anime.status || "Unknown"}</span>
-                            <button
-                              className="wl-card-wish active"
-                              onClick={e => { e.stopPropagation(); removeAnime(anime.id); }}
-                            >
-                              <Heart size={13} fill="currentColor" />
-                            </button>
+                            <div className="upcoming-card-badge">{anime.status || "Unknown"}</div>
                           </div>
-                          <div className="wl-card-body">
+                          <div className="upcoming-card-body">
                             <h3>{anime.name}</h3>
-                            <div className="wl-card-meta">
-                              <span>{anime.year}</span><span>•</span><span>{anime.episodes} eps</span>
+                            <div className="upcoming-card-meta">
+                              <span className="upcoming-card-tag">{anime.rating?.toFixed(1) || "?"}</span>
+                              <span className="upcoming-card-type">{anime.episodes} eps</span>
                             </div>
-                            <div className="wl-card-rating">
-                              <Star size={11} fill="currentColor" /> {anime.rating?.toFixed(1) || "?"}
-                            </div>
-                            {anime.genres && anime.genres.length > 0 && (
-                              <div className="wl-card-tags">
-                                {anime.genres.slice(0, 3).map(g => <span key={g} className="wl-tag">{g}</span>)}
-                              </div>
-                            )}
                           </div>
-                          <div className="wl-card-glow" />
                         </motion.article>
                       ))}
                     </AnimatePresence>
@@ -175,47 +150,27 @@ export default function WatchlistPage() {
                     <AnimatePresence mode="popLayout">
                       {mangaList.map((manga, i) => (
                         <motion.article
-                          className="wl-card"
+                          className="upcoming-card"
                           key={manga.id}
                           layout
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.9 }}
                           transition={{ delay: (i % 12) * 0.03, type: "spring", stiffness: 100, damping: 14 }}
-                          whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(230,54,54,0.3)", borderColor: "#e63636" }}
                           whileTap={{ scale: 0.98 }}
+                          onClick={() => navigate(`/manga/${manga.id}`)}
                         >
-                          <div className="wl-card-thumb">
+                          <div className="upcoming-card-img">
                             <img src={manga.cover} alt={manga.title} loading="lazy" />
-                            <div className="wl-card-overlay">
-                              <div className="wl-card-play"><Play size={20} fill="currentColor" /></div>
-                              <div className="wl-card-tech">
-                                <span>{manga.ch} ch</span>
-                                {getMangaProgress(manga.id) > 0 && <span>Ch {getMangaProgress(manga.id)}</span>}
-                              </div>
-                            </div>
-                            {getMangaProgress(manga.id) > 0 && (
-                              <div className="wl-card-progress" style={{ width: `${(getMangaProgress(manga.id) / (manga.ch || 1)) * 100}%` }} />
-                            )}
-                            <span className={`wl-badge ${(manga.status || "").toLowerCase()}`}>{manga.status || "Unknown"}</span>
-                            <button
-                              className="wl-card-wish active"
-                              onClick={e => { e.stopPropagation(); removeManga(manga.id); }}
-                            >
-                              <Heart size={13} fill="currentColor" />
-                            </button>
+                            <div className="upcoming-card-badge">{manga.status || "Unknown"}</div>
                           </div>
-                          <div className="wl-card-body">
+                          <div className="upcoming-card-body">
                             <h3>{manga.title}</h3>
-                            <div className="wl-card-meta">
-                              <span>{manga.author}</span><span>•</span><span>{manga.ch} ch</span>
+                            <div className="upcoming-card-meta">
+                              <span className="upcoming-card-tag">{manga.demo}</span>
+                              <span className="upcoming-card-type">{manga.ch} ch</span>
                             </div>
-                            <div className="wl-card-rating">
-                              <Star size={11} fill="currentColor" /> {manga.rating?.toFixed(1) || "?"}
-                            </div>
-                            {manga.demo && <div className="wl-card-tags"><span className="wl-tag">{manga.demo}</span></div>}
                           </div>
-                          <div className="wl-card-glow" />
                         </motion.article>
                       ))}
                     </AnimatePresence>

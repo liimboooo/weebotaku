@@ -394,35 +394,22 @@ function SeasonGrid({ animeList }) {
         {animeList.map((anime) => (
           <motion.div
             key={anime.id}
-            className="season-card"
+            className="upcoming-card"
             onClick={() => navigate(`/anime/${anime.id}`)}
             variants={seasonCardReveal}
             whileHover={{ boxShadow: "0 12px 40px rgba(230,54,54,0.12)", transition: { type: "spring", stiffness: 300 } }}
           >
-            <div className="season-card-img">
+            <div className="upcoming-card-img">
               <img src={anime.img} alt={anime.name} loading="lazy" />
-              <div className="season-card-overlay">
-                <button className="season-card-play" onClick={e => e.stopPropagation()}>
-                  <Play size={18} fill="currentColor" />
-                </button>
-              </div>
-              <button
-                className={`season-wish-btn ${watchlist.includes(anime.id) ? "active" : ""}`}
-                onClick={e => toggleWishlist(e, anime)}
-                title={watchlist.includes(anime.id) ? "Remove from watchlist" : "Add to watchlist"}
-              >
-                <Bookmark size={12} fill={watchlist.includes(anime.id) ? "currentColor" : "none"} />
-              </button>
-              <div className="season-card-badge">{anime.status === "Ongoing" ? <Zap size={10} /> : null}{anime.status || "TV"}</div>
+              <div className="upcoming-card-badge">{anime.status === "Ongoing" ? <Zap size={10} /> : null}{anime.status || "TV"}</div>
             </div>
-            <div className="season-card-body">
+            <div className="upcoming-card-body">
               <h3>{anime.name}</h3>
-              <div className="season-card-meta">
-                <span className="season-card-rating"><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</span>
-                <span className="season-card-eps"><Film size={10} /> {anime.episodes} ep</span>
-                {anime.genres?.[0] && <span className="season-card-tag">{anime.genres[0]}</span>}
+              <div className="upcoming-card-meta">
+                <span className="upcoming-card-rating"><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</span>
+                <span className="upcoming-card-type"><Film size={10} /> {anime.episodes} ep</span>
+                {anime.genres?.[0] && <span className="upcoming-card-tag">{anime.genres[0]}</span>}
               </div>
-              <SeasonCardReactions anime={anime} watchlist={watchlist} onToggleWishlist={toggleWishlist} />
             </div>
           </motion.div>
         ))}
@@ -441,7 +428,7 @@ function TopTenRow({ animeList }) {
         {animeList.map((anime, i) => (
           <motion.div
             key={anime.id}
-            className="top-ten-card"
+            className="upcoming-card"
             onClick={() => navigate(`/anime/${anime.id}`)}
             initial={{ opacity: 0, x: 40 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -450,18 +437,15 @@ function TopTenRow({ animeList }) {
             whileHover={{ y: -10, transition: { type: "spring", stiffness: 300 } }}
           >
             <span className="top-ten-rank">{i + 1}</span>
-            <div className="top-ten-poster">
+            <div className="upcoming-card-img">
               <img src={anime.img} alt={anime.name} loading="lazy" />
-              <div className="top-ten-overlay">
-                <Play size={22} fill="currentColor" />
-              </div>
+              <div className="upcoming-card-badge">#{i + 1}</div>
             </div>
-            <div className="top-ten-info">
+            <div className="upcoming-card-body">
               <h3>{anime.name}</h3>
-              <div className="top-ten-meta">
-                <span className="top-ten-score"><Star size={12} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</span>
-                <span className="top-ten-eps">{anime.episodes} ep</span>
-                {anime.genres?.[0] && <span className="top-ten-genre">{anime.genres[0]}</span>}
+              <div className="upcoming-card-meta">
+                <span className="upcoming-card-tag"><Star size={12} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</span>
+                <span className="upcoming-card-type">{anime.episodes} ep</span>
               </div>
             </div>
           </motion.div>
