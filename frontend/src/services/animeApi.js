@@ -216,7 +216,7 @@ async function makeEmbedFallback(animeName) {
 }
 
 // ─── WitAnime (WordPress-based, Arabic subtitles) ───
-const WITANIME = "https://witanime.one";
+const WITANIME = "https://witanime.you";
 
 function witanimeBase64ToBytes(str) {
   return Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
@@ -250,6 +250,10 @@ async function searchWitanime(query) {
     try {
       const html = await fetchHtmlViaProxy(`${WITANIME}/?s=${encodeURIComponent(q)}`);
       if (!html) continue;
+      const animeMatch = html.match(/href=["'](https?:\/\/witanime\.[^"']*\/anime\/([^"']+?)\/)["']/i);
+      if (animeMatch) {
+        return { slug: animeMatch[2], title: q };
+      }
       const episodeMatch = html.match(/href=["']([^"']*\/episode\/([^"']+))["']/i);
       if (episodeMatch) {
         const slug = extractWitanimeSlugFromEpisodeUrl(episodeMatch[1]);
@@ -307,27 +311,31 @@ export async function getWitanimeEpisodes(slug) {
   }
 }
 
-function extractWitanimeVideoUrl(html) {
+function extractAllWitanimeVideoUrls(html) {
   try {
     const zG = html.match(/var\s+_zG\s*=\s*["']([^"']+)["']/);
     const zH = html.match(/var\s+_zH\s*=\s*["']([^"']+)["']/);
-    if (!zG || !zH) return null;
+    if (!zG || !zH) return [];
 
     const resources = JSON.parse(atob(zG[1]));
     const configs = JSON.parse(atob(zH[1]));
-    if (!resources?.length || !configs?.length) return null;
+    if (!resources?.length || !configs?.length) return [];
 
-    const res = resources[0];
-    const cfg = configs[0];
-
-    const reversed = res.split("").reverse().join("");
-    const clean = reversed.replace(/[^A-Za-z0-9+/=]/g, "");
-    const decoded = atob(clean);
-    const idx = parseInt(atob(cfg.k), 10);
-    const offset = cfg.d[idx] || 0;
-    return decoded.slice(0, decoded.length - offset);
+    const urls = [];
+    for (let i = 0; i < resources.length && i < configs.length; i++) {
+      try {
+        const reversed = resources[i].split("").reverse().join("");
+        const clean = reversed.replace(/[^A-Za-z0-9+/=]/g, "");
+        const decoded = atob(clean);
+        const idx = parseInt(atob(configs[i].k), 10);
+        const offset = configs[i].d[idx] || 0;
+        const url = decoded.slice(0, decoded.length - offset);
+        if (url && url.startsWith("http")) urls.push(url);
+      } catch {}
+    }
+    return urls;
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -335,9 +343,32 @@ export async function getWitanimeStreamUrl(episodeUrl) {
   try {
     const html = await fetchHtmlViaProxy(episodeUrl);
     if (!html) return null;
-    return extractWitanimeVideoUrl(html);
+    const urls = extractAllWitanimeVideoUrls(html);
+    return urls[0] || null;
   } catch {
     return null;
+  }
+}
+
+export async function getWitanimeServers(episodeUrl) {
+  try {
+    const html = await fetchHtmlViaProxy(episodeUrl);
+    if (!html) return [];
+    const urls = extractAllWitanimeVideoUrls(html);
+    const labels = ["Server 1", "Server 2", "Server 3", "Server 4", "Server 5"];
+    return urls.map((url, i) => {
+      let label = labels[i] || `Server ${i + 1}`;
+      if (url.includes("yonaplay")) label = "Yonaplay";
+      else if (url.includes("yourupload")) label = "YourUpload";
+      else if (url.includes("videa")) label = "Videa";
+      else if (url.includes("ok.ru")) label = "OK.ru";
+      else if (url.includes("mp4upload")) label = "MP4Upload";
+      else if (url.includes("dood")) label = "Dood";
+      else if (url.includes("streamtape")) label = "Streamtape";
+      return { label, url };
+    });
+  } catch {
+    return [];
   }
 }
 
@@ -351,23 +382,36 @@ async function searchAnime3rb(query) {
     try {
       const html = await fetchHtmlViaProxy(`${ANIME3RB}/titles/list?q=${encodeURIComponent(q)}`);
       if (!html) continue;
-      const aRe = /<a[^>]*href="https:\/\/anime3rb\.com\/titles\/([a-z0-9-]+)"[^>]*>(?:(?!<\/a>)[\s\S])*?<h4 class="text-lg">([^<]+)<\/h4>(?:(?!<\/a>)[\s\S])*?<\/a>/gi;
+      const slugRe = /<a[^>]*href="https:\/\/anime3rb\.com\/titles\/([a-z0-9-]+)"[^>]*class="[^"]*simple-title-card[^"]*"[^>]*>/gi;
+      const titleRe = /<h4 class="text-lg">([^<]+)<\/h4>/gi;
+      const slugs = [];
       let m;
-      while ((m = aRe.exec(html)) !== null) {
-        const slug = m[1];
-        if (slug === "list" || slug.startsWith("list/")) continue;
-        const title = m[2].trim();
-        let score = scoreRelevance(title, q);
-        if (score > 30) {
-          if (score > bestScore) {
+      while ((m = slugRe.exec(html)) !== null) {
+        if (m[1] !== "list" && !m[1].startsWith("list/")) slugs.push({ slug: m[1], pos: m.index });
+      }
+      const titles = [];
+      while ((m = titleRe.exec(html)) !== null) {
+        titles.push({ title: m[1].trim(), pos: m.index });
+      }
+      for (const s of slugs) {
+        const t = titles.find(t => t.pos > s.pos && t.pos - s.pos < 2000);
+        if (!t) continue;
+        const score = scoreRelevance(t.title, q);
+        if (score > 30 && score > bestScore) {
+          bestScore = score;
+          best = { slug: s.slug, title: t.title };
+        }
+      }
+      if (!best) {
+        const fallbackRe = /<a[^>]*href="https:\/\/anime3rb\.com\/titles\/([a-z0-9-]+)"[^>]*>(?:(?!<\/a>)[\s\S])*?<h4[^>]*>([^<]+)<\/h4>/gi;
+        while ((m = fallbackRe.exec(html)) !== null) {
+          const slug = m[1];
+          if (slug === "list" || slug.startsWith("list/")) continue;
+          const title = m[2].trim();
+          const score = scoreRelevance(title, q);
+          if (score > 30 && score > bestScore) {
             bestScore = score;
             best = { slug, title };
-          } else if (score === bestScore) {
-            const slugParts = slug.replace(/^[^/]+\//, "").split("-");
-            const bestParts = best.slug.replace(/^[^/]+\//, "").split("-");
-            if (slugParts.length < bestParts.length) {
-              best = { slug, title };
-            }
           }
         }
       }
@@ -376,20 +420,22 @@ async function searchAnime3rb(query) {
   return best;
 }
 
-function parseAnime3rbEpisodeCount(html) {
-  const eps = html.match(/<span>الحلقة \d+<\/span>/g);
-  return eps ? eps.length : 0;
-}
-
 export async function getAnime3rbEpisodes(slug) {
   try {
     const html = await fetchHtmlViaProxy(`${ANIME3RB}/titles/${slug}`);
     if (!html) return [];
-    const total = parseAnime3rbEpisodeCount(html);
-    if (!total) return [];
-    return Array.from({ length: total }, (_, i) => ({
-      episode: i + 1,
-      url: `${ANIME3RB}/episode/${slug}/${i + 1}`,
+    const linkRe = /href="https:\/\/anime3rb\.com\/episode\/[^/]+\/(\d+)"/g;
+    const epNums = new Set();
+    let m;
+    while ((m = linkRe.exec(html)) !== null) epNums.add(parseInt(m[1], 10));
+    if (epNums.size === 0) {
+      const spanRe = /<span>الحلقة (\d+)<\/span>/g;
+      while ((m = spanRe.exec(html)) !== null) epNums.add(parseInt(m[1], 10));
+    }
+    if (epNums.size === 0) return [];
+    return Array.from(epNums).sort((a, b) => a - b).map(n => ({
+      episode: n,
+      url: `${ANIME3RB}/episode/${slug}/${n}`,
     }));
   } catch {
     return [];
@@ -407,13 +453,15 @@ export async function getAnime3rbStreamUrl(episodeUrl) {
     const snapRe = /wire:snapshot="([^"]+)"/g;
     let m;
     while ((m = snapRe.exec(html)) !== null) {
-      const raw = decodeURIComponent(m[1]);
-      const decoded = decodeHtmlEntities(raw);
+      const decoded = decodeHtmlEntities(m[1]);
       try {
         const data = JSON.parse(decoded);
         if (data?.data?.video_url) return data.data.video_url;
       } catch {}
     }
+    const directRe = /video_url['"]\s*:\s*['"]([^'"]+)['"]/;
+    const directMatch = html.match(directRe);
+    if (directMatch) return decodeHtmlEntities(directMatch[1]).replace(/\\\//g, "/");
     return null;
   } catch {
     return null;
@@ -519,14 +567,16 @@ async function searchParallelEmbeds(animeName) {
 }
 
 // ─── Multi-source search (parallel) ───
+const SOURCE_PRIORITY = ["anime3rb", "witanime", "anitaku", "consumet", "anipub", "embed"];
+
 export async function findStreamingSource(animeName) {
   const sources = [
-    searchAnipub(animeName).then(r => r.length > 0 ? { source: "anipub", id: r[0].Id, title: r[0].Name } : null),
-    searchAnitaku(animeName).then(r => r.length > 0 ? { source: "anitaku", slug: r[0].slug, id: r[0].slug, title: r[0].title } : null),
-    searchConsumetGogoanime(animeName).then(r => r ? { source: "consumet", id: r.id, title: r.title, anilistId: r.anilistId, _mirror: r._mirror } : null),
-    searchParallelEmbeds(animeName).then(r => r),
     searchAnime3rb(animeName).then(r => r ? { source: "anime3rb", slug: r.slug, id: r.slug, title: r.title } : null),
     searchWitanime(animeName).then(r => r ? { source: "witanime", slug: r.slug, id: r.slug, title: r.title } : null),
+    searchAnitaku(animeName).then(r => r.length > 0 ? { source: "anitaku", slug: r[0].slug, id: r[0].slug, title: r[0].title } : null),
+    searchConsumetGogoanime(animeName).then(r => r ? { source: "consumet", id: r.id, title: r.title, anilistId: r.anilistId, _mirror: r._mirror } : null),
+    searchAnipub(animeName).then(r => r.length > 0 ? { source: "anipub", id: r[0].Id, title: r[0].Name } : null),
+    searchParallelEmbeds(animeName).then(r => r),
   ];
 
   const results = await Promise.allSettled(sources);
@@ -536,6 +586,7 @@ export async function findStreamingSource(animeName) {
     .map(r => r.value);
 
   if (fulfilled.length > 0) {
+    fulfilled.sort((a, b) => SOURCE_PRIORITY.indexOf(a.source) - SOURCE_PRIORITY.indexOf(b.source));
     const best = fulfilled[0];
     const embedInfo = fulfilled.find(f => f.source === "embed");
     const consumetInfo = fulfilled.find(f => f.source === "consumet");

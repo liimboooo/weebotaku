@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X, Loader, Play, Monitor, Globe, SkipForward } from "lucide-react";
 import { motion } from "framer-motion";
-import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, getWitanimeEpisodes, getWitanimeStreamUrl, getAnime3rbEpisodes, getAnime3rbStreamUrl, getConsumetGogoanimeEpisodes, getConsumetGogoanimeStreamUrl } from "../../services/animeApi";
+import { getAnimeEpisodes, getAnitakuEpisodes, getAnitakuStreamUrls, getWitanimeEpisodes, getWitanimeStreamUrl, getWitanimeServers, getAnime3rbEpisodes, getAnime3rbStreamUrl, getConsumetGogoanimeEpisodes, getConsumetGogoanimeStreamUrl } from "../../services/animeApi";
 import "./AnimeWatch.css";
 
 function ConsumetPlayer({ streamUrl }) {
@@ -127,11 +127,17 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       })();
     } else if (anime.source === "witanime") {
       (async () => {
-        setError(""); setStreamLoading(true); setStreamUrl("");
+        setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
         try {
-          const url = await getWitanimeStreamUrl(episode.url);
-          if (url) setStreamUrl(url);
-          else setError("No stream URL found.");
+          const srvs = await getWitanimeServers(episode.url);
+          if (srvs.length > 0) {
+            setServers(srvs);
+            setStreamUrl(srvs[0].url);
+          } else {
+            const url = await getWitanimeStreamUrl(episode.url);
+            if (url) setStreamUrl(url);
+            else setError("No stream URL found.");
+          }
         } catch { setError("Failed to load stream."); }
         finally { setStreamLoading(false); }
       })();
