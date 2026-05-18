@@ -16,7 +16,11 @@ const titleVariants = (title) => {
 };
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-const FALLBACK_PROXY = "https://api.codetabs.com/v1/proxy?quest=";
+const PROXIES = [
+  "https://api.codetabs.com/v1/proxy?quest=",
+  "https://corsproxy.io/?url=",
+  "https://api.allorigins.win/raw?url=",
+];
 
 function isCfChallenge(html) {
   return html && typeof html === "string" && (html.includes("Just a moment") || html.includes("cf_chl") || html.includes("challenge-platform"));
@@ -33,14 +37,18 @@ async function fetchHtmlViaProxy(url) {
     return data.data;
   });
 
-  strategies.push(async () => {
-    const res = await Promise.race([
-      fetch(`${FALLBACK_PROXY}${encodeURIComponent(url)}`, { mode: "cors" }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 12000)),
-    ]);
-    if (res.ok) return await res.text();
-    return null;
-  });
+  for (const proxy of PROXIES) {
+    strategies.push(async () => {
+      const res = await Promise.race([
+        fetch(`${proxy}${encodeURIComponent(url)}`, { mode: "cors" }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 12000)),
+      ]);
+      if (!res.ok) return null;
+      const text = await res.text();
+      if (text.length < 50 && /error|invalid|not found/i.test(text)) return null;
+      return text;
+    });
+  }
 
   for (const p of strategies) {
     try { const result = await p(); if (result) return result; } catch {}
@@ -101,7 +109,17 @@ async function searchRistoAnime(query) {
       if (!jsonStr) continue;
       const posts = JSON.parse(jsonStr);
       if (posts.length > 0) {
-        return [{ slug: "r-" + q.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase().replace(/-+/g, "-").replace(/^-|-$/g, ""), title: query, _score: 100 }];
+        const seriesSlugs = new Set();
+        for (const post of posts) {
+          try {
+            const path = new URL(post.link).pathname.replace(/\/+$/, "");
+            const segs = path.split("/").filter(Boolean);
+            const seriesIdx = segs.indexOf("series");
+            if (seriesIdx !== -1 && segs[seriesIdx + 1]) seriesSlugs.add(segs[seriesIdx + 1]);
+          } catch {}
+        }
+        const slug = seriesSlugs.size > 0 ? [...seriesSlugs][0] : query.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase().replace(/-+/g, "-").replace(/^-|-$/g, "");
+        return [{ slug, title: query, _score: 100 }];
       }
     } catch {}
   }
@@ -224,6 +242,7 @@ export async function getRistoAnimeStreamUrls(episodeUrl) {
 }
 
 async function fetchJapaneseTitle(englishName) {
+  // Try AniList GraphQL first
   const q = `query ($s: String) { Media(search: $s, type: ANIME) { title { romaji english } } }`;
   for (const v of titleVariants(englishName)) {
     try {
@@ -241,21 +260,29 @@ async function fetchJapaneseTitle(englishName) {
       }
     } catch {}
   }
+
+  // Fallback: Jikan API for Japanese title
+  for (const v of titleVariants(englishName)) {
+    try {
+      const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(v)}&limit=1`, { signal: AbortSignal.timeout(5000) });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.data?.[0]) {
+        return data.data[0].title || englishName;
+      }
+    } catch {}
+  }
+
   return null;
 }
 
 export async function findStreamingSource(animeName) {
-  const results = await searchRistoAnime(animeName);
-  if (results.length > 0) {
-    return { source: "ristoanime", slug: results[0].slug, id: results[0].slug, title: results[0].title };
-  }
-
   const jpName = await fetchJapaneseTitle(animeName);
-  if (jpName && jpName.toLowerCase() !== animeName.toLowerCase()) {
-    const jpResults = await searchRistoAnime(jpName);
-    if (jpResults.length > 0) {
-      return { source: "ristoanime", slug: jpResults[0].slug, id: jpResults[0].slug, title: jpResults[0].title };
-    }
+  const searchName = jpName || animeName;
+
+  const results = await searchRistoAnime(searchName);
+  if (results.length > 0) {
+    return { source: "ristoanime", slug: results[0].slug, id: results[0].slug, title: searchName };
   }
 
   return null;
