@@ -29,12 +29,14 @@
   height: 35vh;
   min-height: 280px;
   max-height: 360px;
-  border-radius: 16px;
+  border-radius: var(--radius-2xl, 16px);
   margin-bottom: 24px;
   overflow: hidden;
   background: #050505;
   display: flex;
   align-items: flex-end;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.02);
 }
 
 .ad-hero-bg {
@@ -260,9 +262,12 @@
 /* ─── BODY ─── */
 .ad-body {
   border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 16px;
+  border-radius: var(--radius-2xl, 16px);
   background: rgba(255,255,255,0.015);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   padding: 32px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
 }
 
 /* ─── STATUS BAR ─── */
@@ -272,8 +277,10 @@
   gap: 24px;
   flex-wrap: wrap;
   margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 16px 20px;
+  border-radius: var(--radius-lg, 12px);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
 }
 
 .ad-status-item {
@@ -372,6 +379,14 @@
   border-radius: 99px;
   font-size: 0.72rem;
   font-weight: 600;
+  transition: all 0.2s;
+  cursor: default;
+}
+
+.ad-genre-tag:hover {
+  background: rgba(220,38,38,0.14);
+  border-color: rgba(220,38,38,0.4);
+  transform: translateY(-1px);
 }
 
 /* ─── SYNOPSIS ─── */
@@ -399,9 +414,11 @@
   display: flex;
   gap: 4px;
   margin-bottom: 24px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  padding-bottom: 0;
+  padding: 5px;
   overflow-x: auto;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: var(--radius-lg, 12px);
 }
 
 .ad-tab {
@@ -412,18 +429,26 @@
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  border-radius: 8px;
   transition: all 0.2s;
   white-space: nowrap;
+  font-family: inherit;
 }
 
 .ad-tab:hover {
   color: #ccc;
+  background: rgba(255,255,255,0.03);
 }
 
 .ad-tab.active {
-  color: #ef4444;
-  border-bottom-color: #ef4444;
+  color: #fff;
+  background: rgba(220,38,38,0.12);
+  box-shadow: 0 0 16px rgba(220,38,38,0.08);
+}
+
+.ad-tab svg {
+  vertical-align: middle;
+  margin-right: 6px;
 }
 
 /* ─── TRAILER TRIGGER ─── */
@@ -499,23 +524,45 @@
   background: rgba(255,255,255,0.02);
   color: #bbb;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out, ease);
   font-size: 0.75rem;
   font-weight: 600;
+  font-family: inherit;
   gap: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ad-episode-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(220,38,38,0.08), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
 }
 
 .ad-episode-btn:hover {
   background: rgba(255,255,255,0.06);
   border-color: rgba(255,255,255,0.12);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.ad-episode-btn:hover::after {
+  opacity: 1;
 }
 
 .ad-episode-btn.active {
   background: rgba(220,38,38,0.12);
   border-color: rgba(220,38,38,0.4);
   color: #ef4444;
-  box-shadow: 0 0 12px rgba(220,38,38,0.12);
+  box-shadow: 0 0 16px rgba(220,38,38,0.15);
+}
+
+.ad-episode-btn.active::after {
+  opacity: 1;
 }
 
 .ad-episode-btn.disabled {
@@ -549,13 +596,30 @@
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.25s var(--ease-out, ease);
+  position: relative;
+  isolation: isolate;
+}
+
+.ad-character-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(220,38,38,0.3), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.35s;
+  z-index: -1;
+  pointer-events: none;
 }
 
 .ad-character-card:hover {
   background: rgba(255,255,255,0.05);
-  border-color: rgba(220,38,38,0.2);
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.2), 0 0 12px rgba(220,38,38,0.06);
+}
+
+.ad-character-card:hover::before {
+  opacity: 0.4;
 }
 
 .ad-character-img {
@@ -643,13 +707,30 @@
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.25s var(--ease-out, ease);
+  position: relative;
+  isolation: isolate;
+}
+
+.ad-recommendation-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(220,38,38,0.3), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.35s;
+  z-index: -1;
+  pointer-events: none;
 }
 
 .ad-recommendation-card:hover {
   background: rgba(255,255,255,0.05);
-  border-color: rgba(220,38,38,0.2);
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.2), 0 0 12px rgba(220,38,38,0.06);
+}
+
+.ad-recommendation-card:hover::before {
+  opacity: 0.4;
 }
 
 .ad-recommendation-card img {

@@ -306,7 +306,7 @@ export default function ProfilePage() {
           <div className="profile-hero-bg" style={bannerPreview || banner ? { backgroundImage: `url(${bannerPreview || banner})`, backgroundSize: "cover", backgroundPosition: "center" } : {}} />
           {(bannerPreview || banner) && <div className="profile-hero-overlay" />}
           <div className="profile-hero-content">
-            <div className="profile-avatar-wrap" onClick={() => (avatarPreview || avatar) && setPreviewOpen(true)} style={{ cursor: (avatarPreview || avatar) ? "pointer" : "default" }}>
+            <div className={`profile-avatar-wrap ${(avatarPreview || avatar) ? "clickable" : ""}`} onClick={() => (avatarPreview || avatar) && setPreviewOpen(true)}>
               <div className="profile-aura-ring" style={{ background: `radial-gradient(circle, ${auraColor}33 0%, transparent 70%)`, boxShadow: `0 0 80px ${auraColor}22` }} />
               <div className="profile-avatar-circle" style={{ background: `linear-gradient(135deg, ${auraColor}, ${auraColor}dd)` }}>
                 {avatarPreview || avatar ? (
@@ -342,7 +342,7 @@ export default function ProfilePage() {
                   </div>
               </div>
             ) : (
-              <div className="profile-info-area" onClick={() => setInfoOpen(true)} style={{ cursor: 'pointer' }}>
+              <div className="profile-info-area clickable" onClick={() => setInfoOpen(true)}>
                 <h1 className="profile-name">{username}</h1>
                 <div className="profile-status-row">
                   {isRemoteProfile ? (
@@ -708,7 +708,7 @@ export default function ProfilePage() {
                 <h3>Tier Lists ({tierLists.length})</h3>
                 {tierListsLoading ? (
                   <div className="empty-state">
-                    <p style={{ color: 'rgba(255,255,255,0.4)' }}>Loading tier lists...</p>
+                    <p className="loading-text">Loading tier lists...</p>
                   </div>
                 ) : tierLists.length > 0 ? (
                   <div className="tierlists-profile-grid">

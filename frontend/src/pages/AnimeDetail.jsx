@@ -331,7 +331,7 @@ export default function AnimeDetail() {
             <div className="ad-tabs">
               {TABS.map(({ key, label, icon: Icon }) => (
                 <button key={key} className={`ad-tab ${activeTab === key ? "active" : ""}`} onClick={() => setActiveTab(key)}>
-                  <Icon size={14} style={{ marginRight: 6, verticalAlign: "middle" }} />
+                  <Icon size={14} />
                   {label}
                 </button>
               ))}

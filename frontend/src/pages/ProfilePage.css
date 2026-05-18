@@ -70,6 +70,10 @@
   flex-shrink: 0;
 }
 
+.profile-avatar-wrap.clickable {
+  cursor: pointer;
+}
+
 .profile-aura-ring {
   position: absolute;
   top: -30px;
@@ -136,6 +140,10 @@
 .profile-info-area {
   flex: 1;
   min-width: 0;
+}
+
+.profile-info-area.clickable {
+  cursor: pointer;
 }
 
 .profile-name {
@@ -462,10 +470,13 @@
   padding: 22px 10px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.04);
   text-align: center;
   position: relative;
   overflow: hidden;
+  transition: all 0.3s var(--ease-out, ease);
 }
 
 .profile-stat-item::before {
@@ -592,11 +603,32 @@
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.04);
   background: rgba(255, 255, 255, 0.015);
-  transition: border-color 0.25s;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: all 0.3s var(--ease-out, ease);
+  position: relative;
+  overflow: hidden;
+}
+
+.overview-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(230,54,54,0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
 .overview-card:hover {
-  border-color: rgba(230, 54, 54, 0.08);
+  border-color: rgba(230, 54, 54, 0.12);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.overview-card:hover::after {
+  opacity: 1;
 }
 
 .overview-card h3 {
@@ -940,16 +972,19 @@
   padding: 12px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.04);
+  border-left: 3px solid transparent;
   background: rgba(255, 255, 255, 0.015);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s var(--ease-out, ease);
   position: relative;
 }
 
 .list-item:hover {
   background: rgba(230, 54, 54, 0.05);
   border-color: rgba(230, 54, 54, 0.18);
+  border-left-color: var(--red, #e63636);
   transform: translateX(6px);
+  box-shadow: 0 4px 16px rgba(230,54,54,0.06);
 }
 
 .list-item img {
@@ -1034,6 +1069,10 @@
   font-size: 14px;
   margin: 0;
   color: var(--text-mid);
+}
+
+.empty-state p.loading-text {
+  color: rgba(255,255,255,0.4);
 }
 
 .activity-timeline {
