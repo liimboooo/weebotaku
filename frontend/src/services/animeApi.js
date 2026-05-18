@@ -16,25 +16,55 @@ const titleVariants = (title) => {
 };
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const CF_WORKER_PROXY = process.env.REACT_APP_CF_PROXY_URL || '';
 const FALLBACK_PROXY = "https://api.codetabs.com/v1/proxy?quest=";
 
+const CF_PROTECTED_DOMAINS = ["anime3rb.com", "witanime.you", "witanime.one"];
+
+function isCfProtected(url) {
+  try { const h = new URL(url).hostname; return CF_PROTECTED_DOMAINS.some(d => h === d || h.endsWith("." + d)); } catch { return false; }
+}
+
+async function fetchViaWorker(url) {
+  if (!CF_WORKER_PROXY) return null;
+  try {
+    const res = await Promise.race([
+      fetch(`${CF_WORKER_PROXY}?url=${encodeURIComponent(url)}`),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 15000)),
+    ]);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.success ? data.data : null;
+  } catch { return null; }
+}
+
 async function fetchHtmlViaProxy(url) {
-  for (const p of [
-    async () => {
-      const res = await fetch(`${API_BASE}/scrape/fetch?url=${encodeURIComponent(url)}`);
-      if (!res.ok) return null;
-      const data = await res.json();
-      return data.success ? data.data : null;
-    },
-    async () => {
+  const cfSite = isCfProtected(url);
+  const strategies = [];
+
+  if (cfSite && CF_WORKER_PROXY) {
+    strategies.push(() => fetchViaWorker(url));
+  }
+
+  strategies.push(async () => {
+    const res = await fetch(`${API_BASE}/scrape/fetch?url=${encodeURIComponent(url)}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.success ? data.data : null;
+  });
+
+  if (!cfSite) {
+    strategies.push(async () => {
       const res = await Promise.race([
         fetch(`${FALLBACK_PROXY}${encodeURIComponent(url)}`, { mode: "cors" }),
         new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 12000)),
       ]);
       if (res.ok) return await res.text();
       return null;
-    },
-  ]) {
+    });
+  }
+
+  for (const p of strategies) {
     try { const result = await p(); if (result) return result; } catch {}
   }
   return null;

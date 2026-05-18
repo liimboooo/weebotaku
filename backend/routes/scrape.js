@@ -18,14 +18,21 @@ function safeHandler(fn) {
   };
 }
 
+const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
+
 async function fetchWithNative(url, extraHeaders = {}) {
   try {
     const response = await nodeFetch(url, {
       redirect: 'follow',
       timeout: 20000,
       headers: Object.assign({
-        'User-Agent': 'Mozilla/5.0',
-        'Accept': '*/*',
+        'User-Agent': BROWSER_UA,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9,ar;q=0.8',
+        'Cache-Control': 'no-cache',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
       }, extraHeaders),
     });
     const text = await response.text();
@@ -34,6 +41,10 @@ async function fetchWithNative(url, extraHeaders = {}) {
     console.error('fetchWithNative error:', e?.message);
   }
   return null;
+}
+
+function isCloudflareChallenge(html) {
+  return html && html.includes('Just a moment') && (html.includes('cf_chl') || html.includes('challenge-platform'));
 }
 
 router.get('/fetch', safeHandler(async (req, res) => {
@@ -50,6 +61,10 @@ router.get('/fetch', safeHandler(async (req, res) => {
       const wr = await wreq.fetch(url, { timeout: 20000 });
       if (wr.status === 200) html = await wr.text();
     } catch {}
+  }
+
+  if (html && isCloudflareChallenge(html)) {
+    return res.status(503).json({ success: false, data: null, error: 'Cloudflare challenge - use CF Worker proxy' });
   }
 
   if (html) {
