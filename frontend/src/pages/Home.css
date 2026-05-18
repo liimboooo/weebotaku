@@ -684,52 +684,22 @@
   position: relative;
   aspect-ratio: 3/4;
   overflow: hidden;
-  background: linear-gradient(135deg, #1a1a1a, #0e0e0e);
+  background: var(--card-surface);
 }
 
 .season-card-img img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform var(--duration-slow) var(--ease-out);
+  transition: transform 0.4s var(--ease-out);
 }
 
 .season-card:hover .season-card-img img {
   transform: scale(1.06);
 }
 
-.season-card-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  display: grid;
-  place-items: center;
-  opacity: 0;
-  transition: opacity var(--duration-normal);
-}
-
-.season-card:hover .season-card-overlay {
-  opacity: 1;
-}
-
-.season-card-play {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  background: rgba(230, 54, 54, 0.15);
-  color: #fff;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: all var(--duration-normal) var(--ease-out);
-}
-
-.season-card:hover .season-card-play {
-  background: rgba(230, 54, 54, 0.3);
-  border-color: var(--primary);
-  transform: scale(1.08);
-}
+.season-card-overlay,
+.season-card-play { display: none; }
 
 .season-wish-btn {
   position: absolute;
@@ -1164,20 +1134,7 @@
 .top-ten-card:hover .top-ten-poster img {
   transform: scale(1.08);
 }
-.top-ten-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.4);
-  opacity: 0;
-  transition: opacity 0.3s;
-  color: #fff;
-}
-.top-ten-card:hover .top-ten-overlay {
-  opacity: 1;
-}
+.top-ten-overlay { display: none; }
 .top-ten-info {
   padding: 10px 4px 0;
 }
