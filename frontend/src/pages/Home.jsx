@@ -3,17 +3,23 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Bookmark,
+  Calendar,
   ChevronRight,
   Clock,
+  Crown,
   Eye,
   Film,
+  Flame,
   Heart,
+  Layers,
   Play,
   Plus,
   RefreshCw,
   Sparkles,
   Star,
+  Sword,
   TrendingUp,
+  Trophy,
   Users,
   Zap,
 } from "lucide-react";
@@ -39,19 +45,24 @@ function useAnimeData() {
   const [spotlight, setSpotlight] = useState(null);
   const [spotlightIndex, setSpotlightIndex] = useState(0);
   const [spotlightQueue, setSpotlightQueue] = useState([]);
+  const [topTen, setTopTen] = useState([]);
   const [trendingList, setTrendingList] = useState([]);
   const [seasonPicks, setSeasonPicks] = useState([]);
+  const [upcomingList, setUpcomingList] = useState([]);
+  const [popularList, setPopularList] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const [topAir, topAll, seasonal, genres] = await Promise.allSettled([
+        const [topAir, topAll, seasonal, genres, upcoming, popular] = await Promise.allSettled([
           fetchTopAnime(1, "airing"),
           fetchTopAnime(1, ""),
           fetchSeasonalAnime(),
           fetchAnimeGenres(),
+          fetchTopAnime(1, "upcoming"),
+          fetchTopAnime(1, "bypopularity"),
         ]);
 
         if (topAir.status === "fulfilled" && topAir.value.data.length > 0) {
@@ -61,15 +72,24 @@ function useAnimeData() {
         }
 
         if (topAll.status === "fulfilled") {
-          setTrendingList(topAll.value.data.filter(a => a.id !== (spotlight?.id)).slice(0, 15));
+          setTopTen(topAll.value.data.slice(0, 10));
+          setTrendingList(topAll.value.data.slice(10, 25));
         }
 
         if (seasonal.status === "fulfilled") {
-          setSeasonPicks(seasonal.value.data.slice(0, 10));
+          setSeasonPicks(seasonal.value.data.slice(0, 20));
         }
 
         if (genres.status === "fulfilled") {
           setCategories(genres.value);
+        }
+
+        if (upcoming.status === "fulfilled") {
+          setUpcomingList(upcoming.value.data.slice(0, 12));
+        }
+
+        if (popular.status === "fulfilled") {
+          setPopularList(popular.value.data.slice(0, 20));
         }
       } catch {}
       setLoading(false);
@@ -93,12 +113,12 @@ function useAnimeData() {
     try {
       const r = await fetchTopAnime(1, "");
       if (r.data.length) {
-        setTrendingList(r.data.slice(0, 15));
+        setTrendingList(r.data.slice(10, 25));
       }
     } catch {}
   }, []);
 
-  return { spotlight, trendingList, seasonPicks, categories, loading, refreshTrending };
+  return { spotlight, topTen, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending };
 }
 
 // ─── Sub-components ────────────────────────────────────
@@ -411,6 +431,112 @@ function SeasonGrid({ animeList }) {
   );
 }
 
+function TopTenRow({ animeList }) {
+  const navigate = useNavigate();
+  if (!animeList?.length) return null;
+  return (
+    <section className="home-section">
+      <SectionHeader icon={Crown} title="Top 10 Anime" subtitle="Highest rated of all time" />
+      <div className="top-ten-row">
+        {animeList.map((anime, i) => (
+          <motion.div
+            key={anime.id}
+            className="top-ten-card"
+            onClick={() => navigate(`/anime/${anime.id}`)}
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.06, type: "spring", stiffness: 200, damping: 22 }}
+            whileHover={{ y: -10, transition: { type: "spring", stiffness: 300 } }}
+          >
+            <span className="top-ten-rank">{i + 1}</span>
+            <div className="top-ten-poster">
+              <img src={anime.img} alt={anime.name} loading="lazy" />
+              <div className="top-ten-overlay">
+                <Play size={22} fill="currentColor" />
+              </div>
+            </div>
+            <div className="top-ten-info">
+              <h3>{anime.name}</h3>
+              <div className="top-ten-meta">
+                <span className="top-ten-score"><Star size={12} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</span>
+                <span className="top-ten-eps">{anime.episodes} ep</span>
+                {anime.genres?.[0] && <span className="top-ten-genre">{anime.genres[0]}</span>}
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function GenreBar({ genres }) {
+  const navigate = useNavigate();
+  if (!genres?.length) return null;
+  const genreIcons = {
+    Action: Sword, Adventure: Layers, Comedy: Sparkles, Drama: Heart,
+    Fantasy: Crown, Horror: Flame, Romance: Heart, "Sci-Fi": Zap,
+    Sports: Trophy, Mystery: Eye, "Slice of Life": Film,
+  };
+  return (
+    <div className="genre-bar">
+      <div className="genre-bar-inner">
+        {genres.slice(0, 14).map(g => {
+          const Icon = genreIcons[g] || Film;
+          return (
+            <button key={g} className="genre-bar-chip" onClick={() => navigate(`/browse/anime`)}>
+              <Icon size={14} />
+              <span>{g}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function UpcomingSection({ animeList }) {
+  const navigate = useNavigate();
+  if (!animeList?.length) return null;
+  return (
+    <section className="home-section">
+      <SectionHeader icon={Calendar} title="Coming Soon" subtitle="Upcoming anime to watch out for" action={() => navigate("/browse/anime")} />
+      <motion.div
+        className="upcoming-grid"
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-40px" }}
+      >
+        {animeList.map((anime) => (
+          <motion.div
+            key={anime.id}
+            className="upcoming-card"
+            onClick={() => navigate(`/anime/${anime.id}`)}
+            variants={cardSlideUp}
+            whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
+          >
+            <div className="upcoming-card-img">
+              <img src={anime.img} alt={anime.name} loading="lazy" />
+              <div className="upcoming-card-badge">
+                <Calendar size={10} /> {anime.season || "TBA"}
+              </div>
+            </div>
+            <div className="upcoming-card-body">
+              <h3>{anime.name}</h3>
+              <div className="upcoming-card-meta">
+                {anime.genres?.[0] && <span className="upcoming-card-tag">{anime.genres[0]}</span>}
+                <span className="upcoming-card-type">{anime.type || "TV"}</span>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
+    </section>
+  );
+}
+
 const heroStagger = {
   hidden: { opacity: 0 },
   visible: {
@@ -512,7 +638,7 @@ function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onNavig
 
 export default function Home() {
   const navigate = useNavigate();
-  const { spotlight, trendingList, seasonPicks, categories, loading, refreshTrending } = useAnimeData();
+  const { spotlight, topTen, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending } = useAnimeData();
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
 
@@ -562,7 +688,13 @@ export default function Home() {
 
         <StatsBar />
 
+        <GenreBar genres={categories} />
+
         <ContinueWatchingRow />
+
+        {topTen.length > 0 && (
+          <TopTenRow animeList={topTen} />
+        )}
 
         {trendingList.length > 0 && (
           <section className="home-section">
@@ -578,6 +710,22 @@ export default function Home() {
 
         {seasonPicks.length > 0 && (
           <SeasonGrid animeList={seasonPicks} />
+        )}
+
+        {upcomingList.length > 0 && (
+          <UpcomingSection animeList={upcomingList} />
+        )}
+
+        {popularList.length > 0 && (
+          <section className="home-section">
+            <SectionHeader
+              icon={Flame}
+              title="Most Popular"
+              subtitle="All-time fan favorites everyone's watching"
+              action={() => navigate("/browse/anime")}
+            />
+            <Slider sliderData={popularList} noHeader />
+          </section>
         )}
 
         <div className="section-divider">
