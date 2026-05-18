@@ -15,7 +15,7 @@ export default {
       return json({ success: false, error: "Missing ?url= param" }, 400);
     }
 
-    const allowed = ["anime3rb.com", "witanime.you", "witanime.one", "anineko.to"];
+    const allowed = ["anime3rb.com", "witanime.you", "witanime.one", "anineko.to", "ristoanime.co"];
     let hostname;
     try { hostname = new URL(targetUrl).hostname; } catch { return json({ success: false, error: "Invalid URL" }, 400); }
     if (!allowed.some(d => hostname === d || hostname.endsWith("." + d))) {
