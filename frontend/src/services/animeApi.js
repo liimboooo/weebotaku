@@ -223,10 +223,40 @@ export async function getRistoAnimeStreamUrls(episodeUrl) {
   }
 }
 
+async function fetchJapaneseTitle(englishName) {
+  const q = `query ($s: String) { Media(search: $s, type: ANIME) { title { romaji english } } }`;
+  for (const v of titleVariants(englishName)) {
+    try {
+      const res = await fetch("https://graphql.anilist.co", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: q, variables: { s: v } }),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.data?.Media?.title) {
+        const t = data.data.Media.title;
+        return t.romaji || t.english || englishName;
+      }
+    } catch {}
+  }
+  return null;
+}
+
 export async function findStreamingSource(animeName) {
   const results = await searchRistoAnime(animeName);
   if (results.length > 0) {
     return { source: "ristoanime", slug: results[0].slug, id: results[0].slug, title: results[0].title };
   }
+
+  const jpName = await fetchJapaneseTitle(animeName);
+  if (jpName && jpName.toLowerCase() !== animeName.toLowerCase()) {
+    const jpResults = await searchRistoAnime(jpName);
+    if (jpResults.length > 0) {
+      return { source: "ristoanime", slug: jpResults[0].slug, id: jpResults[0].slug, title: jpResults[0].title };
+    }
+  }
+
   return null;
 }
