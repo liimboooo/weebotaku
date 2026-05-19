@@ -25,9 +25,11 @@ import {
 } from 'lucide-react';
 import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications } from '../services/notificationService';
 import authService from '../services/authService';
+import { useLanguage } from '../contexts/LanguageContext';
 import './Header.css';
 
 export default function Header() {
+  const { t, toggleLocale, locale, dir } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -93,13 +95,13 @@ export default function Header() {
   function formatTimeAgo(ts) {
     const diff = Date.now() - ts;
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return `${mins}m ago`;
+    if (mins < 1) return t("time.justNow");
+    if (mins < 60) return `${mins}${t("time.mAgo")}`;
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
+    if (hrs < 24) return `${hrs}${t("time.hAgo")}`;
     const days = Math.floor(hrs / 24);
-    if (days < 7) return `${days}d ago`;
-    return `${Math.floor(days / 7)}w ago`;
+    if (days < 7) return `${days}${t("time.dAgo")}`;
+    return `${Math.floor(days / 7)}${t("time.wAgo")}`;
   }
 
   useEffect(() => {
@@ -186,15 +188,15 @@ export default function Header() {
   return (
     <header className={`header ${isScrolled ? 'scrolled' : ''}`}>
       <div className="header-shell">
-        <button className="mobile-toggle" onClick={() => setMobileOpen((value) => !value)} aria-label="Toggle navigation">
+        <button className="mobile-toggle" onClick={() => setMobileOpen((value) => !value)} aria-label={t("nav.toggle")}>
           {mobileOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
 
-        <button className="brand" onClick={() => navigateTo('/home')} aria-label="AnimeWch home">
+        <button className="brand" onClick={() => navigateTo('/home')} aria-label={t("brand.aria")}>
           <span className="brand-icon">
-            <img className="brand-logo" src="/logo.png" alt="AnimeWch" />
+            <img className="brand-logo" src="/logo.png" alt={t("brand.name")} />
           </span>
-          <span className="brand-text">AnimeWch</span>
+          <span className="brand-text">{t("brand.name")}</span>
         </button>
 
         <div className={`header-panel ${mobileOpen ? 'open' : ''}`}>
@@ -207,7 +209,7 @@ export default function Header() {
                 aria-haspopup="true"
               >
                 <Globe size={16} />
-                <span>Explore</span>
+                <span>{t("nav.explore")}</span>
                 <ChevronDown size={14} className="nav-chevron" />
               </button>
               {exploreOpen && (
@@ -219,19 +221,19 @@ export default function Header() {
                   transition={{ duration: 0.18, ease: [0.2, 0.9, 0.2, 1] }}
                 >
                   <motion.button className="explore-item" onClick={() => navigateTo('/browse/anime')}
-                    initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 }}>
+                    initial={{ opacity: 0, x: dir === "rtl" ? 8 : -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 }}>
                     <span className="explore-item-icon"><Film size={16} /></span>
                     <div>
-                      <span className="explore-item-label">Browse Anime</span>
-                      <span className="explore-item-description">All anime, filters & tags</span>
+                      <span className="explore-item-label">{t("nav.browse.anime")}</span>
+                      <span className="explore-item-description">{t("nav.browse.anime.desc")}</span>
                     </div>
                   </motion.button>
                   <motion.button className="explore-item" onClick={() => navigateTo('/browse/manga')}
-                    initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
+                    initial={{ opacity: 0, x: dir === "rtl" ? 8 : -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
                     <span className="explore-item-icon"><BookOpen size={16} /></span>
                     <div>
-                      <span className="explore-item-label">Browse Manga</span>
-                      <span className="explore-item-description">Manga vault & chapters</span>
+                      <span className="explore-item-label">{t("nav.browse.manga")}</span>
+                      <span className="explore-item-description">{t("nav.browse.manga.desc")}</span>
                     </div>
                   </motion.button>
                 </motion.div>
@@ -246,7 +248,7 @@ export default function Header() {
                 aria-haspopup="true"
               >
                 <MessageSquare size={16} />
-                <span>Feeds</span>
+                <span>{t("nav.feeds")}</span>
                 <ChevronDown size={14} className="nav-chevron" />
               </button>
               {feedsOpen && (
@@ -260,7 +262,7 @@ export default function Header() {
                     const Icon = item.icon;
                     return (
                       <motion.button key={item.path} className="feeds-item" onClick={() => navigateTo(item.path)}
-                        initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}>
+                        initial={{ opacity: 0, x: dir === "rtl" ? 8 : -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}>
                         <span className="feeds-item-icon"><Icon size={16} /></span>
                         <div>
                           <span className="feeds-item-label">{item.label}</span>
@@ -281,7 +283,7 @@ export default function Header() {
                 aria-haspopup="true"
               >
                 <Swords size={16} className="arena-icon-shimmer" />
-                <span>The Arena</span>
+                <span>{t("nav.arena")}</span>
                 <ChevronDown size={14} className="nav-chevron" />
               </button>
               {arenaOpen && (
@@ -294,11 +296,11 @@ export default function Header() {
                   <div className="arena-mega-menu-glow" />
                   <div className="arena-grid">
                     <div className="arena-column">
-                      <div className="column-header"><Star size={14} /> Community Tiers</div>
+                      <div className="column-header"><Star size={14} /> {t("nav.arena.tiers")}</div>
                       <div className="column-items">
                         <button className="arena-item" onClick={() => navigateTo('/arena/tier-lists')}>
                           <span className="arena-item-icon"><TrendingUp size={16} /></span>
-                          <span className="arena-item-label">View Tier Lists</span>
+                          <span className="arena-item-label">{t("nav.arena.tiers.view")}</span>
                         </button>
                       </div>
                     </div>
@@ -310,15 +312,15 @@ export default function Header() {
             <div className="more-dropdown-container" ref={moreDropdownRef}>
               <button className={`more-button ${moreDropdownOpen || isMoreActive ? 'active' : ''}`} onClick={() => setMoreDropdownOpen((value) => !value)}
                 aria-expanded={moreDropdownOpen} aria-haspopup="true">
-                More <ChevronDown size={14} />
+                {t("nav.more")} <ChevronDown size={14} />
               </button>
               {moreDropdownOpen && (
                 <div className="more-dropdown">
                   <button className="more-item" onClick={() => navigateTo('/settings')}>
-                    <Settings size={16} /> <span>Settings</span>
+                    <Settings size={16} /> <span>{t("nav.more.settings")}</span>
                   </button>
                   <button className="more-item" onClick={() => navigateTo('/help')}>
-                    <MessageSquare size={16} /> <span>Help & Support</span>
+                    <MessageSquare size={16} /> <span>{t("nav.more.help")}</span>
                   </button>
                 </div>
               )}
@@ -332,8 +334,8 @@ export default function Header() {
             ref={searchRef}
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search anime...  (Ctrl+K)"
-            aria-label="Search anime"
+            placeholder={t("search.placeholder")}
+            aria-label={t("search.aria")}
           />
           {searchTerm && (
             <button type="button" className="search-clear" onClick={() => { setSearchTerm(''); searchRef.current?.focus(); }}>
@@ -344,20 +346,25 @@ export default function Header() {
 
         <div className="header-actions">
 
+          <button className="lang-toggle" onClick={toggleLocale} title={t("lang.switch")} aria-label={t("lang.switch")}>
+            <Globe size={16} />
+            <span>{locale === "en" ? "AR" : "EN"}</span>
+          </button>
+
           {authService.isLoggedIn() ? (<>
           <div className="notif-dropdown-container" ref={notifRef}>
-            <button className={`icon-button${notifCount > 0 ? " badge" : ""}`} data-badge={notifCount > 0 ? notifCount : undefined} onClick={() => setNotifOpen(v => !v)} title="Notifications">
+            <button className={`icon-button${notifCount > 0 ? " badge" : ""}`} data-badge={notifCount > 0 ? notifCount : undefined} onClick={() => setNotifOpen(v => !v)} title={t("notif.title")}>
               <Bell size={16} />
             </button>
             {notifOpen && (
               <div className="notif-dropdown">
                 <div className="notif-dropdown-header">
-                  <span>Notifications</span>
-                  {notifCount > 0 && <button className="notif-mark-all-btn" onClick={() => { markAllRead(); setNotifList(getNotifications()); }}>Mark all read</button>}
+                  <span>{t("notif.title")}</span>
+                  {notifCount > 0 && <button className="notif-mark-all-btn" onClick={() => { markAllRead(); setNotifList(getNotifications()); }}>{t("notif.markAllRead")}</button>}
                 </div>
                 <div className="notif-dropdown-list">
                   {notifList.length === 0 ? (
-                    <div className="notif-dropdown-empty">No notifications yet</div>
+                    <div className="notif-dropdown-empty">{t("notif.empty")}</div>
                   ) : (
                     notifList.slice(0, 10).map(n => (
                       <div key={n.id} className={`notif-item${!n.read ? " unread" : ""}`} onClick={() => { if (!n.read) { markRead(n.id); setNotifList(getNotifications()); } }}>
@@ -373,7 +380,7 @@ export default function Header() {
                 </div>
                 {notifList.length > 0 && (
                   <div className="notif-dropdown-footer">
-                    <button className="notif-clear-btn" onClick={() => { clearNotifications(); setNotifList([]); }}>Clear all</button>
+                    <button className="notif-clear-btn" onClick={() => { clearNotifications(); setNotifList([]); }}>{t("notif.clearAll")}</button>
                   </div>
                 )}
               </div>
@@ -411,9 +418,9 @@ export default function Header() {
                       <div className="profile-mini-name">{username}</div>
                       <div className="profile-mini-meta">
                         <span className={`profile-mini-meta-pill ${isOnline ? 'online' : 'offline'}`}>
-                          <span className={`status-dot ${isOnline ? 'online' : 'offline'}`} /> {isOnline ? 'Online' : 'Offline'}
+                          <span className={`status-dot ${isOnline ? 'online' : 'offline'}`} /> {isOnline ? t("profile.online") : t("profile.offline")}
                         </span>
-                        {hasUnclaimedRewards && <span className="profile-mini-meta-pill profile-mini-meta-pill--glow"><Gift size={12} /> Rewards</span>}
+                        {hasUnclaimedRewards && <span className="profile-mini-meta-pill profile-mini-meta-pill--glow"><Gift size={12} /> {t("profile.rewards")}</span>}
                       </div>
                     </div>
                   </div>
@@ -421,7 +428,7 @@ export default function Header() {
                 <div className="profile-stats-grid">
                   <div className="profile-stat-card">
                     <span className="profile-stat-value">{episodesWatched}</span>
-                    <span className="profile-stat-label">Episodes</span>
+                    <span className="profile-stat-label">{t("profile.episodes")}</span>
                   </div>
                 </div>
                 <div className="profile-status-edit">
@@ -433,18 +440,18 @@ export default function Header() {
                           if (e.key === 'Enter') { saveStatusMessage(statusMessage); clearTimeout(statusSaveTimeoutRef.current); statusSaveTimeoutRef.current = setTimeout(() => setIsEditingStatus(false), 1500); }
                           if (e.key === 'Escape') { setIsEditingStatus(false); setStatusMessage(localStorage.getItem('userStatusMessage') || ''); }
                         }}
-                        className="profile-status-input" placeholder="Update your status..." />
-                      <button className="profile-status-button" onClick={() => { saveStatusMessage(statusMessage); clearTimeout(statusSaveTimeoutRef.current); statusSaveTimeoutRef.current = setTimeout(() => setIsEditingStatus(false), 1500); }}>Save</button>
+                        className="profile-status-input" placeholder={t("profile.statusPlaceholder")} />
+                      <button className="profile-status-button" onClick={() => { saveStatusMessage(statusMessage); clearTimeout(statusSaveTimeoutRef.current); statusSaveTimeoutRef.current = setTimeout(() => setIsEditingStatus(false), 1500); }}>{t("profile.save")}</button>
                     </div>
                   ) : (
-                    <button className="profile-status-button" onClick={() => setIsEditingStatus(true)}><PenLine size={12} /> Edit Status</button>
+                    <button className="profile-status-button" onClick={() => setIsEditingStatus(true)}><PenLine size={12} /> {t("profile.editStatus")}</button>
                   )}
                 </div>
                 <div className="profile-actions-grid">
-                  <button className="profile-action-card" onClick={() => navigateTo('/profile')}><Settings size={16} /> <span>Profile</span></button>
-                  <button className="profile-action-card" onClick={() => navigateTo('/watchlist')}><Bookmark size={16} /> <span>Watchlist</span></button>
+                  <button className="profile-action-card" onClick={() => navigateTo('/profile')}><Settings size={16} /> <span>{t("profile.profile")}</span></button>
+                  <button className="profile-action-card" onClick={() => navigateTo('/watchlist')}><Bookmark size={16} /> <span>{t("profile.watchlist")}</span></button>
                   <button className="profile-action-card profile-action-card--danger" onClick={async () => { await authService.logout(); navigateTo('/'); }}>
-                    <LogOut size={16} /> <span>Sign Out</span>
+                    <LogOut size={16} /> <span>{t("profile.signOut")}</span>
                   </button>
                 </div>
               </div>
@@ -452,7 +459,7 @@ export default function Header() {
           </div>
           </>) : (
             <button className="header-login-btn" onClick={() => navigateTo('/')}>
-              Log In
+              {t("auth.logIn")}
             </button>
           )}
         </div>
@@ -460,7 +467,7 @@ export default function Header() {
 
       {previewOpen && profileImage && (
         <div className="profile-preview-overlay" onClick={() => setPreviewOpen(false)}>
-          <button className="profile-preview-close" onClick={() => setPreviewOpen(false)}><X size={16} /></button>
+          <button className="profile-preview-close" onClick={() => setPreviewOpen(false)} aria-label={t("preview.close")}><X size={16} /></button>
           <img src={profileImage} alt={username} className="profile-preview-img" />
         </div>
       )}

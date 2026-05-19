@@ -5,6 +5,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import Header from "./components/Header";
 import ToastContainer from "./components/Toast";
 import { LoadingProvider } from "./components/LoadingProvider";
+import { LanguageProvider } from "./contexts/LanguageContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AnimatedPage from "./components/AnimatedPage";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -122,9 +123,11 @@ function AppLayout() {
 function App() {
   return (
     <LoadingProvider>
-      <Router>
-        <AppLayout />
-      </Router>
+      <LanguageProvider>
+        <Router>
+          <AppLayout />
+        </Router>
+      </LanguageProvider>
     </LoadingProvider>
   );
 }
