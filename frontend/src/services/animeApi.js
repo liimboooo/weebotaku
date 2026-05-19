@@ -196,13 +196,18 @@ const EMBED_PROVIDERS = [
   { name: "VidLink", url: (id, ep) => `https://vidlink.pro/anime/${id}/${ep}/1` },
 ];
 
-// ─── WordPress Anime Sources (ristoanime + witanime) ───
+// ─── WordPress Anime Sources (ristoanime + anime4up + witanime) ───
 
 const SOURCES = {
   ristoanime: {
     name: "ristoanime",
     base: "https://ristoanime.co",
     watchSuffix: "/watch",
+  },
+  anime4up: {
+    name: "anime4up",
+    base: "https://w1.anime4up.rest",
+    watchSuffix: "",
   },
   witanime: {
     name: "witanime",
@@ -237,6 +242,7 @@ function identifyServer(url) {
     ["ok.ru", "OK.ru"], ["myvi", "MyVi"], ["netu", "Netu"],
     ["fembed", "Fembed"], ["mixdrop", "MixDrop"], ["streamwish", "StreamWish"],
     ["filelions", "FileLions"], ["voe", "Voe"],
+    ["4shared", "4Shared"], ["uptostream", "UpStream"], ["vadbam", "Vadbam"],
   ];
   for (const [pattern, label] of hosts) {
     if (url.includes(pattern)) return label;
@@ -344,7 +350,7 @@ async function getWpPostsByTagId(base, tagId) {
   return allPosts;
 }
 
-export async function getEpisodes(animeName, tagSlug, sourceName, sourceBase, anilistId, episodeCount) {
+export async function getEpisodes(animeName, tagSlug, sourceName, sourceBase, anilistId, episodeCount, link) {
   if (sourceName === "embed") {
     const count = episodeCount || 24;
     return Array.from({ length: count }, (_, i) => ({
@@ -352,6 +358,11 @@ export async function getEpisodes(animeName, tagSlug, sourceName, sourceBase, an
       url: `embed:${anilistId}:${i + 1}`,
       title: `Episode ${i + 1}`,
     }));
+  }
+
+  if (sourceName === "anime4up") {
+    const base = sourceBase || SOURCES.anime4up.base;
+    return getEpisodesAnime4up(animeName, base);
   }
 
   const source = SOURCES[sourceName];
@@ -418,6 +429,11 @@ export async function getStreamUrls(episodeUrl, sourceName) {
       label: p.name,
       url: p.url(anilistId, epNum),
     }));
+  }
+
+  if (sourceName === "anime4up") {
+    const base = SOURCES.anime4up.base;
+    return getStreamUrlsAnime4up(episodeUrl, base);
   }
 
   const source = SOURCES[sourceName];
@@ -491,16 +507,141 @@ export async function getStreamUrls(episodeUrl, sourceName) {
   }
 }
 
-// ─── Main: find streaming source across ristoanime + witanime + embed fallback ───
+// ─── anime4up: search (wp/v2/anime taxonomy) ───
+
+async function searchAnime4upSource(source, allTitles) {
+  const { base, name } = source;
+
+  for (const searchName of allTitles) {
+    for (const q of titleVariants(searchName)) {
+      try {
+        const apiUrl = `${base}/wp-json/wp/v2/anime?search=${encodeURIComponent(q)}&per_page=5`;
+        const jsonStr = await fetchHtmlViaProxy(apiUrl);
+        if (!jsonStr) continue;
+        let items;
+        try { items = JSON.parse(jsonStr); } catch { continue; }
+        if (!Array.isArray(items) || items.length === 0) continue;
+
+        const matched = [];
+        for (const item of items) {
+          const score = scoreRelevance(item.name || "", q);
+          matched.push({
+            slug: item.slug,
+            title: item.name || searchName,
+            taxonomyId: item.id,
+            link: item.link,
+            count: item.count || 0,
+            _score: score,
+            source: name,
+            sourceBase: base,
+          });
+        }
+        if (matched.length > 0) {
+          return matched.sort((a, b) => b._score - a._score);
+        }
+      } catch {}
+    }
+  }
+
+  for (const searchName of allTitles) {
+    for (const q of titleVariants(searchName)) {
+      try {
+        const html = await fetchHtmlViaProxy(`${base}/?s=${encodeURIComponent(q)}`);
+        if (!html) continue;
+        const seriesRe = /<a[^>]*href="(https?:\/\/w1\.anime4up\.rest\/anime\/[^"]+)"[^>]*>([\s\S]{0,500}?)<\/a>/gi;
+        const results = [];
+        const seen = new Set();
+        let m;
+        while ((m = seriesRe.exec(html)) !== null) {
+          const url = m[1].replace(/\/$/, "");
+          const slug = url.split("/").pop();
+          if (seen.has(slug)) continue;
+          seen.add(slug);
+          const title = m[2].replace(/<[^>]*>/g, "").trim() || slug;
+          const score = scoreRelevance(title, q);
+          results.push({ slug, title, link: url, _score: score, source: name, sourceBase: base });
+        }
+        if (results.length > 0) return results.sort((a, b) => b._score - a._score);
+      } catch {}
+    }
+  }
+
+  return [];
+}
+
+// ─── anime4up: fetch episodes by paginating myapp/v1/episodes ───
+
+async function getEpisodesAnime4up(animeName, base, maxPages = 10) {
+  const episodes = [];
+  const seenIds = new Set();
+  const searchTerms = [animeName.toLowerCase()];
+
+  for (let page = 1; page <= maxPages; page++) {
+    try {
+      const apiUrl = `${base}/wp-json/myapp/v1/episodes?page=${page}&per_page=100`;
+      const jsonStr = await fetchHtmlViaProxy(apiUrl);
+      if (!jsonStr) break;
+      const data = JSON.parse(jsonStr);
+      if (!data.episodes || !data.episodes.length) break;
+
+      for (const ep of data.episodes) {
+        if (seenIds.has(ep.id)) continue;
+        const titleLower = (ep.title || "").toLowerCase();
+        const match = searchTerms.some(t => titleLower.includes(t));
+        if (!match) continue;
+
+        seenIds.add(ep.id);
+        const epMatch = ep.title.match(/الحلقة\s*(\d+)/i) || ep.title.match(/Episode\s*(\d+)/i);
+        const epNum = epMatch ? parseInt(epMatch[1], 10) : 0;
+        if (epNum > 0) {
+          episodes.push({ episode: epNum, id: String(ep.id), url: String(ep.id), title: ep.title });
+        }
+      }
+
+      if (data.page >= data.total_pages) break;
+    } catch { break; }
+  }
+
+  return episodes.sort((a, b) => a.episode - b.episode);
+}
+
+// ─── anime4up: get stream URLs via myapp/v1/watch/{id} ───
+
+async function getStreamUrlsAnime4up(episodeId, base) {
+  try {
+    const apiUrl = `${base}/wp-json/myapp/v1/watch/${episodeId}`;
+    const jsonStr = await fetchHtmlViaProxy(apiUrl);
+    if (!jsonStr) return [];
+    const data = JSON.parse(jsonStr);
+    if (!data.ok || !data.watch_servers) return [];
+
+    return data.watch_servers.map(s => ({
+      label: `${s.name} (${s.quality || "HD"})`,
+      url: s.embed_url,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function extractEpisodeNumberFromSlug(slug) {
+  const m = slug.match(/-(\d+)(?:\/|$)/);
+  if (m) return parseInt(m[1], 10);
+  return 0;
+}
+
+// ─── Main: find streaming source across ristoanime + anime4up + witanime + embed ───
 
 export async function findStreamingSource(animeName) {
   const anilistInfo = await fetchAniListInfo(animeName);
   const allTitles = anilistInfo.titles;
 
   const sourceKeys = Object.keys(SOURCES);
-  const results = await Promise.allSettled(
-    sourceKeys.map(key => searchWpSource(SOURCES[key], allTitles))
-  );
+  const tasks = sourceKeys.map(key => {
+    if (key === "anime4up") return searchAnime4upSource(SOURCES[key], allTitles);
+    return searchWpSource(SOURCES[key], allTitles);
+  });
+  const results = await Promise.allSettled(tasks);
 
   const allMatches = [];
   for (let i = 0; i < results.length; i++) {
@@ -510,9 +651,11 @@ export async function findStreamingSource(animeName) {
           source: sourceKeys[i],
           sourceBase: SOURCES[sourceKeys[i]].base,
           slug: match.slug,
-          id: match.slug,
+          id: match.id || match.slug,
           title: match.title,
-          tagSlug: match.tagSlug,
+          tagSlug: match.tagSlug || null,
+          link: match.link || null,
+          count: match.count || 0,
           _score: match._score || 0,
         });
       }
@@ -526,11 +669,13 @@ export async function findStreamingSource(animeName) {
       source: best.source,
       sourceBase: best.sourceBase,
       slug: best.slug,
-      id: best.slug,
+      id: best.id || best.slug,
       title: best.title,
       tagSlug: best.tagSlug,
+      link: best.link,
+      count: best.count,
       anilistId: anilistInfo.anilistId,
-      episodeCount: anilistInfo.episodeCount,
+      episodeCount: anilistInfo.episodeCount || best.count || undefined,
       allSources: allMatches,
     };
   }
