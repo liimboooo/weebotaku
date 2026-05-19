@@ -1,4 +1,4 @@
-﻿// Auto-generated Arabic translations
+// Auto-generated Arabic translations
 const ar = {
   "lang.name": "العربية",
   "lang.code": "ar",

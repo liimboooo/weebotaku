@@ -421,7 +421,7 @@ export default function AMVsEdits() {
       const stored = JSON.parse(localStorage.getItem(`amv_comments_${selectedEdit.id}`) || "[]");
       setEditComments(prev => ({ ...prev, [selectedEdit.id]: stored }));
     }
-  }, [selectedEdit?.id]);
+  }, [selectedEdit?.id]); // eslint-disable-line
 
   const handlePostComment = () => {
     if (!selectedEdit || !commentText.trim()) return;

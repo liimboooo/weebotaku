@@ -150,7 +150,7 @@ export default function AuthForm({ type, username, email, password, setUsername,
 
       <div className="auth-toggle">
         {type === "login" ? "Don't have an account? " : "Already have an account? "}
-        <a onClick={onModeChange}>{type === "login" ? "Register" : "Login"}</a>
+        <button type="button" className="link-button" onClick={onModeChange}>{type === "login" ? "Register" : "Login"}</button>
       </div>
     </div>
   );

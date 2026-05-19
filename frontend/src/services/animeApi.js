@@ -183,11 +183,6 @@ async function fetchAniListInfo(englishName) {
   };
 }
 
-async function fetchAllTitleVariants(englishName) {
-  const info = await fetchAniListInfo(englishName);
-  return info.titles;
-}
-
 // ─── Embed providers (English sub fallback using AniList ID) ───
 
 const EMBED_PROVIDERS = [
@@ -622,12 +617,6 @@ async function getStreamUrlsAnime4up(episodeId, base) {
   } catch {
     return [];
   }
-}
-
-function extractEpisodeNumberFromSlug(slug) {
-  const m = slug.match(/-(\d+)(?:\/|$)/);
-  if (m) return parseInt(m[1], 10);
-  return 0;
 }
 
 // ─── Main: find streaming source across ristoanime + anime4up + witanime + embed ───

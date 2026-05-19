@@ -218,7 +218,7 @@ export default function Browse() {
       loadingRef.current = false;
       hideGlobalLoading();
     }
-  }, []);
+  }, []); // eslint-disable-line
 
   useEffect(() => {
     setAllAnime([]);

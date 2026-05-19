@@ -1,4 +1,3 @@
-const QUOTES_BASE = "https://animechan.xyz/api";
 const WAIFU_BASE = "https://api.waifu.pics/sfw";
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 

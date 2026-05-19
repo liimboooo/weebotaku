@@ -75,7 +75,7 @@ export default function AnimeDetail() {
     if (!anime) return;
     const aId = anime?.id && anime.id !== malId ? anime.id : null;
     fetchAiringSchedule({ anilistId: aId, malId }).then(setSchedule).catch(() => {});
-  }, [anime?.id, malId]);
+  }, [anime?.id, malId]); // eslint-disable-line
 
   useEffect(() => {
     setIsWatchlisted(isInWatchlist(parseInt(id)));

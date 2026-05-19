@@ -19,11 +19,11 @@ import {
   Star,
   Swords,
   TrendingUp,
-  Users,
+
   Video,
   X,
 } from 'lucide-react';
-import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications } from '../services/notificationService';
+import { getNotifications, markRead, markAllRead, clearNotifications } from '../services/notificationService';
 import authService from '../services/authService';
 import { useLanguage } from '../contexts/LanguageContext';
 import './Header.css';
@@ -75,7 +75,6 @@ export default function Header() {
   const moreDropdownRef = useRef(null);
   const statusInputRef = useRef(null);
   const statusSaveTimeoutRef = useRef(null);
-  const headerPanelRef = useRef(null);
   const searchRef = useRef(null);
 
   const username = localStorage.getItem('username') || 'Guest';

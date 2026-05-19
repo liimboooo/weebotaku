@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, BookOpen, Library, Search, Star, Play, Sparkles } from "lucide-react";
+import { Heart, BookOpen, Search, Star, Play, Sparkles } from "lucide-react";
 import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
 import { loadWatchlist, removeFromWatchlist } from "../services/storage";
