@@ -96,11 +96,13 @@ function scoreRelevance(title, searchQuery) {
   return score;
 }
 
-// ─── Fetch ALL title variants from AniList + Jikan ───
+// ─── Fetch ALL title variants + AniList metadata ───
 
-async function fetchAllTitleVariants(englishName) {
+async function fetchAniListInfo(englishName) {
   const allNames = new Set();
   allNames.add(englishName);
+  let anilistId = null;
+  let episodeCount = null;
 
   const stripped = stripSeasonSuffixes(englishName);
   if (stripped && stripped !== englishName) allNames.add(stripped);
@@ -116,6 +118,8 @@ async function fetchAllTitleVariants(englishName) {
 
   const q = `query ($s: String) {
     Media(search: $s, type: ANIME) {
+      id
+      episodes
       title { romaji english native }
       synonyms
     }
@@ -133,6 +137,8 @@ async function fetchAllTitleVariants(englishName) {
       const data = await res.json();
       const media = data.data?.Media;
       if (media) {
+        anilistId = media.id;
+        episodeCount = media.episodes;
         if (media.title?.romaji) allNames.add(media.title.romaji);
         if (media.title?.english) allNames.add(media.title.english);
         if (media.title?.native) allNames.add(media.title.native);
@@ -163,14 +169,32 @@ async function fetchAllTitleVariants(englishName) {
               if (t.title) allNames.add(t.title);
             }
           }
+          if (!episodeCount && item.episodes) episodeCount = item.episodes;
           break;
         }
       } catch {}
     }
   }
 
-  return [...allNames].filter(n => n && n.length > 1);
+  return {
+    titles: [...allNames].filter(n => n && n.length > 1),
+    anilistId,
+    episodeCount,
+  };
 }
+
+async function fetchAllTitleVariants(englishName) {
+  const info = await fetchAniListInfo(englishName);
+  return info.titles;
+}
+
+// ─── Embed providers (English sub fallback using AniList ID) ───
+
+const EMBED_PROVIDERS = [
+  { name: "VidNest", url: (id, ep) => `https://vidnest.fun/anime/${id}/${ep}/sub` },
+  { name: "VidPlus", url: (id, ep) => `https://player.vidplus.to/embed/anime/${id}/${ep}` },
+  { name: "VidLink", url: (id, ep) => `https://vidlink.pro/anime/${id}/${ep}/1` },
+];
 
 // ─── WordPress Anime Sources (ristoanime + witanime) ───
 
@@ -320,7 +344,16 @@ async function getWpPostsByTagId(base, tagId) {
   return allPosts;
 }
 
-export async function getEpisodes(animeName, tagSlug, sourceName, sourceBase) {
+export async function getEpisodes(animeName, tagSlug, sourceName, sourceBase, anilistId, episodeCount) {
+  if (sourceName === "embed") {
+    const count = episodeCount || 24;
+    return Array.from({ length: count }, (_, i) => ({
+      episode: i + 1,
+      url: `embed:${anilistId}:${i + 1}`,
+      title: `Episode ${i + 1}`,
+    }));
+  }
+
   const source = SOURCES[sourceName];
   if (!source) return [];
   const base = sourceBase || source.base;
@@ -379,6 +412,14 @@ export async function getEpisodes(animeName, tagSlug, sourceName, sourceBase) {
 }
 
 export async function getStreamUrls(episodeUrl, sourceName) {
+  if (sourceName === "embed" && episodeUrl.startsWith("embed:")) {
+    const [, anilistId, epNum] = episodeUrl.split(":");
+    return EMBED_PROVIDERS.map(p => ({
+      label: p.name,
+      url: p.url(anilistId, epNum),
+    }));
+  }
+
   const source = SOURCES[sourceName];
   if (!source) return [];
 
@@ -450,10 +491,11 @@ export async function getStreamUrls(episodeUrl, sourceName) {
   }
 }
 
-// ─── Main: find streaming source across ristoanime + witanime ───
+// ─── Main: find streaming source across ristoanime + witanime + embed fallback ───
 
 export async function findStreamingSource(animeName) {
-  const allTitles = await fetchAllTitleVariants(animeName);
+  const anilistInfo = await fetchAniListInfo(animeName);
+  const allTitles = anilistInfo.titles;
 
   const sourceKeys = Object.keys(SOURCES);
   const results = await Promise.allSettled(
@@ -477,17 +519,35 @@ export async function findStreamingSource(animeName) {
     }
   }
 
-  if (allMatches.length === 0) return null;
+  if (allMatches.length > 0) {
+    allMatches.sort((a, b) => b._score - a._score);
+    const best = allMatches[0];
+    return {
+      source: best.source,
+      sourceBase: best.sourceBase,
+      slug: best.slug,
+      id: best.slug,
+      title: best.title,
+      tagSlug: best.tagSlug,
+      anilistId: anilistInfo.anilistId,
+      episodeCount: anilistInfo.episodeCount,
+      allSources: allMatches,
+    };
+  }
 
-  allMatches.sort((a, b) => b._score - a._score);
-  const best = allMatches[0];
-  return {
-    source: best.source,
-    sourceBase: best.sourceBase,
-    slug: best.slug,
-    id: best.slug,
-    title: best.title,
-    tagSlug: best.tagSlug,
-    allSources: allMatches,
-  };
+  if (anilistInfo.anilistId) {
+    return {
+      source: "embed",
+      sourceBase: "",
+      slug: animeName,
+      id: String(anilistInfo.anilistId),
+      title: animeName,
+      tagSlug: null,
+      anilistId: anilistInfo.anilistId,
+      episodeCount: anilistInfo.episodeCount,
+      subType: "eng",
+    };
+  }
+
+  return null;
 }

@@ -26,7 +26,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     (async () => {
       setLoading(true); setError("");
       try {
-        const eps = await getEpisodes(anime.title || anime.slug, anime.tagSlug, anime.source, anime.sourceBase);
+        const eps = await getEpisodes(anime.title || anime.slug, anime.tagSlug, anime.source, anime.sourceBase, anime.anilistId, anime.episodeCount);
         if (eps.length === 0) { setError("No streaming links available."); return; }
         setEpisodes(eps);
         setEpIndex(Math.min(Math.max(0, startEp - 1), eps.length - 1));
@@ -110,7 +110,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
             {episode && (
               <span className="watch-topbar-ep">Episode {episode.episode}</span>
             )}
-            <span className="watch-source-badge">{anime.source}</span>
+            <span className="watch-source-badge">{anime.source === "embed" ? "ENG SUB" : anime.source}</span>
           </div>
           <div className="watch-topbar-right">
             <button className="watch-topbar-btn" onClick={() => setAutoNext(!autoNext)} title="Auto-next episode">
