@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X, Loader, Play, Monitor, SkipForward } from "lucide-react";
 import { motion } from "framer-motion";
-import { getRistoAnimeEpisodes, getRistoAnimeStreamUrls } from "../../services/animeApi";
+import { getEpisodes, getStreamUrls } from "../../services/animeApi";
 import "./AnimeWatch.css";
 
 export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange }) {
@@ -26,7 +26,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     (async () => {
       setLoading(true); setError("");
       try {
-        const eps = await getRistoAnimeEpisodes(anime.title || anime.slug, anime.tagSlug);
+        const eps = await getEpisodes(anime.title || anime.slug, anime.tagSlug, anime.source, anime.sourceBase);
         if (eps.length === 0) { setError("No streaming links available."); return; }
         setEpisodes(eps);
         setEpIndex(Math.min(Math.max(0, startEp - 1), eps.length - 1));
@@ -42,7 +42,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     (async () => {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
-        const urls = await getRistoAnimeStreamUrls(episode.url);
+        const urls = await getStreamUrls(episode.url, anime.source);
         if (urls.length > 0) { setServers(urls); setStreamUrl(urls[0].url); }
         else setError("No video servers found.");
       } catch { setError("Failed to load stream."); }
