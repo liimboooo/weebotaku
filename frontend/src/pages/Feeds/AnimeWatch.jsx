@@ -26,7 +26,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   useEffect(() => {
     (async () => {
       setLoading(true); setError("");
-      const priority = ["ristoanime", "anime4up", "witanime"];
+      const priority = ["animeslayer", "ristoanime", "anime4up", "witanime"];
       const sourceMap = {};
       for (const s of [anime, ...(anime.allSources || [])]) sourceMap[`${s.source}:${s.slug || s.id}`] = s;
       const ordered = [];

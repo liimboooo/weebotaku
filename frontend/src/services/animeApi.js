@@ -191,7 +191,20 @@ const EMBED_PROVIDERS = [
   { name: "VidLink", url: (id, ep) => `https://vidlink.pro/anime/${id}/${ep}/1` },
 ];
 
-// ─── WordPress Anime Sources (ristoanime + anime4up + witanime) ───
+// ─── XOR decrypt helper (animeslayer uses XOR+base64) ───
+
+function xorDecrypt(encoded, key) {
+  try {
+    const raw = atob(encoded);
+    let r = "";
+    for (let i = 0; i < raw.length; i++) {
+      r += String.fromCharCode(raw.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+    }
+    return r;
+  } catch { return null; }
+}
+
+// ─── WordPress Anime Sources (ristoanime + anime4up + witanime + animeslayer) ───
 
 const SOURCES = {
   ristoanime: {
@@ -207,6 +220,11 @@ const SOURCES = {
   witanime: {
     name: "witanime",
     base: "https://witanime.one",
+    watchSuffix: "",
+  },
+  animeslayer: {
+    name: "animeslayer",
+    base: "https://animeslayer.to",
     watchSuffix: "",
   },
 };
@@ -318,6 +336,89 @@ async function searchWpSource(source, allTitles) {
   return [];
 }
 
+// ─── animeslayer search (uses /api/search?q=) ───
+
+async function searchAnimeSlayerSource(source, allTitles) {
+  const { base, name } = source;
+  for (const searchName of allTitles) {
+    for (const q of titleVariants(searchName)) {
+      try {
+        const apiUrl = `${base}/api/search?q=${encodeURIComponent(q)}`;
+        const jsonStr = await fetchHtmlViaProxy(apiUrl);
+        if (!jsonStr) continue;
+        let items;
+        try { items = JSON.parse(jsonStr); } catch { continue; }
+        if (!Array.isArray(items) || items.length === 0) continue;
+
+        const matched = [];
+        for (const item of items) {
+          const slug = item.href.replace(/^\/title\//, "");
+          const score = scoreRelevance(item.title || "", q);
+          matched.push({
+            slug,
+            title: item.title || searchName,
+            _score: score,
+            source: name,
+            sourceBase: base,
+            tagSlug: slug,
+          });
+        }
+        if (matched.length > 0) {
+          return matched.sort((a, b) => b._score - a._score);
+        }
+      } catch {}
+    }
+  }
+  return [];
+}
+
+// ─── animeslayer episodes (scrape /title/{slug} for encrypted episode hrefs) ───
+
+async function getEpisodesAnimeSlayer(slug, base) {
+  try {
+    const html = await fetchHtmlViaProxy(`${base}/title/${slug}`);
+    if (!html) return [];
+
+    const match = html.match(/const episodes = (\[[\s\S]*?\]);/);
+    if (!match) return [];
+
+    const cleanJson = match[1]
+      .replace(/(\w+):/g, '"$1":')
+      .replace(/,(\s*[\]}])/g, '$1')
+      .replace(/'/g, '"');
+
+    let parsed;
+    try { parsed = JSON.parse(cleanJson); } catch { return []; }
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.map(ep => {
+      const href = xorDecrypt(ep.href, "asxwqa147") || "";
+      const hash = href.includes("#") ? href.split("#")[1] : "";
+      const watchSlug = href.replace(/^\/e\//, "").split("#")[0];
+      return {
+        episode: ep.n,
+        title: ep.title || `Episode ${ep.n}`,
+        url: hash ? `${watchSlug}#${hash}` : watchSlug,
+        thumbnail: ep.thumb || null,
+      };
+    }).sort((a, b) => a.episode - b.episode);
+  } catch {
+    return [];
+  }
+}
+
+// ─── animeslayer stream URLs (embed the watch page) ───
+
+async function getStreamUrlsAnimeSlayer(slugHash, base) {
+  try {
+    const [slug, hash] = slugHash.split("#");
+    const pageUrl = hash ? `${base}/e/${slug}#${hash}` : `${base}/e/${slug}`;
+    return [{ label: "AnimeSlayer", url: pageUrl }];
+  } catch {
+    return [];
+  }
+}
+
 // ─── WP episode & stream fetching ───
 
 async function getWpTagId(base, tagSlug) {
@@ -358,6 +459,11 @@ export async function getEpisodes(animeName, tagSlug, sourceName, sourceBase, an
   if (sourceName === "anime4up") {
     const base = sourceBase || SOURCES.anime4up.base;
     return getEpisodesAnime4up(animeName, base);
+  }
+
+  if (sourceName === "animeslayer") {
+    const base = sourceBase || SOURCES.animeslayer.base;
+    return getEpisodesAnimeSlayer(tagSlug || animeName, base);
   }
 
   const source = SOURCES[sourceName];
@@ -429,6 +535,11 @@ export async function getStreamUrls(episodeUrl, sourceName) {
   if (sourceName === "anime4up") {
     const base = SOURCES.anime4up.base;
     return getStreamUrlsAnime4up(episodeUrl, base);
+  }
+
+  if (sourceName === "animeslayer") {
+    const base = SOURCES.animeslayer.base;
+    return getStreamUrlsAnimeSlayer(episodeUrl, base);
   }
 
   const source = SOURCES[sourceName];
@@ -628,6 +739,7 @@ export async function findStreamingSource(animeName) {
   const sourceKeys = Object.keys(SOURCES);
   const tasks = sourceKeys.map(key => {
     if (key === "anime4up") return searchAnime4upSource(SOURCES[key], allTitles);
+    if (key === "animeslayer") return searchAnimeSlayerSource(SOURCES[key], allTitles);
     return searchWpSource(SOURCES[key], allTitles);
   });
   const results = await Promise.allSettled(tasks);
