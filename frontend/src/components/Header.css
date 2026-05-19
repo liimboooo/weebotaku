@@ -1070,52 +1070,6 @@ body {
   .profile-button { width: 34px; height: 34px; padding: 0; border-radius: var(--radius-sm); justify-content: center; }
 }
 
-/* ─── Language Toggle ────────────────────────────────── */
-.lang-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 11px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-subtle);
-  background: transparent;
-  color: var(--text-tertiary);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--duration-normal) var(--ease-out);
-  white-space: nowrap;
-}
-
-.lang-toggle:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary);
-  border-color: var(--border-hover);
-}
-
-.lang-toggle svg { color: var(--text-tertiary); }
-.lang-toggle:hover svg { color: var(--text-primary); }
-
-/* ─── RTL Overrides ─────────────────────────────────── */
-html[dir="rtl"] .search-icon { margin-right: 0; margin-left: 8px; }
-html[dir="rtl"] .explore-dropdown,
-html[dir="rtl"] .feeds-dropdown { left: auto; right: 0; }
-html[dir="rtl"] .notif-dropdown { right: auto; left: 0; }
-html[dir="rtl"] .profile-mini-card { right: auto; left: 0; }
-html[dir="rtl"] .more-dropdown { right: auto; left: 0; }
-html[dir="rtl"] .more-item,
-html[dir="rtl"] .explore-item,
-html[dir="rtl"] .feeds-item,
-html[dir="rtl"] .arena-item { text-align: right; }
-html[dir="rtl"] .brand-text { font-family: 'Tajawal', 'Noto Sans Arabic', var(--font-body); }
-html[dir="rtl"] .nav-link.active::after { left: auto; right: 50%; transform: translateX(50%); }
-html[dir="rtl"] .icon-button.badge::after { right: auto; left: -4px; }
-html[dir="rtl"] .search-trending-pill { text-align: right; }
-html[dir="rtl"] .search-trending-pill:hover { transform: translateX(-2px); }
-html[dir="rtl"] .nav-chevron { transform: scaleX(-1); }
-html[dir="rtl"] .nav-link[aria-expanded="true"] .nav-chevron { transform: rotate(180deg) scaleX(-1); }
-html[dir="rtl"] .profile-preview-close { right: auto; left: 20px; }
-
 @media (max-width: 640px) {
   .header-shell { padding: 8px 12px; gap: 8px; }
   .mobile-toggle { display: inline-flex; }

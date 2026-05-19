@@ -115,7 +115,7 @@ export default function MangaVault() {
       loadingRef.current = false;
       hideGlobalLoading();
     }
-  }, []); // eslint-disable-line
+  }, []);
 
   useEffect(() => {
     setAllManga([]);

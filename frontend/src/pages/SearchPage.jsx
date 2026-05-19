@@ -17,7 +17,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function SearchPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get("q") || "");
   const [results, setResults] = useState([]);
   const [genres, setGenres] = useState([]);
@@ -56,7 +56,7 @@ export default function SearchPage() {
       setHasSearched(false);
       setResults([]);
     }
-    }, [searchParams.get("q")]); // eslint-disable-line
+  }, [searchParams.get("q")]);
 
   const doSearch = async (query, genre, type, status) => {
     if (!query.trim()) return;

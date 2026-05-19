@@ -64,7 +64,7 @@ export default function AuthPage() {
     } finally {
       setLoading(false);
     }
-  }, [username, email, password, mode, onAuthSuccess]);
+  }, [username, email, password, mode, navigate, onAuthSuccess]);
 
   const handleGoogleSuccess = useCallback(async (credential) => {
     setError("");

@@ -33,7 +33,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       } catch { setError("Failed to load episodes."); }
       finally { setLoading(false); }
     })();
-  }, [anime.title, anime.slug, startEp, retryCount]); // eslint-disable-line
+  }, [anime.title, anime.slug, startEp, retryCount]);
 
   const episode = episodes[epIndex];
 
@@ -48,7 +48,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       } catch { setError("Failed to load stream."); }
       finally { setStreamLoading(false); }
     })();
-  }, [episode, streamRetryCount]); // eslint-disable-line
+  }, [episode, streamRetryCount]);
 
   useEffect(() => {
     if (scrollRef.current && episodes[epIndex]) {

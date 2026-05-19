@@ -8,7 +8,7 @@ import * as tierlistService from "../services/tierlistService";
 import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
 import { formatCount, timeAgo as formatTimeAgo, notify } from "../utils/helpers";
-import { getCurrentXP, getCurrentLevel, getLevelProgress, getStreak, getBadges, getAllBadgeDefs } from "../services/progression";
+import { getCurrentXP, getCurrentLevel, getLevelProgress, getStreak, getBadges, getLevel, getAllBadgeDefs } from "../services/progression";
 import { Bookmark, Heart, Star, Clock, PenLine, LogOut, Settings, Eye, Film, Users, Video, Sparkles, Layers, Zap, Trophy, Flame, Crown, Gem, Gamepad2, Library, MessageSquare, FolderOpen, X } from "lucide-react";
 import "./ProfilePage.css";
 
@@ -242,7 +242,7 @@ export default function ProfilePage() {
         clearInterval(interval);
       };
     }
-  }, [profileUsername]); // eslint-disable-line
+  }, [profileUsername]);
 
   const handleAvatarUpload = (e) => {
     const file = e.target.files?.[0];

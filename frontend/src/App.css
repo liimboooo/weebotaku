@@ -353,7 +353,6 @@ html, body {
   padding-top: 4px;
 }
 
-.auth-toggle button,
 .auth-toggle a {
   color: var(--primary);
   cursor: pointer;
@@ -362,7 +361,6 @@ html, body {
   transition: color var(--duration-fast);
 }
 
-.auth-toggle button:hover,
 .auth-toggle a:hover {
   color: var(--primary-hover);
 }

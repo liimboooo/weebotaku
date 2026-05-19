@@ -3,8 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { ArrowLeft, BookOpen, Heart, ChevronDown, Loader } from "lucide-react";
-import { getMangaById, getMangaChapters, searchAndGetManga, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages, searchBato, getBatoChapters, getBatoPages } from "../services/mangaApi";
+import { ArrowLeft, BookOpen, Heart, Star, ChevronDown, Loader } from "lucide-react";
+import { getMangaById, getMangaChapters, searchManga, searchAndGetManga, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages, searchBato, getBatoChapters, getBatoPages } from "../services/mangaApi";
 import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
 import { addNotification } from "../services/notificationService";
 import MangaReader from "./Feeds/MangaReader";
@@ -19,7 +19,7 @@ export default function MangaDetail() {
 
   const [manga, setManga] = useState(null);
   const [chapters, setChapters] = useState([]);
-  const [, setFilteredCh] = useState([]);
+  const [filteredCh, setFilteredCh] = useState([]);
   const [loading, setLoading] = useState(true);
   const [chLoading, setChLoading] = useState(true);
   const [error, setError] = useState("");
