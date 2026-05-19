@@ -75,6 +75,7 @@ export default function AnimeDetail() {
     if (!anime) return;
     const aId = anime?.id && anime.id !== malId ? anime.id : null;
     fetchAiringSchedule({ anilistId: aId, malId }).then(setSchedule).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anime?.id, malId]);
 
   useEffect(() => {

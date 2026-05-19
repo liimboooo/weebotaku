@@ -421,6 +421,7 @@ export default function AMVsEdits() {
       const stored = JSON.parse(localStorage.getItem(`amv_comments_${selectedEdit.id}`) || "[]");
       setEditComments(prev => ({ ...prev, [selectedEdit.id]: stored }));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedEdit?.id]);
 
   const handlePostComment = () => {

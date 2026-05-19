@@ -33,6 +33,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       } catch { setError("Failed to load episodes."); }
       finally { setLoading(false); }
     })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anime.title, anime.slug, startEp, retryCount]);
 
   const episode = episodes[epIndex];
@@ -48,6 +49,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       } catch { setError("Failed to load stream."); }
       finally { setStreamLoading(false); }
     })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episode, streamRetryCount]);
 
   useEffect(() => {

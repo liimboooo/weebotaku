@@ -218,6 +218,7 @@ export default function Browse() {
       loadingRef.current = false;
       hideGlobalLoading();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

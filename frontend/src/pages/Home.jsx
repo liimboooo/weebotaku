@@ -43,7 +43,7 @@ import "./Home.css";
 
 function useAnimeData() {
   const [spotlight, setSpotlight] = useState(null);
-  const [spotlightIndex, setSpotlightIndex] = useState(0);
+  const [, setSpotlightIndex] = useState(0);
   const [spotlightQueue, setSpotlightQueue] = useState([]);
   const [topTen, setTopTen] = useState([]);
   const [trendingList, setTrendingList] = useState([]);

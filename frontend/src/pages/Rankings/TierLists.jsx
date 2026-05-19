@@ -179,6 +179,7 @@ export default function TierLists() {
         setSearchResults(items);
       } catch {}
     })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchType]);
 
   function getContentType() {
@@ -281,6 +282,7 @@ export default function TierLists() {
     }
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ─── Drag ──────────────────────────────────────
@@ -315,11 +317,6 @@ export default function TierLists() {
     setTimeout(() => setPulsingTier(null), 600);
   }
 
-  function handleDropFromSearch(item, tierId) {
-    handleAddFromSearch(item, tierId);
-    setSearchResults((prev) => prev.filter((i) => i.id !== item.id));
-  }
-
   function handleDragCancel() { setActiveItem(null); }
 
   // ─── Save / Reset ─────────────────────────────
@@ -347,7 +344,7 @@ export default function TierLists() {
     try {
       const allItems = Object.values(tiers).flat().filter(Boolean);
       await Promise.allSettled(allItems.map(item => {
-        if (!item.image) return;
+        if (!item.image) return null;
         return new Promise((resolve) => {
           const img = new Image();
           img.crossOrigin = 'anonymous';

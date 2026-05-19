@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { ChevronLeft, ChevronRight, X, Loader, Image as ImageIcon, ArrowLeftRight, Maximize2, Minus, Plus, BookOpen, ArrowDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Loader, Image as ImageIcon, ArrowLeftRight, Maximize2, BookOpen, ArrowDown } from "lucide-react";
 import { getChapterPages } from "../../services/mangaApi";
 import "./MangaReader.css";
 
@@ -249,14 +249,6 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
   const toggleDirection = () => setDirection(d => d === "ltr" ? "rtl" : "ltr");
 
   const cycleFitMode = () => setFitMode(m => m === "width" ? "height" : m === "height" ? "original" : "width");
-
-  const scrollToPage = (idx) => {
-    if (scrollMode) {
-      const el = pageRefs.current[idx];
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-    setPageIndex(idx);
-  };
 
   const onImageLoad = (idx) => {
     setLoadedPages(prev => new Set(prev).add(idx));

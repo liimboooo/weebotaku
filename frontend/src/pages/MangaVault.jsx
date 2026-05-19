@@ -115,6 +115,7 @@ export default function MangaVault() {
       loadingRef.current = false;
       hideGlobalLoading();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

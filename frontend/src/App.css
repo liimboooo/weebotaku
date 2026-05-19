@@ -353,7 +353,8 @@ html, body {
   padding-top: 4px;
 }
 
-.auth-toggle a {
+.auth-toggle a,
+.auth-toggle button.link-button {
   color: var(--primary);
   cursor: pointer;
   font-weight: 700;
@@ -361,7 +362,8 @@ html, body {
   transition: color var(--duration-fast);
 }
 
-.auth-toggle a:hover {
+.auth-toggle a:hover,
+.auth-toggle button.link-button:hover {
   color: var(--primary-hover);
 }
 
