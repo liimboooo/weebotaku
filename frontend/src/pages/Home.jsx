@@ -1,673 +1,251 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  Bookmark,
-  Calendar,
-  ChevronRight,
-  Clock,
-  Crown,
-  Eye,
-  Film,
-  Flame,
-  Heart,
-  Layers,
-  Play,
-  Plus,
-  RefreshCw,
-  Sparkles,
-  Star,
-  Sword,
-  TrendingUp,
-  Trophy,
-  Users,
-  Zap,
-} from "lucide-react";
+import { Bookmark, ChevronRight, Clock, Eye, Film, Flame, Play, Plus, Sparkles, Star, TrendingUp, Zap, Users } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
-import Skeleton from "../components/Skeleton";
-import Slider from "../components/Slider";
-import LiveRooms from "../components/LiveRooms";
-import Categories from "../components/Categories";
 import Background from "../components/Background";
-import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
-import { fetchRandomQuote } from "../services/communityApi";
-import {
-  addToWatchlist,
-  removeFromWatchlist,
-  loadWatchlist,
-  isInWatchlist,
-  toggleLikeAnime,
-} from "../services/storage";
+import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres } from "../services/anilistApi";
+import { addToWatchlist, removeFromWatchlist, loadWatchlist, isInWatchlist } from "../services/storage";
 import { getCurrentLevel, getStreak } from "../services/progression";
 import "./Home.css";
 
-function useAnimeData() {
+function useHomeData() {
   const [spotlight, setSpotlight] = useState(null);
-  const [, setSpotlightIndex] = useState(0);
+  const [spotlightIdx, setSpotlightIdx] = useState(0);
   const [spotlightQueue, setSpotlightQueue] = useState([]);
-  const [topTen, setTopTen] = useState([]);
-  const [trendingList, setTrendingList] = useState([]);
-  const [seasonPicks, setSeasonPicks] = useState([]);
-  const [upcomingList, setUpcomingList] = useState([]);
-  const [popularList, setPopularList] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [trending, setTrending] = useState([]);
+  const [topAiring, setTopAiring] = useState([]);
+  const [recent, setRecent] = useState([]);
+  const [topViewed, setTopViewed] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function load() {
+    (async () => {
       try {
-        const [topAir, topAll, seasonal, genres, upcoming, popular] = await Promise.allSettled([
-          fetchTopAnime(1, "airing"),
+        const [trend, airing, seasonal] = await Promise.allSettled([
           fetchTopAnime(1, ""),
+          fetchTopAnime(1, "airing"),
           fetchSeasonalAnime(),
-          fetchAnimeGenres(),
-          fetchTopAnime(1, "upcoming"),
-          fetchTopAnime(1, "bypopularity"),
         ]);
 
-        if (topAir.status === "fulfilled" && topAir.value.data.length > 0) {
-          const queue = topAir.value.data.slice(0, 5);
-          setSpotlightQueue(queue);
-          setSpotlight(queue[0]);
+        if (trend.status === "fulfilled" && trend.value.data.length) {
+          const q = trend.value.data.slice(0, 5);
+          setSpotlightQueue(q);
+          setSpotlight(q[0]);
+          setTrending(trend.value.data.slice(0, 20));
+          setTopViewed(trend.value.data.slice(0, 10));
         }
 
-        if (topAll.status === "fulfilled") {
-          setTopTen(topAll.value.data.slice(0, 10));
-          setTrendingList(topAll.value.data.slice(10, 25));
+        if (airing.status === "fulfilled") {
+          setTopAiring(airing.value.data.slice(0, 20));
         }
 
         if (seasonal.status === "fulfilled") {
-          setSeasonPicks(seasonal.value.data.slice(0, 20));
-        }
-
-        if (genres.status === "fulfilled") {
-          setCategories(genres.value);
-        }
-
-        if (upcoming.status === "fulfilled") {
-          setUpcomingList(upcoming.value.data.slice(0, 12));
-        }
-
-        if (popular.status === "fulfilled") {
-          setPopularList(popular.value.data.slice(0, 20));
+          setRecent(seasonal.value.data.slice(0, 20));
         }
       } catch {}
       setLoading(false);
-    }
-    load();
+    })();
   }, []);
 
   useEffect(() => {
     if (spotlightQueue.length < 2) return;
-    const interval = setInterval(() => {
-      setSpotlightIndex(i => {
-        const next = (i + 1) % spotlightQueue.length;
-        setSpotlight(spotlightQueue[next]);
-        return next;
+    const t = setInterval(() => {
+      setSpotlightIdx(i => {
+        const n = (i + 1) % spotlightQueue.length;
+        setSpotlight(spotlightQueue[n]);
+        return n;
       });
     }, 20000);
-    return () => clearInterval(interval);
+    return () => clearInterval(t);
   }, [spotlightQueue]);
 
-  const refreshTrending = useCallback(async () => {
-    try {
-      const r = await fetchTopAnime(1, "");
-      if (r.data.length) {
-        setTrendingList(r.data.slice(10, 25));
-      }
-    } catch {}
-  }, []);
-
-  return { spotlight, topTen, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending };
+  return { spotlight, spotlightIdx, spotlightQueue, trending, topAiring, recent, topViewed, loading };
 }
 
-// ─── Sub-components ────────────────────────────────────
+const rankMedal = ["🥇", "🥈", "🥉"];
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.06, delayChildren: 0.25 },
-  },
-};
+function HeroSection({ spotlight, spotlightIdx, spotlightQueue, onNavigate }) {
+  if (!spotlight) return null;
+  return (
+    <section className="home-hero">
+      <div className="home-hero-bg">
+        <img src={spotlight.img} alt="" className="home-hero-img" />
+        <div className="home-hero-gradient" />
+      </div>
+      <motion.div className="home-hero-content" key={spotlight.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
+        <div className="hero-badge">Spotlight #{spotlightIdx + 1}</div>
+        <h1 className="hero-title">{spotlight.name}</h1>
+        <div className="hero-meta-pills">
+          <span className="pill pill-hd">HD</span>
+          <span className="pill pill-sub">Sub: {spotlight.episodes || "?"}</span>
+          <span className="pill pill-dub">Dub: {spotlight.episodes || "?"}</span>
+          {spotlight.genres?.slice(0, 3).map(g => <span key={g} className="pill pill-genre">{g}</span>)}
+        </div>
+        <p className="hero-synopsis">{spotlight.synopsis?.slice(0, 300)}</p>
+        <div className="hero-actions">
+          <button className="hero-btn-primary" onClick={onNavigate}>
+            <Play size={18} fill="currentColor" /> Watch Now
+          </button>
+          <button className="hero-btn-secondary" onClick={onNavigate}>
+            <Plus size={16} /> Details
+          </button>
+        </div>
+      </motion.div>
+      <div className="hero-dots">
+        {spotlightQueue.map((_, i) => (
+          <span key={i} className={`hero-dot ${i === spotlightIdx ? "active" : ""}`} />
+        ))}
+      </div>
+    </section>
+  );
+}
 
-const cardSlideUp = {
-  hidden: { opacity: 0, y: 24, scale: 0.96 },
-  visible: {
-    opacity: 1, y: 0, scale: 1,
-    transition: { type: "spring", stiffness: 260, damping: 24 },
-  },
-};
+function ContinueWatching() {
+  const navigate = useNavigate();
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("watchHistory") || "[]").slice(0, 6);
+    setItems(stored);
+  }, []);
+
+  if (!items.length) return null;
+
+  return (
+    <section className="cw-section">
+      <div className="section-header">
+        <Clock size={18} color="#e63636" />
+        <h2>Continue Watching</h2>
+      </div>
+      <div className="cw-row">
+        {items.map((item, i) => {
+          const progress = Math.min((item.episode || 1) / 12 * 100, 100);
+          return (
+            <div key={i} className="cw-card" onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode || 1}`)}>
+              <div className="cw-thumb">
+                <img src={item.img || ""} alt="" />
+                <div className="cw-progress-bar" style={{ width: `${progress}%` }} />
+              </div>
+              <div className="cw-info">
+                <h4>{item.name || "Unknown"}</h4>
+                <span>Episode {item.episode || 1}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function PosterCard({ anime, onClick }) {
+  const [watchlist, setWatchlist] = useState(() => loadWatchlist());
+  const inWl = watchlist.some(i => i.id === anime.id);
+
+  const toggleWl = e => {
+    e.stopPropagation();
+    if (inWl) { removeFromWatchlist(anime.id); setWatchlist(loadWatchlist()); }
+    else { addToWatchlist(anime); setWatchlist(loadWatchlist()); }
+  };
+
+  return (
+    <motion.div className="poster-card" onClick={onClick} whileHover={{ y: -8 }} transition={{ type: "spring", stiffness: 260, damping: 20 }}>
+      <div className="poster-img">
+        <img src={anime.img} alt={anime.name} loading="lazy" />
+        <div className="poster-overlay"><Play size={22} fill="currentColor" /></div>
+        <div className="poster-badge-top">{anime.episodes || "?"} Ep</div>
+        <div className="poster-badge-rating"><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</div>
+        <button className={`poster-bookmark ${inWl ? "saved" : ""}`} onClick={toggleWl}>
+          <Bookmark size={12} fill={inWl ? "currentColor" : "none"} />
+        </button>
+      </div>
+      <div className="poster-body">
+        <h3>{anime.name}</h3>
+        <div className="poster-meta">
+          {anime.genres?.[0] && <span>{anime.genres[0]}</span>}
+          {anime.type && <span>{anime.type}</span>}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function PosterRow({ title, icon: Icon, list }) {
+  const navigate = useNavigate();
+  if (!list?.length) return null;
+  return (
+    <section className="poster-section">
+      <div className="section-header">
+        <Icon size={18} color="#e63636" />
+        <h2>{title}</h2>
+      </div>
+      <div className="poster-row">
+        {list.map(a => <PosterCard key={a.id} anime={a} onClick={() => navigate(`/anime/${a.id}`)} />)}
+      </div>
+    </section>
+  );
+}
+
+function TopViewedSidebar({ list }) {
+  const navigate = useNavigate();
+  if (!list?.length) return null;
+  return (
+    <aside className="sidebar">
+      <div className="section-header">
+        <Eye size={18} color="#e63636" />
+        <h2>Top Viewed Today</h2>
+      </div>
+      <div className="sidebar-list">
+        {list.map((a, i) => (
+          <div key={a.id} className={`sidebar-item ${i < 3 ? `rank-${i + 1}` : ""}`} onClick={() => navigate(`/anime/${a.id}`)}>
+            <span className="sidebar-rank">{i < 3 ? rankMedal[i] : `#${i + 1}`}</span>
+            <img src={a.img} alt="" className="sidebar-thumb" />
+            <div className="sidebar-info">
+              <strong>{a.name}</strong>
+              <span className="sidebar-views">{a.votes?.toLocaleString() || "0"} views</span>
+            </div>
+            <Star size={12} fill="#ffd700" color="#ffd700" />
+            <span className="sidebar-score">{a.rating?.toFixed(1)}</span>
+          </div>
+        ))}
+      </div>
+    </aside>
+  );
+}
 
 function StatsBar() {
   const stats = useMemo(() => {
     const wl = loadWatchlist();
     const history = JSON.parse(localStorage.getItem("watchHistory") || "[]");
-    const ratings = Object.keys(JSON.parse(localStorage.getItem("userRatings") || "{}")).length;
-    const level = getCurrentLevel();
-    const streak = getStreak();
-    const items = [
-      { icon: Bookmark, label: "Watchlist", value: wl.length, cls: "bookmark" },
-      { icon: Eye, label: "Episodes Watched", value: history.length, cls: "eye" },
-      { icon: Star, label: "Anime Rated", value: ratings, cls: "trophy" },
-      { icon: Zap, label: "Level", value: level, cls: "level" },
+    return [
+      { icon: Bookmark, label: "Watchlist", value: wl.length },
+      { icon: Eye, label: "Watched", value: history.length },
+      { icon: Zap, label: "Level", value: getCurrentLevel() },
     ];
-    if (streak.current > 0) {
-      items.push({ icon: TrendingUp, label: "Day Streak", value: streak.current, cls: "streak" });
-    }
-    return items;
   }, []);
-
   return (
-    <motion.div
-      className="home-stats-bar"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      {stats.map((s) => (
-        <motion.div
-          key={s.label}
-          className="home-stat-card"
-          variants={cardSlideUp}
-            whileHover={{ boxShadow: "0 16px 48px rgba(230,54,54,0.12)", transition: { type: "spring", stiffness: 300 } }}
-        >
-          <div className={`home-stat-icon ${s.cls}`}>
-            <s.icon size={18} />
-          </div>
-          <div className="home-stat-info">
-            <span className="home-stat-value">{s.value}</span>
-            <span className="home-stat-label">{s.label}</span>
-          </div>
-        </motion.div>
+    <div className="stats-bar">
+      {stats.map(s => (
+        <div key={s.label} className="stat-card">
+          <s.icon size={16} />
+          <div><strong>{s.value}</strong><span>{s.label}</span></div>
+        </div>
       ))}
-    </motion.div>
-  );
-}
-
-function SpotlightQuote({ quote, onRefresh, loading }) {
-  if (!quote) return null;
-  return (
-    <motion.div
-      className="spotlight-quote"
-      initial={{ opacity: 0, y: 16, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ type: "spring", stiffness: 180, damping: 22, delay: 0.6 }}
-    >
-      <p className="spotlight-quote-text">"{quote.quote}"</p>
-      <div className="spotlight-quote-attribution">
-        <span className="spotlight-quote-char">{quote.character}</span>
-        <span className="spotlight-quote-dash">—</span>
-        <span className="spotlight-quote-anime">{quote.anime}</span>
-        <button className="spotlight-quote-refresh" onClick={onRefresh} disabled={loading}>
-          <RefreshCw size={12} />
-        </button>
-      </div>
-    </motion.div>
-  );
-}
-
-function ContinueWatchingRow() {
-  const navigate = useNavigate();
-  const [items, setItems] = useState([]);
-
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("watchHistory") || "[]");
-    const recent = stored.slice(0, 6);
-    Promise.allSettled(
-      recent.map(async item => {
-        try {
-          const data = await fetchAnimeById(item.animeId);
-          if (data) {
-            return {
-              animeId: item.animeId,
-              episode: item.episode,
-              timestamp: item.timestamp,
-              id: data.id,
-              name: data.name,
-              img: data.img,
-              rating: data.rating,
-              episodes: data.episodes,
-            };
-          }
-        } catch {}
-        return null;
-      })
-    ).then(results => {
-      setItems(results.map(r => r.status === "fulfilled" ? r.value : null).filter(Boolean));
-    });
-  }, []);
-
-  if (items.length === 0) return (
-    <section className="home-section">
-      <SectionHeader icon={Clock} title="Continue Watching" subtitle="Pick up where you left off" />
-      <div className="home-empty-state">
-        <div className="home-empty-icon-wrap">
-          <Play size={24} />
-        </div>
-        <p>No watch history yet — start watching to see your progress here.</p>
-        <button className="home-empty-action" onClick={() => navigate("/browse/anime")}>
-          Browse Anime
-        </button>
-      </div>
-    </section>
-  );
-
-  return (
-    <section className="home-section">
-      <SectionHeader icon={Clock} title="Continue Watching" subtitle="Pick up where you left off" />
-      <motion.div
-        className="continue-grid"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-40px" }}
-      >
-        {items.map((item) => (
-          <motion.div
-            key={`${item.animeId}-${item.episode}`}
-            className="continue-card"
-            onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode}`)}
-            variants={cardSlideUp}
-           whileHover={{ boxShadow: "0 12px 40px rgba(230,54,54,0.12)", transition: { type: "spring", stiffness: 300 } }}
-          >
-            <div className="continue-card-img">
-              <img src={item.img} alt={item.name} />
-              <div className="continue-card-overlay">
-                <Play size={18} fill="currentColor" />
-              </div>
-            </div>
-            <div className="continue-card-body">
-              <h4>{item.name}</h4>
-              <span className="continue-card-ep-label">{item.episode ? `Episode ${item.episode}` : "Continue"}</span>
-              {item.rating && (
-                <span className="continue-card-rating">
-                  <Star size={10} fill="#ffd700" color="#ffd700" /> {item.rating.toFixed(1)}
-                </span>
-              )}
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
-    </section>
-  );
-}
-
-function SectionHeader({ icon: Icon, title, subtitle, action }) {
-  return (
-    <div className="section-title">
-      <motion.div
-        initial={{ opacity: 0, x: -28 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true }}
-        transition={{ type: "spring", stiffness: 200, damping: 24 }}
-        className="title-with-icon"
-      >
-        <Icon color="#e63636" size={24} />
-        <div>
-          <h2>{title}</h2>
-          {subtitle && <p className="section-subtitle">{subtitle}</p>}
-        </div>
-      </motion.div>
-      {action && (
-        <motion.button
-          className="section-action"
-          onClick={action}
-          initial={{ opacity: 0, x: 20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ type: "spring", stiffness: 180, damping: 22, delay: 0.1 }}
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.96 }}
-        >
-          View all <ChevronRight size={14} />
-        </motion.button>
-      )}
     </div>
   );
 }
-
-function SeasonCardReactions({ anime, watchlist, onToggleWishlist }) {
-  const [liked, setLiked] = useState(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("likedAnime") || "[]");
-      return stored.includes(anime?.id);
-    } catch { return false; }
-  });
-
-  const handleLike = (e) => {
-    e.stopPropagation();
-    toggleLikeAnime(anime.id);
-    setLiked(prev => !prev);
-  };
-
-  const inWatchlist = watchlist?.includes(anime?.id);
-
-  return (
-    <div className="season-card-reactions">
-      <button className={`scr-btn ${liked ? 'scr-liked' : ''}`} onClick={handleLike}>
-        <Heart size={10} fill={liked ? "currentColor" : "none"} /> {liked ? "Liked" : "Like"}
-      </button>
-      <button className={`scr-btn ${inWatchlist ? 'scr-saved' : ''}`} onClick={(e) => onToggleWishlist?.(e, anime)}>
-        <Bookmark size={10} fill={inWatchlist ? "currentColor" : "none"} /> {inWatchlist ? "Saved" : "Save"}
-      </button>
-    </div>
-  );
-}
-
-function SeasonGrid({ animeList }) {
-  const navigate = useNavigate();
-  const [watchlist, setWatchlist] = useState(() => loadWatchlist().map(i => i.id));
-
-  const toggleWishlist = (e, anime) => {
-    e.stopPropagation();
-    const id = anime.id;
-    if (isInWatchlist(id)) {
-      removeFromWatchlist(id);
-      setWatchlist(prev => prev.filter(i => i !== id));
-    } else {
-      addToWatchlist({ id: anime.id, name: anime.name, img: anime.img, rating: anime.rating, episodes: anime.episodes, year: anime.year, genres: anime.genres, status: anime.status });
-      setWatchlist(prev => [...prev, id]);
-    }
-  };
-
-  if (!animeList?.length) return null;
-
-  const seasonCardReveal = {
-    hidden: { opacity: 0, y: 30, scale: 0.93 },
-    visible: {
-      opacity: 1, y: 0, scale: 1,
-      transition: { type: "spring", stiffness: 200, damping: 22 },
-    },
-  };
-
-  return (
-    <section className="home-section">
-      <SectionHeader icon={Sparkles} title="Season Highlights" subtitle="Top picks this season" action={() => navigate("/browse/anime")} />
-      <motion.div
-        className="season-grid"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-40px" }}
-      >
-        {animeList.map((anime) => (
-          <motion.div
-            key={anime.id}
-            className="season-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
-            variants={seasonCardReveal}
-            whileHover={{ boxShadow: "0 12px 40px rgba(230,54,54,0.12)", transition: { type: "spring", stiffness: 300 } }}
-          >
-            <div className="season-card-img">
-              <img src={anime.img} alt={anime.name} loading="lazy" />
-              <div className="season-card-overlay">
-                <button className="season-card-play" onClick={e => e.stopPropagation()}>
-                  <Play size={18} fill="currentColor" />
-                </button>
-              </div>
-              <button
-                className={`season-wish-btn ${watchlist.includes(anime.id) ? "active" : ""}`}
-                onClick={e => toggleWishlist(e, anime)}
-                title={watchlist.includes(anime.id) ? "Remove from watchlist" : "Add to watchlist"}
-              >
-                <Bookmark size={12} fill={watchlist.includes(anime.id) ? "currentColor" : "none"} />
-              </button>
-              <div className="season-card-badge">{anime.status === "Ongoing" ? <Zap size={10} /> : null}{anime.status || "TV"}</div>
-            </div>
-            <div className="season-card-body">
-              <h3>{anime.name}</h3>
-              <div className="season-card-meta">
-                <span className="season-card-rating"><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</span>
-                <span className="season-card-eps"><Film size={10} /> {anime.episodes} ep</span>
-                {anime.genres?.[0] && <span className="season-card-tag">{anime.genres[0]}</span>}
-              </div>
-              <SeasonCardReactions anime={anime} watchlist={watchlist} onToggleWishlist={toggleWishlist} />
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
-    </section>
-  );
-}
-
-function TopTenRow({ animeList }) {
-  const navigate = useNavigate();
-  if (!animeList?.length) return null;
-  return (
-    <section className="home-section">
-      <SectionHeader icon={Crown} title="Top 10 Anime" subtitle="Highest rated of all time" />
-      <div className="top-ten-row">
-        {animeList.map((anime, i) => (
-          <motion.div
-            key={anime.id}
-            className="top-ten-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.06, type: "spring", stiffness: 200, damping: 22 }}
-            whileHover={{ y: -10, transition: { type: "spring", stiffness: 300 } }}
-          >
-            <span className="top-ten-rank">{i + 1}</span>
-            <div className="top-ten-poster">
-              <img src={anime.img} alt={anime.name} loading="lazy" />
-              <div className="top-ten-overlay">
-                <Play size={22} fill="currentColor" />
-              </div>
-            </div>
-            <div className="top-ten-info">
-              <h3>{anime.name}</h3>
-              <div className="top-ten-meta">
-                <span className="top-ten-score"><Star size={12} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</span>
-                <span className="top-ten-eps">{anime.episodes} ep</span>
-                {anime.genres?.[0] && <span className="top-ten-genre">{anime.genres[0]}</span>}
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function GenreBar({ genres }) {
-  const navigate = useNavigate();
-  if (!genres?.length) return null;
-  const genreIcons = {
-    Action: Sword, Adventure: Layers, Comedy: Sparkles, Drama: Heart,
-    Fantasy: Crown, Horror: Flame, Romance: Heart, "Sci-Fi": Zap,
-    Sports: Trophy, Mystery: Eye, "Slice of Life": Film,
-  };
-  return (
-    <div className="genre-bar">
-      <div className="genre-bar-inner">
-        {genres.slice(0, 14).map(g => {
-          const Icon = genreIcons[g] || Film;
-          return (
-            <button key={g} className="genre-bar-chip" onClick={() => navigate(`/browse/anime`)}>
-              <Icon size={14} />
-              <span>{g}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function UpcomingSection({ animeList }) {
-  const navigate = useNavigate();
-  if (!animeList?.length) return null;
-  return (
-    <section className="home-section">
-      <SectionHeader icon={Calendar} title="Coming Soon" subtitle="Upcoming anime to watch out for" action={() => navigate("/browse/anime")} />
-      <motion.div
-        className="upcoming-grid"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-40px" }}
-      >
-        {animeList.map((anime) => (
-          <motion.div
-            key={anime.id}
-            className="upcoming-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
-            variants={cardSlideUp}
-            whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
-          >
-            <div className="upcoming-card-img">
-              <img src={anime.img} alt={anime.name} loading="lazy" />
-              <div className="upcoming-card-badge">
-                <Calendar size={10} /> {anime.season || "TBA"}
-              </div>
-            </div>
-            <div className="upcoming-card-body">
-              <h3>{anime.name}</h3>
-              <div className="upcoming-card-meta">
-                {anime.genres?.[0] && <span className="upcoming-card-tag">{anime.genres[0]}</span>}
-                <span className="upcoming-card-type">{anime.type || "TV"}</span>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
-    </section>
-  );
-}
-
-const heroStagger = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-  },
-};
-
-const heroItem = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1, y: 0,
-    transition: { type: "spring", stiffness: 200, damping: 24 },
-  },
-};
-
-function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onNavigate }) {
-  const [imgLoaded, setImgLoaded] = useState(false);
-
-  if (!spotlight) return null;
-
-  return (
-    <section className="home-hero">
-      <div className="home-hero-bg">
-        {spotlight.trailerUrl ? (
-          <div className="home-hero-video-wrap">
-            <iframe
-              src={`${spotlight.trailerUrl}${spotlight.trailerUrl.includes("?") ? "&" : "?"}autoplay=1&mute=1&controls=0&loop=1&playlist=${spotlight.trailerUrl.split("/").pop().split("?" )[0]}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0`}
-              title={spotlight.name}
-              allow="autoplay; encrypted-media"
-              className="home-hero-video"
-              loading="lazy"
-            />
-            <div className="home-hero-video-shield" />
-          </div>
-        ) : (
-          <img
-            src={spotlight.img}
-            alt=""
-            className="home-hero-img"
-            onLoad={() => setImgLoaded(true)}
-            style={{ opacity: imgLoaded ? 1 : 0 }}
-          />
-        )}
-        <div className="home-hero-gradient" />
-        <div className="home-hero-gradient-side" />
-      </div>
-
-      <motion.div
-        className="home-hero-content"
-        variants={heroStagger}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.div className="spotlight-kicker" variants={heroItem}>
-          <Sparkles size={14} /> Featured
-        </motion.div>
-        <motion.h1 variants={heroItem}>{spotlight.name}</motion.h1>
-        <motion.p variants={heroItem} className="home-hero-desc">{spotlight.synopsis?.slice(0, 280)}</motion.p>
-        <motion.div variants={heroItem} className="home-hero-meta">
-          {spotlight.rating && <span><Star size={12} fill="#ffd700" color="#ffd700" /> {spotlight.rating.toFixed(1)}</span>}
-          <span>{spotlight.year || "?"}</span>
-          <span>{spotlight.episodes} EP</span>
-          <span>{spotlight.status}</span>
-        </motion.div>
-        <motion.div variants={heroItem} className="home-hero-actions">
-          <button className="hero-btn-primary" onClick={onNavigate}>
-            <Play size={16} fill="currentColor" /> Watch Now
-          </button>
-          <button className="hero-btn-secondary" onClick={onNavigate}>
-            <Plus size={16} /> Details
-          </button>
-        </motion.div>
-        <SpotlightQuote quote={quote} onRefresh={onQuoteRefresh} loading={quoteLoading} />
-      </motion.div>
-
-      <motion.div
-        className="home-hero-sidecard"
-        variants={heroItem}
-        initial="hidden"
-        animate="visible"
-      >
-        <div className="hero-sidecard-img">
-          <img src={spotlight.img} alt={spotlight.name} />
-        </div>
-        <div className="hero-sidecard-info">
-          <span className="hero-sidecard-label">NOW TRENDING</span>
-          <strong className="hero-sidecard-title">{spotlight.name}</strong>
-          <span className="hero-sidecard-rating">
-            <Star size={11} fill="#ffd700" color="#ffd700" /> {spotlight.rating?.toFixed(1) || "?"}
-          </span>
-        </div>
-      </motion.div>
-    </section>
-  );
-}
-
-// ─── Main Home component ────────────────────────────────
 
 export default function Home() {
   const navigate = useNavigate();
-  const { spotlight, topTen, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending } = useAnimeData();
-  const [quote, setQuote] = useState(null);
-  const [quoteLoading, setQuoteLoading] = useState(false);
-
-  useEffect(() => {
-    fetchRandomQuote().then(setQuote).catch(() => {});
-  }, []);
-
-  const refreshQuote = useCallback(() => {
-    setQuoteLoading(true);
-    fetchRandomQuote().then(q => { setQuote(q); setQuoteLoading(false); }).catch(() => setQuoteLoading(false));
-  }, []);
+  const { spotlight, spotlightIdx, spotlightQueue, trending, topAiring, recent, topViewed, loading } = useHomeData();
 
   if (loading) {
     return (
       <AnimatedPage>
-        <div className="home-container">
+        <div className="home-loading">
           <Background />
-          <div className="home-loading">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="home-loading-section">
-                <Skeleton variant="title" width="180px" />
-                <div className="home-loading-grid">
-                  {[1, 2, 3, 4].map(j => (
-                    <Skeleton key={j} variant="card" />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <div className="loading-spinner" />
         </div>
       </AnimatedPage>
     );
@@ -675,94 +253,29 @@ export default function Home() {
 
   return (
     <AnimatedPage>
-      <HeroSpotlight
-        spotlight={spotlight}
-        quote={quote}
-        onQuoteRefresh={refreshQuote}
-        quoteLoading={quoteLoading}
-        onNavigate={() => spotlight && navigate(`/anime/${spotlight.id}`)}
-      />
-
+      <Background />
+      <HeroSection spotlight={spotlight} spotlightIdx={spotlightIdx} spotlightQueue={spotlightQueue} onNavigate={() => spotlight && navigate(`/anime/${spotlight.id}`)} />
       <div className="home-container">
-        <Background />
-
         <StatsBar />
+        <ContinueWatching />
 
-        <GenreBar genres={categories} />
-
-        <ContinueWatchingRow />
-
-        {topTen.length > 0 && (
-          <TopTenRow animeList={topTen} />
-        )}
-
-        {trendingList.length > 0 && (
-          <section className="home-section">
-            <SectionHeader
-              icon={TrendingUp}
-              title="Trending Now"
-              subtitle="Most watched anime this week"
-              action={refreshTrending}
-            />
-            <Slider sliderData={trendingList} noHeader />
-          </section>
-        )}
-
-        {seasonPicks.length > 0 && (
-          <SeasonGrid animeList={seasonPicks} />
-        )}
-
-        {upcomingList.length > 0 && (
-          <UpcomingSection animeList={upcomingList} />
-        )}
-
-        {popularList.length > 0 && (
-          <section className="home-section">
-            <SectionHeader
-              icon={Flame}
-              title="Most Popular"
-              subtitle="All-time fan favorites everyone's watching"
-              action={() => navigate("/browse/anime")}
-            />
-            <Slider sliderData={popularList} noHeader />
-          </section>
-        )}
-
-        <div className="section-divider">
-          <span>Community</span>
-        </div>
-
-        <section className="home-section" id="live-rooms">
-          <LiveRooms />
-        </section>
-
-        {categories.length > 0 && (
-          <Categories categories={categories} />
-        )}
-
-        <div className="section-divider" style={{ marginTop: 0 }}>
-          <span>Join the movement</span>
-        </div>
-
-        <motion.div
-          className="home-cta-banner"
-          initial={{ opacity: 0, y: 30, scale: 0.97 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ type: "spring", stiffness: 200, damping: 24 }}
-        >
-          <div className="home-cta-glow" />
-          <div className="home-cta-content">
-            <Users size={24} />
-            <div>
-              <strong>Join the Community</strong>
-              <span>Discuss episodes, share edits, vote in arena battles</span>
-            </div>
-            <button className="home-cta-btn" onClick={() => navigate("/watch-together")}>
-              Explore <ChevronRight size={14} />
-            </button>
+        <div className="home-layout">
+          <div className="home-main">
+            <PosterRow title="Trending Now" icon={TrendingUp} list={trending} />
+            <PosterRow title="Top Airing" icon={Flame} list={topAiring} />
+            <PosterRow title="Recently Added" icon={Film} list={recent} />
           </div>
-        </motion.div>
+          <TopViewedSidebar list={topViewed} />
+        </div>
+
+        <div className="home-footer-cta">
+          <Users size={20} />
+          <div>
+            <strong>Join the Community</strong>
+            <span>Discuss episodes, share edits, vote in arena battles</span>
+          </div>
+          <button className="cta-btn" onClick={() => navigate("/watch-together")}>Explore <ChevronRight size={14} /></button>
+        </div>
       </div>
     </AnimatedPage>
   );
