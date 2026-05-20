@@ -61,6 +61,7 @@ function mapAnime(a) {
     id: a.id,
     name: a.title?.english || a.title?.romaji || "",
     img: a.coverImage?.extraLarge || a.coverImage?.large || "",
+    bannerImage: a.bannerImage || "",
     rating: (a.averageScore || 0) / 10,
     votes: a.popularity || 0,
     year: a.seasonYear || 0,

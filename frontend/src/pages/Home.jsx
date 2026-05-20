@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Bookmark, ChevronRight, Clock, Eye, Film, Flame, Play, Plus, Sparkles, Star, TrendingUp, Zap, Users } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Bookmark, ChevronRight, Clock, Eye, Film, Flame, Info, Play, Plus, Star, TrendingUp, Zap, Users } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
-import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres } from "../services/anilistApi";
-import { addToWatchlist, removeFromWatchlist, loadWatchlist, isInWatchlist } from "../services/storage";
-import { getCurrentLevel, getStreak } from "../services/progression";
+import { fetchTopAnime, fetchSeasonalAnime } from "../services/anilistApi";
+import { addToWatchlist, removeFromWatchlist, loadWatchlist } from "../services/storage";
+import { getCurrentLevel } from "../services/progression";
 import "./Home.css";
 
 function useHomeData() {
@@ -60,41 +60,68 @@ function useHomeData() {
     return () => clearInterval(t);
   }, [spotlightQueue]);
 
-  return { spotlight, spotlightIdx, spotlightQueue, trending, topAiring, recent, topViewed, loading };
+  const goToSlide = (i) => {
+    setSpotlightIdx(i);
+    setSpotlight(spotlightQueue[i]);
+  };
+
+  return { spotlight, spotlightIdx, spotlightQueue, trending, topAiring, recent, topViewed, loading, goToSlide };
 }
 
 const rankMedal = ["🥇", "🥈", "🥉"];
 
-function HeroSection({ spotlight, spotlightIdx, spotlightQueue, onNavigate }) {
+function HeroSection({ spotlight, spotlightIdx, spotlightQueue, onNavigate, onDotClick }) {
   if (!spotlight) return null;
   return (
     <section className="home-hero">
       <div className="home-hero-bg">
-        <img src={spotlight.img} alt="" className="home-hero-img" />
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={spotlight.id}
+            src={spotlight.bannerImage || spotlight.img}
+            alt=""
+            className="home-hero-img"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+          />
+        </AnimatePresence>
         <div className="home-hero-gradient" />
       </div>
-      <motion.div className="home-hero-content" key={spotlight.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
-        <div className="hero-badge">Spotlight #{spotlightIdx + 1}</div>
-        <h1 className="hero-title">{spotlight.name}</h1>
-        <div className="hero-meta-pills">
-          <span className="pill pill-hd">HD</span>
-          <span className="pill pill-sub">Sub: {spotlight.episodes || "?"}</span>
-          <span className="pill pill-dub">Dub: {spotlight.episodes || "?"}</span>
-          {spotlight.genres?.slice(0, 3).map(g => <span key={g} className="pill pill-genre">{g}</span>)}
-        </div>
-        <p className="hero-synopsis">{spotlight.synopsis?.slice(0, 300)}</p>
-        <div className="hero-actions">
-          <button className="hero-btn-primary" onClick={onNavigate}>
-            <Play size={18} fill="currentColor" /> Watch Now
-          </button>
-          <button className="hero-btn-secondary" onClick={onNavigate}>
-            <Plus size={16} /> Details
-          </button>
-        </div>
-      </motion.div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          className="home-hero-content"
+          key={spotlight.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          <div className="hero-badge">
+            <Zap size={10} /> Spotlight #{spotlightIdx + 1}
+          </div>
+          <h1 className="hero-title">{spotlight.name}</h1>
+          <div className="hero-meta-pills">
+            <span className="pill pill-hd">HD</span>
+            {spotlight.episodes && <span className="pill pill-sub">Sub: {spotlight.episodes}</span>}
+            {spotlight.episodes && <span className="pill pill-dub">Dub: {spotlight.episodes}</span>}
+            {spotlight.genres?.slice(0, 3).map(g => <span key={g} className="pill pill-genre">{g}</span>)}
+          </div>
+          <p className="hero-synopsis">{spotlight.synopsis?.replace(/<[^>]+>/g, "").slice(0, 280)}</p>
+          <div className="hero-actions">
+            <button className="hero-btn-primary" onClick={onNavigate}>
+              <Play size={16} fill="currentColor" /> Watch Now
+            </button>
+            <button className="hero-btn-secondary" onClick={onNavigate}>
+              <Info size={15} /> Details
+            </button>
+          </div>
+        </motion.div>
+      </AnimatePresence>
       <div className="hero-dots">
         {spotlightQueue.map((_, i) => (
-          <span key={i} className={`hero-dot ${i === spotlightIdx ? "active" : ""}`} />
+          <span key={i} className={`hero-dot ${i === spotlightIdx ? "active" : ""}`} onClick={() => onDotClick?.(i)} />
         ))}
       </div>
     </section>
@@ -125,6 +152,7 @@ function ContinueWatching() {
             <div key={i} className="cw-card" onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode || 1}`)}>
               <div className="cw-thumb">
                 <img src={item.img || ""} alt="" />
+                <div className="cw-play-icon"><Play size={14} fill="currentColor" /></div>
                 <div className="cw-progress-bar" style={{ width: `${progress}%` }} />
               </div>
               <div className="cw-info">
@@ -238,7 +266,7 @@ function StatsBar() {
 
 export default function Home() {
   const navigate = useNavigate();
-  const { spotlight, spotlightIdx, spotlightQueue, trending, topAiring, recent, topViewed, loading } = useHomeData();
+  const { spotlight, spotlightIdx, spotlightQueue, trending, topAiring, recent, topViewed, loading, goToSlide } = useHomeData();
 
   if (loading) {
     return (
@@ -254,7 +282,7 @@ export default function Home() {
   return (
     <AnimatedPage>
       <Background />
-      <HeroSection spotlight={spotlight} spotlightIdx={spotlightIdx} spotlightQueue={spotlightQueue} onNavigate={() => spotlight && navigate(`/anime/${spotlight.id}`)} />
+      <HeroSection spotlight={spotlight} spotlightIdx={spotlightIdx} spotlightQueue={spotlightQueue} onNavigate={() => spotlight && navigate(`/anime/${spotlight.id}`)} onDotClick={goToSlide} />
       <div className="home-container">
         <StatsBar />
         <ContinueWatching />
