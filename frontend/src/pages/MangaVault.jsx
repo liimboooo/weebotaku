@@ -6,7 +6,7 @@ import { Search, X, Star, BookOpen, Eye, Bookmark, Sparkles, Zap, Library, List,
 import AnimatedPage from "../components/AnimatedPage";
 import Loader from "../components/Loader";
 import Background from "../components/Background";
-import { fetchTopManga, fetchSearchManga } from "../services/jikanApi";
+import { fetchTopManga, fetchSearchManga } from "../services/anilistApi";
 import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
 import { addNotification } from "../services/notificationService";
 import { searchManga as mdSearch, getMangaChapters, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages, searchBato, getBatoChapters, getBatoPages } from "../services/mangaApi";

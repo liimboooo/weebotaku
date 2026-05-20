@@ -686,7 +686,7 @@ const en = {
   "footer.report": "Report",
   "footer.copyright": "AnimeWch. Not affiliated with any studios.",
   "footer.react": "React",
-  "footer.jikan": "Jikan API",
+  "footer.anilist": "AniList",
   "toast.default": "Notification",
   "toast.xp": "+{amount} XP",
   "error.somethingWentWrong": "Something went wrong",

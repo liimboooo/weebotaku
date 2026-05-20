@@ -24,7 +24,7 @@ import {
 import AnimatedPage from "../components/AnimatedPage";
 import Loader from "../components/Loader";
 import Background from "../components/Background";
-import { fetchTopAnime, fetchSearchAnime, fetchAnimeGenres } from "../services/jikanApi";
+import { fetchTopAnime, fetchSearchAnime, fetchAnimeGenres } from "../services/anilistApi";
 import { loadWatchlist, addToWatchlist, removeFromWatchlist } from "../services/storage";
 import { addNotification } from "../services/notificationService";
 import { findStreamingSource } from "../services/animeApi";

@@ -1,4 +1,4 @@
-const ALLOWED = ["witanime.one", "witanime.you", "witanime.cool", "anineko.to", "ristoanime.co", "w1.anime4up.rest", "animeslayer.to", "kuudere.to"];
+const ALLOWED = ["reanime.to", "flixcloud.cc", "animeslayer.to", "kuudere.to"];
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
 

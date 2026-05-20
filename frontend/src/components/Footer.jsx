@@ -48,7 +48,7 @@ export default function Footer() {
           <p className="footer-copy">&copy; {new Date().getFullYear()} AnimeWch. Not affiliated with any studios.</p>
           <div className="footer-badges">
             <span className="footer-badge">React</span>
-            <span className="footer-badge">Jikan API</span>
+            <span className="footer-badge">AniList</span>
           </div>
         </div>
       </div>

@@ -17,7 +17,7 @@ import LiveRooms from "../../components/LiveRooms";
 import * as roomService from "../../services/roomService";
 import authService from "../../services/authService";
 import { addNotification } from "../../services/notificationService";
-import { fetchTopAnime } from "../../services/jikanApi";
+import { fetchTopAnime } from "../../services/anilistApi";
 import "./WatchTogetherCreative.css";
 
 function getEmbedSource(urlString) {

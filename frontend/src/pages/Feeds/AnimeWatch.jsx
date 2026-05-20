@@ -17,7 +17,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [iframeError, setIframeError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
-  const [effectiveSource, setEffectiveSource] = useState(anime.source);
   const [autoNext, setAutoNext] = useState(false);
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
@@ -26,42 +25,20 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   useEffect(() => {
     (async () => {
       setLoading(true); setError("");
-      const priority = ["animeslayer", "ristoanime", "anime4up", "witanime"];
-      const sourceMap = {};
-      for (const s of [anime, ...(anime.allSources || [])]) sourceMap[`${s.source}:${s.slug || s.id}`] = s;
-      const ordered = [];
-      for (const name of priority) {
-        const match = Object.values(sourceMap).find(s => s.source === name);
-        if (match) { ordered.push(match); delete sourceMap[`${match.source}:${match.slug || match.id}`]; }
-      }
-      ordered.push(...Object.values(sourceMap));
-      const tried = new Set();
-      for (const src of ordered) {
-        const key = `${src.source}:${src.slug || src.id}`;
-        if (tried.has(key)) continue;
-        tried.add(key);
-        try {
-          const eps = await getEpisodes(src.title || src.slug, src.tagSlug, src.source, src.sourceBase, src.anilistId, src.episodeCount, src.link);
-          if (eps.length > 0) {
-            setEpisodes(eps);
-            setEpIndex(Math.min(Math.max(0, startEp - 1), eps.length - 1));
-            setEffectiveSource(src.source);
-            setLoading(false);
-            return;
-          }
-        } catch {}
-      }
-      if (anime.anilistId) {
-        try {
-          const eps = await getEpisodes(anime.title, null, "embed", "", anime.anilistId, anime.episodeCount);
-          if (eps.length > 0) { setEpisodes(eps); setEpIndex(Math.min(Math.max(0, startEp - 1), eps.length - 1)); setEffectiveSource("embed"); setLoading(false); return; }
-        } catch {}
-      }
+      try {
+        const eps = await getEpisodes(anime.title || anime.slug, anime.tagSlug, anime.source, anime.sourceBase, anime.anilistId);
+        if (eps.length > 0) {
+          setEpisodes(eps);
+          setEpIndex(Math.min(Math.max(0, startEp - 1), eps.length - 1));
+          setLoading(false);
+          return;
+        }
+      } catch {}
       setError("No streaming links available.");
       setLoading(false);
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [anime.title, anime.slug, startEp, retryCount]);
+  }, [anime.title, anime.slug, retryCount]);
 
   const episode = episodes[epIndex];
 
@@ -70,7 +47,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     (async () => {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
-        const urls = await getStreamUrls(episode.url, effectiveSource);
+        const urls = await getStreamUrls(episode.url, anime.source, anime.anilistId);
         if (urls.length > 0) { setServers(urls); setStreamUrl(urls[0].url); }
         else setError("No video servers found.");
       } catch { setError("Failed to load stream."); }
@@ -139,7 +116,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
             {episode && (
               <span className="watch-topbar-ep">Episode {episode.episode}</span>
             )}
-            <span className="watch-source-badge">{effectiveSource === "embed" ? "ENG SUB" : effectiveSource}</span>
+            <span className="watch-source-badge">{anime.source}</span>
           </div>
           <div className="watch-topbar-right">
             <button className="watch-topbar-btn" onClick={() => setAutoNext(!autoNext)} title="Auto-next episode">
@@ -169,7 +146,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                       if (episodes.length === 0) setRetryCount(c => c + 1);
                       else setStreamRetryCount(c => c + 1);
                     }}>Retry</button>
-
                   </div>
                 </div>
               )}

@@ -9,7 +9,7 @@ import AnimatedPage from "../components/AnimatedPage";
 import Skeleton from "../components/Skeleton";
 import Loader from "../components/Loader";
 import Background from "../components/Background";
-import { fetchSearchAnime, fetchTopAnime, fetchAnimeGenres } from "../services/jikanApi";
+import { fetchSearchAnime, fetchTopAnime, fetchAnimeGenres } from "../services/anilistApi";
 import { addToWatchlist, removeFromWatchlist, loadWatchlist } from "../services/storage";
 import "./SearchPage.css";
 

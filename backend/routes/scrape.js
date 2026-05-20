@@ -477,31 +477,4 @@ router.get('/anipub-proxy', safeHandler(async (req, res) => {
   }
 }));
 
-router.get('/jikan-proxy', safeHandler(async (req, res) => {
-  const { path } = req.query;
-  if (!path) return res.status(400).json({ success: false, message: 'Missing path' });
-  try {
-    const url = `https://api.jikan.moe/v4${path}`;
-    const response = await nodeFetch(url, {
-      timeout: 20000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-        'Accept': 'application/json',
-      },
-    });
-    if (response.status === 429) {
-      return res.status(429).json({ success: false, data: null, error: 'Jikan rate limited' });
-    }
-    const text = await response.text();
-    if (text && response.ok) {
-      let parsed;
-      try { parsed = JSON.parse(text); } catch { parsed = text; }
-      return res.json({ success: true, data: parsed });
-    }
-    res.status(502).json({ success: false, data: null, error: `jikan returned ${response.status}` });
-  } catch (e) {
-    res.status(502).json({ success: false, data: null, error: e?.message });
-  }
-}));
-
 module.exports = router;

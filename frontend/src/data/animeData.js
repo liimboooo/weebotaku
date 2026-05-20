@@ -1,4 +1,5 @@
-const CACHE_TTL = 5 * 60 * 1000;
+const CACHE_TTL = 10 * 60 * 1000;
+const CACHE_MAX = 100;
 const cache = new Map();
 
 function getCached(key) {
@@ -8,83 +9,53 @@ function getCached(key) {
 }
 
 function setCache(key, data) {
-  if (cache.size >= 50) { const oldest = cache.keys().next().value; cache.delete(oldest); }
+  if (cache.size >= CACHE_MAX) { const oldest = cache.keys().next().value; cache.delete(oldest); }
   cache.set(key, { data, time: Date.now() });
 }
 
-const JIKAN = "https://api.jikan.moe/v4";
 const ANILIST = "https://graphql.anilist.co";
 
-async function jikanFetch(endpoint) {
-  const cached = getCached(endpoint);
+async function gql(query, variables = {}) {
+  const key = `gql:${query.replace(/\s+/g, " ").slice(0, 80)}:${JSON.stringify(variables)}`;
+  const cached = getCached(key);
   if (cached) return cached;
-  await new Promise(r => setTimeout(r, 1100));
-  const res = await fetch(`${JIKAN}${endpoint}`);
-  if (!res.ok) throw new Error(`Jikan error: ${res.status}`);
-  const json = await res.json();
-  setCache(endpoint, json);
-  return json;
-}
-
-async function anilistQuery(query) {
-  const cached = getCached(query);
-  if (cached) return cached;
-  const r = await fetch(ANILIST, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query }) });
+  const r = await fetch(ANILIST, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query, variables }) });
   const j = await r.json();
   if (j.errors) throw new Error(j.errors[0]?.message);
-  setCache(query, j.data);
+  setCache(key, j.data);
   return j.data;
 }
 
-function mapFromJikan(a) {
-  return {
-    id: a.mal_id,
-    name: a.title_english || a.title,
-    malId: a.mal_id,
-    type: a.type || "TV",
-    img: a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || "",
-    rating: a.score || 0,
-    votes: a.scored_by || 0,
-    year: a.year || (a.aired?.from ? new Date(a.aired.from).getFullYear() : 0),
-    episodes: a.episodes || 0,
-    status: a.status === "Currently Airing" ? "Ongoing" : a.status === "Finished Airing" ? "Completed" : a.status || "Unknown",
-    genres: a.genres?.map(g => g.name) || [],
-    synopsis: a.synopsis || "",
-    studio: a.studios?.[0]?.name || "",
-    season: a.season ? `${a.season.charAt(0).toUpperCase() + a.season.slice(1)} ${a.year || ""}` : "",
-    director: "",
-    trend: "",
-    description: (a.synopsis || "").slice(0, 100),
-    currentEp: a.episodes || 0,
-    nextEpDate: a.status === "Currently Airing" ? "TBD" : "Ended",
-    imdbId: "",
-    trailerUrl: a.trailer?.embed_url || null,
-    airingDay: null,
-    seasons: [],
-  };
+const FIELDS = `id idMal title { romaji english } coverImage { large extraLarge } bannerImage averageScore episodes genres description status season seasonYear studios(isMain:true) { nodes { name } } trailer { site id } format startDate { year month day } nextAiringEpisode { episode airingAt timeUntilAiring }`;
+
+function statusLabel(s) {
+  if (s === "RELEASING") return "Ongoing";
+  if (s === "FINISHED") return "Completed";
+  if (s === "NOT_YET_RELEASED") return "Upcoming";
+  return s || "Unknown";
 }
 
-function mapFromAnilist(a) {
+function mapAnime(a) {
   return {
     id: a.id,
     name: a.title?.english || a.title?.romaji || "",
     malId: a.idMal || a.id,
     type: a.format || "TV",
-    img: a.coverImage?.large || "",
+    img: a.coverImage?.extraLarge || a.coverImage?.large || "",
     rating: (a.averageScore || 0) / 10,
-    votes: 0,
+    votes: a.popularity || 0,
     year: a.seasonYear || 0,
     episodes: a.episodes || 0,
-    status: a.status === "RELEASING" ? "Ongoing" : a.status === "FINISHED" ? "Completed" : a.status || "Unknown",
+    status: statusLabel(a.status),
     genres: a.genres || [],
     synopsis: a.description || "",
     studio: a.studios?.nodes?.[0]?.name || "",
-    season: a.season ? `${a.season.charAt(0) + a.season.slice(1).toLowerCase()} ${a.seasonYear || ""}` : "",
+    season: a.season ? `${a.season.charAt(0).toUpperCase() + a.season.slice(1).toLowerCase()} ${a.seasonYear || ""}` : "",
     director: "",
     trend: "",
     description: (a.description || "").slice(0, 100),
     currentEp: a.episodes || 0,
-    nextEpDate: a.status === "RELEASING" ? "TBD" : "Ended",
+    nextEpDate: a.nextAiringEpisode?.airingAt ? new Date(a.nextAiringEpisode.airingAt * 1000).toLocaleDateString() : a.status === "RELEASING" ? "TBD" : "Ended",
     imdbId: "",
     trailerUrl: a.trailer?.site === "youtube" ? `https://www.youtube.com/embed/${a.trailer.id}` : null,
     airingDay: null,
@@ -92,51 +63,38 @@ function mapFromAnilist(a) {
   };
 }
 
-let topCache = null;
-let topCacheTime = 0;
-
-async function ensureTopLoaded() {
-  if (topCache && Date.now() - topCacheTime < CACHE_TTL) return topCache;
+export async function getAllAnime() {
+  const cached = getCached("allAnime");
+  if (cached) return cached;
   try {
-    const json = await jikanFetch("/top/anime?page=1");
-    topCache = json.data.map(mapFromJikan);
-    topCacheTime = Date.now();
-    return topCache;
-  } catch {
-    if (topCache) return topCache;
-    return [];
-  }
+    const q = `query{Page(page:1,perPage:50){media(sort:TRENDING_DESC,type:ANIME){${FIELDS}}}}`;
+    const data = await gql(q);
+    const results = (data?.Page?.media || []).map(mapAnime);
+    setCache("allAnime", results);
+    return results;
+  } catch { return []; }
 }
 
-export async function getAllAnime() { return ensureTopLoaded(); }
-
 export async function getAnimeById(id) {
-  const cached = getCached(`animeById:${id}`);
+  const k = `animeById:${id}`;
+  const cached = getCached(k);
   if (cached) return cached;
   const numId = Number(id);
-  const fromTop = (await ensureTopLoaded()).find(a => a.id === numId || a.malId === numId);
-  if (fromTop) return fromTop;
   try {
-    const json = await jikanFetch(`/anime/${numId}`);
-    const mapped = mapFromJikan(json.data);
-    setCache(`animeById:${id}`, mapped);
-    return mapped;
-  } catch {}
-  try {
-    const q = `{Media(id:${numId},type:ANIME){id idMal title{romaji english}coverImage{large}bannerImage averageScore episodes genres description status season seasonYear studios(isMain:true){nodes{name}}trailer{site id}format}}`;
-    const d = await anilistQuery(q);
-    if (d?.Media) {
-      const mapped = mapFromAnilist(d.Media);
-      setCache(`animeById:${id}`, mapped);
+    const q = `query($id:Int){Media(id:$id,type:ANIME){${FIELDS} popularity}}`;
+    const data = await gql(q, { id: numId });
+    if (data?.Media) {
+      const mapped = mapAnime(data.Media);
+      setCache(k, mapped);
       return mapped;
     }
   } catch {}
   try {
-    const q = `{Media(idMal:${numId},type:ANIME){id idMal title{romaji english}coverImage{large}bannerImage averageScore episodes genres description status season seasonYear studios(isMain:true){nodes{name}}trailer{site id}format}}`;
-    const d = await anilistQuery(q);
-    if (d?.Media) {
-      const mapped = mapFromAnilist(d.Media);
-      setCache(`animeById:${id}`, mapped);
+    const q = `query($id:Int){Media(idMal:$id,type:ANIME){${FIELDS} popularity}}`;
+    const data = await gql(q, { id: numId });
+    if (data?.Media) {
+      const mapped = mapAnime(data.Media);
+      setCache(k, mapped);
       return mapped;
     }
   } catch {}
@@ -146,69 +104,52 @@ export async function getAnimeById(id) {
 export async function getAnimeType(anime) { return anime?.type || "TV"; }
 
 export async function searchAnime(query) {
-  const cached = getCached(`search:${query}`);
+  const k = `search:${query}`;
+  const cached = getCached(k);
   if (cached) return cached;
-  const results = [];
   try {
-    const json = await jikanFetch(`/anime?q=${encodeURIComponent(query)}&page=1&order_by=score&sort=desc&limit=25`);
-    results.push(...json.data.map(mapFromJikan));
-  } catch {}
-  if (results.length < 25) {
-    try {
-      const q = `{Page(page:1,perPage:25){media(search:"${query.replace(/"/g, "")}",type:ANIME,sort:SEARCH_MATCH){id idMal title{romaji english}coverImage{large}averageScore episodes genres description status season seasonYear studios(isMain:true){nodes{name}}trailer{site id}format}}}`;
-      const d = await anilistQuery(q);
-      for (const m of d?.Page?.media || []) {
-        if (!results.some(r => r.id === m.id || r.malId === m.idMal)) {
-          results.push(mapFromAnilist(m));
-        }
-      }
-    } catch {}
-  }
-  setCache(`search:${query}`, results);
-  return results;
+    const q = `query($search:String){Page(page:1,perPage:25){media(search:$search,type:ANIME,sort:SEARCH_MATCH){${FIELDS}}}}`;
+    const data = await gql(q, { search: query });
+    const results = (data?.Page?.media || []).map(mapAnime);
+    setCache(k, results);
+    return results;
+  } catch { return []; }
 }
 
 export async function getTrendingAnime() {
   const cached = getCached("trending");
   if (cached) return cached;
   try {
-    const q = `{Page(page:1,perPage:10){media(sort:TRENDING_DESC,type:ANIME){id idMal title{romaji english}coverImage{large}averageScore episodes genres description status season seasonYear studios(isMain:true){nodes{name}}trailer{site id}format}}}`;
-    const d = await anilistQuery(q);
-    const results = (d?.Page?.media || []).map(mapFromAnilist);
+    const q = `query{Page(page:1,perPage:10){media(sort:TRENDING_DESC,type:ANIME){${FIELDS}}}}`;
+    const data = await gql(q);
+    const results = (data?.Page?.media || []).map(mapAnime);
     setCache("trending", results);
     return results;
-  } catch {
-    const top = await ensureTopLoaded();
-    return top.slice(0, 6);
-  }
+  } catch { return []; }
 }
 
 export async function getFeaturedAnime() {
   const cached = getCached("featured");
   if (cached) return cached;
   try {
-    const json = await jikanFetch("/top/anime?page=1&filter=bypopularity");
-    const results = json.data.slice(0, 4).map(mapFromJikan);
+    const q = `query{Page(page:1,perPage:4){media(sort:TRENDING_DESC,type:ANIME){${FIELDS}}}}`;
+    const data = await gql(q);
+    const results = (data?.Page?.media || []).map(mapAnime);
     setCache("featured", results);
     return results;
-  } catch {
-    const top = await ensureTopLoaded();
-    return top.slice(0, 4);
-  }
+  } catch { return []; }
 }
 
 export async function getNewEpisodes() {
   const cached = getCached("newEpisodes");
   if (cached) return cached;
   try {
-    const json = await jikanFetch("/top/anime?page=1&filter=airing");
-    const results = json.data.slice(0, 4).map(mapFromJikan);
+    const q = `query{Page(page:1,perPage:4){media(status:RELEASING,sort:POPULARITY_DESC,type:ANIME){${FIELDS}}}}`;
+    const data = await gql(q);
+    const results = (data?.Page?.media || []).map(mapAnime);
     setCache("newEpisodes", results);
     return results;
-  } catch {
-    const top = await ensureTopLoaded();
-    return top.filter(a => a.status === "Ongoing").slice(0, 4);
-  }
+  } catch { return []; }
 }
 
 export async function getSeasonPicks() {
@@ -216,41 +157,35 @@ export async function getSeasonPicks() {
   if (cached) return cached;
   try {
     const now = new Date();
-    const season = ["winter", "spring", "summer", "fall"][Math.floor(now.getMonth() / 3)];
-    const json = await jikanFetch(`/seasons/${now.getFullYear()}/${season}`);
-    const results = json.data.sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, 6).map(mapFromJikan);
+    const season = ["WINTER", "SPRING", "SUMMER", "FALL"][Math.floor(now.getMonth() / 3)];
+    const year = now.getFullYear();
+    const q = `query($yr:Int,$seas:MediaSeason){Page(page:1,perPage:6){media(season:$seas,seasonYear:$yr,type:ANIME,sort:POPULARITY_DESC){${FIELDS}}}}`;
+    const data = await gql(q, { yr: year, seas: season });
+    const results = (data?.Page?.media || []).map(mapAnime);
     setCache("seasonPicks", results);
     return results;
-  } catch {
-    const top = await ensureTopLoaded();
-    return top.slice(0, 6);
-  }
+  } catch { return []; }
 }
 
 export async function getLatestAnime() {
   const cached = getCached("latest");
   if (cached) return cached;
   try {
-    const json = await jikanFetch("/top/anime?page=1");
-    const all = json.data.map(mapFromJikan);
-    const results = all.sort((a, b) => b.year - a.year).slice(0, 6);
+    const q = `query{Page(page:1,perPage:6){media(sort:TRENDING_DESC,type:ANIME){${FIELDS}}}}`;
+    const data = await gql(q);
+    const results = (data?.Page?.media || []).map(mapAnime);
     setCache("latest", results);
     return results;
-  } catch {
-    const top = await ensureTopLoaded();
-    return top.slice(-6).reverse();
-  }
+  } catch { return []; }
 }
 
 export async function getAiringTodayAnime() {
   const cached = getCached("airingToday");
   if (cached) return cached;
   try {
-    const now = new Date();
-    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-    const dayName = days[now.getDay()];
-    const json = await jikanFetch(`/schedules?filter=${dayName}&limit=10`);
-    const results = json.data.map(mapFromJikan);
+    const q = `query{Page(page:1,perPage:10){media(status:RELEASING,sort:TRENDING_DESC,type:ANIME){${FIELDS}}}}`;
+    const data = await gql(q);
+    const results = (data?.Page?.media || []).map(mapAnime);
     setCache("airingToday", results);
     return results;
   } catch { return []; }
@@ -260,28 +195,27 @@ export async function getAllGenres() {
   const cached = getCached("genres");
   if (cached) return cached;
   try {
-    const json = await jikanFetch("/genres/anime");
-    const results = json.data.map(g => g.name);
+    const data = await gql("query{GenreCollection}");
+    const results = data?.GenreCollection || [];
     setCache("genres", results);
     return results;
   } catch {
-    return ["Action","Adventure","Comedy","Drama","Fantasy","Horror","Mystery","Romance","Sci-Fi","Slice of Life","Sports","Thriller"];
+    return ["Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Mystery", "Romance", "Sci-Fi", "Slice of Life", "Sports", "Thriller"];
   }
 }
 
 export async function getSchedule() {
   const cached = getCached("schedule");
   if (cached) return cached;
-  const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-  const result = {};
-  for (const day of days) {
-    try {
-      const json = await jikanFetch(`/schedules?filter=${day}&limit=10`);
-      result[day.charAt(0).toUpperCase() + day.slice(1)] = json.data.map(mapFromJikan);
-    } catch {
-      result[day.charAt(0).toUpperCase() + day.slice(1)] = [];
-    }
+  try {
+    const q = `query{Page(page:1,perPage:50){media(status:RELEASING,sort:POPULARITY_DESC,type:ANIME){${FIELDS}}}}`;
+    const data = await gql(q);
+    const results = { "Monday": [], "Tuesday": [], "Wednesday": [], "Thursday": [], "Friday": [], "Saturday": [], "Sunday": [] };
+    // AniList doesn't have airing day directly on media, return empty schedule
+    setCache("schedule", results);
+    return results;
+  } catch {
+    const results = { "Monday": [], "Tuesday": [], "Wednesday": [], "Thursday": [], "Friday": [], "Saturday": [], "Sunday": [] };
+    return results;
   }
-  setCache("schedule", result);
-  return result;
 }

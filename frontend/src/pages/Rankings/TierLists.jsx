@@ -24,10 +24,20 @@ function buildEmptyTiers() {
   return { s: [], a: [], b: [], c: [], d: [], unranked: [] };
 }
 
-const JIKA_ANIME = 'https://api.jikan.moe/v4/anime?q={q}&limit=20&sfw=true';
-const JIKA_MANGA = 'https://api.jikan.moe/v4/manga?q={q}&limit=20&sfw=true';
-const TOP_ANIME = 'https://api.jikan.moe/v4/top/anime?limit=10&sfw=true';
-const TOP_MANGA = 'https://api.jikan.moe/v4/top/manga?limit=10&sfw=true';
+const ANILIST = "https://graphql.anilist.co";
+const AL_FIELDS = `id title { romaji english } coverImage { large } genres`;
+async function anilistSearch(type, q) {
+  const query = `query($s:String){Page(page:1,perPage:20){media(search:$s,type:${type},sort:SEARCH_MATCH){${AL_FIELDS}}}}`;
+  const r = await fetch(ANILIST, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query, variables: { s: q } }) });
+  const j = await r.json();
+  return (j?.data?.Page?.media || []).map(a => ({ id: `a-${a.id}`, name: a.title?.english || a.title?.romaji || "", image: a.coverImage?.large || null, type: type === "ANIME" ? "anime" : "manga", genres: a.genres || [], malId: a.id }));
+}
+async function anilistTop(type) {
+  const query = `query{Page(page:1,perPage:10){media(sort:TRENDING_DESC,type:${type}){${AL_FIELDS}}}}`;
+  const r = await fetch(ANILIST, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query }) });
+  const j = await r.json();
+  return (j?.data?.Page?.media || []).map(a => ({ id: `a-${a.id}`, name: a.title?.english || a.title?.romaji || "", image: a.coverImage?.large || null, type: type === "ANIME" ? "anime" : "manga", genres: a.genres || [], malId: a.id }));
+}
 
 export default function TierLists() {
   const navigate = useNavigate();
@@ -141,17 +151,8 @@ export default function TierLists() {
     debounceRef.current = setTimeout(async () => {
       setSearchLoading(true);
       try {
-        const url = (searchType === 'manga' ? JIKA_MANGA : JIKA_ANIME).replace('{q}', encodeURIComponent(searchQuery));
-        const res = await fetch(url);
-        const json = await res.json();
-        const items = (json.data || []).map((d) => ({
-          id: `j-${d.mal_id}`,
-          name: d.title,
-          image: d.images?.jpg?.image_url || null,
-          type: searchType,
-          genres: (d.genres || []).map(g => g.name),
-          malId: d.mal_id,
-        }));
+        const type = searchType === 'manga' ? 'MANGA' : 'ANIME';
+        const items = await anilistSearch(type, searchQuery);
         setSearchResults(items);
         setSearchIndex(-1);
       } catch { setSearchResults([]); }
@@ -165,17 +166,8 @@ export default function TierLists() {
     if (searchQuery.trim()) return;
     (async () => {
       try {
-        const url = searchType === 'manga' ? TOP_MANGA : TOP_ANIME;
-        const res = await fetch(url);
-        const json = await res.json();
-        const items = (json.data || []).map((d) => ({
-          id: `j-${d.mal_id}`,
-          name: d.title,
-          image: d.images?.jpg?.image_url || null,
-          type: searchType,
-          genres: (d.genres || []).map(g => g.name),
-          malId: d.mal_id,
-        }));
+        const type = searchType === 'manga' ? 'MANGA' : 'ANIME';
+        const items = await anilistTop(type);
         setSearchResults(items);
       } catch {}
     })();
@@ -235,16 +227,8 @@ export default function TierLists() {
   async function handleLoadTop() {
     setSearchLoading(true);
     try {
-      const url = searchType === 'manga' ? TOP_MANGA : TOP_ANIME;
-      const res = await fetch(url);
-      const json = await res.json();
-      const items = (json.data || []).map((d) => ({
-        id: `j-${d.mal_id}`,
-        name: d.title,
-        image: d.images?.jpg?.image_url || null,
-        type: searchType,
-        malId: d.mal_id,
-      }));
+      const type = searchType === 'manga' ? 'MANGA' : 'ANIME';
+      const items = await anilistTop(type);
       setSearchResults(items);
       setSearchQuery('');
       setSearchIndex(-1);
@@ -265,16 +249,8 @@ export default function TierLists() {
         searchRef.current?.blur();
         (async () => {
           try {
-            const url = searchType === 'manga' ? TOP_MANGA : TOP_ANIME;
-            const res = await fetch(url);
-            const json = await res.json();
-            const items = (json.data || []).map((d) => ({
-              id: `j-${d.mal_id}`,
-              name: d.title,
-              image: d.images?.jpg?.image_url || null,
-              type: searchType,
-              malId: d.mal_id,
-            }));
+            const type = searchType === 'manga' ? 'MANGA' : 'ANIME';
+            const items = await anilistTop(type);
             setSearchResults(items);
           } catch {}
         })();
@@ -469,16 +445,8 @@ export default function TierLists() {
                     setSearchIndex(-1);
                     (async () => {
                       try {
-                        const url = searchType === 'manga' ? TOP_MANGA : TOP_ANIME;
-                        const res = await fetch(url);
-                        const json = await res.json();
-                        const items = (json.data || []).map((d) => ({
-                          id: `j-${d.mal_id}`,
-                          name: d.title,
-                          image: d.images?.jpg?.image_url || null,
-                          type: searchType,
-                          malId: d.mal_id,
-                        }));
+                        const type = searchType === 'manga' ? 'MANGA' : 'ANIME';
+                        const items = await anilistTop(type);
                         setSearchResults(items);
                       } catch {}
                     })();

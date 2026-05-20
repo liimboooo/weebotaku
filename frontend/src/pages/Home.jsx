@@ -29,7 +29,7 @@ import Slider from "../components/Slider";
 import LiveRooms from "../components/LiveRooms";
 import Categories from "../components/Categories";
 import Background from "../components/Background";
-import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/jikanApi";
+import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
 import {
   addToWatchlist,

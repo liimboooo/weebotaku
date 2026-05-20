@@ -19,7 +19,7 @@ import {
 import AnimatedPage from "../../components/AnimatedPage";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import { formatCount, timeAgo, notify } from "../../utils/helpers";
-import { fetchTopAnime } from "../../services/jikanApi";
+import { fetchTopAnime } from "../../services/anilistApi";
 
 import "./AMVsEdits.css";
 

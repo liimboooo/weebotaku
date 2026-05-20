@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Play, Bookmark, Heart, Share2, Bell, Star, Tv, Film, Users, MessageSquare, Calendar, X } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
-import { fetchAnimeCharacters, fetchAnimeRecommendations, fetchAiringSchedule } from "../services/jikanApi";
+import { fetchAnimeCharacters, fetchAnimeRecommendations, fetchAiringSchedule } from "../services/anilistApi";
 
 import { addToWatchlist, removeFromWatchlist, isInWatchlist, rateAnime as syncRateAnime, toggleLikeAnime, addToWatchHistory } from "../services/storage";
 import { addNotification } from "../services/notificationService";
