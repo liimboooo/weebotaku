@@ -151,12 +151,12 @@ function ContinueWatching() {
           return (
             <div key={i} className="cw-card" onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode || 1}`)}>
               <div className="cw-thumb">
-                <img src={item.img || ""} alt="" />
+                <img src={item.img || item.animeImg || ""} alt="" />
                 <div className="cw-play-icon"><Play size={14} fill="currentColor" /></div>
                 <div className="cw-progress-bar" style={{ width: `${progress}%` }} />
               </div>
               <div className="cw-info">
-                <h4>{item.name || "Unknown"}</h4>
+                <h4>{item.name || item.animeName || "Unknown"}</h4>
                 <span>Episode {item.episode || 1}</span>
               </div>
             </div>
