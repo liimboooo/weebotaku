@@ -56,6 +56,16 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episode, streamRetryCount]);
 
+  const [prefetchCache, setPrefetchCache] = useState({});
+  useEffect(() => {
+    const nextEp = episodes[epIndex + 1];
+    if (!nextEp || !anime.anilistId || prefetchCache[nextEp.url]) return;
+    const nextUrl = anime.anilistId ? `https://anime-proxy.mohamedlimam80000.workers.dev/?url=${encodeURIComponent(`https://reanime.to/api/flix/${anime.anilistId}/${nextEp.url}`)}` : null;
+    if (!nextUrl) return;
+    setPrefetchCache(p => ({ ...p, [nextEp.url]: true }));
+    fetch(nextUrl, { signal: AbortSignal.timeout(10000) }).catch(() => {});
+  }, [epIndex, episodes, anime.anilistId, prefetchCache]);
+
   useEffect(() => {
     if (scrollRef.current && episodes[epIndex]) {
       const el = scrollRef.current.querySelector(`[data-ep="${epIndex}"]`);

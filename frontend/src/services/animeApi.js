@@ -42,7 +42,10 @@ const PROXIES = [
   "https://api.allorigins.win/raw?url=",
 ];
 
+const ssCache = new Map();
 async function fetchJsonViaProxy(url) {
+  const cached = ssCache.get(url);
+  if (cached && Date.now() - cached.time < 300000) return cached.data;
   for (const proxy of PROXIES) {
     try {
       const res = await Promise.race([
@@ -53,10 +56,18 @@ async function fetchJsonViaProxy(url) {
       const text = await res.text();
       try {
         const parsed = JSON.parse(text);
+        let data;
         if (parsed && parsed.success && typeof parsed.data === "string") {
-          return JSON.parse(parsed.data);
+          data = JSON.parse(parsed.data);
+        } else {
+          data = parsed;
         }
-        return parsed;
+        ssCache.set(url, { data, time: Date.now() });
+        if (ssCache.size > 50) {
+          const oldest = ssCache.keys().next().value;
+          ssCache.delete(oldest);
+        }
+        return data;
       } catch {
         return null;
       }

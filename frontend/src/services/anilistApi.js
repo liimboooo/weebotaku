@@ -1,14 +1,25 @@
-/* eslint-disable no-unused-vars */
 const CACHE_TTL = 10 * 60 * 1000;
 const DETAIL_CACHE_TTL = 30 * 60 * 1000;
 const CACHE_MAX = 100;
 const cache = new Map();
+const LS_PREFIX = "al_";
 
 function getCached(key) {
-  const entry = cache.get(key);
-  if (!entry) return null;
-  if (Date.now() - entry.time > entry.ttl) { cache.delete(key); return null; }
-  return entry.data;
+  let entry = cache.get(key);
+  if (entry && Date.now() - entry.time <= entry.ttl) return entry.data;
+  if (entry) cache.delete(key);
+  const ls = localStorage.getItem(LS_PREFIX + key);
+  if (ls) {
+    try {
+      const parsed = JSON.parse(ls);
+      if (Date.now() - parsed.time <= parsed.ttl) {
+        cache.set(key, parsed);
+        return parsed.data;
+      }
+      localStorage.removeItem(LS_PREFIX + key);
+    } catch { localStorage.removeItem(LS_PREFIX + key); }
+  }
+  return null;
 }
 
 function setCache(key, data, ttl = CACHE_TTL) {
@@ -16,7 +27,11 @@ function setCache(key, data, ttl = CACHE_TTL) {
     const oldest = cache.keys().next().value;
     cache.delete(oldest);
   }
-  cache.set(key, { data, time: Date.now(), ttl });
+  const entry = { data, time: Date.now(), ttl };
+  cache.set(key, entry);
+  if (key.length < 100) {
+    try { localStorage.setItem(LS_PREFIX + key, JSON.stringify(entry)); } catch {}
+  }
 }
 
 const ANILIST = "https://graphql.anilist.co";
