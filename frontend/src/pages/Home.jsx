@@ -606,7 +606,7 @@ export default function Home() {
                 <div
                   key={anime.id}
                   className="upcoming-card"
-                  onClick={() => setSelectedAnime(anime)}
+                  onClick={() => { alert(`Clicked: ${anime.name}`); setSelectedAnime(anime); }}
                 >
                   <div className="upcoming-card-img">
                     <img src={anime.img} alt={anime.name} loading="lazy" />
@@ -670,7 +670,7 @@ export default function Home() {
         )}
 
         {selectedAnime && (
-          <div className="preview-panel" style={{ overflow: "hidden" }}>
+          <div className="preview-panel" style={{ overflow: "hidden", border: "2px solid red" }}>
             <div className="preview-panel-inner">
               <div className="preview-panel-left">
                 <button className="preview-panel-close" onClick={() => setSelectedAnime(null)}>X</button>
