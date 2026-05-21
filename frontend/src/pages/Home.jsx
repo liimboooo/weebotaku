@@ -28,7 +28,7 @@ import Skeleton from "../components/Skeleton";
 import LiveRooms from "../components/LiveRooms";
 import Categories from "../components/Categories";
 import Background from "../components/Background";
-import AnimePreviewPanel from "../components/AnimePreviewPanel";
+import "../components/AnimePreviewPanel.css";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
 import { loadWatchlist } from "../services/storage";
@@ -727,14 +727,50 @@ export default function Home() {
 
         <AnimatePresence>
           {selectedAnime && (
-            <AnimePreviewPanel
+            <motion.div
               key={selectedAnime.id}
-              anime={selectedAnime}
-              onClose={() => setSelectedAnime(null)}
-              onPlay={() => { const id = selectedAnime.id; setSelectedAnime(null); navigate(`/anime/${id}`); }}
-              onWatchlist={() => {}}
-              onLike={() => {}}
-            />
+              className="preview-panel"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 26 }}
+              style={{ overflow: "hidden" }}
+            >
+              <div className="preview-panel-inner">
+                <div className="preview-panel-left">
+                  <button className="preview-panel-close" onClick={() => setSelectedAnime(null)}>
+                    X
+                  </button>
+                  <h2 className="preview-panel-title">{selectedAnime.name || "Untitled"}</h2>
+                  <div className="preview-panel-stats">
+                    <span className="preview-panel-stat">{selectedAnime.year || "?"}</span>
+                    <span className="preview-panel-stat">{selectedAnime.rating?.toFixed(1) || "?"}</span>
+                    <span className="preview-panel-stat">{selectedAnime.episodes ? `${selectedAnime.episodes} EP` : "?"}</span>
+                  </div>
+                  <p className="preview-panel-synopsis">{selectedAnime.synopsis || "No synopsis."}</p>
+                  <div className="preview-panel-actions">
+                    <button className="preview-panel-btn primary" onClick={() => { setSelectedAnime(null); navigate(`/anime/${selectedAnime.id}`); }}>
+                      ▶ Watch Now
+                    </button>
+                    <button className="preview-panel-btn secondary" onClick={() => setSelectedAnime(null)}>
+                      Close
+                    </button>
+                  </div>
+                  <div className="preview-panel-details">
+                    <div className="preview-panel-detail-item">
+                      <span className="preview-panel-detail-label">Genres</span>
+                      <span className="preview-panel-detail-value">{selectedAnime.genres?.join(", ") || "N/A"}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="preview-panel-right">
+                  <div className="preview-panel-media">
+                    <img src={selectedAnime.bannerImage || selectedAnime.img} alt="" />
+                  </div>
+                  <div className="preview-panel-fade" />
+                </div>
+              </div>
+            </motion.div>
           )}
         </AnimatePresence>
 
