@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Bookmark,
   Calendar,
@@ -28,6 +28,7 @@ import Skeleton from "../components/Skeleton";
 import LiveRooms from "../components/LiveRooms";
 import Categories from "../components/Categories";
 import Background from "../components/Background";
+import AnimePreviewPanel from "../components/AnimePreviewPanel";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
 import { loadWatchlist } from "../services/storage";
@@ -200,7 +201,7 @@ function SpotlightQuote({ quote, onRefresh, loading }) {
   );
 }
 
-function ContinueWatchingRow() {
+function ContinueWatchingRow({ onCardClick }) {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
 
@@ -260,7 +261,7 @@ function ContinueWatchingRow() {
           <motion.div
             key={`${item.animeId}-${item.episode}`}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode}`)}
+            onClick={() => onCardClick?.({ ...item, id: item.animeId })}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -317,7 +318,7 @@ function SectionHeader({ icon: Icon, title, subtitle, action }) {
   );
 }
 
-function SeasonGrid({ animeList }) {
+function SeasonGrid({ animeList, onCardClick }) {
   const navigate = useNavigate();
 
   if (!animeList?.length) return null;
@@ -336,7 +337,7 @@ function SeasonGrid({ animeList }) {
           <motion.div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
+            onClick={() => onCardClick?.(anime)}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -360,8 +361,7 @@ function SeasonGrid({ animeList }) {
   );
 }
 
-function TopTenRow({ animeList }) {
-  const navigate = useNavigate();
+function TopTenRow({ animeList, onCardClick }) {
   if (!animeList?.length) return null;
   return (
     <section className="home-section">
@@ -377,7 +377,7 @@ function TopTenRow({ animeList }) {
           <motion.div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
+            onClick={() => onCardClick?.(anime)}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -426,7 +426,7 @@ function GenreBar({ genres }) {
   );
 }
 
-function UpcomingSection({ animeList }) {
+function UpcomingSection({ animeList, onCardClick }) {
   const navigate = useNavigate();
   if (!animeList?.length) return null;
   return (
@@ -443,7 +443,7 @@ function UpcomingSection({ animeList }) {
           <motion.div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
+            onClick={() => onCardClick?.(anime)}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -571,6 +571,11 @@ export default function Home() {
   const { spotlight, topTen, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending } = useAnimeData();
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const [selectedAnime, setSelectedAnime] = useState(null);
+
+  const handleCardClick = (anime) => {
+    setSelectedAnime(prev => prev?.id === anime.id ? null : anime);
+  };
 
   useEffect(() => {
     fetchRandomQuote().then(setQuote).catch(() => {});
@@ -620,10 +625,10 @@ export default function Home() {
 
         <GenreBar genres={categories} />
 
-        <ContinueWatchingRow />
+        <ContinueWatchingRow onCardClick={handleCardClick} />
 
         {topTen.length > 0 && (
-          <TopTenRow animeList={topTen} />
+          <TopTenRow animeList={topTen} onCardClick={handleCardClick} />
         )}
 
         {trendingList.length > 0 && (
@@ -645,7 +650,7 @@ export default function Home() {
                 <motion.div
                   key={anime.id}
                   className="upcoming-card"
-                  onClick={() => navigate(`/anime/${anime.id}`)}
+                  onClick={() => handleCardClick(anime)}
                   variants={cardSlideUp}
                   whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
                 >
@@ -669,11 +674,11 @@ export default function Home() {
         )}
 
         {seasonPicks.length > 0 && (
-          <SeasonGrid animeList={seasonPicks} />
+          <SeasonGrid animeList={seasonPicks} onCardClick={handleCardClick} />
         )}
 
         {upcomingList.length > 0 && (
-          <UpcomingSection animeList={upcomingList} />
+          <UpcomingSection animeList={upcomingList} onCardClick={handleCardClick} />
         )}
 
         {popularList.length > 0 && (
@@ -695,7 +700,7 @@ export default function Home() {
                 <motion.div
                   key={anime.id}
                   className="upcoming-card"
-                  onClick={() => navigate(`/anime/${anime.id}`)}
+                  onClick={() => handleCardClick(anime)}
                   variants={cardSlideUp}
                   whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
                 >
@@ -717,6 +722,18 @@ export default function Home() {
             </motion.div>
           </section>
         )}
+
+        <AnimatePresence>
+          {selectedAnime && (
+            <AnimePreviewPanel
+              anime={selectedAnime}
+              onClose={() => setSelectedAnime(null)}
+              onPlay={() => { setSelectedAnime(null); navigate(`/anime/${selectedAnime.id}`); }}
+              onWatchlist={() => {}}
+              onLike={() => {}}
+            />
+          )}
+        </AnimatePresence>
 
         <div className="section-divider">
           <span>Community</span>
