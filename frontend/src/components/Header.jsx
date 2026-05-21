@@ -30,6 +30,7 @@ import './Header.css';
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
+  const headerRef = useRef(null);
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
@@ -48,7 +49,7 @@ export default function Header() {
   const [statusMessage, setStatusMessage] = useState(() => localStorage.getItem('userStatusMessage') || '');
   const [isEditingStatus, setIsEditingStatus] = useState(false);
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifList, setNotifList] = useState(getNotifications());
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -111,7 +112,7 @@ export default function Header() {
       if (notifRef.current && !notifRef.current.contains(event.target)) setNotifOpen(false);
     };
     document.addEventListener('click', closeOnClickOutside);
-    const onScroll = () => setIsScrolled(window.scrollY > 8);
+    const onScroll = () => setScrollProgress(Math.min(1, window.scrollY / 120));
     window.addEventListener('scroll', onScroll, { passive: true });
     const onKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -183,7 +184,7 @@ export default function Header() {
   };
 
   return (
-    <header className={`header ${isScrolled ? 'scrolled' : ''}`}>
+    <header ref={headerRef} className="header" style={{ opacity: scrollProgress, backdropFilter: `blur(${scrollProgress * 24}px)`, WebkitBackdropFilter: `blur(${scrollProgress * 24}px)` }}>
       <div className="header-shell">
         <button className="mobile-toggle" onClick={() => setMobileOpen((value) => !value)} aria-label="Toggle navigation">
           {mobileOpen ? <X size={18} /> : <Menu size={18} />}
