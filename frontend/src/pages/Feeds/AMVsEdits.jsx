@@ -562,7 +562,7 @@ export default function AMVsEdits() {
                     <div className="edits-duration-badge">
                       <Clock size={10} /> {edit.duration}s
                     </div>
-                    {savedEdits.includes(edit.id) && <div className="edits-saved-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="#e50914" stroke="#e50914" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>}
+                    {savedEdits.includes(edit.id) && <div className="edits-saved-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="#6d28d9" stroke="#6d28d9" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>}
                     <div className="edits-poster-overlay">
                       <p className="edits-overlay-desc">{(edit.hashtags || []).slice(0, 3).join(" · ")}</p>
                     </div>
@@ -735,7 +735,7 @@ export default function AMVsEdits() {
                       <h2 className="pin-title">{selectedEdit.title}</h2>
 
                       <div className="pin-stats-row">
-                        <span><Heart size={13} fill={likedEdits.includes(selectedEdit.id) ? "#e50914" : "none"} color={likedEdits.includes(selectedEdit.id) ? "#e50914" : "currentColor"} /> {formatCount(selectedEdit.likes)}</span>
+                        <span><Heart size={13} fill={likedEdits.includes(selectedEdit.id) ? "#6d28d9" : "none"} color={likedEdits.includes(selectedEdit.id) ? "#6d28d9" : "currentColor"} /> {formatCount(selectedEdit.likes)}</span>
                         <span><Play size={13} /> {formatCount(selectedEdit.views)}</span>
                         <span>{timeAgo(selectedEdit.timestamp)}</span>
                       </div>
@@ -746,7 +746,7 @@ export default function AMVsEdits() {
                           onClick={() => handleResonate(selectedEdit.id)}
                           title="Like"
                         >
-                          <Heart size={17} fill={likedEdits.includes(selectedEdit.id) ? "#e50914" : "none"} color={likedEdits.includes(selectedEdit.id) ? "#e50914" : "#fff"} />
+                          <Heart size={17} fill={likedEdits.includes(selectedEdit.id) ? "#6d28d9" : "none"} color={likedEdits.includes(selectedEdit.id) ? "#6d28d9" : "#fff"} />
                         </button>
                         <button className="pin-glass-btn" onClick={() => handleShare(selectedEdit)} title="Share">
                           <Share2 size={17} />
@@ -756,7 +756,7 @@ export default function AMVsEdits() {
                           onClick={() => handleSave(selectedEdit.id)}
                           title="Save"
                         >
-                          <svg width="17" height="17" viewBox="0 0 24 24" fill={savedEdits.includes(selectedEdit.id) ? "#e50914" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                          <svg width="17" height="17" viewBox="0 0 24 24" fill={savedEdits.includes(selectedEdit.id) ? "#6d28d9" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                         </button>
                         <button className="pin-glass-btn" onClick={() => handleDownload(selectedEdit)} title="Download">
                           <Download size={17} />

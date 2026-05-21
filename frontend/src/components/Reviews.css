@@ -96,7 +96,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8b5cf6, #ff5252);
+  background: linear-gradient(135deg, #8b5cf6, #8b5cf6);
   display: flex;
   align-items: center;
   justify-content: center;

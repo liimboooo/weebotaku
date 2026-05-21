@@ -9,7 +9,7 @@
 .news-refresh:hover{background:rgba(255,255,255,0.1);color:#fff}
 .news-refresh:disabled{opacity:.5;cursor:not-allowed}
 
-.news-error{background:rgba(255,50,50,0.1);border:1px solid rgba(255,50,50,0.2);color:#c084fc;padding:12px 16px;border-radius:10px;margin:12px 0;display:flex;align-items:center;gap:12px}
+.news-error{background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:#c084fc;padding:12px 16px;border-radius:10px;margin:12px 0;display:flex;align-items:center;gap:12px}
 .news-retry-btn{background:rgba(255,255,255,0.08);border:none;color:#fff;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:.8rem}
 
 .media-toggle{display:flex;gap:4px;margin:14px 0 4px;background:rgba(255,255,255,0.03);border-radius:10px;padding:3px;width:fit-content;border:1px solid rgba(255,255,255,0.05)}

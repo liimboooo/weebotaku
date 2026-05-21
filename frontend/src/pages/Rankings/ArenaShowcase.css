@@ -89,7 +89,7 @@
 }
 
 .arena-action.primary {
-  background: linear-gradient(135deg, #8b5cf6, #ff5959);
+  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
   color: #fff;
 }
 
@@ -187,7 +187,7 @@
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: #ff5d5d;
+  background: #a78bfa;
   box-shadow: 0 0 0 0 rgba(255, 93, 93, 0.6);
   animation: pulseGlow 1.8s infinite;
 }

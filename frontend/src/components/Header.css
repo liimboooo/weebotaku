@@ -317,7 +317,7 @@ body {
 }
 
 .trending-indicator.up { color: #22c55e; }
-.trending-indicator.down { color: #ef4444; }
+.trending-indicator.down { color: #7c3aed; }
 .trending-indicator.neutral { color: var(--text-tertiary); }
 
 /* ─── Header Actions ─────────────────────────────────── */
@@ -699,8 +699,8 @@ body {
 
 .profile-action-card svg { color: var(--text-tertiary); transition: color var(--duration-fast); }
 .profile-action-card:hover svg { color: var(--text-primary); }
-.profile-action-card--danger:hover { background: rgba(220, 38, 38, 0.08); color: #dc2626; border-color: rgba(220, 38, 38, 0.2); }
-.profile-action-card--danger:hover svg { color: #dc2626; }
+.profile-action-card--danger:hover { background: rgba(109, 40, 217, 0.08); color: #6d28d9; border-color: rgba(109, 40, 217, 0.2); }
+.profile-action-card--danger:hover svg { color: #6d28d9; }
 
 /* ─── Explore & Feeds Dropdowns ──────────────────────── */
 .explore-dropdown-container, .feeds-dropdown-container { position: relative; }

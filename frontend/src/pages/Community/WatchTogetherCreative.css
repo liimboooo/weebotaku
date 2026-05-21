@@ -47,7 +47,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: #ff4d4d;
+  color: #8b5cf6;
   margin-bottom: 24px;
 }
 
@@ -87,7 +87,7 @@
 }
 
 .zenith-launch-btn {
-  background: linear-gradient(135deg, #e50914, #ff3d3d);
+  background: linear-gradient(135deg, #6d28d9, #7c3aed);
   color: #fff;
   border: none;
   padding: 18px 40px;
@@ -180,11 +180,11 @@
 .stage-actions .exit-btn {
   background: rgba(229, 9, 20, 0.1);
   border-color: rgba(229, 9, 20, 0.2);
-  color: #ff4d4d;
+  color: #8b5cf6;
 }
 
 .stage-actions .exit-btn:hover {
-  background: #e50914;
+  background: #6d28d9;
   color: #fff;
 }
 
@@ -286,7 +286,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e50914, #7f0c12);
+  background: linear-gradient(135deg, #6d28d9, #7f0c12);
   display: grid;
   place-items: center;
   font-size: 0.7rem;
@@ -329,7 +329,7 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: #e50914;
+  background: #6d28d9;
   color: #fff;
   border: none;
   display: grid;
@@ -436,7 +436,7 @@
 }
 
 .start-btn {
-  background: #e50914;
+  background: #6d28d9;
   color: #fff;
   border: none;
   display: flex;
@@ -453,7 +453,7 @@
 .bitrate-value {
   font-size: 0.75rem;
   font-weight: 900;
-  color: #e50914;
+  color: #6d28d9;
   font-family: var(--font-mono);
 }
 
@@ -486,7 +486,7 @@
 }
 
 .bitrate-meta {
-  color: #e50914 !important;
+  color: #6d28d9 !important;
   font-weight: 900;
 }
 
@@ -503,7 +503,7 @@ input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 18px;
   height: 18px;
-  background: #e50914;
+  background: #6d28d9;
   border-radius: 50%;
   cursor: pointer;
   box-shadow: 0 0 10px rgba(229, 9, 20, 0.5);

@@ -73,7 +73,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  color: #e50914;
+  color: #6d28d9;
   margin-bottom: 8px;
 }
 
@@ -121,7 +121,7 @@
 }
 
 .edits-cta-primary {
-  background: #e50914;
+  background: #6d28d9;
   color: #fff;
   border: none;
   box-shadow: 0 0 30px rgba(229, 9, 20, 0.25);
@@ -162,7 +162,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #e50914;
+  background: #6d28d9;
   color: #fff;
   border: none;
   padding: 10px 20px;
@@ -237,7 +237,7 @@
 }
 
 .edits-cat-btn.active {
-  background: #e50914;
+  background: #6d28d9;
   color: #fff;
   box-shadow: 0 0 20px rgba(229, 9, 20, 0.2);
 }
@@ -275,7 +275,7 @@
 }
 
 .edits-nav-search:focus-within svg {
-  color: #e50914;
+  color: #6d28d9;
 }
 
 .edits-nav-search input {
@@ -495,7 +495,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e50914, #ff5252);
+  background: linear-gradient(135deg, #6d28d9, #8b5cf6);
   color: #fff;
   display: flex;
   align-items: center;
@@ -579,7 +579,7 @@
   width: 36px;
   height: 36px;
   border: 3px solid rgba(229, 9, 20, 0.15);
-  border-top-color: #e50914;
+  border-top-color: #6d28d9;
   border-radius: 50%;
   animation: edits-spin 0.7s linear infinite;
 }
@@ -786,7 +786,7 @@
 
 .pin-bar-fill {
   height: 100%;
-  background: #e50914;
+  background: #6d28d9;
   border-radius: 3px;
   transition: width 0.15s linear;
 }
@@ -898,7 +898,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e50914, #ff5252);
+  background: linear-gradient(135deg, #6d28d9, #8b5cf6);
   color: #fff;
   display: flex;
   align-items: center;
@@ -979,14 +979,14 @@
 .pin-glass-btn.active {
   background: rgba(229, 9, 20, 0.15);
   border-color: rgba(229, 9, 20, 0.4);
-  color: #e50914;
+  color: #6d28d9;
   box-shadow: 0 0 20px rgba(229, 9, 20, 0.15);
 }
 
 .pin-glass-btn.saved {
   background: rgba(229, 9, 20, 0.15);
   border-color: rgba(229, 9, 20, 0.4);
-  color: #e50914;
+  color: #6d28d9;
   box-shadow: 0 0 24px rgba(229, 9, 20, 0.25);
 }
 
@@ -1062,7 +1062,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e50914, #c084fc);
+  background: linear-gradient(135deg, #6d28d9, #c084fc);
   color: #fff;
   display: flex;
   align-items: center;
@@ -1119,7 +1119,7 @@
 }
 
 .pin-c-delete:hover {
-  color: #e50914;
+  color: #6d28d9;
 }
 
 .pin-c-empty {
@@ -1158,7 +1158,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e50914, #c084fc);
+  background: linear-gradient(135deg, #6d28d9, #c084fc);
   color: #fff;
   display: flex;
   align-items: center;
@@ -1189,7 +1189,7 @@
   background: rgba(229, 9, 20, 0.12);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(229, 9, 20, 0.25);
-  color: #e50914;
+  color: #6d28d9;
   padding: 9px 18px;
   border-radius: 10px;
   font-weight: 700;
@@ -1201,7 +1201,7 @@
 }
 
 .pin-post-btn:hover {
-  background: #e50914;
+  background: #6d28d9;
   color: #fff;
 }
 
@@ -1223,7 +1223,7 @@
 }
 
 .creator-bar-handle {
-  color: #e50914;
+  color: #6d28d9;
 }
 
 .creator-bar-grid {
@@ -1404,7 +1404,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #e50914;
+  color: #6d28d9;
   flex-shrink: 0;
 }
 
@@ -1474,7 +1474,7 @@
 }
 
 .upload-video-label:hover {
-  border-color: #e50914;
+  border-color: #6d28d9;
   background: rgba(229, 9, 20, 0.04);
   color: #fff;
 }
@@ -1525,7 +1525,7 @@
 
 .upload-error {
   width: 100%;
-  color: #e50914;
+  color: #6d28d9;
   font-size: 0.8rem;
   font-weight: 600;
   text-align: right;
@@ -1545,7 +1545,7 @@
 }
 
 .upload-confirm-btn {
-  background: #e50914;
+  background: #6d28d9;
   color: #fff;
   border: none;
   padding: 10px 24px;
@@ -1624,7 +1624,7 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #e50914;
+  background: #6d28d9;
   cursor: pointer;
   border: 2px solid #fff;
 }
@@ -1778,8 +1778,8 @@
 }
 
 .edits-sort-btn.active {
-  background: #e50914;
-  border-color: #e50914;
+  background: #6d28d9;
+  border-color: #6d28d9;
   color: #fff;
   box-shadow: 0 0 20px rgba(229, 9, 20, 0.2);
 }

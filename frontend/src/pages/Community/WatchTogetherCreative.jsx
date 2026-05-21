@@ -342,7 +342,7 @@ export default function WatchTogetherCreative() {
                       {participantCount.toLocaleString()} {liveKitConnected ? 'connected' : 'viewing'}
                     </span>
                     <span><Globe size={14} /> {selectedAnime}</span>
-                    <span className="bitrate-meta"><Zap size={14} color="#e50914" /> {bitrate} kbps</span>
+                    <span className="bitrate-meta"><Zap size={14} color="#6d28d9" /> {bitrate} kbps</span>
                     {liveKitConnected && <span className="livekit-badge">LiveKit</span>}
                   </div>
                 </div>

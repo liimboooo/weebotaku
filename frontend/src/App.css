@@ -172,7 +172,7 @@ html, body {
   border-radius: var(--radius-md);
   background: rgba(139, 92, 246, 0.06);
   border: 1px solid rgba(139, 92, 246, 0.12);
-  color: #f87171;
+  color: #a78bfa;
   font-size: 0.8rem;
   font-weight: 500;
   animation: auth-shake 0.4s var(--ease-out);

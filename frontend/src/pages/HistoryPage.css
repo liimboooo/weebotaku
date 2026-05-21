@@ -43,7 +43,7 @@
   inset: -2px;
   z-index: 0;
   background:
-    radial-gradient(ellipse at 30% 0%, rgba(220,38,38,0.2), transparent 60%),
+    radial-gradient(ellipse at 30% 0%, rgba(109,40,217,0.2), transparent 60%),
     radial-gradient(ellipse at 70% 100%, rgba(180,30,30,0.1), transparent 50%),
     linear-gradient(135deg, #0a0a0a, #1a0a0a, #0d0d0d);
   background-size: cover;
@@ -83,14 +83,14 @@
   align-items: center;
   gap: 8px;
   padding: 7px 14px;
-  background: rgba(220,38,38,0.1);
-  border: 1px solid rgba(220,38,38,0.3);
+  background: rgba(109,40,217,0.1);
+  border: 1px solid rgba(109,40,217,0.3);
   border-radius: 99px;
   font-size: 0.7rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: #ef4444;
+  color: #7c3aed;
   margin-bottom: 20px;
   width: fit-content;
 }
@@ -113,12 +113,12 @@
 .hp-hero-accent {
   display: block;
   font-size: clamp(2.8rem, 5.5vw, 4.5rem);
-  color: #dc2626;
+  color: #6d28d9;
   font-weight: 900;
   font-family: var(--font-display);
   text-transform: uppercase;
   letter-spacing: -0.02em;
-  text-shadow: 0 0 40px rgba(220,38,38,0.4);
+  text-shadow: 0 0 40px rgba(109,40,217,0.4);
 }
 
 .hp-hero-desc {
@@ -176,7 +176,7 @@
 
 .hp-clear-btn:hover {
   background: rgba(255, 82, 82, 0.15);
-  border-color: #ff5252;
+  border-color: #8b5cf6;
   color: #fff;
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(255, 82, 82, 0.15);
@@ -224,7 +224,7 @@
   font-size: 0.55rem;
   font-weight: 900;
   letter-spacing: 0.12em;
-  color: #dc2626;
+  color: #6d28d9;
   text-transform: uppercase;
 }
 
@@ -384,8 +384,8 @@
 }
 
 .hp-card:hover .hp-card-play-icon {
-  background: rgba(220,38,38,0.25);
-  border-color: #dc2626;
+  background: rgba(109,40,217,0.25);
+  border-color: #6d28d9;
 }
 
 .hp-card-progress-bar {
@@ -393,7 +393,7 @@
   bottom: 0;
   left: 0;
   height: 3px;
-  background: linear-gradient(90deg, #8b5cf6, #ff5252);
+  background: linear-gradient(90deg, #8b5cf6, #8b5cf6);
   box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
   border-radius: 0 0 10px 10px;
 }
@@ -435,7 +435,7 @@
   border-radius: 8px;
   font-size: 0.72rem;
   font-weight: 700;
-  color: #ef4444;
+  color: #7c3aed;
   width: fit-content;
   margin-top: 6px;
 }
@@ -478,7 +478,7 @@
 
 .hp-card-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #8b5cf6, #ff5252);
+  background: linear-gradient(90deg, #8b5cf6, #8b5cf6);
   border-radius: 4px;
   box-shadow: 0 0 6px rgba(139, 92, 246, 0.3);
   transition: width 0.4s var(--ease-out);
@@ -516,7 +516,7 @@
 
 .hp-card-remove:hover {
   background: rgba(255, 82, 82, 0.15);
-  color: #ff5252;
+  color: #8b5cf6;
 }
 
 /* ═══ EMPTY STATE ═══ */
@@ -564,7 +564,7 @@
   padding: 12px 28px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, #8b5cf6, #ff5252);
+  background: linear-gradient(135deg, #8b5cf6, #8b5cf6);
   color: #fff;
   font-size: 0.85rem;
   font-weight: 700;

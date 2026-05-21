@@ -36,7 +36,7 @@ export default class ErrorBoundary extends React.Component {
           background: "rgba(5,5,5,0.95)",
           borderRadius: "28px",
         }}>
-          <AlertTriangle size={40} style={{ opacity: 0.4, color: "#dc2626" }} />
+          <AlertTriangle size={40} style={{ opacity: 0.4, color: "#6d28d9" }} />
           <h2 style={{ color: "#fff", margin: 0, fontSize: "1.1rem", fontWeight: 600 }}>{message}</h2>
           <p style={{ margin: 0, fontSize: "0.85rem", maxWidth: "400px", lineHeight: 1.5, color: "#666" }}>
             {this.state.error?.message || "An unexpected error occurred"}
@@ -49,8 +49,8 @@ export default class ErrorBoundary extends React.Component {
               gap: "8px",
               padding: "10px 24px",
               borderRadius: "10px",
-              border: "1px solid #dc2626",
-              background: "#dc2626",
+              border: "1px solid #6d28d9",
+              background: "#6d28d9",
               color: "#fff",
               fontWeight: 600,
               cursor: "pointer",
@@ -60,7 +60,7 @@ export default class ErrorBoundary extends React.Component {
               transition: "all .2s",
             }}
             onMouseOver={e => { e.currentTarget.style.background = "#8b5cf6"; }}
-            onMouseOut={e => { e.currentTarget.style.background = "#dc2626"; }}
+            onMouseOut={e => { e.currentTarget.style.background = "#6d28d9"; }}
           >
             <RefreshCw size={16} /> Try Again
           </button>

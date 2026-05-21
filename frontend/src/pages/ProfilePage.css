@@ -2,8 +2,8 @@
   --reveal-radius: 0%;
   --reveal-x: 0px;
   --reveal-y: 0px;
-  --red: #8b5cf6;
-  --red-bright: #ff1744;
+  --red: #6d28d9;
+  --red-bright: #7c3aed;
   --red-glow: rgba(139, 92, 246, 0.35);
   --red-subtle: rgba(139, 92, 246, 0.08);
   --panel-bg: rgba(8, 8, 12, 0.85);
@@ -110,7 +110,7 @@
   width: 180px;
   height: 180px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--red), var(--red-bright));
+  background: linear-gradient(135deg, #6d28d9, var(--red-bright));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -211,7 +211,7 @@
 
 .profile-badge-accent {
   background: rgba(139, 92, 246, 0.06);
-  color: var(--red);
+  color: #6d28d9;
   border-color: rgba(139, 92, 246, 0.2);
   box-shadow: 0 0 10px rgba(139, 92, 246, 0.06);
 }
@@ -232,7 +232,7 @@
 .profile-xp-bar-fill {
   height: 100%;
   border-radius: 2px;
-  background: linear-gradient(90deg, var(--red), #c084fc);
+  background: linear-gradient(90deg, #6d28d9, #c084fc);
   transition: width 0.6s ease;
   box-shadow: 0 0 8px rgba(139, 92, 246, 0.3);
 }
@@ -249,7 +249,7 @@
   gap: 4px;
   font-size: 11px;
   font-weight: 700;
-  color: var(--red);
+  color: #6d28d9;
 }
 
 .profile-xp-streak {
@@ -269,7 +269,7 @@
   border-radius: 10px;
   border: 1px solid rgba(139, 92, 246, 0.3);
   background: rgba(139, 92, 246, 0.06);
-  color: var(--red);
+  color: #6d28d9;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -400,7 +400,7 @@
 }
 
 .profile-input:focus {
-  border-color: var(--red);
+  border-color: #6d28d9;
   box-shadow: 0 0 12px rgba(139, 92, 246, 0.12);
 }
 
@@ -423,7 +423,7 @@
 }
 
 .profile-btn-primary {
-  background: linear-gradient(135deg, var(--red), var(--red-bright));
+  background: linear-gradient(135deg, #6d28d9, var(--red-bright));
   color: #fff;
 }
 
@@ -501,7 +501,7 @@
 }
 
 .profile-stat-item svg {
-  color: var(--red);
+  color: #6d28d9;
   opacity: 0.8;
 }
 
@@ -634,7 +634,7 @@
 .overview-card h3 {
   font-size: 11px;
   font-weight: 700;
-  color: var(--red);
+  color: #6d28d9;
   margin: 0 0 16px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -752,12 +752,12 @@
 }
 
 .prog-how-list span svg {
-  color: var(--red);
+  color: #6d28d9;
   opacity: 0.7;
 }
 
 .prog-how-list span strong {
-  color: var(--red);
+  color: #6d28d9;
   font-weight: 700;
   margin-left: auto;
 }
@@ -819,7 +819,7 @@
 }
 
 .badge-item.earned .badge-label {
-  color: var(--red);
+  color: #6d28d9;
 }
 
 /* ─── Aura Explanation ─────────────────────────────── */
@@ -878,7 +878,7 @@
 .genre-bar-fill {
   height: 100%;
   border-radius: 3px;
-  background: linear-gradient(90deg, var(--red), #ff4d4d);
+  background: linear-gradient(90deg, #6d28d9, #8b5cf6);
   transition: width 0.6s ease;
   box-shadow: 0 0 6px rgba(139, 92, 246, 0.15);
 }
@@ -1105,7 +1105,7 @@
   width: 8px;
   height: 8px;
   border-radius: 2px;
-  background: var(--red);
+  background: #6d28d9;
   margin-left: -19px;
   flex-shrink: 0;
   box-shadow: 0 0 8px var(--red-glow);
@@ -1165,14 +1165,14 @@
 }
 
 .community-section-header svg {
-  color: var(--red);
+  color: #6d28d9;
   opacity: 0.8;
 }
 
 .community-section-header h3 {
   font-size: 11px;
   font-weight: 700;
-  color: var(--red);
+  color: #6d28d9;
   margin: 0;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -1184,7 +1184,7 @@
   padding: 2px 8px;
   border-radius: 4px;
   background: rgba(139, 92, 246, 0.1);
-  color: var(--red);
+  color: #6d28d9;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -1304,7 +1304,7 @@
 }
 
 .profile-edits-hero svg {
-  color: var(--red);
+  color: #6d28d9;
   flex-shrink: 0;
 }
 
@@ -1436,7 +1436,7 @@
 }
 
 .tierlist-profile-card:hover {
-  border-color: var(--red);
+  border-color: #6d28d9;
   box-shadow: 0 4px 20px var(--red-glow);
   transform: translateY(-2px);
 }
@@ -1596,5 +1596,5 @@
 
 .list-item-remove:hover {
   transform: scale(1.1);
-  background: #e50914;
+  background: #6d28d9;
 }

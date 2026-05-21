@@ -158,7 +158,7 @@
   padding: 7px 16px;
   border: none;
   border-radius: 6px;
-  background: #e50914;
+  background: #6d28d9;
   color: #fff;
   font-size: 12px;
   font-weight: 700;
@@ -167,7 +167,7 @@
   transition: all 0.2s;
 }
 
-.tl-save:hover:not(:disabled) { background: #f6121d; transform: translateY(-1px); }
+.tl-save:hover:not(:disabled) { background: #6d28d9; transform: translateY(-1px); }
 .tl-save:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .tl-reset, .tl-login, .tl-export {
@@ -733,7 +733,7 @@
   width: 20px; height: 20px;
   border-radius: 50%;
   border: none;
-  background: #e50914;
+  background: #6d28d9;
   color: #fff;
   font-size: 14px;
   line-height: 1;
@@ -811,12 +811,12 @@
 }
 
 .tl-confirm-delete {
-  background: #e50914;
+  background: #6d28d9;
   color: #fff;
 }
 
 .tl-confirm-cancel:hover { background: rgba(255,255,255,0.1); }
-.tl-confirm-delete:hover { background: #f6121d; }
+.tl-confirm-delete:hover { background: #6d28d9; }
 
 /* ─── Loading State ──────────────────────────────── */
 .tl-center-loading {

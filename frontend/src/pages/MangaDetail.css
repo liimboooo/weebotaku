@@ -151,9 +151,9 @@
 }
 
 .md-status.ongoing {
-  color: #ef4444;
-  border-color: rgba(239,68,68,0.2);
-  background: rgba(239,68,68,0.06);
+  color: #7c3aed;
+  border-color: rgba(124,58,237,0.2);
+  background: rgba(124,58,237,0.06);
 }
 
 .md-tags {
@@ -165,7 +165,7 @@
 
 .md-tag {
   font-size: 0.68rem;
-  color: #ef4444;
+  color: #7c3aed;
   padding: 4px 12px;
   background: rgba(139,92,246,0.06);
   border-radius: 99px;
@@ -214,9 +214,9 @@
 }
 
 .md-btn-primary {
-  background: linear-gradient(135deg, #dc2626, #ef4444);
+  background: linear-gradient(135deg, #6d28d9, #7c3aed);
   color: #fff;
-  box-shadow: 0 4px 24px rgba(220,38,38,0.3);
+  box-shadow: 0 4px 24px rgba(109,40,217,0.3);
 }
 
 .md-btn-primary::before {
@@ -230,7 +230,7 @@
 
 .md-btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 36px rgba(220,38,38,0.45);
+  box-shadow: 0 8px 36px rgba(109,40,217,0.45);
 }
 
 .md-btn-primary:hover::before { opacity: 1; }
@@ -256,9 +256,9 @@
 }
 
 .md-btn-secondary.active {
-  color: #ef4444;
-  border-color: rgba(239,68,68,0.4);
-  background: rgba(239,68,68,0.1);
+  color: #7c3aed;
+  border-color: rgba(124,58,237,0.4);
+  background: rgba(124,58,237,0.1);
 }
 
 /* ═══ CHAPTERS SECTION — Connected to Hero ═══ */
@@ -277,7 +277,7 @@
   font-size: 0.75rem;
   font-weight: 800;
   margin: 0 0 20px;
-  color: #ef4444;
+  color: #7c3aed;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   display: flex;
@@ -353,7 +353,7 @@
 }
 
 .md-ch-item:hover .md-ch-num {
-  color: #ef4444;
+  color: #7c3aed;
 }
 
 .md-ch-title {
@@ -390,7 +390,7 @@
   align-items: center;
   gap: 6px;
   margin: 16px auto 0;
-  color: #ef4444;
+  color: #7c3aed;
   background: rgba(139,92,246,0.06);
   border: 1px solid rgba(139,92,246,0.2);
   padding: 10px 22px;
