@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Skeleton from "../components/Skeleton";
-import Slider from "../components/Slider";
 import LiveRooms from "../components/LiveRooms";
 import Categories from "../components/Categories";
 import Background from "../components/Background";
@@ -251,7 +250,7 @@ function ContinueWatchingRow() {
     <section className="home-section">
       <SectionHeader icon={Clock} title="Continue Watching" subtitle="Pick up where you left off" />
       <motion.div
-        className="continue-grid"
+        className="upcoming-grid"
         variants={staggerContainer}
         initial="hidden"
         whileInView="visible"
@@ -260,25 +259,22 @@ function ContinueWatchingRow() {
         {items.map((item) => (
           <motion.div
             key={`${item.animeId}-${item.episode}`}
-            className="continue-card"
+            className="upcoming-card"
             onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode}`)}
             variants={cardSlideUp}
-           whileHover={{ boxShadow: "0 12px 40px rgba(230,54,54,0.12)", transition: { type: "spring", stiffness: 300 } }}
+            whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
-            <div className="continue-card-img">
-              <img src={item.img} alt={item.name} />
-              <div className="continue-card-overlay">
-                <Play size={18} fill="currentColor" />
+            <div className="upcoming-card-img">
+              <img src={item.img} alt={item.name} loading="lazy" />
+              <div className="upcoming-card-badge">
+                <Star size={10} fill="#ffd700" color="#ffd700" /> {item.rating?.toFixed(1)}
               </div>
             </div>
-            <div className="continue-card-body">
-              <h4>{item.name}</h4>
-              <span className="continue-card-ep-label">{item.episode ? `Episode ${item.episode}` : "Continue"}</span>
-              {item.rating && (
-                <span className="continue-card-rating">
-                  <Star size={10} fill="#ffd700" color="#ffd700" /> {item.rating.toFixed(1)}
-                </span>
-              )}
+            <div className="upcoming-card-body">
+              <h3>{item.name}</h3>
+              <div className="upcoming-card-meta">
+                <span className="upcoming-card-type">{item.episode ? `Ep ${item.episode}` : "Continue"}</span>
+              </div>
             </div>
           </motion.div>
         ))}
@@ -370,36 +366,37 @@ function TopTenRow({ animeList }) {
   return (
     <section className="home-section">
       <SectionHeader icon={Crown} title="Top 10 Anime" subtitle="Highest rated of all time" />
-      <div className="top-ten-row">
-        {animeList.map((anime, i) => (
+      <motion.div
+        className="upcoming-grid"
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-40px" }}
+      >
+        {animeList.map((anime) => (
           <motion.div
             key={anime.id}
-            className="top-ten-card"
+            className="upcoming-card"
             onClick={() => navigate(`/anime/${anime.id}`)}
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.06, type: "spring", stiffness: 200, damping: 22 }}
-            whileHover={{ y: -10, transition: { type: "spring", stiffness: 300 } }}
+            variants={cardSlideUp}
+            whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
-            <span className="top-ten-rank">{i + 1}</span>
-            <div className="top-ten-poster">
+            <div className="upcoming-card-img">
               <img src={anime.img} alt={anime.name} loading="lazy" />
-              <div className="top-ten-overlay">
-                <Play size={22} fill="currentColor" />
+              <div className="upcoming-card-badge">
+                {anime.rating && <><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</>}
               </div>
             </div>
-            <div className="top-ten-info">
+            <div className="upcoming-card-body">
               <h3>{anime.name}</h3>
-              <div className="top-ten-meta">
-                <span className="top-ten-score"><Star size={12} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</span>
-                <span className="top-ten-eps">{anime.episodes} ep</span>
-                {anime.genres?.[0] && <span className="top-ten-genre">{anime.genres[0]}</span>}
+              <div className="upcoming-card-meta">
+                {anime.genres?.[0] && <span className="upcoming-card-tag">{anime.genres[0]}</span>}
+                <span className="upcoming-card-type">{anime.status || "TV"}</span>
               </div>
             </div>
           </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }
@@ -637,7 +634,37 @@ export default function Home() {
               subtitle="Most watched anime this week"
               action={refreshTrending}
             />
-            <Slider sliderData={trendingList} noHeader />
+            <motion.div
+              className="upcoming-grid"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-40px" }}
+            >
+              {trendingList.map((anime) => (
+                <motion.div
+                  key={anime.id}
+                  className="upcoming-card"
+                  onClick={() => navigate(`/anime/${anime.id}`)}
+                  variants={cardSlideUp}
+                  whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
+                >
+                  <div className="upcoming-card-img">
+                    <img src={anime.img} alt={anime.name} loading="lazy" />
+                    <div className="upcoming-card-badge">
+                      {anime.rating && <><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</>}
+                    </div>
+                  </div>
+                  <div className="upcoming-card-body">
+                    <h3>{anime.name}</h3>
+                    <div className="upcoming-card-meta">
+                      {anime.genres?.[0] && <span className="upcoming-card-tag">{anime.genres[0]}</span>}
+                      <span className="upcoming-card-type">{anime.status || "TV"}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
           </section>
         )}
 
@@ -657,7 +684,37 @@ export default function Home() {
               subtitle="All-time fan favorites everyone's watching"
               action={() => navigate("/browse/anime")}
             />
-            <Slider sliderData={popularList} noHeader />
+            <motion.div
+              className="upcoming-grid"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-40px" }}
+            >
+              {popularList.map((anime) => (
+                <motion.div
+                  key={anime.id}
+                  className="upcoming-card"
+                  onClick={() => navigate(`/anime/${anime.id}`)}
+                  variants={cardSlideUp}
+                  whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
+                >
+                  <div className="upcoming-card-img">
+                    <img src={anime.img} alt={anime.name} loading="lazy" />
+                    <div className="upcoming-card-badge">
+                      {anime.rating && <><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</>}
+                    </div>
+                  </div>
+                  <div className="upcoming-card-body">
+                    <h3>{anime.name}</h3>
+                    <div className="upcoming-card-meta">
+                      {anime.genres?.[0] && <span className="upcoming-card-tag">{anime.genres[0]}</span>}
+                      <span className="upcoming-card-type">{anime.status || "TV"}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
           </section>
         )}
 
