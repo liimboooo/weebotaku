@@ -1,6 +1,5 @@
 import React from "react";
-import { motion } from "framer-motion";
-import { X, Play, Bookmark, ThumbsUp, Film, Calendar, Star } from "lucide-react";
+import { X, Play, Bookmark, ThumbsUp, Star, Film, Calendar } from "lucide-react";
 import "./AnimePreviewPanel.css";
 
 export default function AnimePreviewPanel({ anime, onClose, onPlay, onWatchlist, onLike }) {
@@ -8,33 +7,27 @@ export default function AnimePreviewPanel({ anime, onClose, onPlay, onWatchlist,
 
   const meta = [
     { label: "Year", value: anime.year || anime.seasonYear, icon: Calendar },
-    { label: "Rating", value: anime.rating ? `${Number(anime.rating).toFixed(1)} / 10` : null, icon: Star },
+    { label: "Rating", value: anime.rating ? `${Number(anime.rating).toFixed(1)}` : null, icon: Star },
     { label: "Episodes", value: anime.episodes ? `${anime.episodes} EP` : null, icon: Film },
-    { label: "Quality", value: "HD", accent: true },
+    { label: "Quality", value: "HD" },
   ].filter(m => m.value);
 
   const hasTrailer = anime.trailerUrl && anime.trailerUrl.includes("youtube");
   const hasBanner = anime.bannerImage || anime.backdrop;
 
   return (
-    <motion.div
-      className="preview-panel"
-      initial={{ opacity: 0, y: -12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
-      transition={{ type: "spring", stiffness: 260, damping: 24 }}
-    >
+    <div className="preview-panel">
       <div className="preview-panel-left">
         <button className="preview-panel-close" onClick={onClose} aria-label="Close preview">
           <X size={16} />
         </button>
 
-        <h2 className="preview-panel-title">{anime.name || anime.title?.romaji}</h2>
+        <h2 className="preview-panel-title">{anime.name || anime.title?.romaji || "Untitled"}</h2>
 
         <div className="preview-panel-stats">
           {meta.map((m, i) => (
             <span key={i} className={`preview-panel-stat${m.accent ? " accent" : ""}`}>
-              {m.icon && <m.icon size={11} style={{ display: "inline", marginRight: 4 }} />}
+              {m.icon && React.createElement(m.icon, { size: 11, style: { display: "inline", marginRight: 4 } })}
               {m.value}
             </span>
           ))}
@@ -93,6 +86,6 @@ export default function AnimePreviewPanel({ anime, onClose, onPlay, onWatchlist,
         )}
         <div className="preview-panel-fade" />
       </div>
-    </motion.div>
+    </div>
   );
 }
