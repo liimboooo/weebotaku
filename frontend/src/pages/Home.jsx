@@ -28,7 +28,6 @@ import Skeleton from "../components/Skeleton";
 import LiveRooms from "../components/LiveRooms";
 import Categories from "../components/Categories";
 import Background from "../components/Background";
-import "../components/AnimePreviewPanel.css";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
 import { loadWatchlist } from "../services/storage";
@@ -201,7 +200,7 @@ function SpotlightQuote({ quote, onRefresh, loading }) {
   );
 }
 
-function ContinueWatchingRow({ onCardClick }) {
+function ContinueWatchingRow() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
 
@@ -261,7 +260,7 @@ function ContinueWatchingRow({ onCardClick }) {
           <motion.div
             key={`${item.animeId}-${item.episode}`}
             className="upcoming-card"
-            onClick={() => onCardClick?.({ ...item, id: item.animeId })}
+            onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode}`)}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -318,11 +317,9 @@ function SectionHeader({ icon: Icon, title, subtitle, action }) {
   );
 }
 
-function SeasonGrid({ animeList, onCardClick }) {
+function SeasonGrid({ animeList }) {
   const navigate = useNavigate();
-
   if (!animeList?.length) return null;
-
   return (
     <section className="home-section">
       <SectionHeader icon={Sparkles} title="Season Highlights" subtitle="Top picks this season" action={() => navigate("/browse/anime")} />
@@ -337,7 +334,7 @@ function SeasonGrid({ animeList, onCardClick }) {
           <motion.div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => onCardClick?.(anime)}
+            onClick={() => navigate(`/anime/${anime.id}`)}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -361,7 +358,8 @@ function SeasonGrid({ animeList, onCardClick }) {
   );
 }
 
-function TopTenRow({ animeList, onCardClick }) {
+function TopTenRow({ animeList }) {
+  const navigate = useNavigate();
   if (!animeList?.length) return null;
   return (
     <section className="home-section">
@@ -377,7 +375,7 @@ function TopTenRow({ animeList, onCardClick }) {
           <motion.div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => onCardClick?.(anime)}
+            onClick={() => navigate(`/anime/${anime.id}`)}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -426,7 +424,7 @@ function GenreBar({ genres }) {
   );
 }
 
-function UpcomingSection({ animeList, onCardClick }) {
+function UpcomingSection({ animeList }) {
   const navigate = useNavigate();
   if (!animeList?.length) return null;
   return (
@@ -443,7 +441,7 @@ function UpcomingSection({ animeList, onCardClick }) {
           <motion.div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => onCardClick?.(anime)}
+            onClick={() => navigate(`/anime/${anime.id}`)}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -571,11 +569,6 @@ export default function Home() {
   const { spotlight, topTen, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending } = useAnimeData();
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
-  const [selectedAnime, setSelectedAnime] = useState(null);
-
-  const handleCardClick = (anime) => {
-    setSelectedAnime(anime);
-  };
 
   useEffect(() => {
     fetchRandomQuote().then(setQuote).catch(() => {});
@@ -625,10 +618,10 @@ export default function Home() {
 
         <GenreBar genres={categories} />
 
-        <ContinueWatchingRow onCardClick={handleCardClick} />
+        <ContinueWatchingRow />
 
         {topTen.length > 0 && (
-          <TopTenRow animeList={topTen} onCardClick={handleCardClick} />
+          <TopTenRow animeList={topTen} />
         )}
 
         {trendingList.length > 0 && (
@@ -644,7 +637,7 @@ export default function Home() {
                 <div
                   key={anime.id}
                   className="upcoming-card"
-                  onClick={() => handleCardClick(anime)}
+                  onClick={() => navigate(`/anime/${anime.id}`)}
                 >
                   <div className="upcoming-card-img">
                     <img src={anime.img} alt={anime.name} loading="lazy" />
@@ -666,11 +659,11 @@ export default function Home() {
         )}
 
         {seasonPicks.length > 0 && (
-          <SeasonGrid animeList={seasonPicks} onCardClick={handleCardClick} />
+          <SeasonGrid animeList={seasonPicks} />
         )}
 
         {upcomingList.length > 0 && (
-          <UpcomingSection animeList={upcomingList} onCardClick={handleCardClick} />
+          <UpcomingSection animeList={upcomingList} />
         )}
 
         {popularList.length > 0 && (
@@ -686,7 +679,7 @@ export default function Home() {
                 <div
                   key={anime.id}
                   className="upcoming-card"
-                  onClick={() => handleCardClick(anime)}
+                  onClick={() => navigate(`/anime/${anime.id}`)}
                 >
                   <div className="upcoming-card-img">
                     <img src={anime.img} alt={anime.name} loading="lazy" />
@@ -705,45 +698,6 @@ export default function Home() {
               ))}
             </div>
           </section>
-        )}
-
-        {selectedAnime && (
-          <div className="preview-panel" style={{ overflow: "hidden" }}>
-            <div className="preview-panel-inner">
-              <div className="preview-panel-left">
-                <button className="preview-panel-close" onClick={() => setSelectedAnime(null)}>
-                  X
-                </button>
-                <h2 className="preview-panel-title">{selectedAnime.name || "Untitled"}</h2>
-                <div className="preview-panel-stats">
-                  <span className="preview-panel-stat">{selectedAnime.year || "?"}</span>
-                  <span className="preview-panel-stat">{selectedAnime.rating?.toFixed(1) || "?"}</span>
-                  <span className="preview-panel-stat">{selectedAnime.episodes ? `${selectedAnime.episodes} EP` : "?"}</span>
-                </div>
-                <p className="preview-panel-synopsis">{selectedAnime.synopsis || "No synopsis."}</p>
-                <div className="preview-panel-actions">
-                  <button className="preview-panel-btn primary" onClick={() => { navigate(`/anime/${selectedAnime.id}`); }}>
-                    ▶ Watch Now
-                  </button>
-                  <button className="preview-panel-btn secondary" onClick={() => setSelectedAnime(null)}>
-                    Close
-                  </button>
-                </div>
-                <div className="preview-panel-details">
-                  <div className="preview-panel-detail-item">
-                    <span className="preview-panel-detail-label">Genres</span>
-                    <span className="preview-panel-detail-value">{selectedAnime.genres?.join(", ") || "N/A"}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="preview-panel-right">
-                <div className="preview-panel-media">
-                  <img src={selectedAnime.bannerImage || selectedAnime.img} alt="" />
-                </div>
-                <div className="preview-panel-fade" />
-              </div>
-            </div>
-          </div>
         )}
 
         <div className="section-divider">
