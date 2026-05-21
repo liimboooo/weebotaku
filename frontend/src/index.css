@@ -14,7 +14,7 @@
   --primary: #e63636;
   --primary-hover: #ff4444;
   --primary-muted: #c62828;
-  --primary-glow: rgba(230, 54, 54, 0.4);
+  --primary-glow: rgba(230, 54, 54, 0.18);
   --primary-surface: rgba(230, 54, 54, 0.08);
   --primary-border: rgba(230, 54, 54, 0.2);
 
@@ -109,8 +109,8 @@ html {
 body {
   background: var(--bg-deep);
   background-image:
-    radial-gradient(ellipse at 20% 0%, rgba(230, 54, 54, 0.08), transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(230, 54, 54, 0.06), transparent 40%),
+    radial-gradient(ellipse at 20% 0%, rgba(230, 54, 54, 0.03), transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(230, 54, 54, 0.025), transparent 40%),
     radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.015), transparent 60%),
     linear-gradient(180deg, var(--bg-deep) 0%, #050507 100%);
   background-attachment: fixed;
