@@ -59,7 +59,7 @@ export default class ErrorBoundary extends React.Component {
               marginTop: "8px",
               transition: "all .2s",
             }}
-            onMouseOver={e => { e.currentTarget.style.background = "#e63636"; }}
+            onMouseOver={e => { e.currentTarget.style.background = "#8b5cf6"; }}
             onMouseOut={e => { e.currentTarget.style.background = "#dc2626"; }}
           >
             <RefreshCw size={16} /> Try Again

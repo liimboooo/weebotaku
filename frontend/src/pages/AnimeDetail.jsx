@@ -244,7 +244,7 @@ export default function AnimeDetail() {
                     <Bell size={16} fill={isFollowing ? "currentColor" : "none"} />
                   </button>
                   <button className={`ad-hero-action-btn ${isLiked ? "liked" : ""}`} onClick={toggleLiked} title="Like">
-                    <Heart size={16} fill={isLiked ? "#e63636" : "none"} />
+                    <Heart size={16} fill={isLiked ? "#8b5cf6" : "none"} />
                   </button>
                   <button className="ad-hero-action-btn" onClick={() => navigator.clipboard.writeText(window.location.href)} title="Share">
                     <Share2 size={16} />

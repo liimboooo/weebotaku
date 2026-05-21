@@ -1,10 +1,10 @@
 export const colors = {
-  primary: '#e63636',
-  primaryHover: '#ff4444',
-  primaryMuted: '#c62828',
-  primaryGlow: 'rgba(230, 54, 54, 0.4)',
-  primarySurface: 'rgba(230, 54, 54, 0.08)',
-  primaryBorder: 'rgba(230, 54, 54, 0.2)',
+  primary: '#8b5cf6',
+  primaryHover: '#a78bfa',
+  primaryMuted: '#7c3aed',
+  primaryGlow: 'rgba(139, 92, 246, 0.4)',
+  primarySurface: 'rgba(139, 92, 246, 0.08)',
+  primaryBorder: 'rgba(139, 92, 246, 0.2)',
 
   bgDeep: '#030304',
   bgBase: '#080809',
@@ -56,7 +56,7 @@ export const shadow = {
   md: '0 8px 24px rgba(0,0,0,0.3)',
   lg: '0 16px 48px rgba(0,0,0,0.4)',
   xl: '0 24px 64px rgba(0,0,0,0.5)',
-  glow: '0 0 40px rgba(230,54,54,0.15)',
+  glow: '0 0 40px rgba(139,92,246,0.15)',
 };
 
 export const breakpoints = {

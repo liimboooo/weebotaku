@@ -16,7 +16,7 @@
   50%{transform:translateY(-10px)}
 }
 
-.nf-divider{width:48px;height:2px;background:var(--primary);border-radius:2px;margin:14px 0 24px;box-shadow:0 0 16px rgba(230,54,54,0.25)}
+.nf-divider{width:48px;height:2px;background:var(--primary);border-radius:2px;margin:14px 0 24px;box-shadow:0 0 16px rgba(139,92,246,0.25)}
 
 .nf-title{font-size:1.5rem;font-weight:700;color:var(--text-primary);margin:0 0 10px;letter-spacing:-0.02em}
 .nf-desc{color:var(--text-tertiary);font-size:0.95rem;margin:0 0 36px;line-height:1.6}
@@ -25,7 +25,7 @@
 .nf-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:var(--radius-md);font-size:0.85rem;font-weight:600;cursor:pointer;border:1px solid var(--border-subtle);background:transparent;color:var(--text-secondary);transition:all var(--duration-normal) var(--ease-out)}
 .nf-btn:hover{background:rgba(255,255,255,0.04);color:var(--text-primary);border-color:var(--border-hover)}
 .nf-btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
-.nf-btn-primary:hover{background:var(--primary-hover);border-color:var(--primary-hover);transform:translateY(-1px);box-shadow:0 6px 20px rgba(230,54,54,0.25)}
+.nf-btn-primary:hover{background:var(--primary-hover);border-color:var(--primary-hover);transform:translateY(-1px);box-shadow:0 6px 20px rgba(139,92,246,0.25)}
 
 @media(max-width:640px){
   .nf-char{font-size:5rem}

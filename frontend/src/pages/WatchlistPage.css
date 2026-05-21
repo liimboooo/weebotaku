@@ -11,7 +11,7 @@
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(230, 54, 54, 0.04), transparent 50%);
+    radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.04), transparent 50%);
   z-index: 0;
 }
 
@@ -267,8 +267,8 @@
 }
 
 .wl-card:hover {
-  border-color: rgba(230, 54, 54, 0.25);
-  box-shadow: 0 8px 32px rgba(230, 54, 54, 0.08);
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.08);
 }
 
 .wl-card:hover .wl-card-thumb img {
@@ -324,7 +324,7 @@
   left: 0;
   height: 2px;
   background: var(--primary);
-  box-shadow: 0 0 8px rgba(230, 54, 54, 0.4);
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
 }
 
 .wl-badge {
@@ -341,8 +341,8 @@
 
 .wl-badge.ongoing { background: rgba(46,204,113,0.85); color: #fff; }
 .wl-badge.publishing { background: rgba(46,204,113,0.85); color: #fff; }
-.wl-badge.completed { background: rgba(230,54,54,0.85); color: #fff; }
-.wl-badge.finished { background: rgba(230,54,54,0.85); color: #fff; }
+.wl-badge.completed { background: rgba(139,92,246,0.85); color: #fff; }
+.wl-badge.finished { background: rgba(139,92,246,0.85); color: #fff; }
 
 .wl-card-wish {
   position: absolute;
@@ -410,8 +410,8 @@
 }
 
 .wl-tag {
-  background: rgba(230,54,54,0.12);
-  color: #e63636;
+  background: rgba(139,92,246,0.12);
+  color: #8b5cf6;
   padding: 2px 8px;
   border-radius: 6px;
   font-size: 0.6rem;
@@ -422,7 +422,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 0%, rgba(230,54,54,0.12), transparent 60%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(139,92,246,0.12), transparent 60%);
   opacity: 0;
   transition: opacity 0.4s;
 }
@@ -450,7 +450,7 @@
   padding: 12px 28px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, #e63636, #ff5252);
+  background: linear-gradient(135deg, #8b5cf6, #ff5252);
   color: #fff;
   font-size: 0.85rem;
   font-weight: 700;
@@ -461,7 +461,7 @@
 
 .wl-browse-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(230,54,54,0.35);
+  box-shadow: 0 8px 24px rgba(139,92,246,0.35);
 }
 
 @media (max-width: 768px) {

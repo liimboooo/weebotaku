@@ -3,7 +3,7 @@
   min-height: 100vh;
   overflow: hidden;
   background:
-    radial-gradient(circle at top left, rgba(230, 54, 54, 0.18), transparent 28%),
+    radial-gradient(circle at top left, rgba(139, 92, 246, 0.18), transparent 28%),
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.05), transparent 22%),
     linear-gradient(180deg, #0b0b0d 0%, #050506 100%);
 }
@@ -45,7 +45,7 @@
   width: fit-content;
   padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(230, 54, 54, 0.14);
+  background: rgba(139, 92, 246, 0.14);
   color: #ff9b9b;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -89,7 +89,7 @@
 }
 
 .arena-action.primary {
-  background: linear-gradient(135deg, #e63636, #ff5959);
+  background: linear-gradient(135deg, #8b5cf6, #ff5959);
   color: #fff;
 }
 
@@ -175,7 +175,7 @@
   gap: 8px;
   padding: 7px 12px;
   border-radius: 999px;
-  background: rgba(230, 54, 54, 0.14);
+  background: rgba(139, 92, 246, 0.14);
   color: #ffd0d0;
   font-size: 0.72rem;
   font-weight: 700;
@@ -225,8 +225,8 @@
 .arena-meter-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #e63636, #ff8a8a);
-  box-shadow: 0 0 24px rgba(230, 54, 54, 0.35);
+  background: linear-gradient(90deg, #8b5cf6, #ff8a8a);
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.35);
 }
 
 .arena-link-grid,
@@ -278,7 +278,7 @@
   align-items: center;
   border-radius: 999px;
   padding: 6px 10px;
-  background: rgba(230, 54, 54, 0.16);
+  background: rgba(139, 92, 246, 0.16);
   color: #ffd0d0;
   font-size: 0.75rem;
   font-weight: 700;
@@ -325,14 +325,14 @@
 .arena-duel-side {
   border-radius: 24px;
   padding: 18px;
-  background: linear-gradient(180deg, rgba(230, 54, 54, 0.12), rgba(255, 255, 255, 0.03));
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.12), rgba(255, 255, 255, 0.03));
   border: 1px solid rgba(255, 255, 255, 0.06);
   display: grid;
   gap: 12px;
 }
 
 .arena-duel-side.right {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(230, 54, 54, 0.08));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(139, 92, 246, 0.08));
 }
 
 .arena-duel-name {
@@ -363,11 +363,11 @@
   width: 58px;
   height: 58px;
   border-radius: 18px;
-  background: linear-gradient(135deg, #e63636, #ff7b7b);
+  background: linear-gradient(135deg, #8b5cf6, #ff7b7b);
   color: #fff;
   font-family: var(--font-display);
   font-size: 1.25rem;
-  box-shadow: 0 14px 34px rgba(230, 54, 54, 0.28);
+  box-shadow: 0 14px 34px rgba(139, 92, 246, 0.28);
 }
 
 .arena-vote-row {
@@ -386,9 +386,9 @@
 }
 
 .arena-vote-button.active {
-  background: rgba(230, 54, 54, 0.18);
-  border-color: rgba(230, 54, 54, 0.45);
-  box-shadow: 0 0 0 4px rgba(230, 54, 54, 0.1);
+  background: rgba(139, 92, 246, 0.18);
+  border-color: rgba(139, 92, 246, 0.45);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
 }
 
 .arena-duel-meter {
@@ -414,7 +414,7 @@
 .arena-duel-meter-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #e63636, #ff8a8a);
+  background: linear-gradient(90deg, #8b5cf6, #ff8a8a);
 }
 
 .arena-note {

@@ -13,7 +13,7 @@ import TierCard from './TierCard';
 import './TierLists.css';
 
 const TIER_CONFIG = [
-  { id: 's', label: 'S', sub: 'PINNACLE', color: '#ff4444' },
+  { id: 's', label: 'S', sub: 'PINNACLE', color: '#a78bfa' },
   { id: 'a', label: 'A', sub: 'SUPERIOR', color: '#ff8c00' },
   { id: 'b', label: 'B', sub: 'GREAT', color: '#ffd700' },
   { id: 'c', label: 'C', sub: 'DECENT', color: '#4dabf7' },

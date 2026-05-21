@@ -5,7 +5,7 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(230, 54, 54, 0.9);
+  background: rgba(139, 92, 246, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
   cursor: pointer;
@@ -17,7 +17,7 @@
   pointer-events: none;
   transition: all var(--duration-slow) var(--ease-out);
   z-index: 998;
-  box-shadow: 0 4px 16px rgba(230, 54, 54, 0.3);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
   backdrop-filter: blur(8px);
 }
 
@@ -29,7 +29,7 @@
 
 .scroll-to-top:hover {
   transform: translateY(-3px) scale(1.08);
-  box-shadow: 0 8px 28px rgba(230, 54, 54, 0.5), 0 0 40px rgba(230, 54, 54, 0.15);
+  box-shadow: 0 8px 28px rgba(139, 92, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.15);
   background: var(--primary);
 }
 

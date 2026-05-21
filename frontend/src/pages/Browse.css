@@ -15,7 +15,7 @@
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(230, 54, 54, 0.04), transparent 50%);
+    radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.04), transparent 50%);
   z-index: 0;
 }
 
@@ -110,7 +110,7 @@
   color: var(--primary-hover);
   margin-bottom: 20px;
   width: fit-content;
-  box-shadow: 0 0 20px rgba(230, 54, 54, 0.1);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.1);
 }
 
 .br-hero-main {
@@ -133,13 +133,13 @@
   text-transform: uppercase;
   line-height: 1;
   letter-spacing: -0.02em;
-  text-shadow: 0 0 40px rgba(230, 54, 54, 0.3);
+  text-shadow: 0 0 40px rgba(139, 92, 246, 0.3);
   animation: glow-pulse-text 3s ease-in-out infinite;
 }
 
 @keyframes glow-pulse-text {
-  0%, 100% { text-shadow: 0 0 30px rgba(230, 54, 54, 0.2); }
-  50% { text-shadow: 0 0 60px rgba(230, 54, 54, 0.5); }
+  0%, 100% { text-shadow: 0 0 30px rgba(139, 92, 246, 0.2); }
+  50% { text-shadow: 0 0 60px rgba(139, 92, 246, 0.5); }
 }
 
 .br-hero-desc {
@@ -580,8 +580,8 @@
 }
 
 .br-card:hover {
-  border-color: rgba(230, 54, 54, 0.25);
-  box-shadow: 0 8px 32px rgba(230, 54, 54, 0.08);
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.08);
 }
 
 .br-card-thumb {
@@ -678,7 +678,7 @@
 }
 
 .br-card-badge:not(:has(svg)) {
-  background: rgba(230,54,54,0.85);
+  background: rgba(139,92,246,0.85);
   color: #fff;
 }
 
@@ -688,7 +688,7 @@
   left: 0;
   height: 2px;
   background: var(--primary);
-  box-shadow: 0 0 8px rgba(230, 54, 54, 0.4);
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
 }
 
 .br-card-body {
@@ -776,7 +776,7 @@
   border-radius: 5px;
   font-size: 10px;
   font-weight: 600;
-  background: rgba(230,54,54,0.12);
+  background: rgba(139,92,246,0.12);
   color: #ef4444;
 }
 
@@ -810,7 +810,7 @@
 .br-list .br-card-overlay,
 .br-list .br-card-glow { display: none; }
 
-.br-list .br-card:hover { border-color: rgba(230, 54, 54, 0.25); box-shadow: 0 4px 16px rgba(230, 54, 54, 0.06); }
+.br-list .br-card:hover { border-color: rgba(139, 92, 246, 0.25); box-shadow: 0 4px 16px rgba(139, 92, 246, 0.06); }
 
 /* ─── SENTINEL ─── */
 .br-sentinel { height: 1px; }
@@ -878,10 +878,10 @@
   transition: all var(--duration-normal) var(--ease-out);
 }
 .br-retry-btn:hover {
-  background: rgba(230, 54, 54, 0.15);
+  background: rgba(139, 92, 246, 0.15);
   border-color: var(--primary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(230, 54, 54, 0.15);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15);
 }
 
 /* ─── ANIMATIONS ─── */

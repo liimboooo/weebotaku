@@ -7,7 +7,7 @@ import Background from '../../components/Background';
 import './TierLists.css';
 
 const TIER_CONFIG = [
-  { id: 's', label: 'S', color: '#ff4444' },
+  { id: 's', label: 'S', color: '#a78bfa' },
   { id: 'a', label: 'A', color: '#ff8c00' },
   { id: 'b', label: 'B', color: '#ffd700' },
   { id: 'c', label: 'C', color: '#4dabf7' },

@@ -114,7 +114,7 @@ export default function WatchlistPage() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.9 }}
                           transition={{ delay: (i % 12) * 0.03, type: "spring", stiffness: 100, damping: 14 }}
-                          whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(230,54,54,0.3)", borderColor: "#e63636" }}
+                          whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(139,92,246,0.3)", borderColor: "#8b5cf6" }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => navigate(`/anime/${anime.id}`)}
                         >
@@ -182,7 +182,7 @@ export default function WatchlistPage() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.9 }}
                           transition={{ delay: (i % 12) * 0.03, type: "spring", stiffness: 100, damping: 14 }}
-                          whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(230,54,54,0.3)", borderColor: "#e63636" }}
+                          whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(139,92,246,0.3)", borderColor: "#8b5cf6" }}
                           whileTap={{ scale: 0.98 }}
                         >
                           <div className="wl-card-thumb">

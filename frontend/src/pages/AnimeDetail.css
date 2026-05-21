@@ -10,7 +10,7 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 0%, rgba(230, 54, 54, 0.04), transparent 50%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.04), transparent 50%);
   z-index: 0;
 }
 
@@ -140,7 +140,7 @@
   color: #888;
 }
 
-.ad-metric svg { color: #e63636; opacity: 0.7; }
+.ad-metric svg { color: #8b5cf6; opacity: 0.7; }
 
 .ad-metric strong {
   color: #fff;
@@ -230,8 +230,8 @@
 }
 
 .ad-hero-action-btn.liked {
-  color: #e63636;
-  border-color: rgba(230,54,54,0.4);
+  color: #8b5cf6;
+  border-color: rgba(139,92,246,0.4);
 }
 
 .ad-heart-burst {
@@ -248,7 +248,7 @@
   position: absolute;
   inset: -4px;
   border-radius: 12px;
-  border: 2px solid #e63636;
+  border: 2px solid #8b5cf6;
   opacity: 0;
   pointer-events: none;
 }

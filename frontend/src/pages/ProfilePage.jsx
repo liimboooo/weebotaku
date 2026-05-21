@@ -135,12 +135,12 @@ export default function ProfilePage() {
   const topGenres = Object.entries(favoriteGenres).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
   const auraColors = {
-    Action: "#e63636", Adventure: "#f59e0b", Comedy: "#22c55e", Drama: "#a855f7",
+    Action: "#8b5cf6", Adventure: "#f59e0b", Comedy: "#22c55e", Drama: "#a855f7",
     Fantasy: "#3b82f6", Horror: "#881337", Romance: "#ec4899", "Sci-Fi": "#06b6d4",
     "Slice of Life": "#f97316", Sports: "#14b8a6", Thriller: "#64748b", Mystery: "#8b5cf6",
   };
   const dominantGenre = topGenres[0]?.[0];
-  const auraColor = auraColors[dominantGenre] || "#e63636";
+  const auraColor = auraColors[dominantGenre] || "#8b5cf6";
 
   const storedEdits = (() => { try { return JSON.parse(localStorage.getItem("amv_edits") || "[]"); } catch { return []; } })();
   const totalEdits = formatCount(storedEdits.length);
@@ -485,7 +485,7 @@ export default function ProfilePage() {
                         <div className="prog-level-circle">
                           <svg viewBox="0 0 80 80" className="prog-ring-svg">
                             <circle cx="40" cy="40" r="36" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="4" />
-                            <circle cx="40" cy="40" r="36" fill="none" stroke="#e63636" strokeWidth="4"
+                            <circle cx="40" cy="40" r="36" fill="none" stroke="#8b5cf6" strokeWidth="4"
                               strokeDasharray={`${(xpProgress / 100) * 226} 226`}
                               strokeLinecap="round" transform="rotate(-90 40 40)" />
                           </svg>

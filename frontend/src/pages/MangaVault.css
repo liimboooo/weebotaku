@@ -15,7 +15,7 @@
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(230, 54, 54, 0.04), transparent 50%);
+    radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.04), transparent 50%);
   z-index: 0;
 }
 
@@ -518,8 +518,8 @@
 }
 
 .mv-card:hover {
-  border-color: rgba(230, 54, 54, 0.25);
-  box-shadow: 0 8px 32px rgba(230, 54, 54, 0.08);
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.08);
 }
 
 .mv-card-thumb {
@@ -593,7 +593,7 @@
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  background: rgba(230,54,54,0.85);
+  background: rgba(139,92,246,0.85);
   color: #fff;
   backdrop-filter: blur(4px);
 }
@@ -737,8 +737,8 @@
 }
 
 .mv-row-card:hover {
-  border-color: rgba(230, 54, 54, 0.25);
-  box-shadow: 0 4px 16px rgba(230, 54, 54, 0.06);
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.06);
 }
 
 .mv-row-thumb {

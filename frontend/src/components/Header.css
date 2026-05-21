@@ -59,14 +59,14 @@ body {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-sm);
-  background: rgba(230, 54, 54, 0.08);
-  border: 1px solid rgba(230, 54, 54, 0.12);
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.12);
   transition: all var(--duration-normal) var(--ease-out);
 }
 
 .brand:hover .brand-icon {
-  background: rgba(230, 54, 54, 0.12);
-  border-color: rgba(230, 54, 54, 0.2);
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.2);
   transform: scale(1.04);
 }
 
@@ -164,8 +164,8 @@ body {
 
 .search-form:focus-within {
   background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(230, 54, 54, 0.2);
-  box-shadow: 0 0 0 3px rgba(230, 54, 54, 0.06), 0 4px 20px rgba(0, 0, 0, 0.2);
+  border-color: rgba(139, 92, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.06), 0 4px 20px rgba(0, 0, 0, 0.2);
   max-width: 320px;
 }
 
@@ -387,14 +387,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(230, 54, 54, 0.4);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
   line-height: 1;
   animation: notif-badge-pulse 2s ease-in-out infinite;
 }
 
 @keyframes notif-badge-pulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 2px 8px rgba(230, 54, 54, 0.4); }
-  50% { transform: scale(1.15); box-shadow: 0 2px 12px rgba(230, 54, 54, 0.6); }
+  0%, 100% { transform: scale(1); box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4); }
+  50% { transform: scale(1.15); box-shadow: 0 2px 12px rgba(139, 92, 246, 0.6); }
 }
 
 /* ─── More Dropdown ──────────────────────────────────── */
@@ -486,8 +486,8 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: rgba(230, 54, 54, 0.1);
-  border: 1px solid rgba(230, 54, 54, 0.15);
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.15);
 }
 
 .profile-avatar {
@@ -908,8 +908,8 @@ body {
 }
 
 .notif-item:hover { background: rgba(255, 255, 255, 0.03); }
-.notif-item.unread { background: rgba(230, 54, 54, 0.04); }
-.notif-item.unread:hover { background: rgba(230, 54, 54, 0.07); }
+.notif-item.unread { background: rgba(139, 92, 246, 0.04); }
+.notif-item.unread:hover { background: rgba(139, 92, 246, 0.07); }
 
 .notif-item-dot {
   width: 7px;

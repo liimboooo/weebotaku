@@ -27,7 +27,7 @@ function SliderCard({ item, onClick }) {
     <motion.div
       className="slider-card"
       onClick={onClick}
-      whileHover={{ boxShadow: "0 16px 48px rgba(230,54,54,0.12)" }}
+      whileHover={{ boxShadow: "0 16px 48px rgba(139,92,246,0.12)" }}
       transition={{ type: "spring", stiffness: 300 }}
     >
       <div className="slider-card-thumb">

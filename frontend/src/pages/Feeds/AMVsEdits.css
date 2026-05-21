@@ -864,7 +864,7 @@
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #ff4444;
+  color: #a78bfa;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1013,7 +1013,7 @@
 
 .pin-hashtag {
   border: 1px solid rgba(229, 9, 20, 0.5);
-  color: #ff6b6b;
+  color: #c084fc;
   font-size: 0.65rem;
   font-weight: 700;
   padding: 4px 10px;
@@ -1062,7 +1062,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e50914, #ff6b6b);
+  background: linear-gradient(135deg, #e50914, #c084fc);
   color: #fff;
   display: flex;
   align-items: center;
@@ -1158,7 +1158,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e50914, #ff6b6b);
+  background: linear-gradient(135deg, #e50914, #c084fc);
   color: #fff;
   display: flex;
   align-items: center;
@@ -1511,7 +1511,7 @@
 }
 
 .duration-warning {
-  color: #ff6b6b;
+  color: #c084fc;
   font-weight: 600;
 }
 

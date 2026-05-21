@@ -37,16 +37,16 @@
 .toast-info { border-left: 3px solid #3b82f6; }
 
 .toast-xp {
-  border-left: 3px solid #e63636;
+  border-left: 3px solid #8b5cf6;
   min-width: auto;
   padding: 10px 14px;
   gap: 8px;
   font-weight: 700;
   font-size: 14px;
-  color: #e63636;
+  color: #8b5cf6;
   animation: toast-in 0.3s var(--ease-out), xp-pulse 0.4s ease-out 0.3s;
 }
-.toast-xp svg { color: #e63636; }
+.toast-xp svg { color: #8b5cf6; }
 .toast-xp-label {
   font-size: 11px;
   font-weight: 500;

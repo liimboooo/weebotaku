@@ -11,12 +11,12 @@
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
 
   /* Color — Primary */
-  --primary: #e63636;
-  --primary-hover: #ff4444;
-  --primary-muted: #c62828;
-  --primary-glow: rgba(230, 54, 54, 0.08);
-  --primary-surface: rgba(230, 54, 54, 0.08);
-  --primary-border: rgba(230, 54, 54, 0.2);
+  --primary: #8b5cf6;
+  --primary-hover: #a78bfa;
+  --primary-muted: #7c3aed;
+  --primary-glow: rgba(139, 92, 246, 0.08);
+  --primary-surface: rgba(139, 92, 246, 0.08);
+  --primary-border: rgba(139, 92, 246, 0.2);
 
   /* Color — Neutrals */
   --bg-deep: #030304;
@@ -36,7 +36,7 @@
   --border-subtle: rgba(255, 255, 255, 0.06);
   --border-default: rgba(255, 255, 255, 0.09);
   --border-hover: rgba(255, 255, 255, 0.14);
-  --border-active: rgba(230, 54, 54, 0.35);
+  --border-active: rgba(139, 92, 246, 0.35);
 
   /* Color — Glass */
   --glass-bg: rgba(12, 12, 16, 0.72);
@@ -48,7 +48,7 @@
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 40px rgba(230, 54, 54, 0.15);
+  --shadow-glow: 0 0 40px rgba(139, 92, 246, 0.15);
 
   /* Spacing scale */
   --space-1: 4px;
@@ -173,12 +173,12 @@ button, [role="button"], input, textarea, select, a {
 :focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 3px;
-  box-shadow: 0 0 0 4px rgba(230, 54, 54, 0.12);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.12);
 }
 
 /* ─── Selection ──────────────────────────────────────── */
 ::selection {
-  background: rgba(230, 54, 54, 0.25);
+  background: rgba(139, 92, 246, 0.25);
   color: #fff;
 }
 
@@ -213,7 +213,7 @@ button, [role="button"], input, textarea, select, a {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(230, 54, 54, 0.5);
+  background: rgba(139, 92, 246, 0.5);
 }
 
 /* ─── Utility Classes ────────────────────────────────── */
@@ -234,7 +234,7 @@ button, [role="button"], input, textarea, select, a {
 }
 
 .text-gradient-accent {
-  background: linear-gradient(135deg, #ff6b6b 0%, #e63636 50%, #cc2020 100%);
+  background: linear-gradient(135deg, #c084fc 0%, #8b5cf6 50%, #6d28d9 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -921,8 +921,8 @@ img[loading="lazy"][src] {
 }
 
 .empty-state-action:hover {
-  background: rgba(230, 54, 54, 0.15);
+  background: rgba(139, 92, 246, 0.15);
   border-color: var(--primary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(230, 54, 54, 0.15);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15);
 }
