@@ -28,6 +28,7 @@ import Skeleton from "../components/Skeleton";
 import LiveRooms from "../components/LiveRooms";
 import Categories from "../components/Categories";
 import Background from "../components/Background";
+import "../components/AnimePreviewPanel.css";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
 import { loadWatchlist } from "../services/storage";
@@ -200,7 +201,7 @@ function SpotlightQuote({ quote, onRefresh, loading }) {
   );
 }
 
-function ContinueWatchingRow() {
+function ContinueWatchingRow({ onCardClick }) {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
 
@@ -249,20 +250,12 @@ function ContinueWatchingRow() {
   return (
     <section className="home-section">
       <SectionHeader icon={Clock} title="Continue Watching" subtitle="Pick up where you left off" />
-      <motion.div
-        className="upcoming-grid"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-40px" }}
-      >
+      <div className="upcoming-grid">
         {items.map((item) => (
-          <motion.div
+          <div
             key={`${item.animeId}-${item.episode}`}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode}`)}
-            variants={cardSlideUp}
-            whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
+            onClick={() => onCardClick?.({ ...item, id: item.animeId })}
           >
             <div className="upcoming-card-img">
               <img src={item.img} alt={item.name} loading="lazy" />
@@ -276,9 +269,9 @@ function ContinueWatchingRow() {
                 <span className="upcoming-card-type">{item.episode ? `Ep ${item.episode}` : "Continue"}</span>
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
+      </div>
     </section>
   );
 }
@@ -317,26 +310,18 @@ function SectionHeader({ icon: Icon, title, subtitle, action }) {
   );
 }
 
-function SeasonGrid({ animeList }) {
+function SeasonGrid({ animeList, onCardClick }) {
   const navigate = useNavigate();
   if (!animeList?.length) return null;
   return (
     <section className="home-section">
       <SectionHeader icon={Sparkles} title="Season Highlights" subtitle="Top picks this season" action={() => navigate("/browse/anime")} />
-      <motion.div
-        className="upcoming-grid"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-40px" }}
-      >
+      <div className="upcoming-grid">
         {animeList.map((anime) => (
-          <motion.div
+          <div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
-            variants={cardSlideUp}
-            whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
+            onClick={() => onCardClick(anime)}
           >
             <div className="upcoming-card-img">
               <img src={anime.img} alt={anime.name} loading="lazy" />
@@ -351,33 +336,24 @@ function SeasonGrid({ animeList }) {
                 <span className="upcoming-card-type">{anime.status || "TV"}</span>
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
+      </div>
     </section>
   );
 }
 
-function TopTenRow({ animeList }) {
-  const navigate = useNavigate();
+function TopTenRow({ animeList, onCardClick }) {
   if (!animeList?.length) return null;
   return (
     <section className="home-section">
       <SectionHeader icon={Crown} title="Top 10 Anime" subtitle="Highest rated of all time" />
-      <motion.div
-        className="upcoming-grid"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-40px" }}
-      >
+      <div className="upcoming-grid">
         {animeList.map((anime) => (
-          <motion.div
+          <div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
-            variants={cardSlideUp}
-            whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
+            onClick={() => onCardClick(anime)}
           >
             <div className="upcoming-card-img">
               <img src={anime.img} alt={anime.name} loading="lazy" />
@@ -392,9 +368,9 @@ function TopTenRow({ animeList }) {
                 <span className="upcoming-card-type">{anime.status || "TV"}</span>
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
+      </div>
     </section>
   );
 }
@@ -424,26 +400,18 @@ function GenreBar({ genres }) {
   );
 }
 
-function UpcomingSection({ animeList }) {
+function UpcomingSection({ animeList, onCardClick }) {
   const navigate = useNavigate();
   if (!animeList?.length) return null;
   return (
     <section className="home-section">
       <SectionHeader icon={Calendar} title="Coming Soon" subtitle="Upcoming anime to watch out for" action={() => navigate("/browse/anime")} />
-      <motion.div
-        className="upcoming-grid"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-40px" }}
-      >
+      <div className="upcoming-grid">
         {animeList.map((anime) => (
-          <motion.div
+          <div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
-            variants={cardSlideUp}
-            whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
+            onClick={() => onCardClick(anime)}
           >
             <div className="upcoming-card-img">
               <img src={anime.img} alt={anime.name} loading="lazy" />
@@ -458,9 +426,9 @@ function UpcomingSection({ animeList }) {
                 <span className="upcoming-card-type">{anime.type || "TV"}</span>
               </div>
             </div>
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
+      </div>
     </section>
   );
 }
@@ -569,6 +537,7 @@ export default function Home() {
   const { spotlight, topTen, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending } = useAnimeData();
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const [selectedAnime, setSelectedAnime] = useState(null);
 
   useEffect(() => {
     fetchRandomQuote().then(setQuote).catch(() => {});
@@ -618,10 +587,10 @@ export default function Home() {
 
         <GenreBar genres={categories} />
 
-        <ContinueWatchingRow />
+        <ContinueWatchingRow onCardClick={setSelectedAnime} />
 
         {topTen.length > 0 && (
-          <TopTenRow animeList={topTen} />
+          <TopTenRow animeList={topTen} onCardClick={setSelectedAnime} />
         )}
 
         {trendingList.length > 0 && (
@@ -637,7 +606,7 @@ export default function Home() {
                 <div
                   key={anime.id}
                   className="upcoming-card"
-                  onClick={() => navigate(`/anime/${anime.id}`)}
+                  onClick={() => setSelectedAnime(anime)}
                 >
                   <div className="upcoming-card-img">
                     <img src={anime.img} alt={anime.name} loading="lazy" />
@@ -659,11 +628,11 @@ export default function Home() {
         )}
 
         {seasonPicks.length > 0 && (
-          <SeasonGrid animeList={seasonPicks} />
+          <SeasonGrid animeList={seasonPicks} onCardClick={setSelectedAnime} />
         )}
 
         {upcomingList.length > 0 && (
-          <UpcomingSection animeList={upcomingList} />
+          <UpcomingSection animeList={upcomingList} onCardClick={setSelectedAnime} />
         )}
 
         {popularList.length > 0 && (
@@ -679,7 +648,7 @@ export default function Home() {
                 <div
                   key={anime.id}
                   className="upcoming-card"
-                  onClick={() => navigate(`/anime/${anime.id}`)}
+                  onClick={() => setSelectedAnime(anime)}
                 >
                   <div className="upcoming-card-img">
                     <img src={anime.img} alt={anime.name} loading="lazy" />
@@ -698,6 +667,50 @@ export default function Home() {
               ))}
             </div>
           </section>
+        )}
+
+        {selectedAnime && (
+          <div className="preview-panel" style={{ overflow: "hidden" }}>
+            <div className="preview-panel-inner">
+              <div className="preview-panel-left">
+                <button className="preview-panel-close" onClick={() => setSelectedAnime(null)}>X</button>
+                <h2 className="preview-panel-title">{selectedAnime.name || "Untitled"}</h2>
+                <div className="preview-panel-stats">
+                  <span className="preview-panel-stat">{selectedAnime.year || "?"}</span>
+                  <span className="preview-panel-stat">{Number(selectedAnime.rating).toFixed(1) || "?"}</span>
+                  <span className="preview-panel-stat">{selectedAnime.episodes ? `${selectedAnime.episodes} EP` : "?"}</span>
+                  <span className="preview-panel-stat">HD</span>
+                </div>
+                <p className="preview-panel-synopsis">{selectedAnime.synopsis || "No synopsis available."}</p>
+                <div className="preview-panel-actions">
+                  <button
+                    className="preview-panel-btn primary"
+                    onClick={() => { const id = selectedAnime.id; setSelectedAnime(null); navigate(`/anime/${id}`); }}
+                  >
+                    ▶ Watch
+                  </button>
+                  <button className="preview-panel-btn secondary">♡ Watchlist</button>
+                  <button className="preview-panel-btn icon">👍</button>
+                </div>
+                <div className="preview-panel-details">
+                  <div className="preview-panel-detail-item">
+                    <span className="preview-panel-detail-label">Cast</span>
+                    <span className="preview-panel-detail-value">{selectedAnime.studios?.join(", ") || "Various"}</span>
+                  </div>
+                  <div className="preview-panel-detail-item">
+                    <span className="preview-panel-detail-label">Genres</span>
+                    <span className="preview-panel-detail-value">{selectedAnime.genres?.join(", ") || "N/A"}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="preview-panel-right">
+                <div className="preview-panel-media">
+                  <img src={selectedAnime.bannerImage || selectedAnime.img} alt="" />
+                </div>
+                <div className="preview-panel-fade" />
+              </div>
+            </div>
+          </div>
         )}
 
         <div className="section-divider">
