@@ -574,7 +574,9 @@ export default function Home() {
   const [selectedAnime, setSelectedAnime] = useState(null);
 
   const handleCardClick = (anime) => {
-    setSelectedAnime(prev => prev?.id === anime.id ? null : anime);
+    if (anime?.id) {
+      setSelectedAnime(anime);
+    }
   };
 
   useEffect(() => {

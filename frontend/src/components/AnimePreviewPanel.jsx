@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { X, Play, Bookmark, ThumbsUp, Film, Calendar, Monitor } from "lucide-react";
+import { X, Play, Bookmark, ThumbsUp, Film, Calendar, Star } from "lucide-react";
 import "./AnimePreviewPanel.css";
 
 export default function AnimePreviewPanel({ anime, onClose, onPlay, onWatchlist, onLike }) {
@@ -8,9 +8,9 @@ export default function AnimePreviewPanel({ anime, onClose, onPlay, onWatchlist,
 
   const meta = [
     { label: "Year", value: anime.year || anime.seasonYear, icon: Calendar },
-    { label: "Rating", value: anime.rating ? `${Number(anime.rating).toFixed(1)} / 10` : null, icon: Monitor },
+    { label: "Rating", value: anime.rating ? `${Number(anime.rating).toFixed(1)} / 10` : null, icon: Star },
     { label: "Episodes", value: anime.episodes ? `${anime.episodes} EP` : null, icon: Film },
-    { label: "Quality", value: "HD", icon: Monitor, accent: true },
+    { label: "Quality", value: "HD", accent: true },
   ].filter(m => m.value);
 
   const hasTrailer = anime.trailerUrl && anime.trailerUrl.includes("youtube");
@@ -19,10 +19,10 @@ export default function AnimePreviewPanel({ anime, onClose, onPlay, onWatchlist,
   return (
     <motion.div
       className="preview-panel"
-      initial={{ height: 0, opacity: 0 }}
-      animate={{ height: "auto", opacity: 1 }}
-      exit={{ height: 0, opacity: 0 }}
-      transition={{ type: "spring", stiffness: 200, damping: 26 }}
+      initial={{ opacity: 0, y: -12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ type: "spring", stiffness: 260, damping: 24 }}
     >
       <div className="preview-panel-left">
         <button className="preview-panel-close" onClick={onClose} aria-label="Close preview">
