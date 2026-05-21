@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Bookmark,
   Calendar,
@@ -725,15 +725,18 @@ export default function Home() {
           </section>
         )}
 
-        {selectedAnime && (
-          <AnimePreviewPanel
-            anime={selectedAnime}
-            onClose={() => setSelectedAnime(null)}
-            onPlay={() => { const id = selectedAnime.id; setSelectedAnime(null); navigate(`/anime/${id}`); }}
-            onWatchlist={() => {}}
-            onLike={() => {}}
-          />
-        )}
+        <AnimatePresence>
+          {selectedAnime && (
+            <AnimePreviewPanel
+              key={selectedAnime.id}
+              anime={selectedAnime}
+              onClose={() => setSelectedAnime(null)}
+              onPlay={() => { const id = selectedAnime.id; setSelectedAnime(null); navigate(`/anime/${id}`); }}
+              onWatchlist={() => {}}
+              onLike={() => {}}
+            />
+          )}
+        </AnimatePresence>
 
         <div className="section-divider">
           <span>Community</span>

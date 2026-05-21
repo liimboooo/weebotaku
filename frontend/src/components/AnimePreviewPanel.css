@@ -1,9 +1,12 @@
 .preview-panel {
+  margin: 16px 0 8px;
+}
+
+.preview-panel-inner {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  margin: 16px 0 8px;
   border: 1px solid rgba(255,255,255,0.06);
   background: rgba(255,255,255,0.015);
   position: relative;
@@ -207,7 +210,7 @@
 }
 
 @media (max-width: 768px) {
-  .preview-panel {
+  .preview-panel-inner {
     grid-template-columns: 1fr;
   }
   .preview-panel-left {
