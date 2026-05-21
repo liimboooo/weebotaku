@@ -173,9 +173,9 @@ function StatsBar() {
             <span className="home-stat-value">{s.value}</span>
             <span className="home-stat-label">{s.label}</span>
           </div>
-        </motion.div>
-      ))}
-    </motion.div>
+          </motion.div>
+        ))}
+      </motion.div>
   );
 }
 
@@ -562,9 +562,9 @@ export default function Home() {
                     <Skeleton key={j} variant="card" />
                   ))}
                 </div>
-              </div>
-            ))}
-          </div>
+                </div>
+              ))}
+            </div>
         </div>
       </AnimatedPage>
     );
@@ -601,13 +601,21 @@ export default function Home() {
               subtitle="Most watched anime this week"
               action={refreshTrending}
             />
-            <div className="upcoming-grid">
-              {trendingList.map((anime) => (
-                <div
-                  key={anime.id}
-                  className="upcoming-card"
-                  onClick={() => { alert(`Clicked: ${anime.name}`); setSelectedAnime(anime); }}
-                >
+          <motion.div
+            className="upcoming-grid"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-40px" }}
+          >
+            {trendingList.map((anime) => (
+              <motion.div
+                key={anime.id}
+                className="upcoming-card"
+                onClick={() => { alert(`Clicked: ${anime.name}`); setSelectedAnime(anime); }}
+                variants={cardSlideUp}
+                whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
+              >
                   <div className="upcoming-card-img">
                     <img src={anime.img} alt={anime.name} loading="lazy" />
                     <div className="upcoming-card-badge">
@@ -621,9 +629,9 @@ export default function Home() {
                       <span className="upcoming-card-type">{anime.status || "TV"}</span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </section>
         )}
 
