@@ -184,7 +184,8 @@ export default function Header() {
   };
 
   return (
-    <header ref={headerRef} className="header" style={{ opacity: scrollProgress, backdropFilter: `blur(${scrollProgress * 24}px)`, WebkitBackdropFilter: `blur(${scrollProgress * 24}px)` }}>
+    <header ref={headerRef} className="header">
+      <div className="header-bg" style={{ opacity: scrollProgress, backdropFilter: `blur(${scrollProgress * 24}px)`, WebkitBackdropFilter: `blur(${scrollProgress * 24}px)` }} />
       <div className="header-shell">
         <button className="mobile-toggle" onClick={() => setMobileOpen((value) => !value)} aria-label="Toggle navigation">
           {mobileOpen ? <X size={18} /> : <Menu size={18} />}
