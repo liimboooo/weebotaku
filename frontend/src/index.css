@@ -107,10 +107,7 @@ html {
 }
 
 body {
-  background: var(--bg-deep);
-  background-image:
-    radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.015), transparent 60%),
-    linear-gradient(180deg, var(--bg-deep) 0%, #050507 100%);
+  background: #000;
   background-attachment: fixed;
   color: var(--text-primary);
   font-family: var(--font-body);
