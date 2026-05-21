@@ -8,10 +8,10 @@ export default function AnimePreviewPanel({ anime, onClose, onPlay, onWatchlist,
 
   const meta = [
     { label: "Year", value: anime.year || anime.seasonYear, icon: Calendar },
-    { label: "Rating", value: anime.rating ? `${anime.rating.toFixed(1)} / 10` : "N/A", icon: Monitor },
-    { label: "Episodes", value: `${anime.episodes || "?"} EP`, icon: Film },
+    { label: "Rating", value: anime.rating ? `${Number(anime.rating).toFixed(1)} / 10` : null, icon: Monitor },
+    { label: "Episodes", value: anime.episodes ? `${anime.episodes} EP` : null, icon: Film },
     { label: "Quality", value: "HD", icon: Monitor, accent: true },
-  ].filter(m => m.value && m.value !== "N/A");
+  ].filter(m => m.value);
 
   const hasTrailer = anime.trailerUrl && anime.trailerUrl.includes("youtube");
   const hasBanner = anime.bannerImage || anime.backdrop;
@@ -23,7 +23,6 @@ export default function AnimePreviewPanel({ anime, onClose, onPlay, onWatchlist,
       animate={{ height: "auto", opacity: 1 }}
       exit={{ height: 0, opacity: 0 }}
       transition={{ type: "spring", stiffness: 200, damping: 26 }}
-      layout
     >
       <div className="preview-panel-left">
         <button className="preview-panel-close" onClick={onClose} aria-label="Close preview">

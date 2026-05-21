@@ -726,9 +726,10 @@ export default function Home() {
         <AnimatePresence>
           {selectedAnime && (
             <AnimePreviewPanel
+              key={selectedAnime.id}
               anime={selectedAnime}
               onClose={() => setSelectedAnime(null)}
-              onPlay={() => { setSelectedAnime(null); navigate(`/anime/${selectedAnime.id}`); }}
+              onPlay={() => { const id = selectedAnime.id; setSelectedAnime(null); navigate(`/anime/${id}`); }}
               onWatchlist={() => {}}
               onLike={() => {}}
             />
