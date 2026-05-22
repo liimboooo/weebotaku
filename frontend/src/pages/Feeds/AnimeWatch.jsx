@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
-  ChevronLeft, X, Loader, Play, SkipForward,
+  Loader, Play,
   Star, Tv, Calendar, Clock, Monitor, Search, Film,
-  Bookmark, Heart, Volume2, Maximize, List,
-  ArrowLeft, MessageCircle, ThumbsUp, ThumbsDown,
-  Reply, Pin, EyeOff, ChevronRight, Users,
-  AlertCircle
+  Bookmark, Heart, List,
+  MessageCircle, ThumbsUp, ThumbsDown,
+  Reply, Pin, EyeOff, Users,
+  AlertCircle, X, ArrowLeft, SkipForward
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { getEpisodes, getStreamUrls } from "../../services/animeApi";
-import { fetchAnimeRecommendations } from "../../services/anilistApi";
 import "./AnimeWatch.css";
 
 const SORT_TABS = [
@@ -51,9 +50,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [commentText, setCommentText] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [spoilerMode, setSpoilerMode] = useState({});
-
-  /* ─── RECOMMENDATIONS ─── */
-  const [recommendations, setRecommendations] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -105,12 +101,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
   }, [epIndex, episodes]);
-
-  /* ─── FETCH RECOMMENDATIONS ─── */
-  useEffect(() => {
-    if (!anime.anilistId) return;
-    fetchAnimeRecommendations(anime.anilistId).then(setRecommendations).catch(() => {});
-  }, [anime.anilistId]);
 
   const switchServer = (idx) => {
     if (servers[idx]) {
@@ -203,18 +193,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     return [...pinned, ...rest];
   }, [comments, commentSort]);
 
-  const similarAnime = useMemo(() => {
-    if (!detail?.genres?.length) return [];
-    return detail.genres.slice(0, 4).map((g, i) => ({
-      id: i + 1,
-      name: `${g} Hit`,
-      img: detail.img,
-      rating: (7.5 + Math.random()).toFixed(1),
-      eps: "12 EP",
-      status: "Airing",
-    }));
-  }, [detail]);
-
   return createPortal(
     <motion.div className="watch-overlay"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
@@ -269,20 +247,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
 
           <div className="watch-center-col">
             <header className="watch-topbar">
-              <button className="watch-back" onClick={onClose}>
-                <ChevronLeft size={16} />
-                <span className="watch-back-label">{animeName || anime.title}</span>
-              </button>
-              <div className="watch-topbar-mid">
-                {episode && <span className="watch-topbar-ep">Episode {episode.episode}</span>}
-              </div>
-              <div className="watch-topbar-right">
-                <button className="watch-topbar-btn" onClick={() => setAutoNext(!autoNext)} title="Auto-next">
-                  <SkipForward size={13} />
-                  <span className={`watch-topbar-indicator ${autoNext ? "on" : ""}`} />
-                </button>
-                <button className="watch-close" onClick={onClose}><X size={16} /></button>
-              </div>
+              <span className="watch-topbar-ep">{episode && `Episode ${episode.episode}`}</span>
             </header>
 
             <div className="watch-player-stage">
@@ -302,19 +267,16 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                 </div>
               )}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && (
-                <>
-                  <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}`} className="watch-frame" src={streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
-                  <div className="watch-player-controls">
-                    <div className="watch-controls-left">
-                      <button className="watch-ctrl-btn" title="Play/Pause"><Play size={14} fill="currentColor" /></button>
-                      <button className="watch-ctrl-btn" title="Volume"><Volume2 size={14} /></button>
-                      <div className="watch-timeline"><div className="watch-timeline-track"><div className="watch-timeline-progress" style={{ width: "0%" }} /></div></div>
-                    </div>
-                    <div className="watch-controls-right">
-                      <button className="watch-ctrl-btn" title="Fullscreen"><Maximize size={14} /></button>
-                    </div>
-                  </div>
-                </>
+                <iframe
+                  ref={iframeRef}
+                  key={`${episode?.episode || 0}-${serverIndex}`}
+                  className="watch-frame"
+                  src={streamUrl}
+                  title={`Episode ${episode?.episode || ""}`}
+                  allow="autoplay; fullscreen; encrypted-media"
+                  allowFullScreen
+                  onError={handleIframeError}
+                />
               )}
               {!loading && !error && iframeError && streamUrl && (
                 <div className="watch-center">
@@ -451,43 +413,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                       </div>
                     </div>
                   ))}
-                </div>
-              </section>
-
-              {/* ═══ MORE LIKE THIS ═══ */}
-              <section className="watch-section">
-                <div className="watch-section-head">
-                  <div className="watch-section-head-left">
-                    <Film size={13} />
-                    <span>More Like This</span>
-                  </div>
-                  <button className="watch-section-more">
-                    View All <ChevronRight size={12} />
-                  </button>
-                </div>
-                <div className="watch-rec-scroll">
-                  <div className="watch-rec-track">
-                    {(recommendations && recommendations.length > 0 ? recommendations : similarAnime).slice(0, 10).map((rec, i) => (
-                      <div key={rec.id || i} className="watch-rec-card">
-                        <div className="watch-rec-img-wrap">
-                          <img src={rec.image || rec.img || detail?.img} alt={rec.name || rec.title?.romaji || `Anime ${i + 1}`} />
-                          <div className="watch-rec-overlay">
-                            <Play size={14} fill="currentColor" />
-                          </div>
-                        </div>
-                        <div className="watch-rec-info">
-                          <span className="watch-rec-name">{rec.name || rec.title?.romaji || `Anime ${i + 1}`}</span>
-                          <div className="watch-rec-meta">
-                            {rec.rating && (
-                              <span className="watch-rec-rating"><Star size={9} /> {typeof rec.rating === "number" ? (rec.rating / 10).toFixed(1) : rec.rating}</span>
-                            )}
-                            {rec.episodes && <span className="watch-rec-eps">{rec.episodes} EP</span>}
-                            {rec.status && <span className="watch-rec-status">{rec.status}</span>}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </section>
 
