@@ -52,16 +52,6 @@ export default function AnimeDetail() {
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
   const failedServers = useRef(new Set());
-  const langKey = useRef(0);
-
-  const toStreamUrl = (srv) => {
-    if (!srv) return "";
-    try {
-      const u = new URL(srv.url);
-      if (srv.type === "dub") u.searchParams.set("type", "dub");
-      return u.toString();
-    } catch { return srv.url; }
-  };
 
   const [comments, setComments] = useState(MOCK_COMMENTS);
   const [commentSort, setCommentSort] = useState("top");
@@ -135,8 +125,7 @@ export default function AnimeDetail() {
       const ls = servers.filter(s => s.type === language);
       if (ls.length > 0) {
         setServerIndex(0);
-        setStreamUrl(toStreamUrl(ls[0]));
-        langKey.current += 1;
+        setStreamUrl(ls[0].url);
       }
     }
   }, [servers, language]);
@@ -156,7 +145,7 @@ export default function AnimeDetail() {
       setServerIndex(idx);
       setIframeError(false);
       failedServers.current = new Set();
-      setStreamUrl(toStreamUrl(srv));
+      setStreamUrl(srv.url);
     }
   };
 
@@ -167,7 +156,7 @@ export default function AnimeDetail() {
       failedServers.current.add(serverIndex);
       setServerIndex(nextIdx);
       setIframeError(false);
-      setStreamUrl(toStreamUrl(ls[nextIdx]));
+      setStreamUrl(ls[nextIdx].url);
     } else {
       setIframeError(true);
     }
@@ -180,7 +169,7 @@ export default function AnimeDetail() {
     if (ls[nextIdx]) {
       setIframeError(false);
       setServerIndex(nextIdx);
-      setStreamUrl(toStreamUrl(ls[nextIdx]));
+      setStreamUrl(ls[nextIdx].url);
     } else {
       setIframeError(true);
     }
@@ -316,7 +305,7 @@ export default function AnimeDetail() {
                 </div>
               )}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && (
-                <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}-${langKey.current}`} className="watch-frame" src={streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
+                <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}`} className="watch-frame" src={streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
               )}
               {!loading && !error && iframeError && streamUrl && (
                 <div className="watch-center">
