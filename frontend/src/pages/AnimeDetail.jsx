@@ -48,6 +48,11 @@ export default function AnimeDetail() {
   const [streamRetryCount, setStreamRetryCount] = useState(0);
   const [autoNext, setAutoNext] = useState(true);
   const [epSearch, setEpSearch] = useState("");
+  const [language, setLanguage] = useState("sub");
+
+  const filteredServers = useMemo(() => {
+    return servers.filter(s => !s.type || s.type === language);
+  }, [servers, language]);
 
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
@@ -112,13 +117,22 @@ export default function AnimeDetail() {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
         const urls = await getStreamUrls(episode.url, watchAnime.source, watchAnime.anilistId);
-        if (urls.length > 0) { setServers(urls); setStreamUrl(urls[0].url); }
+        if (urls.length > 0) { setServers(urls); }
         else setError("No video servers found.");
       } catch { setError("Failed to load stream."); }
       finally { setStreamLoading(false); }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episode, streamRetryCount]);
+
+  useEffect(() => {
+    const langServers = servers.filter(s => !s.type || s.type === language);
+    if (langServers.length > 0) {
+      const idx = servers.indexOf(langServers[0]);
+      setServerIndex(idx);
+      setStreamUrl(langServers[0].url);
+    }
+  }, [language, servers]);
 
   useEffect(() => {
     if (scrollRef.current && episodes[epIndex]) {
@@ -128,35 +142,39 @@ export default function AnimeDetail() {
   }, [epIndex, episodes]);
 
   const switchServer = (idx) => {
-    if (servers[idx]) {
-      setServerIndex(idx);
+    const srv = filteredServers[idx];
+    if (srv) {
+      const globalIdx = servers.indexOf(srv);
+      setServerIndex(globalIdx);
       setIframeError(false);
       failedServers.current = new Set();
-      setStreamUrl(servers[idx].url);
+      setStreamUrl(srv.url);
     }
   };
 
   const tryNextServer = useCallback(() => {
     const nextIdx = serverIndex + 1;
-    if (servers[nextIdx]) {
+    if (filteredServers[nextIdx]) {
       failedServers.current.add(serverIndex);
-      setServerIndex(nextIdx);
+      const globalIdx = servers.indexOf(filteredServers[nextIdx]);
+      setServerIndex(globalIdx);
       setIframeError(false);
     } else {
       setIframeError(true);
     }
-  }, [serverIndex, servers]);
+  }, [serverIndex, servers, filteredServers]);
 
   const handleIframeError = useCallback(() => {
     failedServers.current.add(serverIndex);
     const nextIdx = serverIndex + 1;
-    if (servers[nextIdx]) {
+    if (filteredServers[nextIdx]) {
       setIframeError(false);
-      setServerIndex(nextIdx);
+      const globalIdx = servers.indexOf(filteredServers[nextIdx]);
+      setServerIndex(globalIdx);
     } else {
       setIframeError(true);
     }
-  }, [serverIndex, servers]);
+  }, [serverIndex, servers, filteredServers]);
 
   const filteredEpisodes = useMemo(() => {
     if (!epSearch) return episodes;
@@ -288,14 +306,14 @@ export default function AnimeDetail() {
                 </div>
               )}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && (
-                <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}`} className="watch-frame" src={streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
+                <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}-${language}`} className="watch-frame" src={streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
               )}
               {!loading && !error && iframeError && streamUrl && (
                 <div className="watch-center">
                   <div className="watch-err-badge">!</div>
                   <p className="watch-err-text">Episode not available on this source.</p>
                   <div style={{ display: "flex", gap: 8 }}>
-                    {serverIndex < servers.length - 1 && <button className="watch-btn" onClick={tryNextServer}>Try Next Source</button>}
+                    {serverIndex < filteredServers.length - 1 && <button className="watch-btn" onClick={tryNextServer}>Try Next Source</button>}
                     {epIndex < episodes.length - 1 && <button className="watch-btn watch-btn-ghost" onClick={() => { setIframeError(false); failedServers.current = new Set(); setEpIndex(i => i + 1); }}>Skip to Next Episode</button>}
                     <button className="watch-btn watch-btn-ghost" onClick={() => { setIframeError(false); failedServers.current = new Set(); setStreamRetryCount(c => c + 1); }}>Retry</button>
                   </div>
@@ -326,12 +344,15 @@ export default function AnimeDetail() {
                   <span className="watch-info-bar-ep">Episode {episode?.episode || selectedEp}{totalEps && <span className="watch-info-bar-total"> / {totalEps}</span>}</span>
                 </div>
                 <div className="watch-servers">
-                  <span className="watch-servers-label">Servers</span>
+                  <div className="watch-lang-toggle">
+                    <button className={`watch-lang-btn ${language === "sub" ? "active" : ""}`} onClick={() => setLanguage("sub")}>SUB</button>
+                    <button className={`watch-lang-btn ${language === "dub" ? "active" : ""}`} onClick={() => setLanguage("dub")}>DUB</button>
+                  </div>
                   <div className="watch-servers-list">
-                    {servers.map((s, i) => (
+                    {filteredServers.map((s, i) => (
                       <button key={i} className={`watch-server-chip ${i === serverIndex ? "active" : ""}`} onClick={() => switchServer(i)}>{s.label || `Server ${i + 1}`}</button>
                     ))}
-                    {servers.length === 0 && !streamLoading && <span className="watch-muted" style={{ fontSize: 12, padding: "5px 0" }}>No servers loaded</span>}
+                    {filteredServers.length === 0 && !streamLoading && <span className="watch-muted" style={{ fontSize: 12, padding: "5px 0" }}>No servers loaded</span>}
                   </div>
                 </div>
               </div>

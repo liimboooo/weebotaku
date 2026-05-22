@@ -163,6 +163,7 @@ async function getStreamUrlsReanime(epNum, anilistId) {
     return data.servers.map(s => ({
       label: `${s.serverName} (${s.dataType})`,
       url: s.dataLink,
+      type: s.dataType,
     }));
   } catch {
     return [];

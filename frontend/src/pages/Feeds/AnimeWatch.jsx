@@ -40,6 +40,12 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [streamRetryCount, setStreamRetryCount] = useState(0);
   const [autoNext, setAutoNext] = useState(true);
   const [epSearch, setEpSearch] = useState("");
+  const [language, setLanguage] = useState("sub");
+
+  const filteredServers = useMemo(() => {
+    return servers.filter(s => !s.type || s.type === language);
+  }, [servers, language]);
+
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
   const failedServers = useRef(new Set());
@@ -77,13 +83,21 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
         const urls = await getStreamUrls(episode.url, anime.source, anime.anilistId);
-        if (urls.length > 0) { setServers(urls); setStreamUrl(urls[0].url); }
+        if (urls.length > 0) { setServers(urls); }
         else setError("No video servers found.");
       } catch { setError("Failed to load stream."); }
       finally { setStreamLoading(false); }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episode, streamRetryCount]);
+
+  useEffect(() => {
+    const langServers = servers.filter(s => !s.type || s.type === language);
+    if (langServers.length > 0) {
+      setServerIndex(0);
+      setStreamUrl(langServers[0].url);
+    }
+  }, [language, servers]);
 
   const [prefetchCache, setPrefetchCache] = useState({});
   useEffect(() => {
@@ -103,35 +117,36 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   }, [epIndex, episodes]);
 
   const switchServer = (idx) => {
-    if (servers[idx]) {
+    const srv = filteredServers[idx];
+    if (srv) {
       setServerIndex(idx);
       setIframeError(false);
       failedServers.current = new Set();
-      setStreamUrl(servers[idx].url);
+      setStreamUrl(srv.url);
     }
   };
 
   const tryNextServer = useCallback(() => {
     const nextIdx = serverIndex + 1;
-    if (servers[nextIdx]) {
+    if (filteredServers[nextIdx]) {
       failedServers.current.add(serverIndex);
       setServerIndex(nextIdx);
       setIframeError(false);
     } else {
       setIframeError(true);
     }
-  }, [serverIndex, servers]);
+  }, [serverIndex, filteredServers]);
 
   const handleIframeError = useCallback(() => {
     failedServers.current.add(serverIndex);
     const nextIdx = serverIndex + 1;
-    if (servers[nextIdx]) {
+    if (filteredServers[nextIdx]) {
       setIframeError(false);
       setServerIndex(nextIdx);
     } else {
       setIframeError(true);
     }
-  }, [serverIndex, servers]);
+  }, [serverIndex, filteredServers]);
 
   const filteredEpisodes = useMemo(() => {
     if (!epSearch) return episodes;
@@ -269,7 +284,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
               {!loading && !error && streamUrl && !streamLoading && !iframeError && (
                 <iframe
                   ref={iframeRef}
-                  key={`${episode?.episode || 0}-${serverIndex}`}
+                  key={`${episode?.episode || 0}-${serverIndex}-${language}`}
                   className="watch-frame"
                   src={streamUrl}
                   title={`Episode ${episode?.episode || ""}`}
@@ -283,7 +298,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                   <div className="watch-err-badge">!</div>
                   <p className="watch-err-text">Episode not available on this source.</p>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    {serverIndex < servers.length - 1 && <button className="watch-btn" onClick={tryNextServer}>Try Next Source</button>}
+                    {serverIndex < filteredServers.length - 1 && <button className="watch-btn" onClick={tryNextServer}>Try Next Source</button>}
                     {epIndex < episodes.length - 1 && <button className="watch-btn watch-btn-ghost" onClick={() => { setIframeError(false); failedServers.current = new Set(); setEpIndex(i => i + 1); }}>Skip to Next Episode</button>}
                     <button className="watch-btn watch-btn-ghost" onClick={() => { setIframeError(false); failedServers.current = new Set(); setStreamRetryCount(c => c + 1); }}>Retry</button>
                   </div>
@@ -314,12 +329,15 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                   <span className="watch-info-bar-ep">Episode {episode?.episode || startEp}{totalEpisodes && <span className="watch-info-bar-total"> / {totalEpisodes}</span>}</span>
                 </div>
                 <div className="watch-servers">
-                  <span className="watch-servers-label">Servers</span>
+                  <div className="watch-lang-toggle">
+                    <button className={`watch-lang-btn ${language === "sub" ? "active" : ""}`} onClick={() => setLanguage("sub")}>SUB</button>
+                    <button className={`watch-lang-btn ${language === "dub" ? "active" : ""}`} onClick={() => setLanguage("dub")}>DUB</button>
+                  </div>
                   <div className="watch-servers-list">
-                    {servers.map((s, i) => (
+                    {filteredServers.map((s, i) => (
                       <button key={i} className={`watch-server-chip ${i === serverIndex ? "active" : ""}`} onClick={() => switchServer(i)}>{s.label || `Server ${i + 1}`}</button>
                     ))}
-                    {servers.length === 0 && !streamLoading && <span className="watch-muted" style={{ fontSize: 12, padding: "5px 0" }}>No servers loaded</span>}
+                    {filteredServers.length === 0 && !streamLoading && <span className="watch-muted" style={{ fontSize: 12, padding: "5px 0" }}>No servers loaded</span>}
                   </div>
                 </div>
               </div>
