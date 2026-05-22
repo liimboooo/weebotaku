@@ -251,7 +251,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2px 10px;
+  padding: 0 2px 12px;
   flex-shrink: 0;
 }
 
@@ -353,9 +353,9 @@
 
 .watch-player-stage {
   flex: 0 0 auto;
-  height: 50vh;
-  min-height: 300px;
-  max-height: 560px;
+  height: 60vh;
+  min-height: 350px;
+  max-height: 620px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -363,20 +363,21 @@
   border-radius: 16px;
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(139,92,246,0.08);
-  box-shadow: 0 0 60px rgba(139,92,246,0.03), inset 0 0 80px rgba(139,92,246,0.02);
+  border: 1px solid rgba(139,92,246,0.1);
+  box-shadow: 0 0 80px rgba(139,92,246,0.04), inset 0 0 100px rgba(139,92,246,0.02);
 }
 
 .watch-scroll-area {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  padding: 0 2px 24px 0;
+  padding: 0 4px 24px 0;
+  scroll-behavior: smooth;
 }
 
-.watch-scroll-area::-webkit-scrollbar { width: 3px; }
+.watch-scroll-area::-webkit-scrollbar { width: 4px; }
 .watch-scroll-area::-webkit-scrollbar-track { background: transparent; }
-.watch-scroll-area::-webkit-scrollbar-thumb { background: #1a1a1e; border-radius: 2px; }
+.watch-scroll-area::-webkit-scrollbar-thumb { background: #1a1a1e; border-radius: 3px; }
 .watch-scroll-area::-webkit-scrollbar-thumb:hover { background: #a855f7; box-shadow: 0 0 8px rgba(168,85,247,0.2); }
 
 .watch-frame {
@@ -526,7 +527,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0 4px;
+  padding: 12px 0 8px;
   flex-shrink: 0;
   gap: 8px;
   flex-wrap: wrap;
@@ -539,9 +540,9 @@
 }
 
 .watch-info-bar-ep {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 800;
-  color: #a0a0ab;
+  color: #c0c0cc;
   font-family: "Space Grotesk", sans-serif;
 }
 
@@ -560,21 +561,21 @@
 .watch-lang-toggle {
   display: flex;
   gap: 2px;
-  padding: 2px;
-  border-radius: 8px;
+  padding: 3px;
+  border-radius: 10px;
   background: rgba(139,92,246,0.04);
-  border: 1px solid rgba(139,92,246,0.06);
+  border: 1px solid rgba(139,92,246,0.08);
   flex-shrink: 0;
 }
 
 .watch-lang-btn {
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 5px 12px;
+  border-radius: 7px;
   border: none;
   background: transparent;
   color: #5c5c6b;
   cursor: pointer;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   font-family: "Space Grotesk", sans-serif;
   letter-spacing: 0.04em;
@@ -582,13 +583,13 @@
 }
 
 .watch-lang-btn:hover {
-  color: #888;
+  color: #aaa;
 }
 
 .watch-lang-btn.active {
-  background: rgba(139,92,246,0.15);
+  background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(124,58,237,0.15));
   color: #c084fc;
-  box-shadow: 0 0 10px rgba(139,92,246,0.06);
+  box-shadow: 0 0 12px rgba(139,92,246,0.08);
 }
 
 .watch-servers-label {
@@ -755,16 +756,16 @@
 .watch-ep-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
-  padding: 12px;
-  margin-bottom: 6px;
-  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 8px;
+  border-radius: 12px;
   background: rgba(255,255,255,0.01);
-  border: 1px solid rgba(139,92,246,0.03);
+  border: 1px solid rgba(139,92,246,0.04);
   color: #888;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   text-align: left;
   font-family: "Inter", sans-serif;
   font-size: 13px;
@@ -772,16 +773,17 @@
 }
 
 .watch-ep-item:hover {
-  background: rgba(139,92,246,0.04);
+  background: rgba(139,92,246,0.05);
   color: #bbb;
-  border-color: rgba(139,92,246,0.08);
+  border-color: rgba(139,92,246,0.1);
+  transform: translateX(2px);
 }
 
 .watch-ep-item.active {
   background: rgba(139,92,246,0.08);
   border-color: rgba(139,92,246,0.2);
   color: #c084fc;
-  box-shadow: 0 0 16px rgba(139,92,246,0.04), inset 0 0 20px rgba(139,92,246,0.02);
+  box-shadow: 0 0 20px rgba(139,92,246,0.06), inset 0 0 24px rgba(139,92,246,0.02);
 }
 
 .watch-ep-thumb {
@@ -955,23 +957,42 @@
    SECTIONS (Reactions, Comments, Recs, Characters)
    ══════════════════════════════════════════════ */
 .watch-section {
-  margin-top: 24px;
-  padding: 24px 24px;
+  margin-top: 20px;
+  padding: 20px 20px;
   background: rgba(10,10,14,0.6);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(139,92,246,0.06);
   border-radius: 14px;
+  transition: border-color 0.2s;
+}
+
+.watch-section:hover {
+  border-color: rgba(139,92,246,0.1);
 }
 
 .watch-section:first-child {
-  margin-top: 12px;
+  margin-top: 8px;
 }
 
 .watch-section-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.watch-section-head svg {
+  color: #a855f7;
+  flex-shrink: 0;
+}
+
+.watch-section-head > span {
+  font-size: 12px;
+  font-weight: 800;
+  color: #a0a0ab;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: "Space Grotesk", sans-serif;
 }
 
 .watch-section-head-left {
@@ -991,10 +1012,11 @@
 }
 
 .watch-section-badge {
+  margin-left: auto;
   font-size: 9px;
   font-weight: 800;
-  padding: 1px 6px;
-  border-radius: 5px;
+  padding: 2px 7px;
+  border-radius: 6px;
   background: rgba(139,92,246,0.08);
   color: #c084fc;
   font-family: "IBM Plex Mono", monospace;
@@ -1234,10 +1256,16 @@
   display: flex;
   gap: 12px;
   padding: 14px 16px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: rgba(255,255,255,0.01);
   border: 1px solid rgba(255,255,255,0.02);
   position: relative;
+  transition: all 0.2s;
+}
+
+.watch-comment-item:hover {
+  background: rgba(255,255,255,0.02);
+  border-color: rgba(139,92,246,0.05);
 }
 
 .watch-comment-item.pinned {
