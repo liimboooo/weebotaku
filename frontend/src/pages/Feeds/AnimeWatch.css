@@ -921,8 +921,8 @@
    SECTIONS (Reactions, Comments, Recs, Characters)
    ══════════════════════════════════════════════ */
 .watch-section {
-  margin-top: 24px;
-  padding: 24px 24px;
+  margin-top: 20px;
+  padding: 18px 20px;
   background: rgba(10,10,14,0.6);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(139,92,246,0.06);
@@ -937,7 +937,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .watch-section-head-left {
@@ -1093,8 +1093,8 @@
 
 .watch-comment-input {
   display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .watch-comment-avatar {
@@ -1168,7 +1168,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 0 16px 38px;
+  padding: 4px 0 8px 38px;
   font-size: 10px;
   color: #c084fc;
   font-weight: 600;
@@ -1193,13 +1193,13 @@
 .watch-comments-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
 .watch-comment-item {
   display: flex;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 10px;
+  padding: 10px 12px;
   border-radius: 10px;
   background: rgba(255,255,255,0.01);
   border: 1px solid rgba(255,255,255,0.02);
@@ -1234,7 +1234,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
 }
 
 .watch-comment-user {
@@ -1251,15 +1251,15 @@
 .watch-comment-text {
   font-size: 11px;
   color: #a0a0ab;
-  margin: 0 0 4px;
-  line-height: 1.6;
+  margin: 0;
+  line-height: 1.5;
   word-break: break-word;
 }
 
 .watch-comment-actions {
   display: flex;
   gap: 4px;
-  margin-top: 10px;
+  margin-top: 4px;
 }
 
 .watch-comment-action {
@@ -1311,12 +1311,12 @@
 }
 
 .watch-comment-replies {
-  margin-top: 14px;
-  padding-left: 16px;
+  margin-top: 6px;
+  padding-left: 12px;
   border-left: 2px solid rgba(139,92,246,0.08);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
 }
 
 /* ─── RECOMMENDATIONS ─── */
