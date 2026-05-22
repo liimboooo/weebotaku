@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Play, Bookmark, Heart, Share2, Bell, Star, Tv, Film, Users, MessageSquare, Calendar, X } from "lucide-react";
+import { Play, Bookmark, Heart, Bell, Star, Film, Users, MessageSquare, X, Tv } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
 import { fetchAnimeCharacters, fetchAnimeRecommendations, fetchAiringSchedule } from "../services/anilistApi";
 
@@ -13,6 +13,7 @@ import Background from "../components/Background";
 import Reviews from "../components/Reviews";
 import AnimatedPage from "../components/AnimatedPage";
 import "./AnimeDetail.css";
+import "../components/AnimePreviewPanel.css";
 
 const TABS = [
   { key: "episodes", label: "Episodes", icon: Tv },
@@ -37,7 +38,6 @@ export default function AnimeDetail() {
   const [selectedEp, setSelectedEp] = useState(1);
   const [showPlayer, setShowPlayer] = useState(false);
   const [showTrailer, setShowTrailer] = useState(false);
-  const [bgLoaded, setBgLoaded] = useState(false);
 
   const [watchAnime, setWatchAnime] = useState(null);
   const [watchLoading, setWatchLoading] = useState(false);
@@ -206,91 +206,114 @@ export default function AnimeDetail() {
         <div className="ad-bg-ornament" />
 
         <main className="ad-shell">
-          {/* ─── COMPACT HERO ─── */}
-          <motion.section className="ad-hero" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className={`ad-hero-bg ${bgLoaded ? "loaded" : "loading"}`} style={{ backgroundImage: `url(${anime.img})` }} />
-            <img src={anime.img} alt="" style={{ display: "none" }} onLoad={() => setBgLoaded(true)} />
-            <div className="ad-hero-gradient" />
-            <div className="ad-hero-content">
-              <div className="ad-hero-left">
-                <button className="ad-back-btn" onClick={() => navigate(-1)}>
-                  <ArrowLeft size={18} /> Back
+          {/* ─── PREVIEW PANEL HEADER ─── */}
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 26 }}
+            style={{ overflow: "hidden", marginBottom: 16 }}
+          >
+            <div className="preview-panel-inner">
+              <div className="preview-panel-left">
+                <button className="preview-panel-close" onClick={() => navigate(-1)} aria-label="Close">
+                  <X size={16} />
                 </button>
-                <h1 className="ad-hero-title">{anime.name}</h1>
-                <p className="ad-hero-synopsis">{anime.synopsis}</p>
-                <div className="ad-hero-metrics">
-                  <div className="ad-metric"><Tv size={14} /> <strong>{anime.episodes || "?"}</strong> Episodes</div>
-                  <div className="ad-metric"><Star size={14} /> <strong>{anime.rating?.toFixed(1) || "?"}</strong></div>
-                  <div className="ad-metric"><Calendar size={14} /> <strong>{anime.year || "?"}</strong></div>
-                  <div className="ad-metric"><Film size={14} /> <strong>{anime.studio || "?"}</strong></div>
+
+                <h1 className="preview-panel-title">{anime.name}</h1>
+
+                <div className="preview-panel-stats">
+                  {anime.year && <span className="preview-panel-stat">{anime.year}</span>}
+                  {anime.rating && <span className="preview-panel-stat accent">{anime.rating.toFixed(1)}</span>}
+                  {anime.episodes && <span className="preview-panel-stat">{anime.episodes} EP</span>}
+                  <span className="preview-panel-stat">HD</span>
+                  {anime.status && <span className="preview-panel-stat">{anime.status}</span>}
+                </div>
+
+                <p className="preview-panel-synopsis">{anime.synopsis || "No synopsis available."}</p>
+
+                <div className="preview-panel-actions">
+                  <motion.button
+                    className="preview-panel-btn primary"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleWatch(selectedEp)}
+                    disabled={watchLoading}
+                  >
+                    <Play size={16} fill="currentColor" />
+                    {watchLoading ? "Searching..." : "Watch Now"}
+                  </motion.button>
+                  <button className={`preview-panel-btn secondary ${isWatchlisted ? "active" : ""}`} onClick={toggleWatchlist}>
+                    <Bookmark size={14} fill={isWatchlisted ? "currentColor" : "none"} />
+                    {isWatchlisted ? "Saved" : "Watchlist"}
+                  </button>
+                  <button className={`preview-panel-btn icon ${isLiked ? "liked" : ""}`} onClick={toggleLiked} aria-label="Like">
+                    <Heart size={14} fill={isLiked ? "#8b5cf6" : "none"} />
+                  </button>
+                  <button className="preview-panel-btn icon" onClick={toggleFollowing} aria-label="Follow">
+                    <Bell size={14} fill={isFollowing ? "currentColor" : "none"} />
+                  </button>
+                </div>
+
+                <div className="preview-panel-details">
+                  <div className="preview-panel-detail-item">
+                    <span className="preview-panel-detail-label">Cast</span>
+                    <span className="preview-panel-detail-value">
+                      {anime.studios?.join(", ") || anime.studio || "Various"}
+                    </span>
+                  </div>
+                  <div className="preview-panel-detail-item">
+                    <span className="preview-panel-detail-label">Genres</span>
+                    <span className="preview-panel-detail-value">
+                      {anime.genres?.join(", ") || "N/A"}
+                    </span>
+                  </div>
+                  {anime.director && (
+                    <div className="preview-panel-detail-item">
+                      <span className="preview-panel-detail-label">Director</span>
+                      <span className="preview-panel-detail-value">{anime.director}</span>
+                    </div>
+                  )}
+                  {anime.season && (
+                    <div className="preview-panel-detail-item">
+                      <span className="preview-panel-detail-label">Season</span>
+                      <span className="preview-panel-detail-value">{anime.season}</span>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="ad-hero-right">
-                <motion.button
-                  className="ad-hero-watch-btn"
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => handleWatch(selectedEp)}
-                  disabled={watchLoading}
-                >
-                  <Play size={20} fill="currentColor" />
-                  {watchLoading ? "Searching..." : "Watch Now"}
-                </motion.button>
-                <div className="ad-hero-actions">
-                  <button className={`ad-hero-action-btn ${isWatchlisted ? "active" : ""}`} onClick={toggleWatchlist} title={isWatchlisted ? "Saved" : "Save"}>
-                    <Bookmark size={16} fill={isWatchlisted ? "currentColor" : "none"} />
-                  </button>
-                  <button className={`ad-hero-action-btn ${isFollowing ? "active" : ""}`} onClick={toggleFollowing} title={isFollowing ? "Following" : "Follow"}>
-                    <Bell size={16} fill={isFollowing ? "currentColor" : "none"} />
-                  </button>
-                  <button className={`ad-hero-action-btn ${isLiked ? "liked" : ""}`} onClick={toggleLiked} title="Like">
-                    <Heart size={16} fill={isLiked ? "#8b5cf6" : "none"} />
-                  </button>
-                  <button className="ad-hero-action-btn" onClick={() => navigator.clipboard.writeText(window.location.href)} title="Share">
-                    <Share2 size={16} />
-                  </button>
-                </div>
-                {watchError && (
-                  <p className="ad-error-msg">
-                    {watchError}
-                    <button className="ad-retry-btn" onClick={handleRetry}>Retry</button>
-                  </p>
+
+              <div className="preview-panel-right">
+                {(anime.trailerUrl || anime.trailer?.embed_url) ? (
+                  <div className="preview-panel-media">
+                    <iframe
+                      src={anime.trailerUrl || anime.trailer.embed_url}
+                      title={anime.name}
+                      allow="autoplay; encrypted-media"
+                      style={{ border: 0 }}
+                    />
+                  </div>
+                ) : anime.img ? (
+                  <div className="preview-panel-media">
+                    <img src={anime.img} alt="" style={{ objectFit: "cover" }} />
+                  </div>
+                ) : (
+                  <div className="preview-panel-fallback">
+                    <Film size={40} />
+                  </div>
                 )}
+                <div className="preview-panel-fade" />
               </div>
             </div>
-          </motion.section>
+          </motion.div>
 
           {/* ─── BODY ─── */}
           <section className="ad-body">
-            {/* Status Bar */}
-            <div className="ad-status-bar">
-              <div className="ad-status-item">
-                <span className="label">Status</span>
-                <span className="value white">{anime.status || "—"}</span>
-              </div>
-              <div className="ad-status-item">
-                <span className="label">Season</span>
-                <span className="value">{anime.season || "—"}</span>
-              </div>
-              <div className="ad-status-item">
-                <span className="label">Episodes</span>
-                <span className="value">{anime.episodes || "?"}</span>
-              </div>
-              <div className="ad-status-item">
-                <span className="label">Studio</span>
-                <span className="value">{anime.studio || "—"}</span>
-              </div>
-              <div className="ad-status-item">
-                <span className="label">Year</span>
-                <span className="value">{anime.year || "—"}</span>
-              </div>
-              {anime.director && (
-                <div className="ad-status-item">
-                  <span className="label">Director</span>
-                  <span className="value">{anime.director}</span>
-                </div>
-              )}
-            </div>
+            {watchError && (
+              <p className="ad-error-msg" style={{ marginBottom: 16 }}>
+                {watchError}
+                <button className="ad-retry-btn" onClick={handleRetry}>Retry</button>
+              </p>
+            )}
 
             {/* 5-Star Rating */}
             <div className="ad-rating-row">
@@ -310,21 +333,6 @@ export default function AnimeDetail() {
                 {anime.votes > 0 && <span className="ad-rating-votes">({anime.votes.toLocaleString()})</span>}
                 {userRating > 0 && <span className="ad-rating-user">You: {userRating}/5</span>}
               </div>
-            </div>
-
-            {/* Genres */}
-            {anime.genres?.length > 0 && (
-              <div className="ad-genres">
-                {anime.genres.map((g) => (
-                  <span key={g} className="ad-genre-tag">{g}</span>
-                ))}
-              </div>
-            )}
-
-            {/* Synopsis */}
-            <div className="ad-synopsis">
-              <h3>Synopsis</h3>
-              <p>{anime.synopsis}</p>
             </div>
 
             {/* ─── TABS ─── */}
