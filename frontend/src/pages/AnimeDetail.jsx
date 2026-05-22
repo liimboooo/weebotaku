@@ -306,10 +306,6 @@ export default function AnimeDetail() {
               )}
             </div>
 
-            <header className="watch-topbar">
-              <span className="watch-topbar-ep">{episode && `Episode ${episode.episode}`}</span>
-            </header>
-
             <div className="watch-scroll-area">
               <div className="watch-notif-banner">
                 <span>Report broken episodes to help us improve</span>

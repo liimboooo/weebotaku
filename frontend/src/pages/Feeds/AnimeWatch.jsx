@@ -249,9 +249,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       >
         <div className="watch-main">
           <div className="watch-center-col">
-            <header className="watch-topbar">
-              <span className="watch-topbar-ep">{episode && `Episode ${episode.episode}`}</span>
-            </header>
 
             <div className="watch-player-stage">
               {loading && (
