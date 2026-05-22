@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Loader, Play, Star, Tv, Calendar, Clock, Monitor, Search, Film,
-  MessageCircle, ThumbsUp, ThumbsDown,
-  Reply, Pin, EyeOff, Users, AlertCircle, X, ArrowLeft
+  List, MessageCircle, ThumbsUp, ThumbsDown,
+  Reply, Pin, EyeOff, Users, AlertCircle, X, ArrowLeft, SkipForward
 } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
 import { findStreamingSource, getEpisodes, getStreamUrls } from "../services/animeApi";
@@ -46,20 +46,13 @@ export default function AnimeDetail() {
   const [iframeError, setIframeError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
+  const [autoNext, setAutoNext] = useState(true);
   const [epSearch, setEpSearch] = useState("");
   const [language, setLanguage] = useState("sub");
 
   const filteredServers = useMemo(() => {
-    return servers.filter(s => s.type === language);
+    return servers.filter(s => !s.type || s.type === language);
   }, [servers, language]);
-
-  useEffect(() => {
-    const langServers = servers.filter(s => s.type === language);
-    if (langServers.length > 0) {
-      const idx = servers.indexOf(langServers[0]);
-      setServerIndex(idx);
-    }
-  }, [language, servers]);
 
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
@@ -118,28 +111,28 @@ export default function AnimeDetail() {
 
   const episode = episodes[epIndex];
 
-  const makeStreamUrl = useCallback((srv) => {
-    if (!srv) return "";
-    try {
-      const u = new URL(srv.url);
-      if (srv.type === "dub") u.searchParams.set("type", "dub");
-      return u.toString();
-    } catch { return srv.url; }
-  }, []);
-
   useEffect(() => {
     if (!episode) return;
     (async () => {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
         const urls = await getStreamUrls(episode.url, watchAnime.source, watchAnime.anilistId);
-        if (urls.length > 0) { setServers(urls); setStreamUrl(makeStreamUrl(urls[0])); }
+        if (urls.length > 0) { setServers(urls); }
         else setError("No video servers found.");
       } catch { setError("Failed to load stream."); }
       finally { setStreamLoading(false); }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episode, streamRetryCount]);
+
+  useEffect(() => {
+    const langServers = servers.filter(s => !s.type || s.type === language);
+    if (langServers.length > 0) {
+      const idx = servers.indexOf(langServers[0]);
+      setServerIndex(idx);
+      setStreamUrl(langServers[0].url);
+    }
+  }, [language, servers]);
 
   useEffect(() => {
     if (scrollRef.current && episodes[epIndex]) {
@@ -151,10 +144,11 @@ export default function AnimeDetail() {
   const switchServer = (idx) => {
     const srv = filteredServers[idx];
     if (srv) {
-      setServerIndex(idx);
+      const globalIdx = servers.indexOf(srv);
+      setServerIndex(globalIdx);
       setIframeError(false);
       failedServers.current = new Set();
-      setStreamUrl(makeStreamUrl(srv));
+      setStreamUrl(srv.url);
     }
   };
 
@@ -162,25 +156,25 @@ export default function AnimeDetail() {
     const nextIdx = serverIndex + 1;
     if (filteredServers[nextIdx]) {
       failedServers.current.add(serverIndex);
-      setServerIndex(nextIdx);
+      const globalIdx = servers.indexOf(filteredServers[nextIdx]);
+      setServerIndex(globalIdx);
       setIframeError(false);
-      setStreamUrl(makeStreamUrl(filteredServers[nextIdx]));
     } else {
       setIframeError(true);
     }
-  }, [serverIndex, filteredServers, makeStreamUrl]);
+  }, [serverIndex, servers, filteredServers]);
 
   const handleIframeError = useCallback(() => {
     failedServers.current.add(serverIndex);
     const nextIdx = serverIndex + 1;
     if (filteredServers[nextIdx]) {
       setIframeError(false);
-      setServerIndex(nextIdx);
-      setStreamUrl(makeStreamUrl(filteredServers[nextIdx]));
+      const globalIdx = servers.indexOf(filteredServers[nextIdx]);
+      setServerIndex(globalIdx);
     } else {
       setIframeError(true);
     }
-  }, [serverIndex, filteredServers, makeStreamUrl]);
+  }, [serverIndex, servers, filteredServers]);
 
   const filteredEpisodes = useMemo(() => {
     if (!epSearch) return episodes;
@@ -312,7 +306,7 @@ export default function AnimeDetail() {
                 </div>
               )}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && (
-                <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}`} className="watch-frame" src={streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
+                <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}-${language}`} className="watch-frame" src={streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
               )}
               {!loading && !error && iframeError && streamUrl && (
                 <div className="watch-center">
@@ -336,6 +330,13 @@ export default function AnimeDetail() {
             <div className="watch-scroll-area">
               <div className="watch-notif-banner">
                 <span>Report broken episodes to help us improve</span>
+              </div>
+
+              <div className="watch-action-bar">
+                <button className="watch-action-btn"><Monitor size={13} /> Theater</button>
+                <button className="watch-action-btn active"><Play size={13} /> Autoplay</button>
+                <button className={`watch-action-btn ${autoNext ? "active" : ""}`} onClick={() => setAutoNext(!autoNext)}><SkipForward size={13} /> Auto Next</button>
+                <button className="watch-action-btn"><List size={13} /> Add to List</button>
               </div>
 
               <div className="watch-info-bar">
