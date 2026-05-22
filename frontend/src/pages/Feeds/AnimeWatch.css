@@ -752,12 +752,12 @@
   flex: 1;
   overflow-y: auto;
   padding-right: 2px;
+  scrollbar-width: none;
 }
 
-.watch-side-scroll::-webkit-scrollbar { width: 3px; }
+.watch-side-scroll::-webkit-scrollbar { width: 0; }
 .watch-side-scroll::-webkit-scrollbar-track { background: transparent; }
-.watch-side-scroll::-webkit-scrollbar-thumb { background: #1a1a1e; border-radius: 2px; }
-.watch-side-scroll::-webkit-scrollbar-thumb:hover { background: #a855f7; box-shadow: 0 0 8px rgba(168,85,247,0.2); }
+.watch-side-scroll::-webkit-scrollbar-thumb { background: transparent; }
 
 .watch-ep-item {
   display: flex;
