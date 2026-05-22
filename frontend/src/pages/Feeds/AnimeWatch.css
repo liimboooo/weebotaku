@@ -359,9 +359,9 @@
 
 .watch-player-stage {
   flex: 0 0 auto;
-  height: 90vh;
-  min-height: 500px;
-  max-height: 900px;
+  aspect-ratio: 16 / 9;
+  max-height: 85vh;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
