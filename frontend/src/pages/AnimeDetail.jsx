@@ -49,6 +49,15 @@ export default function AnimeDetail() {
   const [epSearch, setEpSearch] = useState("");
   const [language, setLanguage] = useState("sub");
 
+  const makeStreamUrl = useCallback((srv) => {
+    if (!srv) return "";
+    try {
+      const u = new URL(srv.url);
+      if (srv.type === "dub") u.searchParams.set("type", "dub");
+      return u.toString();
+    } catch { return srv.url; }
+  }, []);
+
   const filteredServers = useMemo(() => {
     return servers.filter(s => s.type === language);
   }, [servers, language]);
@@ -117,15 +126,6 @@ export default function AnimeDetail() {
   }, [watchAnime, retryCount]);
 
   const episode = episodes[epIndex];
-
-  const makeStreamUrl = useCallback((srv) => {
-    if (!srv) return "";
-    try {
-      const u = new URL(srv.url);
-      if (srv.type === "dub") u.searchParams.set("type", "dub");
-      return u.toString();
-    } catch { return srv.url; }
-  }, []);
 
   useEffect(() => {
     if (!episode) return;
