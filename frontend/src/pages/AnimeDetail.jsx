@@ -1,25 +1,26 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Play, Bookmark, Heart, Bell, Star, Film, Users, MessageSquare, X, Tv } from "lucide-react";
+import {
+  Loader, Play, Star, Tv, Calendar, Clock, Monitor, Search, Film,
+  List, MessageCircle, ThumbsUp, ThumbsDown,
+  Reply, Pin, EyeOff, Users, AlertCircle, X, ArrowLeft, SkipForward
+} from "lucide-react";
 import { getAnimeById } from "../data/animeData";
-import { fetchAnimeCharacters, fetchAnimeRecommendations, fetchAiringSchedule } from "../services/anilistApi";
+import { findStreamingSource, getEpisodes, getStreamUrls } from "../services/animeApi";
+import "./Feeds/AnimeWatch.css";
 
-import { addToWatchlist, removeFromWatchlist, isInWatchlist, rateAnime as syncRateAnime, toggleLikeAnime, addToWatchHistory } from "../services/storage";
-import { addNotification } from "../services/notificationService";
-import { findStreamingSource } from "../services/animeApi";
-import AnimeWatch from "./Feeds/AnimeWatch";
-import Background from "../components/Background";
-import Reviews from "../components/Reviews";
-import AnimatedPage from "../components/AnimatedPage";
-import "./AnimeDetail.css";
-import "../components/AnimePreviewPanel.css";
+const SORT_TABS = [
+  { key: "top", label: "Top" },
+  { key: "newest", label: "Newest" },
+  { key: "liked", label: "Most Liked" },
+];
 
-const TABS = [
-  { key: "episodes", label: "Episodes", icon: Tv },
-  { key: "characters", label: "Characters", icon: Users },
-  { key: "recommendations", label: "Recommendations", icon: Film },
-  { key: "reviews", label: "Reviews", icon: MessageSquare },
+const MOCK_COMMENTS = [
+  { id: 1, user: "AnimeKing", avatar: "", text: "This episode was absolutely insane! The animation quality is top tier \uD83D\uDD25\uD83D\uDD25", time: "2 min ago", likes: 42, dislikes: 2, replies: [
+    { id: 11, user: "OtakuPro", avatar: "", text: "Totally agree, the fight scene was peak cinema", time: "1 min ago", likes: 12, dislikes: 0 }
+  ], pinned: true },
+  { id: 2, user: "MangaReader", avatar: "", text: "As a manga reader, I can say they adapted this perfectly. Cant wait for next week!", time: "5 min ago", likes: 28, dislikes: 1, replies: [], pinned: false },
+  { id: 3, user: "NightWatcher", avatar: "", text: "Spoiler: ||The main character finally unlocks his true power at the end||", time: "8 min ago", likes: 35, dislikes: 3, replies: [], pinned: false, hasSpoiler: true },
 ];
 
 export default function AnimeDetail() {
@@ -30,27 +31,35 @@ export default function AnimeDetail() {
   const [apiAnime, setApiAnime] = useState(null);
   const [animeLoading, setAnimeLoading] = useState(true);
   const [animeError, setAnimeError] = useState("");
-  const [characters, setCharacters] = useState(null);
-  const [recommendations, setRecommendations] = useState(null);
-  const [schedule, setSchedule] = useState(null);
 
-  const [activeTab, setActiveTab] = useState("episodes");
   const [selectedEp, setSelectedEp] = useState(1);
-  const [showPlayer, setShowPlayer] = useState(false);
-  const [showTrailer, setShowTrailer] = useState(false);
-
   const [watchAnime, setWatchAnime] = useState(null);
-  const [watchLoading, setWatchLoading] = useState(false);
-  const [watchError, setWatchError] = useState("");
 
-  const [isWatchlisted, setIsWatchlisted] = useState(false);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-  const [userRating, setUserRating] = useState(0);
-  const [hoverRating, setHoverRating] = useState(0);
+  const [episodes, setEpisodes] = useState([]);
+  const [epIndex, setEpIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [streamLoading, setStreamLoading] = useState(false);
+  const [servers, setServers] = useState([]);
+  const [serverIndex, setServerIndex] = useState(0);
+  const [streamUrl, setStreamUrl] = useState("");
+  const [error, setError] = useState("");
+  const [iframeError, setIframeError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [streamRetryCount, setStreamRetryCount] = useState(0);
+  const [autoNext, setAutoNext] = useState(true);
+  const [epSearch, setEpSearch] = useState("");
+
+  const scrollRef = useRef(null);
+  const iframeRef = useRef(null);
+  const failedServers = useRef(new Set());
+
+  const [comments, setComments] = useState(MOCK_COMMENTS);
+  const [commentSort, setCommentSort] = useState("top");
+  const [commentText, setCommentText] = useState("");
+  const [replyTo, setReplyTo] = useState(null);
+  const [spoilerMode, setSpoilerMode] = useState({});
 
   const anime = apiAnime;
-  const malId = anime?.malId || parseInt(id);
   const totalEps = anime?.episodes ?? 12;
 
   useEffect(() => {
@@ -66,428 +75,391 @@ export default function AnimeDetail() {
     setAnimeLoading(true);
     setAnimeError("");
     getAnimeById(id).then((a) => { if (!cancelled) { setApiAnime(a); setAnimeLoading(false); if (!a) setAnimeError("Could not load this anime."); } }).catch(() => { if (!cancelled) { setAnimeLoading(false); setAnimeError("Failed to load anime details."); } });
-    fetchAnimeCharacters(parseInt(id)).then(setCharacters).catch(() => {});
-    fetchAnimeRecommendations(parseInt(id)).then(setRecommendations).catch(() => {});
     return () => { cancelled = true; };
   }, [id]);
 
   useEffect(() => {
     if (!anime) return;
-    const aId = anime?.id && anime.id !== malId ? anime.id : null;
-    fetchAiringSchedule({ anilistId: aId, malId }).then(setSchedule).catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [anime?.id, malId]);
-
-  useEffect(() => {
-    setIsWatchlisted(isInWatchlist(parseInt(id)));
-    const sf = JSON.parse(localStorage.getItem("followingAnime") || "[]");
-    setIsFollowing(sf.some((f) => f.animeId === parseInt(id)));
-    const sl = JSON.parse(localStorage.getItem("likedAnime") || "[]");
-    setIsLiked(sl.includes(parseInt(id)));
-    const sr = JSON.parse(localStorage.getItem("userRatings") || "{}");
-    if (sr[id]) setUserRating(sr[id]);
-    window.scrollTo(0, 0);
-  }, [id]);
-
-  useEffect(() => {
-    if (showPlayer) {
-      const storedHistory = JSON.parse(localStorage.getItem("watchHistory") || "[]");
-      const filteredHistory = storedHistory.filter((item) => item.animeId !== parseInt(id));
-      localStorage.setItem("watchHistory", JSON.stringify([{ animeId: parseInt(id), episode: selectedEp, timestamp: Date.now() }, ...filteredHistory].slice(0, 50)));
-      addToWatchHistory(parseInt(id), selectedEp, anime?.name, anime?.img);
-    }
-  }, [showPlayer, selectedEp, id, anime]);
-
-  const episodeNumbers = useMemo(() => {
-    if (totalEps > 0 && totalEps < 300) return Array.from({ length: totalEps }, (_, i) => i + 1);
-    return Array.from({ length: 12 }, (_, i) => i + 1);
-  }, [totalEps]);
-
-  const handleWatch = async (ep) => {
-    if (ep !== undefined) setSelectedEp(ep);
-    setWatchError("");
-    if (watchAnime) { setShowPlayer(true); return; }
-    setWatchLoading(true);
-    try {
-      const src = await findStreamingSource(anime.name);
-      if (src) {
-        setWatchAnime(src);
-        setShowPlayer(true);
-        addNotification({ title: "Now Playing", body: anime.name, type: "watch" });
-      } else {
-        setWatchError("No streaming source available. Try again or check back later.");
-      }
-    } catch {
-      setWatchError("Failed to find streaming source.");
-    } finally {
-      setWatchLoading(false);
-    }
-  };
-
-  const handleRetry = () => {
-    setWatchError("");
-    setWatchLoading(true);
     findStreamingSource(anime.name).then((src) => {
-      if (src) { setWatchAnime(src); setShowPlayer(true); addNotification({ title: "Now Playing", body: anime.name, type: "watch" }); }
-      else setWatchError("No streaming source available.");
-    }).catch(() => setWatchError("Failed to find streaming source."))
-    .finally(() => setWatchLoading(false));
-  };
+      if (src) setWatchAnime(src);
+    }).catch(() => {});
+  }, [anime]);
 
-  const toggleWatchlist = () => {
-    const aid = parseInt(id);
-    if (isInWatchlist(aid)) { removeFromWatchlist(aid); addNotification({ title: "Removed from Watchlist", body: anime.name, type: "save" }); }
-    else { addToWatchlist(anime); addNotification({ title: "Added to Watchlist", body: anime.name, type: "save" }); }
-    setIsWatchlisted(!isWatchlisted);
-  };
+  useEffect(() => {
+    if (!watchAnime) return;
+    (async () => {
+      setLoading(true); setError("");
+      try {
+        const eps = await getEpisodes(watchAnime.title || watchAnime.slug, watchAnime.tagSlug, watchAnime.source, watchAnime.sourceBase, watchAnime.anilistId);
+        if (eps.length > 0) {
+          setEpisodes(eps);
+          setEpIndex(Math.min(Math.max(0, selectedEp - 1), eps.length - 1));
+          setLoading(false);
+          return;
+        }
+      } catch {}
+      setError("No streaming links available.");
+      setLoading(false);
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchAnime, retryCount]);
 
-  const toggleLiked = () => {
-    const aid = parseInt(id);
-    const result = toggleLikeAnime(aid);
-    const nowLiked = result.includes(aid);
-    setIsLiked(nowLiked);
-    if (nowLiked) addNotification({ title: "Liked", body: anime.name, type: "follow" });
-  };
+  const episode = episodes[epIndex];
 
-  const toggleFollowing = () => {
-    const stored = JSON.parse(localStorage.getItem("followingAnime") || "[]");
-    const aid = parseInt(id);
-    if (isFollowing) {
-      localStorage.setItem("followingAnime", JSON.stringify(stored.filter((f) => f.animeId !== aid)));
-      addNotification({ title: "Unfollowed", body: anime.name, type: "follow" });
-    } else {
-      localStorage.setItem("followingAnime", JSON.stringify([...stored, { animeId: aid, animeName: anime.name, animeImg: anime.img, followedAt: Date.now(), unreadUpdates: 0, lastUpdate: Date.now() }]));
-      addNotification({ title: "Following", body: anime.name, type: "follow" });
+  useEffect(() => {
+    if (!episode) return;
+    (async () => {
+      setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
+      try {
+        const urls = await getStreamUrls(episode.url, watchAnime.source, watchAnime.anilistId);
+        if (urls.length > 0) { setServers(urls); setStreamUrl(urls[0].url); }
+        else setError("No video servers found.");
+      } catch { setError("Failed to load stream."); }
+      finally { setStreamLoading(false); }
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [episode, streamRetryCount]);
+
+  useEffect(() => {
+    if (scrollRef.current && episodes[epIndex]) {
+      const el = scrollRef.current.querySelector(`[data-ep="${epIndex}"]`);
+      el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
-    setIsFollowing(!isFollowing);
+  }, [epIndex, episodes]);
+
+  const switchServer = (idx) => {
+    if (servers[idx]) {
+      setServerIndex(idx);
+      setIframeError(false);
+      failedServers.current = new Set();
+      setStreamUrl(servers[idx].url);
+    }
   };
 
-  const handleRate = (rating) => {
-    const sr = JSON.parse(localStorage.getItem("userRatings") || "{}");
-    sr[id] = rating;
-    localStorage.setItem("userRatings", JSON.stringify(sr));
-    setUserRating(rating);
-    syncRateAnime(id, rating);
+  const tryNextServer = useCallback(() => {
+    const nextIdx = serverIndex + 1;
+    if (servers[nextIdx]) {
+      failedServers.current.add(serverIndex);
+      setServerIndex(nextIdx);
+      setIframeError(false);
+    } else {
+      setIframeError(true);
+    }
+  }, [serverIndex, servers]);
+
+  const handleIframeError = useCallback(() => {
+    failedServers.current.add(serverIndex);
+    const nextIdx = serverIndex + 1;
+    if (servers[nextIdx]) {
+      setIframeError(false);
+      setServerIndex(nextIdx);
+    } else {
+      setIframeError(true);
+    }
+  }, [serverIndex, servers]);
+
+  const filteredEpisodes = useMemo(() => {
+    if (!epSearch) return episodes;
+    const q = epSearch.toLowerCase();
+    return episodes.filter(ep =>
+      `Episode ${ep.episode}`.toLowerCase().includes(q) ||
+      (ep.title && ep.title.toLowerCase().includes(q))
+    );
+  }, [episodes, epSearch]);
+
+  const metadataItems = useMemo(() => {
+    const items = [];
+    if (anime) {
+      if (anime.year) items.push({ label: "Year", value: anime.year, icon: Calendar });
+      if (anime.season) items.push({ label: "Season", value: anime.season, icon: Clock });
+      if (anime.status) items.push({ label: "Status", value: anime.status, icon: Tv });
+      if (anime.studio) items.push({ label: "Studio", value: anime.studio, icon: Monitor });
+      if (anime.director) items.push({ label: "Director", value: anime.director, icon: Monitor });
+      if (anime.genres?.length) items.push({ label: "Genres", value: anime.genres.slice(0, 3).join(", "), icon: Film });
+    }
+    return items;
+  }, [anime]);
+
+  const handleAddComment = () => {
+    if (!commentText.trim()) return;
+    const newComment = {
+      id: Date.now(),
+      user: "You", avatar: "",
+      text: commentText, time: "Just now",
+      likes: 0, dislikes: 0, replies: [], pinned: false,
+    };
+    if (replyTo) {
+      setComments(c => c.map(cm => cm.id === replyTo ? { ...cm, replies: [...cm.replies, { ...newComment, id: Date.now() + 1, user: "You" }] } : cm));
+      setReplyTo(null);
+    } else {
+      setComments(c => [newComment, ...c]);
+    }
+    setCommentText("");
   };
+
+  const handleLikeComment = (id, isReply, parentId) => {
+    if (isReply && parentId) {
+      setComments(c => c.map(cm => cm.id === parentId ? { ...cm, replies: cm.replies.map(r => r.id === id ? { ...r, likes: r.likes + 1 } : r) } : cm));
+    } else {
+      setComments(c => c.map(cm => cm.id === id ? { ...cm, likes: cm.likes + 1 } : cm));
+    }
+  };
+
+  const sortedComments = useMemo(() => {
+    const pinned = comments.filter(c => c.pinned);
+    const rest = comments.filter(c => !c.pinned);
+    if (commentSort === "top") return [...pinned, ...rest.sort((a, b) => b.likes - a.likes)];
+    if (commentSort === "liked") return [...pinned, ...rest.sort((a, b) => (b.likes - b.dislikes) - (a.likes - a.dislikes))];
+    return [...pinned, ...rest];
+  }, [comments, commentSort]);
 
   if (animeLoading) {
     return (
-      <AnimatedPage>
-        <div className="anime-detail-page">
-          <Background />
-          <div className="ad-loading">
-            <div className="ad-loading-pulse" />
-            <div className="ad-loading-pulse" />
-            <div className="ad-loading-pulse" />
-          </div>
-        </div>
-      </AnimatedPage>
+      <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+        <div style={{ width: 40, height: 40, borderRadius: "50%", border: "2px solid rgba(139,92,246,0.08)", borderTopColor: "#a855f7", animation: "watch-spin 0.8s linear infinite" }} />
+        <p style={{ color: "#5c5c6b", fontSize: 13 }}>Loading anime...</p>
+      </div>
     );
   }
 
   if (!anime || animeError) {
     return (
-      <AnimatedPage>
-        <div className="anime-detail-page">
-          <Background />
-          <div className="ad-error-state">
-            <p className="ad-error-state-text">{animeError || "Anime not found"}</p>
-            <button className="ad-error-state-btn" onClick={() => navigate(-1)}>Go back</button>
-          </div>
-        </div>
-      </AnimatedPage>
+      <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
+        <p style={{ color: "#a0a0ab", fontSize: 14 }}>{animeError || "Anime not found"}</p>
+        <button onClick={() => navigate(-1)} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(139,92,246,0.2)", background: "rgba(139,92,246,0.08)", color: "#c084fc", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>Go back</button>
+      </div>
     );
   }
 
   return (
-    <AnimatedPage>
-      <div className="ad">
-        <Background />
-        <div className="ad-bg-ornament" />
+    <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#000", display: "flex" }}>
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, background: "repeating-linear-gradient(180deg, rgba(255,255,255,0.008) 0, rgba(255,255,255,0.008) 1px, transparent 1px, transparent 3px), radial-gradient(circle at 80% 0%, rgba(139,92,246,0.08), transparent 50%), radial-gradient(circle at 20% 100%, rgba(139,92,246,0.03), transparent 40%)" }} />
+      <div style={{ position: "relative", zIndex: 1, width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", background: "#050508" }}>
+        <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
 
-        <main className="ad-shell">
-          {/* ─── PREVIEW PANEL HEADER ─── */}
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            transition={{ type: "spring", stiffness: 200, damping: 26 }}
-            style={{ overflow: "hidden", marginBottom: 16 }}
-          >
-            <div className="preview-panel-inner">
-              <div className="preview-panel-left">
-                <button className="preview-panel-close" onClick={() => navigate(-1)} aria-label="Close">
-                  <X size={16} />
-                </button>
-
-                <h1 className="preview-panel-title">{anime.name}</h1>
-
-                <div className="preview-panel-stats">
-                  {anime.year && <span className="preview-panel-stat">{anime.year}</span>}
-                  {anime.rating && <span className="preview-panel-stat accent">{anime.rating.toFixed(1)}</span>}
-                  {anime.episodes && <span className="preview-panel-stat">{anime.episodes} EP</span>}
-                  <span className="preview-panel-stat">HD</span>
-                  {anime.status && <span className="preview-panel-stat">{anime.status}</span>}
-                </div>
-
-                <p className="preview-panel-synopsis">{anime.synopsis || "No synopsis available."}</p>
-
-                <div className="preview-panel-actions">
-                  <motion.button
-                    className="preview-panel-btn primary"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleWatch(selectedEp)}
-                    disabled={watchLoading}
-                  >
-                    <Play size={16} fill="currentColor" />
-                    {watchLoading ? "Searching..." : "Watch Now"}
-                  </motion.button>
-                  <button className={`preview-panel-btn secondary ${isWatchlisted ? "active" : ""}`} onClick={toggleWatchlist}>
-                    <Bookmark size={14} fill={isWatchlisted ? "currentColor" : "none"} />
-                    {isWatchlisted ? "Saved" : "Watchlist"}
-                  </button>
-                  <button className={`preview-panel-btn icon ${isLiked ? "liked" : ""}`} onClick={toggleLiked} aria-label="Like">
-                    <Heart size={14} fill={isLiked ? "#8b5cf6" : "none"} />
-                  </button>
-                  <button className="preview-panel-btn icon" onClick={toggleFollowing} aria-label="Follow">
-                    <Bell size={14} fill={isFollowing ? "currentColor" : "none"} />
-                  </button>
-                </div>
-
-                <div className="preview-panel-details">
-                  <div className="preview-panel-detail-item">
-                    <span className="preview-panel-detail-label">Cast</span>
-                    <span className="preview-panel-detail-value">
-                      {anime.studios?.join(", ") || anime.studio || "Various"}
-                    </span>
-                  </div>
-                  <div className="preview-panel-detail-item">
-                    <span className="preview-panel-detail-label">Genres</span>
-                    <span className="preview-panel-detail-value">
-                      {anime.genres?.join(", ") || "N/A"}
-                    </span>
-                  </div>
-                  {anime.director && (
-                    <div className="preview-panel-detail-item">
-                      <span className="preview-panel-detail-label">Director</span>
-                      <span className="preview-panel-detail-value">{anime.director}</span>
-                    </div>
-                  )}
-                  {anime.season && (
-                    <div className="preview-panel-detail-item">
-                      <span className="preview-panel-detail-label">Season</span>
-                      <span className="preview-panel-detail-value">{anime.season}</span>
-                    </div>
-                  )}
-                </div>
+          {/* ─── LEFT: INFO ─── */}
+          <aside style={{ width: 240, flexShrink: 0, padding: "12px 0 12px 12px", overflowY: "auto" }}>
+            <div className="watch-info-card">
+              <div className="watch-poster-wrap">
+                {anime.img ? <img src={anime.img} alt="" className="watch-poster" /> : <div className="watch-poster-fallback"><Film size={32} /></div>}
+                <div className="watch-poster-glow" />
               </div>
-
-              <div className="preview-panel-right">
-                {(anime.trailerUrl || anime.trailer?.embed_url) ? (
-                  <div className="preview-panel-media">
-                    <iframe
-                      src={anime.trailerUrl || anime.trailer.embed_url}
-                      title={anime.name}
-                      allow="autoplay; encrypted-media"
-                      style={{ border: 0 }}
-                    />
-                  </div>
-                ) : anime.img ? (
-                  <div className="preview-panel-media">
-                    <img src={anime.img} alt="" style={{ objectFit: "cover" }} />
-                  </div>
-                ) : (
-                  <div className="preview-panel-fallback">
-                    <Film size={40} />
-                  </div>
-                )}
-                <div className="preview-panel-fade" />
+              <h1 className="watch-info-title">{anime.name}</h1>
+              {anime.jpTitle && <p className="watch-info-jp">{anime.jpTitle}</p>}
+              <div className="watch-info-badges">
+                {anime.rating && <span className="watch-badge"><Star size={10} /> {anime.rating.toFixed(1)}</span>}
+                <span className="watch-badge"><Tv size={10} /> {anime.episodes || totalEps || "?"} EP</span>
+                {anime.status && <span className="watch-badge">{anime.status}</span>}
               </div>
+              {anime.synopsis && <p className="watch-info-synopsis">{anime.synopsis}</p>}
+              {metadataItems.length > 0 && (
+                <div className="watch-info-meta">
+                  {metadataItems.map((item, i) => (
+                    <div key={i} className="watch-meta-row">
+                      <span className="watch-meta-label">{item.label}</span>
+                      <span className="watch-meta-value">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </motion.div>
+          </aside>
 
-          {/* ─── BODY ─── */}
-          <section className="ad-body">
-            {watchError && (
-              <p className="ad-error-msg" style={{ marginBottom: 16 }}>
-                {watchError}
-                <button className="ad-retry-btn" onClick={handleRetry}>Retry</button>
-              </p>
-            )}
+          {/* ─── CENTER: PLAYER ─── */}
+          <div className="watch-center-col">
+            <header className="watch-topbar">
+              <span className="watch-topbar-ep">{episode && `Episode ${episode.episode}`}</span>
+            </header>
 
-            {/* 5-Star Rating */}
-            <div className="ad-rating-row">
-              <div className="ad-rating-stars">
-                {[1, 2, 3, 4, 5].map((num) => (
-                  <span
-                    key={num}
-                    className={`ad-rating-star ${num <= userRating ? "filled" : ""} ${num <= hoverRating ? "hovered" : ""}`}
-                    onClick={() => handleRate(num === userRating ? num - 1 : num)}
-                    onMouseEnter={() => setHoverRating(num)}
-                    onMouseLeave={() => setHoverRating(0)}
-                  ><Star size={16} fill={num <= userRating ? "currentColor" : "none"} /></span>
-                ))}
-              </div>
-              <div className="ad-rating-info">
-                <span className="ad-rating-global">{anime.rating?.toFixed(1) || "?"}</span>
-                {anime.votes > 0 && <span className="ad-rating-votes">({anime.votes.toLocaleString()})</span>}
-                {userRating > 0 && <span className="ad-rating-user">You: {userRating}/5</span>}
-              </div>
+            <div className="watch-player-stage">
+              {loading && (
+                <div className="watch-center">
+                  <div className="watch-pulse" />
+                  <p className="watch-muted">Loading episodes...</p>
+                </div>
+              )}
+              {!loading && error && (
+                <div className="watch-center">
+                  <div className="watch-err-badge">!</div>
+                  <p className="watch-err-text">{error}</p>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button className="watch-btn" onClick={() => { if (episodes.length === 0) setRetryCount(c => c + 1); else setStreamRetryCount(c => c + 1); }}>Retry</button>
+                  </div>
+                </div>
+              )}
+              {!loading && !error && streamUrl && !streamLoading && !iframeError && (
+                <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}`} className="watch-frame" src={streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
+              )}
+              {!loading && !error && iframeError && streamUrl && (
+                <div className="watch-center">
+                  <div className="watch-err-badge">!</div>
+                  <p className="watch-err-text">Episode not available on this source.</p>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {serverIndex < servers.length - 1 && <button className="watch-btn" onClick={tryNextServer}>Try Next Source</button>}
+                    {epIndex < episodes.length - 1 && <button className="watch-btn watch-btn-ghost" onClick={() => { setIframeError(false); failedServers.current = new Set(); setEpIndex(i => i + 1); }}>Skip to Next Episode</button>}
+                    <button className="watch-btn watch-btn-ghost" onClick={() => { setIframeError(false); failedServers.current = new Set(); setStreamRetryCount(c => c + 1); }}>Retry</button>
+                  </div>
+                </div>
+              )}
+              {!loading && !error && streamLoading && (
+                <div className="watch-center"><div className="watch-pulse" /><p className="watch-muted">Loading stream...</p></div>
+              )}
+              {!loading && !error && !streamLoading && !streamUrl && episode && (
+                <div className="watch-center"><p className="watch-muted">Preparing stream...</p></div>
+              )}
             </div>
 
-            {/* ─── TABS ─── */}
-            <div className="ad-tabs">
-              {TABS.map(({ key, label, icon: Icon }) => (
-                <button key={key} className={`ad-tab ${activeTab === key ? "active" : ""}`} onClick={() => setActiveTab(key)}>
-                  <Icon size={14} />
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {/* ─── TAB: EPISODES ─── */}
-            {activeTab === "episodes" && (
-              <div>
-                {(anime.trailerUrl || anime.trailer?.embed_url) && (
-                  <div className="ad-trailer-trigger-wrap">
-                    <button className="ad-trailer-trigger" onClick={() => setShowTrailer(true)}>
-                      <Play size={14} /> Watch Trailer
-                    </button>
-                  </div>
-                )}
-                {schedule?.cours ? schedule.cours.map((cour) => (
-                  <div key={cour.episodeStart} className="ad-cour-section">
-                    <div className="ad-cour-header">
-                      <span className="ad-cour-name">{cour.name}</span>
-                      <span className="ad-cour-dates">{cour.startDate} &ndash; {cour.endDate}</span>
-                    </div>
-                    <div className="ad-episodes-grid">
-                      {episodeNumbers.filter(ep => ep >= cour.episodeStart && ep <= cour.episodeEnd).map((ep) => {
-                        const sch = schedule.episodes?.find(e => e.episode === ep);
-                        const aired = sch ? sch.aired : false;
-                        return (
-                          <button
-                            key={ep}
-                            className={`ad-episode-btn ${ep === selectedEp ? "active" : ""} ${!aired ? "disabled" : ""}`}
-                            onClick={() => aired && handleWatch(ep)}
-                            disabled={!aired}
-                            title={aired ? `Episode ${ep}` : sch ? `Airs ${new Date(sch.airingAt * 1000).toLocaleDateString()}` : `Not yet aired`}
-                          >
-                            <span className="ad-episode-num">{ep}</span>
-                            <span className="ad-episode-label">{aired ? "EP" : "Soon"}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )) : (
-                  <div className="ad-episodes-grid">
-                    {episodeNumbers.map((ep) => {
-                      const sch = schedule?.episodes?.find(e => e.episode === ep);
-                      const aired = sch ? sch.aired : true;
-                      return (
-                        <button
-                          key={ep}
-                          className={`ad-episode-btn ${ep === selectedEp ? "active" : ""} ${!aired ? "disabled" : ""}`}
-                          onClick={() => aired && handleWatch(ep)}
-                          disabled={!aired}
-                          title={aired ? `Episode ${ep}` : sch ? `Airs ${new Date(sch.airingAt * 1000).toLocaleDateString()}` : `Not yet aired`}
-                        >
-                          <span className="ad-episode-num">{ep}</span>
-                          <span className="ad-episode-label">{aired ? "EP" : "Soon"}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+            <div className="watch-scroll-area">
+              <div className="watch-notif-banner">
+                <span>Report broken episodes to help us improve</span>
               </div>
-            )}
 
-            {/* ─── TAB: CHARACTERS ─── */}
-            {activeTab === "characters" && (
-              characters === null ? (
-                <p className="ad-tab-empty">Loading characters...</p>
-              ) : characters.length > 0 ? (
-                <div className="ad-characters-grid">
-                  {characters.map((c) => (
-                    <div key={c.id} className="ad-character-card">
-                      {c.image ? (
-                        <img src={c.image} alt={c.name} className="ad-character-img" />
-                      ) : (
-                        <div className="ad-character-img ad-character-fallback">
-                          <Users size={20} />
+              <div className="watch-action-bar">
+                <button className="watch-action-btn"><Monitor size={13} /> Theater</button>
+                <button className="watch-action-btn active"><Play size={13} /> Autoplay</button>
+                <button className={`watch-action-btn ${autoNext ? "active" : ""}`} onClick={() => setAutoNext(!autoNext)}><SkipForward size={13} /> Auto Next</button>
+                <button className="watch-action-btn"><List size={13} /> Add to List</button>
+              </div>
+
+              <div className="watch-info-bar">
+                <div className="watch-info-bar-left">
+                  <span className="watch-info-bar-ep">Episode {episode?.episode || selectedEp}{totalEps && <span className="watch-info-bar-total"> / {totalEps}</span>}</span>
+                </div>
+                <div className="watch-servers">
+                  <span className="watch-servers-label">Servers</span>
+                  <div className="watch-servers-list">
+                    {servers.map((s, i) => (
+                      <button key={i} className={`watch-server-chip ${i === serverIndex ? "active" : ""}`} onClick={() => switchServer(i)}>{s.label || `Server ${i + 1}`}</button>
+                    ))}
+                    {servers.length === 0 && !streamLoading && <span className="watch-muted" style={{ fontSize: 12, padding: "5px 0" }}>No servers loaded</span>}
+                  </div>
+                </div>
+              </div>
+
+              {/* ═══ COMMENTS ═══ */}
+              <section className="watch-section">
+                <div className="watch-section-head">
+                  <div className="watch-section-head-left">
+                    <MessageCircle size={13} />
+                    <span>Comments</span>
+                    <span className="watch-section-badge">{comments.length}</span>
+                  </div>
+                  <div className="watch-comment-sorts">
+                    {SORT_TABS.map(st => (
+                      <button key={st.key} className={`watch-comment-sort ${commentSort === st.key ? "active" : ""}`} onClick={() => setCommentSort(st.key)}>{st.label}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="watch-comment-input">
+                  <div className="watch-comment-avatar"><Users size={14} /></div>
+                  <div className="watch-comment-input-wrap">
+                    <input className="watch-comment-field" type="text" placeholder={replyTo ? "Write a reply..." : "Join the discussion..."} value={commentText} onChange={e => setCommentText(e.target.value)} onKeyDown={e => e.key === "Enter" && handleAddComment()} />
+                    <div className="watch-comment-input-actions">
+                      <button className="watch-comment-input-btn" title="Spoiler"><EyeOff size={12} /></button>
+                      <button className="watch-comment-input-btn" title="Send" onClick={handleAddComment}><ArrowLeft size={12} style={{ transform: "rotate(90deg)" }} /></button>
+                    </div>
+                  </div>
+                </div>
+                {replyTo && (
+                  <div className="watch-reply-indicator">
+                    Replying to a comment <button onClick={() => setReplyTo(null)}><X size={12} /></button>
+                  </div>
+                )}
+
+                <div className="watch-comments-list">
+                  {sortedComments.map(cm => (
+                    <div key={cm.id} className={`watch-comment-item ${cm.pinned ? "pinned" : ""}`}>
+                      {cm.pinned && <div className="watch-comment-pin"><Pin size={10} /> Pinned</div>}
+                      <div className="watch-comment-avatar"><Users size={14} /></div>
+                      <div className="watch-comment-body">
+                        <div className="watch-comment-top">
+                          <span className="watch-comment-user">{cm.user}</span>
+                          <span className="watch-comment-time">{cm.time}</span>
                         </div>
-                      )}
-                      <div className="ad-character-info">
-                        <span className="ad-character-name">{c.name}</span>
-                        <span className="ad-character-role">{c.role}</span>
-                        {c.voiceActor && <span className="ad-character-va">VA: {c.voiceActor.name}</span>}
+                        {cm.hasSpoiler ? (
+                          <div className={`watch-spoiler-wrap ${spoilerMode[cm.id] ? "revealed" : ""}`} onClick={() => setSpoilerMode(s => ({ ...s, [cm.id]: true }))}>
+                            <div className="watch-spoiler-blur"><AlertCircle size={12} /><span>Spoiler — Click to reveal</span></div>
+                            <p className="watch-comment-text">{cm.text.replace(/\|\|(.*?)\|\|/g, "$1")}</p>
+                          </div>
+                        ) : (
+                          <p className="watch-comment-text">{cm.text}</p>
+                        )}
+                        <div className="watch-comment-actions">
+                          <button className="watch-comment-action" onClick={() => handleLikeComment(cm.id, false, null)}><ThumbsUp size={11} /> {cm.likes}</button>
+                          <button className="watch-comment-action"><ThumbsDown size={11} /> {cm.dislikes}</button>
+                          <button className="watch-comment-action" onClick={() => setReplyTo(cm.id)}><Reply size={11} /> Reply</button>
+                        </div>
+                        {cm.replies.length > 0 && (
+                          <div className="watch-comment-replies">
+                            {cm.replies.map(r => (
+                              <div key={r.id} className="watch-comment-item">
+                                <div className="watch-comment-avatar" style={{ width: 24, height: 24 }}><Users size={10} /></div>
+                                <div className="watch-comment-body">
+                                  <div className="watch-comment-top">
+                                    <span className="watch-comment-user">{r.user}</span>
+                                    <span className="watch-comment-time">{r.time}</span>
+                                  </div>
+                                  <p className="watch-comment-text">{r.text}</p>
+                                  <div className="watch-comment-actions">
+                                    <button className="watch-comment-action" onClick={() => handleLikeComment(r.id, true, cm.id)}><ThumbsUp size={11} /> {r.likes}</button>
+                                    <button className="watch-comment-action"><ThumbsDown size={11} /> {r.dislikes}</button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <p className="ad-tab-empty">No character data available.</p>
-              )
-            )}
+              </section>
 
-            {/* ─── TAB: RECOMMENDATIONS ─── */}
-            {activeTab === "recommendations" && (
-              recommendations && recommendations.length > 0 ? (
-                <div className="ad-recommendations-grid">
-                  {recommendations.map((r) => (
-                    <div key={r.id} className="ad-recommendation-card" onClick={() => { window.scrollTo(0, 0); navigate(`/anime/${r.id}`); }}>
-                      {r.image ? (
-                        <img src={r.image} alt={r.name} />
-                      ) : (
-                        <div className="ad-rec-fallback"><Film size={20} /></div>
-                      )}
-                      <span className="ad-recommendation-name">{r.name}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="ad-tab-empty">No recommendations available.</p>
-              )
-            )}
-
-            {/* ─── TAB: REVIEWS ─── */}
-            {activeTab === "reviews" && (
-              <Reviews animeId={anime.id} selectedEp={selectedEp} />
-            )}
-          </section>
-
-          {/* ─── PLAYER MODAL ─── */}
-          {showPlayer && watchAnime && (
-            <AnimeWatch
-              anime={watchAnime}
-              animeName={anime?.name}
-              detail={anime}
-              onClose={() => setShowPlayer(false)}
-              startEp={selectedEp}
-              onEpisodeChange={(ep) => setSelectedEp(ep)}
-              totalEpisodes={totalEps}
-            />
-          )}
-
-          {/* ─── TRAILER OVERLAY ─── */}
-          {showTrailer && (anime.trailerUrl || anime.trailer?.embed_url) && (
-            <div className="ad-trailer-overlay" onClick={() => setShowTrailer(false)}>
-              <div className="ad-trailer-modal" onClick={(e) => e.stopPropagation()}>
-                <button className="ad-trailer-close" onClick={() => setShowTrailer(false)}><X size={16} /></button>
-                <div className="ad-trailer-embed">
-                  <iframe
-                    src={anime.trailerUrl || anime.trailer.embed_url}
-                    title="Trailer"
-                    allowFullScreen
-                    allow="autoplay; encrypted-media"
-                  />
-                </div>
-              </div>
             </div>
-          )}
-        </main>
+          </div>
+
+          {/* ─── RIGHT: EPISODES ─── */}
+          <aside className="watch-right-col">
+            <div className="watch-side-head">
+              <Monitor size={13} />
+              <span>Episodes</span>
+              <span className="watch-side-count">{episodes.length}</span>
+            </div>
+            <div className="watch-search-wrap">
+              <Search size={13} className="watch-search-icon" />
+              <input className="watch-search-input" type="text" placeholder="Search episodes..." value={epSearch} onChange={e => setEpSearch(e.target.value)} />
+              {epSearch && <button className="watch-search-clear" onClick={() => setEpSearch("")}><X size={12} /></button>}
+            </div>
+            <div className="watch-side-scroll" ref={scrollRef}>
+              {loading ? (
+                <div className="watch-center" style={{ padding: 40 }}><Loader size={18} className="watch-spin" /></div>
+              ) : filteredEpisodes.length === 0 ? (
+                <div className="watch-center" style={{ padding: 40 }}><p className="watch-muted">{epSearch ? "No matching episodes" : "No episodes"}</p></div>
+              ) : (
+                filteredEpisodes.map((ep, i) => {
+                  const realIdx = episodes.indexOf(ep);
+                  return (
+                    <button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} onClick={() => { setEpIndex(realIdx); }}>
+                      <div className="watch-ep-thumb">
+                        {anime.img && <img src={anime.img} alt="" />}
+                        <div className="watch-ep-thumb-overlay"><Play size={10} /></div>
+                      </div>
+                      <div className="watch-ep-info">
+                        <span className="watch-ep-name">Episode {ep.episode}</span>
+                        {ep.title && <span className="watch-ep-title">{ep.title}</span>}
+                        <span className="watch-ep-date">{ep.aired ? "Aired" : "Upcoming"}</span>
+                      </div>
+                      {realIdx === epIndex && <div className="watch-ep-active-dot" />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </aside>
+
+        </div>
       </div>
-    </AnimatedPage>
+    </div>
   );
 }
