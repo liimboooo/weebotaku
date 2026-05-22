@@ -138,7 +138,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   useEffect(() => {
     if (scrollRef.current && episodes[epIndex]) {
       const el = scrollRef.current.querySelector(`[data-ep="${epIndex}"]`);
-      el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      el?.scrollIntoView({ block: "start", behavior: "smooth" });
     }
   }, [epIndex, episodes]);
 
