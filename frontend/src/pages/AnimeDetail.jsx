@@ -265,34 +265,6 @@ export default function AnimeDetail() {
       <div style={{ position: "relative", zIndex: 1, width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", background: "#050508" }}>
         <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
 
-          {/* ─── LEFT: INFO ─── */}
-          <aside style={{ width: 240, flexShrink: 0, padding: "12px 0 12px 12px", overflowY: "auto" }}>
-            <div className="watch-info-card">
-              <div className="watch-poster-wrap">
-                {anime.img ? <img src={anime.img} alt="" className="watch-poster" /> : <div className="watch-poster-fallback"><Film size={32} /></div>}
-                <div className="watch-poster-glow" />
-              </div>
-              <h1 className="watch-info-title">{anime.name}</h1>
-              {anime.jpTitle && <p className="watch-info-jp">{anime.jpTitle}</p>}
-              <div className="watch-info-badges">
-                {anime.rating && <span className="watch-badge"><Star size={10} /> {anime.rating.toFixed(1)}</span>}
-                <span className="watch-badge"><Tv size={10} /> {anime.episodes || totalEps || "?"} EP</span>
-                {anime.status && <span className="watch-badge">{anime.status}</span>}
-              </div>
-              {anime.synopsis && <p className="watch-info-synopsis">{anime.synopsis}</p>}
-              {metadataItems.length > 0 && (
-                <div className="watch-info-meta">
-                  {metadataItems.map((item, i) => (
-                    <div key={i} className="watch-meta-row">
-                      <span className="watch-meta-label">{item.label}</span>
-                      <span className="watch-meta-value">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </aside>
-
           {/* ─── CENTER: PLAYER ─── */}
           <div className="watch-center-col">
             <header className="watch-topbar">
