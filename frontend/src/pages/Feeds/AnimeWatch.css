@@ -822,10 +822,10 @@
 .watch-ep-item {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   width: 100%;
-  padding: 14px;
-  margin-bottom: 8px;
+  padding: 18px;
+  margin-bottom: 10px;
   border-radius: 12px;
   background: rgba(255,255,255,0.01);
   border: 1px solid rgba(139,92,246,0.04);
@@ -834,7 +834,7 @@
   transition: all 0.2s ease;
   text-align: left;
   font-family: "Inter", sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   position: relative;
 }
 
@@ -853,8 +853,8 @@
 }
 
 .watch-ep-thumb {
-  width: 100px;
-  height: 60px;
+  width: 120px;
+  height: 72px;
   border-radius: 7px;
   overflow: hidden;
   flex-shrink: 0;
@@ -898,7 +898,7 @@
 
 .watch-ep-name {
   font-weight: 800;
-  font-size: 12px;
+  font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
