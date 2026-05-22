@@ -48,11 +48,11 @@ export default function AnimeDetail() {
   const [streamRetryCount, setStreamRetryCount] = useState(0);
   const [epSearch, setEpSearch] = useState("");
   const [language, setLanguage] = useState("sub");
-  const [langKey, setLangKey] = useState(0);
 
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
   const failedServers = useRef(new Set());
+  const langKey = useRef(0);
 
   const toStreamUrl = (srv) => {
     if (!srv) return "";
@@ -136,7 +136,7 @@ export default function AnimeDetail() {
       if (ls.length > 0) {
         setServerIndex(0);
         setStreamUrl(toStreamUrl(ls[0]));
-        setLangKey(k => k + 1);
+        langKey.current += 1;
       }
     }
   }, [servers, language]);
@@ -316,7 +316,7 @@ export default function AnimeDetail() {
                 </div>
               )}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && (
-                <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}-${langKey}`} className="watch-frame" src={streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
+                <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}-${langKey.current}`} className="watch-frame" src={streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
               )}
               {!loading && !error && iframeError && streamUrl && (
                 <div className="watch-center">
