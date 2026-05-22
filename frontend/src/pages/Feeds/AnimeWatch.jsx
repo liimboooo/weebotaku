@@ -446,46 +446,47 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                 </div>
               </section>
 
+              <section className="watch-section">
+                <div className="watch-section-head">
+                  <Monitor size={13} />
+                  <span>Episodes</span>
+                  <span className="watch-section-badge">{episodes.length}</span>
+                </div>
+                <div className="watch-search-wrap">
+                  <Search size={13} className="watch-search-icon" />
+                  <input className="watch-search-input" type="text" placeholder="Search episodes..." value={epSearch} onChange={e => setEpSearch(e.target.value)} />
+                  {epSearch && <button className="watch-search-clear" onClick={() => setEpSearch("")}><X size={12} /></button>}
+                </div>
+                <div ref={scrollRef}>
+                  {loading ? (
+                    <div className="watch-center" style={{ padding: 40 }}><Loader size={18} className="watch-spin" /></div>
+                  ) : filteredEpisodes.length === 0 ? (
+                    <div className="watch-center" style={{ padding: 40 }}><p className="watch-muted">{epSearch ? "No matching episodes" : "No episodes"}</p></div>
+                  ) : (
+                    filteredEpisodes.map((ep, i) => {
+                      const realIdx = episodes.indexOf(ep);
+                      return (
+                        <motion.button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300 }} onClick={() => { setEpIndex(realIdx); if (onEpisodeChange) onEpisodeChange(ep.episode); }}>
+                          <div className="watch-ep-thumb">
+                            {detail?.img && <img src={detail.img} alt="" />}
+                            <div className="watch-ep-thumb-overlay"><Play size={10} /></div>
+                          </div>
+                          <div className="watch-ep-info">
+                            <span className="watch-ep-name">Episode {ep.episode}</span>
+                            {ep.title && <span className="watch-ep-title">{ep.title}</span>}
+                            <span className="watch-ep-date">{ep.aired ? "Aired" : "Upcoming"}</span>
+                          </div>
+                          {realIdx === epIndex && <div className="watch-ep-active-dot" />}
+                        </motion.button>
+                      );
+                    })
+                  )}
+                </div>
+              </section>
+
             </div>
           </div>
 
-          <aside className="watch-right-col">
-            <div className="watch-side-head">
-              <Monitor size={13} />
-              <span>Episodes</span>
-              <span className="watch-side-count">{episodes.length}</span>
-            </div>
-            <div className="watch-search-wrap">
-              <Search size={13} className="watch-search-icon" />
-              <input className="watch-search-input" type="text" placeholder="Search episodes..." value={epSearch} onChange={e => setEpSearch(e.target.value)} />
-              {epSearch && <button className="watch-search-clear" onClick={() => setEpSearch("")}><X size={12} /></button>}
-            </div>
-            <div className="watch-side-scroll" ref={scrollRef}>
-              {loading ? (
-                <div className="watch-center" style={{ padding: 40 }}><Loader size={18} className="watch-spin" /></div>
-              ) : filteredEpisodes.length === 0 ? (
-                <div className="watch-center" style={{ padding: 40 }}><p className="watch-muted">{epSearch ? "No matching episodes" : "No episodes"}</p></div>
-              ) : (
-                filteredEpisodes.map((ep, i) => {
-                  const realIdx = episodes.indexOf(ep);
-                  return (
-                    <motion.button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300 }} onClick={() => { setEpIndex(realIdx); if (onEpisodeChange) onEpisodeChange(ep.episode); }}>
-                      <div className="watch-ep-thumb">
-                        {detail?.img && <img src={detail.img} alt="" />}
-                        <div className="watch-ep-thumb-overlay"><Play size={10} /></div>
-                      </div>
-                      <div className="watch-ep-info">
-                        <span className="watch-ep-name">Episode {ep.episode}</span>
-                        {ep.title && <span className="watch-ep-title">{ep.title}</span>}
-                        <span className="watch-ep-date">{ep.aired ? "Aired" : "Upcoming"}</span>
-                      </div>
-                      {realIdx === epIndex && <div className="watch-ep-active-dot" />}
-                    </motion.button>
-                  );
-                })
-              )}
-            </div>
-          </aside>
         </div>
       </motion.div>
     </motion.div>,
