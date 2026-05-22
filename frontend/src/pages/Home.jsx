@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Bookmark,
   Calendar,
@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Trophy,
   Users,
+  X,
   Zap,
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
@@ -28,6 +29,7 @@ import Skeleton from "../components/Skeleton";
 import LiveRooms from "../components/LiveRooms";
 import Categories from "../components/Categories";
 import Background from "../components/Background";
+import "../components/AnimePreviewPanel.css";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
 import { loadWatchlist } from "../services/storage";
@@ -200,7 +202,7 @@ function SpotlightQuote({ quote, onRefresh, loading }) {
   );
 }
 
-function ContinueWatchingRow() {
+function ContinueWatchingRow({ onCardClick }) {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
 
@@ -260,7 +262,7 @@ function ContinueWatchingRow() {
           <motion.div
             key={`${item.animeId}-${item.episode}`}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode}`)}
+            onClick={() => onCardClick?.({ ...item, id: item.animeId })}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -317,7 +319,7 @@ function SectionHeader({ icon: Icon, title, subtitle, action }) {
   );
 }
 
-function SeasonGrid({ animeList }) {
+function SeasonGrid({ animeList, onCardClick }) {
   const navigate = useNavigate();
   if (!animeList?.length) return null;
   return (
@@ -334,7 +336,7 @@ function SeasonGrid({ animeList }) {
           <motion.div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
+            onClick={() => onCardClick(anime)}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -358,8 +360,7 @@ function SeasonGrid({ animeList }) {
   );
 }
 
-function TopTenRow({ animeList }) {
-  const navigate = useNavigate();
+function TopTenRow({ animeList, onCardClick }) {
   if (!animeList?.length) return null;
   return (
     <section className="home-section">
@@ -375,7 +376,7 @@ function TopTenRow({ animeList }) {
           <motion.div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
+            onClick={() => onCardClick(anime)}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -424,7 +425,7 @@ function GenreBar({ genres }) {
   );
 }
 
-function UpcomingSection({ animeList }) {
+function UpcomingSection({ animeList, onCardClick }) {
   const navigate = useNavigate();
   if (!animeList?.length) return null;
   return (
@@ -441,7 +442,7 @@ function UpcomingSection({ animeList }) {
           <motion.div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
+            onClick={() => onCardClick(anime)}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -569,6 +570,7 @@ export default function Home() {
   const { spotlight, topTen, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending } = useAnimeData();
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const [selectedAnime, setSelectedAnime] = useState(null);
 
   useEffect(() => {
     fetchRandomQuote().then(setQuote).catch(() => {});
@@ -618,10 +620,10 @@ export default function Home() {
 
         <GenreBar genres={categories} />
 
-        <ContinueWatchingRow />
+        <ContinueWatchingRow onCardClick={setSelectedAnime} />
 
         {topTen.length > 0 && (
-          <TopTenRow animeList={topTen} />
+          <TopTenRow animeList={topTen} onCardClick={setSelectedAnime} />
         )}
 
         {trendingList.length > 0 && (
@@ -632,12 +634,20 @@ export default function Home() {
               subtitle="Most watched anime this week"
               action={refreshTrending}
             />
-            <div className="upcoming-grid">
+            <motion.div
+              className="upcoming-grid"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-40px" }}
+            >
               {trendingList.map((anime) => (
-                <div
+                <motion.div
                   key={anime.id}
                   className="upcoming-card"
-                  onClick={() => navigate(`/anime/${anime.id}`)}
+                  onClick={() => setSelectedAnime(anime)}
+                  variants={cardSlideUp}
+                  whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
                 >
                   <div className="upcoming-card-img">
                     <img src={anime.img} alt={anime.name} loading="lazy" />
@@ -652,18 +662,18 @@ export default function Home() {
                       <span className="upcoming-card-type">{anime.status || "TV"}</span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </section>
         )}
 
         {seasonPicks.length > 0 && (
-          <SeasonGrid animeList={seasonPicks} />
+          <SeasonGrid animeList={seasonPicks} onCardClick={setSelectedAnime} />
         )}
 
         {upcomingList.length > 0 && (
-          <UpcomingSection animeList={upcomingList} />
+          <UpcomingSection animeList={upcomingList} onCardClick={setSelectedAnime} />
         )}
 
         {popularList.length > 0 && (
@@ -674,12 +684,20 @@ export default function Home() {
               subtitle="All-time fan favorites everyone's watching"
               action={() => navigate("/browse/anime")}
             />
-            <div className="upcoming-grid">
+            <motion.div
+              className="upcoming-grid"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-40px" }}
+            >
               {popularList.map((anime) => (
-                <div
+                <motion.div
                   key={anime.id}
                   className="upcoming-card"
-                  onClick={() => navigate(`/anime/${anime.id}`)}
+                  onClick={() => setSelectedAnime(anime)}
+                  variants={cardSlideUp}
+                  whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
                 >
                   <div className="upcoming-card-img">
                     <img src={anime.img} alt={anime.name} loading="lazy" />
@@ -694,11 +712,80 @@ export default function Home() {
                       <span className="upcoming-card-type">{anime.status || "TV"}</span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </section>
         )}
+
+        <AnimatePresence>
+          {selectedAnime && (
+            <motion.div
+              key={selectedAnime.id}
+              className="preview-panel"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 26 }}
+              style={{ overflow: "hidden" }}
+            >
+              <div className="preview-panel-inner">
+                <div className="preview-panel-left">
+                  <button className="preview-panel-close" onClick={() => setSelectedAnime(null)}>
+                    <X size={16} />
+                  </button>
+                  <h2 className="preview-panel-title">{selectedAnime.name || selectedAnime.title?.romaji || "Untitled"}</h2>
+                  <div className="preview-panel-stats">
+                    {[
+                      { label: "Year", value: selectedAnime.year || selectedAnime.seasonYear },
+                      { label: "Rating", value: selectedAnime.rating ? `${Number(selectedAnime.rating).toFixed(1)}` : null },
+                      { label: "Episodes", value: selectedAnime.episodes ? `${selectedAnime.episodes} EP` : null },
+                      { label: "Quality", value: "HD" },
+                    ].filter(m => m.value).map((m, i) => (
+                      <span key={i} className="preview-panel-stat">{m.value}</span>
+                    ))}
+                  </div>
+                  <p className="preview-panel-synopsis">{selectedAnime.synopsis || selectedAnime.description || "No synopsis available."}</p>
+                  <div className="preview-panel-actions">
+                    <button
+                      className="preview-panel-btn primary"
+                      onClick={() => { const id = selectedAnime.id; setSelectedAnime(null); navigate(`/anime/${id}`); }}
+                    >
+                      ▶ Watch Now
+                    </button>
+                    <button className="preview-panel-btn secondary">♡ Watchlist</button>
+                    <button className="preview-panel-btn icon">👍</button>
+                  </div>
+                  <div className="preview-panel-details">
+                    <div className="preview-panel-detail-item">
+                      <span className="preview-panel-detail-label">Cast</span>
+                      <span className="preview-panel-detail-value">{selectedAnime.studios?.join(", ") || "Various"}</span>
+                    </div>
+                    <div className="preview-panel-detail-item">
+                      <span className="preview-panel-detail-label">Genres</span>
+                      <span className="preview-panel-detail-value">{selectedAnime.genres?.join(", ") || "N/A"}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="preview-panel-right">
+                  <div className="preview-panel-media">
+                    {selectedAnime.trailerUrl && selectedAnime.trailerUrl.includes("youtube") ? (
+                      <iframe
+                        src={selectedAnime.trailerUrl}
+                        title={selectedAnime.name}
+                        allow="autoplay; encrypted-media"
+                        style={{ border: 0 }}
+                      />
+                    ) : (
+                      <img src={selectedAnime.bannerImage || selectedAnime.backdrop || selectedAnime.img} alt="" />
+                    )}
+                  </div>
+                  <div className="preview-panel-fade" />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="section-divider">
           <span>Community</span>
