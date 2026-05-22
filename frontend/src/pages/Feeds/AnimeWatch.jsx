@@ -4,11 +4,37 @@ import {
   ChevronLeft, X, Loader, Play, SkipForward,
   Star, Tv, Calendar, Clock, Monitor, Search, Film,
   Bookmark, Heart, Volume2, Maximize, List,
-  ArrowLeft
+  ArrowLeft, MessageCircle, ThumbsUp, ThumbsDown,
+  Reply, Pin, EyeOff, ChevronRight, Users,
+  Sparkles, Flame, AlertCircle
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { getEpisodes, getStreamUrls } from "../../services/animeApi";
+import { fetchAnimeCharacters, fetchAnimeRecommendations } from "../../services/anilistApi";
 import "./AnimeWatch.css";
+
+const REACTIONS = [
+  { emoji: "\uD83D\uDE06", label: "LOL", key: "lol" },
+  { emoji: "\uD83D\uDE0D", label: "Fire", key: "fire" },
+  { emoji: "\uD83D\uDE2E", label: "Shock", key: "shock" },
+  { emoji: "\u2764\uFE0F", label: "Love", key: "love" },
+  { emoji: "\uD83D\uDE22", label: "Sad", key: "sad" },
+  { emoji: "\uD83D\uDC4D", label: "Nice", key: "nice" },
+];
+
+const SORT_TABS = [
+  { key: "top", label: "Top" },
+  { key: "newest", label: "Newest" },
+  { key: "liked", label: "Most Liked" },
+];
+
+const MOCK_COMMENTS = [
+  { id: 1, user: "AnimeKing", avatar: "", text: "This episode was absolutely insane! The animation quality is top tier \uD83D\uDD25\uD83D\uDD25", time: "2 min ago", likes: 42, dislikes: 2, replies: [
+    { id: 11, user: "OtakuPro", avatar: "", text: "Totally agree, the fight scene was peak cinema", time: "1 min ago", likes: 12, dislikes: 0 }
+  ], pinned: true },
+  { id: 2, user: "MangaReader", avatar: "", text: "As a manga reader, I can say they adapted this perfectly. Cant wait for next week!", time: "5 min ago", likes: 28, dislikes: 1, replies: [], pinned: false },
+  { id: 3, user: "NightWatcher", avatar: "", text: "Spoiler: ||The main character finally unlocks his true power at the end||", time: "8 min ago", likes: 35, dislikes: 3, replies: [], pinned: false, hasSpoiler: true },
+];
 
 export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange, detail, totalEpisodes }) {
   const [episodes, setEpisodes] = useState([]);
@@ -27,6 +53,23 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
   const failedServers = useRef(new Set());
+
+  /* ─── REACTIONS ─── */
+  const [reactions, setReactions] = useState({ lol: 284, fire: 512, shock: 156, love: 378, sad: 89, nice: 203 });
+  const [userReaction, setUserReaction] = useState(null);
+
+  /* ─── COMMENTS ─── */
+  const [comments, setComments] = useState(MOCK_COMMENTS);
+  const [commentSort, setCommentSort] = useState("top");
+  const [commentText, setCommentText] = useState("");
+  const [replyTo, setReplyTo] = useState(null);
+  const [spoilerMode, setSpoilerMode] = useState({});
+
+  /* ─── CHARACTERS ─── */
+  const [characters, setCharacters] = useState(null);
+
+  /* ─── RECOMMENDATIONS ─── */
+  const [recommendations, setRecommendations] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -66,7 +109,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   useEffect(() => {
     const nextEp = episodes[epIndex + 1];
     if (!nextEp || !anime.anilistId || prefetchCache[nextEp.url]) return;
-    const nextUrl = anime.anilistId ? `https://anime-proxy.mohamedlimam80000.workers.dev/?url=${encodeURIComponent(`https://reanime.to/api/flix/${anime.anilistId}/${nextEp.url}`)}` : null;
+    const nextUrl = `https://anime-proxy.mohamedlimam80000.workers.dev/?url=${encodeURIComponent(`https://reanime.to/api/flix/${anime.anilistId}/${nextEp.url}`)}`;
     if (!nextUrl) return;
     setPrefetchCache(p => ({ ...p, [nextEp.url]: true }));
     fetch(nextUrl, { signal: AbortSignal.timeout(10000) }).catch(() => {});
@@ -78,6 +121,18 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
   }, [epIndex, episodes]);
+
+  /* ─── FETCH CHARACTERS ─── */
+  useEffect(() => {
+    if (!anime.anilistId) return;
+    fetchAnimeCharacters(anime.anilistId).then(setCharacters).catch(() => {});
+  }, [anime.anilistId]);
+
+  /* ─── FETCH RECOMMENDATIONS ─── */
+  useEffect(() => {
+    if (!anime.anilistId) return;
+    fetchAnimeRecommendations(anime.anilistId).then(setRecommendations).catch(() => {});
+  }, [anime.anilistId]);
 
   const switchServer = (idx) => {
     if (servers[idx]) {
@@ -132,6 +187,70 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     return items;
   }, [detail]);
 
+  const handleReaction = (key) => {
+    if (userReaction === key) {
+      setReactions(r => ({ ...r, [key]: r[key] - 1 }));
+      setUserReaction(null);
+    } else {
+      if (userReaction) setReactions(r => ({ ...r, [userReaction]: r[userReaction] - 1 }));
+      setReactions(r => ({ ...r, [key]: r[key] + 1 }));
+      setUserReaction(key);
+    }
+  };
+
+  const handleAddComment = () => {
+    if (!commentText.trim()) return;
+    const newComment = {
+      id: Date.now(),
+      user: "You",
+      avatar: "",
+      text: commentText,
+      time: "Just now",
+      likes: 0,
+      dislikes: 0,
+      replies: [],
+      pinned: false,
+    };
+    if (replyTo) {
+      setComments(c => c.map(cm => cm.id === replyTo ? { ...cm, replies: [...cm.replies, { ...newComment, id: Date.now() + 1, user: "You" }] } : cm));
+      setReplyTo(null);
+    } else {
+      setComments(c => [newComment, ...c]);
+    }
+    setCommentText("");
+  };
+
+  const handleLikeComment = (id, isReply, parentId) => {
+    if (isReply && parentId) {
+      setComments(c => c.map(cm => cm.id === parentId ? { ...cm, replies: cm.replies.map(r => r.id === id ? { ...r, likes: r.likes + 1 } : r) } : cm));
+    } else {
+      setComments(c => c.map(cm => cm.id === id ? { ...cm, likes: cm.likes + 1 } : cm));
+    }
+  };
+
+  const sortedComments = useMemo(() => {
+    const pinned = comments.filter(c => c.pinned);
+    const rest = comments.filter(c => !c.pinned);
+    if (commentSort === "top") return [...pinned, ...rest.sort((a, b) => b.likes - a.likes)];
+    if (commentSort === "liked") return [...pinned, ...rest.sort((a, b) => (b.likes - b.dislikes) - (a.likes - a.dislikes))];
+    return [...pinned, ...rest];
+  }, [comments, commentSort]);
+
+  const topReaction = Object.entries(reactions).sort((a, b) => b[1] - a[1])[0];
+  const totalReactions = Object.values(reactions).reduce((a, b) => a + b, 0);
+
+  const similarAnime = useMemo(() => {
+    if (!detail?.genres?.length) return [];
+    return detail.genres.slice(0, 4).map((g, i) => ({
+      id: i + 1,
+      name: `${g} Hit`,
+      img: detail.img,
+      rating: (7.5 + Math.random()).toFixed(1),
+      eps: "12 EP",
+      status: "Airing",
+    }));
+  }, [detail]);
+
   return createPortal(
     <motion.div className="watch-overlay"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
@@ -144,45 +263,29 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         transition={{ type: "spring", stiffness: 260, damping: 28 }}
       >
         <div className="watch-main">
-          {/* ─── LEFT: INFO PANEL ─── */}
           <aside className="watch-left-col">
             <div className="watch-info-card">
               <button className="watch-info-close" onClick={onClose} aria-label="Close">
                 <ArrowLeft size={16} />
               </button>
-
               <div className="watch-poster-wrap">
                 {detail?.img ? (
                   <img src={detail.img} alt="" className="watch-poster" />
                 ) : (
-                  <div className="watch-poster-fallback">
-                    <Film size={32} />
-                  </div>
+                  <div className="watch-poster-fallback"><Film size={32} /></div>
                 )}
                 <div className="watch-poster-glow" />
               </div>
-
               <h1 className="watch-info-title">{detail?.name || animeName || anime.title}</h1>
               {detail?.jpTitle && <p className="watch-info-jp">{detail.jpTitle}</p>}
-
               <div className="watch-info-badges">
                 {detail?.rating && (
-                  <span className="watch-badge">
-                    <Star size={10} /> {detail.rating.toFixed(1)}
-                  </span>
+                  <span className="watch-badge"><Star size={10} /> {detail.rating.toFixed(1)}</span>
                 )}
-                <span className="watch-badge">
-                  <Tv size={10} /> {detail?.episodes || totalEpisodes || episodes.length || "?"} EP
-                </span>
-                {detail?.status && (
-                  <span className="watch-badge">{detail.status}</span>
-                )}
+                <span className="watch-badge"><Tv size={10} /> {detail?.episodes || totalEpisodes || episodes.length || "?"} EP</span>
+                {detail?.status && <span className="watch-badge">{detail.status}</span>}
               </div>
-
-              {detail?.synopsis && (
-                <p className="watch-info-synopsis">{detail.synopsis}</p>
-              )}
-
+              {detail?.synopsis && <p className="watch-info-synopsis">{detail.synopsis}</p>}
               {metadataItems.length > 0 && (
                 <div className="watch-info-meta">
                   {metadataItems.map((item, i) => (
@@ -193,19 +296,13 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                   ))}
                 </div>
               )}
-
               <div className="watch-info-actions">
-                <button className="watch-info-action" title="Watchlist">
-                  <Bookmark size={14} />
-                </button>
-                <button className="watch-info-action" title="Like">
-                  <Heart size={14} />
-                </button>
+                <button className="watch-info-action" title="Watchlist"><Bookmark size={14} /></button>
+                <button className="watch-info-action" title="Like"><Heart size={14} /></button>
               </div>
             </div>
           </aside>
 
-          {/* ─── CENTER: PLAYER ─── */}
           <div className="watch-center-col">
             <header className="watch-topbar">
               <button className="watch-back" onClick={onClose}>
@@ -213,9 +310,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                 <span className="watch-back-label">{animeName || anime.title}</span>
               </button>
               <div className="watch-topbar-mid">
-                {episode && (
-                  <span className="watch-topbar-ep">Episode {episode.episode}</span>
-                )}
+                {episode && <span className="watch-topbar-ep">Episode {episode.episode}</span>}
               </div>
               <div className="watch-topbar-right">
                 <button className="watch-topbar-btn" onClick={() => setAutoNext(!autoNext)} title="Auto-next">
@@ -238,43 +333,21 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                   <div className="watch-err-badge">!</div>
                   <p className="watch-err-text">{error}</p>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button className="watch-btn" onClick={() => {
-                      if (episodes.length === 0) setRetryCount(c => c + 1);
-                      else setStreamRetryCount(c => c + 1);
-                    }}>Retry</button>
+                    <button className="watch-btn" onClick={() => { if (episodes.length === 0) setRetryCount(c => c + 1); else setStreamRetryCount(c => c + 1); }}>Retry</button>
                   </div>
                 </div>
               )}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && (
                 <>
-                  <iframe
-                    ref={iframeRef}
-                    key={`${episode?.episode || 0}-${serverIndex}`}
-                    className="watch-frame"
-                    src={streamUrl}
-                    title={`Episode ${episode?.episode || ""}`}
-                    allow="autoplay; fullscreen; encrypted-media"
-                    allowFullScreen
-                    onError={handleIframeError}
-                  />
+                  <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}`} className="watch-frame" src={streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
                   <div className="watch-player-controls">
                     <div className="watch-controls-left">
-                      <button className="watch-ctrl-btn" title="Play/Pause">
-                        <Play size={14} fill="currentColor" />
-                      </button>
-                      <button className="watch-ctrl-btn" title="Volume">
-                        <Volume2 size={14} />
-                      </button>
-                      <div className="watch-timeline">
-                        <div className="watch-timeline-track">
-                          <div className="watch-timeline-progress" style={{ width: "0%" }} />
-                        </div>
-                      </div>
+                      <button className="watch-ctrl-btn" title="Play/Pause"><Play size={14} fill="currentColor" /></button>
+                      <button className="watch-ctrl-btn" title="Volume"><Volume2 size={14} /></button>
+                      <div className="watch-timeline"><div className="watch-timeline-track"><div className="watch-timeline-progress" style={{ width: "0%" }} /></div></div>
                     </div>
                     <div className="watch-controls-right">
-                      <button className="watch-ctrl-btn" title="Fullscreen">
-                        <Maximize size={14} />
-                      </button>
+                      <button className="watch-ctrl-btn" title="Fullscreen"><Maximize size={14} /></button>
                     </div>
                   </div>
                 </>
@@ -284,145 +357,282 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                   <div className="watch-err-badge">!</div>
                   <p className="watch-err-text">Episode not available on this source.</p>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    {serverIndex < servers.length - 1 && (
-                      <button className="watch-btn" onClick={tryNextServer}>Try Next Source</button>
-                    )}
-                    {epIndex < episodes.length - 1 && (
-                      <button className="watch-btn watch-btn-ghost" onClick={() => {
-                        setIframeError(false);
-                        failedServers.current = new Set();
-                        setEpIndex(i => i + 1);
-                      }}>Skip to Next Episode</button>
-                    )}
-                    <button className="watch-btn watch-btn-ghost" onClick={() => {
-                      setIframeError(false);
-                      failedServers.current = new Set();
-                      setStreamRetryCount(c => c + 1);
-                    }}>Retry</button>
+                    {serverIndex < servers.length - 1 && <button className="watch-btn" onClick={tryNextServer}>Try Next Source</button>}
+                    {epIndex < episodes.length - 1 && <button className="watch-btn watch-btn-ghost" onClick={() => { setIframeError(false); failedServers.current = new Set(); setEpIndex(i => i + 1); }}>Skip to Next Episode</button>}
+                    <button className="watch-btn watch-btn-ghost" onClick={() => { setIframeError(false); failedServers.current = new Set(); setStreamRetryCount(c => c + 1); }}>Retry</button>
                   </div>
                 </div>
               )}
               {!loading && !error && streamLoading && (
-                <div className="watch-center">
-                  <div className="watch-pulse" />
-                  <p className="watch-muted">Loading stream...</p>
-                </div>
+                <div className="watch-center"><div className="watch-pulse" /><p className="watch-muted">Loading stream...</p></div>
               )}
               {!loading && !error && !streamLoading && !streamUrl && episode && (
                 <div className="watch-center"><p className="watch-muted">Preparing stream...</p></div>
               )}
             </div>
 
-            <div className="watch-notif-banner">
-              <span>Report broken episodes to help us improve</span>
-            </div>
-
-            <div className="watch-action-bar">
-              <button className="watch-action-btn">
-                <Monitor size={13} /> Theater
-              </button>
-              <button className="watch-action-btn active">
-                <Play size={13} /> Autoplay
-              </button>
-              <button className={`watch-action-btn ${autoNext ? "active" : ""}`} onClick={() => setAutoNext(!autoNext)}>
-                <SkipForward size={13} /> Auto Next
-              </button>
-              <button className="watch-action-btn">
-                <List size={13} /> Add to List
-              </button>
-            </div>
-
-            <div className="watch-info-bar">
-              <div className="watch-info-bar-left">
-                <span className="watch-info-bar-ep">
-                  Episode {episode?.episode || startEp}
-                  {totalEpisodes && <span className="watch-info-bar-total"> / {totalEpisodes}</span>}
-                </span>
+            <div className="watch-scroll-area">
+              <div className="watch-notif-banner">
+                <span>Report broken episodes to help us improve</span>
               </div>
-              <div className="watch-servers">
-                <span className="watch-servers-label">Servers</span>
-                <div className="watch-servers-list">
-                  {servers.map((s, i) => (
-                    <button
-                      key={i}
-                      className={`watch-server-chip ${i === serverIndex ? "active" : ""}`}
-                      onClick={() => switchServer(i)}
-                    >
-                      {s.label || `Server ${i + 1}`}
-                    </button>
-                  ))}
-                  {servers.length === 0 && !streamLoading && (
-                    <span className="watch-muted" style={{ fontSize: 12, padding: "5px 0" }}>No servers loaded</span>
-                  )}
+
+              <div className="watch-action-bar">
+                <button className="watch-action-btn"><Monitor size={13} /> Theater</button>
+                <button className="watch-action-btn active"><Play size={13} /> Autoplay</button>
+                <button className={`watch-action-btn ${autoNext ? "active" : ""}`} onClick={() => setAutoNext(!autoNext)}><SkipForward size={13} /> Auto Next</button>
+                <button className="watch-action-btn"><List size={13} /> Add to List</button>
+              </div>
+
+              <div className="watch-info-bar">
+                <div className="watch-info-bar-left">
+                  <span className="watch-info-bar-ep">Episode {episode?.episode || startEp}{totalEpisodes && <span className="watch-info-bar-total"> / {totalEpisodes}</span>}</span>
+                </div>
+                <div className="watch-servers">
+                  <span className="watch-servers-label">Servers</span>
+                  <div className="watch-servers-list">
+                    {servers.map((s, i) => (
+                      <button key={i} className={`watch-server-chip ${i === serverIndex ? "active" : ""}`} onClick={() => switchServer(i)}>{s.label || `Server ${i + 1}`}</button>
+                    ))}
+                    {servers.length === 0 && !streamLoading && <span className="watch-muted" style={{ fontSize: 12, padding: "5px 0" }}>No servers loaded</span>}
+                  </div>
                 </div>
               </div>
+
+              {/* ═══ COMMUNITY REACTIONS ═══ */}
+              <section className="watch-section">
+                <div className="watch-section-head">
+                  <div className="watch-section-head-left">
+                    <Sparkles size={13} />
+                    <span>Community Reactions</span>
+                    <span className="watch-section-badge">{totalReactions}</span>
+                  </div>
+                  <span className="watch-section-trend">
+                    <Flame size={11} /> {REACTIONS.find(r => r.key === topReaction[0])?.emoji} {topReaction[1]}
+                  </span>
+                </div>
+                <div className="watch-reactions-bar">
+                  {REACTIONS.map(r => (
+                    <button
+                      key={r.key}
+                      className={`watch-reaction-btn ${userReaction === r.key ? "active" : ""}`}
+                      onClick={() => handleReaction(r.key)}
+                    >
+                      <span className="watch-reaction-emoji">{r.emoji}</span>
+                      <span className="watch-reaction-label">{r.label}</span>
+                      <span className="watch-reaction-count">{reactions[r.key]}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              {/* ═══ COMMENTS ═══ */}
+              <section className="watch-section">
+                <div className="watch-section-head">
+                  <div className="watch-section-head-left">
+                    <MessageCircle size={13} />
+                    <span>Comments</span>
+                    <span className="watch-section-badge">{comments.length}</span>
+                  </div>
+                  <div className="watch-comment-sorts">
+                    {SORT_TABS.map(st => (
+                      <button key={st.key} className={`watch-comment-sort ${commentSort === st.key ? "active" : ""}`} onClick={() => setCommentSort(st.key)}>{st.label}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="watch-comment-input">
+                  <div className="watch-comment-avatar">
+                    <Users size={14} />
+                  </div>
+                  <div className="watch-comment-input-wrap">
+                    <input
+                      className="watch-comment-field"
+                      type="text"
+                      placeholder={replyTo ? "Write a reply..." : "Join the discussion..."}
+                      value={commentText}
+                      onChange={e => setCommentText(e.target.value)}
+                      onKeyDown={e => e.key === "Enter" && handleAddComment()}
+                    />
+                    <div className="watch-comment-input-actions">
+                      <button className="watch-comment-input-btn" title="Spoiler"><EyeOff size={12} /></button>
+                      <button className="watch-comment-input-btn" title="Send" onClick={handleAddComment}><ArrowLeft size={12} style={{ transform: "rotate(90deg)" }} /></button>
+                    </div>
+                  </div>
+                </div>
+                {replyTo && (
+                  <div className="watch-reply-indicator">
+                    Replying to a comment <button onClick={() => setReplyTo(null)}><X size={12} /></button>
+                  </div>
+                )}
+
+                <div className="watch-comments-list">
+                  {sortedComments.map(cm => (
+                    <div key={cm.id} className={`watch-comment-item ${cm.pinned ? "pinned" : ""}`}>
+                      {cm.pinned && <div className="watch-comment-pin"><Pin size={10} /> Pinned</div>}
+                      <div className="watch-comment-avatar"><Users size={14} /></div>
+                      <div className="watch-comment-body">
+                        <div className="watch-comment-top">
+                          <span className="watch-comment-user">{cm.user}</span>
+                          <span className="watch-comment-time">{cm.time}</span>
+                        </div>
+                        {cm.hasSpoiler ? (
+                          <div className={`watch-spoiler-wrap ${spoilerMode[cm.id] ? "revealed" : ""}`} onClick={() => setSpoilerMode(s => ({ ...s, [cm.id]: true }))}>
+                            <div className="watch-spoiler-blur">
+                              <AlertCircle size={12} />
+                              <span>Spoiler — Click to reveal</span>
+                            </div>
+                            <p className="watch-comment-text">{cm.text.replace(/\|\|(.*?)\|\|/g, "$1")}</p>
+                          </div>
+                        ) : (
+                          <p className="watch-comment-text">{cm.text}</p>
+                        )}
+                        <div className="watch-comment-actions">
+                          <button className="watch-comment-action" onClick={() => handleLikeComment(cm.id, false, null)}><ThumbsUp size={11} /> {cm.likes}</button>
+                          <button className="watch-comment-action"><ThumbsDown size={11} /> {cm.dislikes}</button>
+                          <button className="watch-comment-action" onClick={() => setReplyTo(cm.id)}><Reply size={11} /> Reply</button>
+                        </div>
+                        {cm.replies.length > 0 && (
+                          <div className="watch-comment-replies">
+                            {cm.replies.map(r => (
+                              <div key={r.id} className="watch-comment-item">
+                                <div className="watch-comment-avatar" style={{ width: 24, height: 24 }}><Users size={10} /></div>
+                                <div className="watch-comment-body">
+                                  <div className="watch-comment-top">
+                                    <span className="watch-comment-user">{r.user}</span>
+                                    <span className="watch-comment-time">{r.time}</span>
+                                  </div>
+                                  <p className="watch-comment-text">{r.text}</p>
+                                  <div className="watch-comment-actions">
+                                    <button className="watch-comment-action" onClick={() => handleLikeComment(r.id, true, cm.id)}><ThumbsUp size={11} /> {r.likes}</button>
+                                    <button className="watch-comment-action"><ThumbsDown size={11} /> {r.dislikes}</button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* ═══ MORE LIKE THIS ═══ */}
+              <section className="watch-section">
+                <div className="watch-section-head">
+                  <div className="watch-section-head-left">
+                    <Film size={13} />
+                    <span>More Like This</span>
+                  </div>
+                  <button className="watch-section-more">
+                    View All <ChevronRight size={12} />
+                  </button>
+                </div>
+                <div className="watch-rec-scroll">
+                  <div className="watch-rec-track">
+                    {(recommendations && recommendations.length > 0 ? recommendations : similarAnime).slice(0, 10).map((rec, i) => (
+                      <div key={rec.id || i} className="watch-rec-card">
+                        <div className="watch-rec-img-wrap">
+                          <img src={rec.image || rec.img || detail?.img} alt={rec.name || rec.title?.romaji || `Anime ${i + 1}`} />
+                          <div className="watch-rec-overlay">
+                            <Play size={14} fill="currentColor" />
+                          </div>
+                        </div>
+                        <div className="watch-rec-info">
+                          <span className="watch-rec-name">{rec.name || rec.title?.romaji || `Anime ${i + 1}`}</span>
+                          <div className="watch-rec-meta">
+                            {rec.rating && (
+                              <span className="watch-rec-rating"><Star size={9} /> {typeof rec.rating === "number" ? (rec.rating / 10).toFixed(1) : rec.rating}</span>
+                            )}
+                            {rec.episodes && <span className="watch-rec-eps">{rec.episodes} EP</span>}
+                            {rec.status && <span className="watch-rec-status">{rec.status}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              {/* ═══ CHARACTERS & STAFF ═══ */}
+              <section className="watch-section">
+                <div className="watch-section-head">
+                  <div className="watch-section-head-left">
+                    <Users size={13} />
+                    <span>Characters & Staff</span>
+                  </div>
+                  {detail?.studio && <span className="watch-section-sub">{detail.studio}</span>}
+                </div>
+                {characters && characters.length > 0 ? (
+                  <div className="watch-char-scroll">
+                    <div className="watch-char-track">
+                      {characters.slice(0, 12).map(c => (
+                        <div key={c.id} className="watch-char-card">
+                          <div className="watch-char-img-wrap">
+                            {c.image ? (
+                              <img src={c.image} alt={c.name} />
+                            ) : (
+                              <div className="watch-char-fallback"><Users size={18} /></div>
+                            )}
+                          </div>
+                          <div className="watch-char-name">{c.name}</div>
+                          <div className="watch-char-role">{c.role}</div>
+                          {c.voiceActor && <div className="watch-char-va">VA: {c.voiceActor.name}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="watch-char-scroll">
+                    <div className="watch-char-track">
+                      {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="watch-char-card">
+                          <div className="watch-char-img-wrap">
+                            <div className="watch-char-fallback"><Users size={18} /></div>
+                          </div>
+                          <div className="watch-char-name">—</div>
+                          <div className="watch-char-role">—</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+
             </div>
           </div>
 
-          {/* ─── RIGHT: EPISODES ─── */}
           <aside className="watch-right-col">
             <div className="watch-side-head">
               <Monitor size={13} />
               <span>Episodes</span>
               <span className="watch-side-count">{episodes.length}</span>
             </div>
-
             <div className="watch-search-wrap">
               <Search size={13} className="watch-search-icon" />
-              <input
-                className="watch-search-input"
-                type="text"
-                placeholder="Search episodes..."
-                value={epSearch}
-                onChange={e => setEpSearch(e.target.value)}
-              />
-              {epSearch && (
-                <button className="watch-search-clear" onClick={() => setEpSearch("")}>
-                  <X size={12} />
-                </button>
-              )}
+              <input className="watch-search-input" type="text" placeholder="Search episodes..." value={epSearch} onChange={e => setEpSearch(e.target.value)} />
+              {epSearch && <button className="watch-search-clear" onClick={() => setEpSearch("")}><X size={12} /></button>}
             </div>
-
             <div className="watch-side-scroll" ref={scrollRef}>
               {loading ? (
                 <div className="watch-center" style={{ padding: 40 }}><Loader size={18} className="watch-spin" /></div>
               ) : filteredEpisodes.length === 0 ? (
-                <div className="watch-center" style={{ padding: 40 }}>
-                  <p className="watch-muted">{epSearch ? "No matching episodes" : "No episodes"}</p>
-                </div>
+                <div className="watch-center" style={{ padding: 40 }}><p className="watch-muted">{epSearch ? "No matching episodes" : "No episodes"}</p></div>
               ) : (
                 filteredEpisodes.map((ep, i) => {
                   const realIdx = episodes.indexOf(ep);
                   return (
-                    <motion.button
-                      key={ep.id || realIdx}
-                      data-ep={realIdx}
-                      className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`}
-                      whileHover={{ x: 4 }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                      onClick={() => {
-                        setEpIndex(realIdx);
-                        if (onEpisodeChange) onEpisodeChange(ep.episode);
-                      }}
-                    >
+                    <motion.button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300 }} onClick={() => { setEpIndex(realIdx); if (onEpisodeChange) onEpisodeChange(ep.episode); }}>
                       <div className="watch-ep-thumb">
-                        {detail?.img && (
-                          <img src={detail.img} alt="" />
-                        )}
-                        <div className="watch-ep-thumb-overlay">
-                          <Play size={10} />
-                        </div>
+                        {detail?.img && <img src={detail.img} alt="" />}
+                        <div className="watch-ep-thumb-overlay"><Play size={10} /></div>
                       </div>
                       <div className="watch-ep-info">
                         <span className="watch-ep-name">Episode {ep.episode}</span>
                         {ep.title && <span className="watch-ep-title">{ep.title}</span>}
-                        <span className="watch-ep-date">
-                          {ep.aired ? "Aired" : "Upcoming"}
-                        </span>
+                        <span className="watch-ep-date">{ep.aired ? "Aired" : "Upcoming"}</span>
                       </div>
-                      {realIdx === epIndex && (
-                        <div className="watch-ep-active-dot" />
-                      )}
+                      {realIdx === epIndex && <div className="watch-ep-active-dot" />}
                     </motion.button>
                   );
                 })
