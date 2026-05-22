@@ -1,11 +1,16 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, X, Loader, Play, Monitor, SkipForward } from "lucide-react";
+import {
+  ChevronLeft, X, Loader, Play, SkipForward,
+  Star, Tv, Calendar, Clock, Monitor, Search, Film,
+  Bookmark, Heart, Volume2, Maximize, List,
+  ArrowLeft
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { getEpisodes, getStreamUrls } from "../../services/animeApi";
 import "./AnimeWatch.css";
 
-export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange }) {
+export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange, detail, totalEpisodes }) {
   const [episodes, setEpisodes] = useState([]);
   const [epIndex, setEpIndex] = useState(Math.max(0, startEp - 1));
   const [loading, setLoading] = useState(true);
@@ -17,7 +22,8 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [iframeError, setIframeError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
-  const [autoNext, setAutoNext] = useState(false);
+  const [autoNext, setAutoNext] = useState(true);
+  const [epSearch, setEpSearch] = useState("");
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
   const failedServers = useRef(new Set());
@@ -103,47 +109,127 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       setIframeError(true);
     }
   }, [serverIndex, servers]);
-  const goPrev = () => setEpIndex(i => { const n = Math.max(0, i - 1); if (onEpisodeChange && episodes[n]) onEpisodeChange(episodes[n].episode); return n; });
-  const goNext = () => setEpIndex(i => { const n = Math.min(episodes.length - 1, i + 1); if (onEpisodeChange && episodes[n]) onEpisodeChange(episodes[n].episode); return n; });
+
+  const filteredEpisodes = useMemo(() => {
+    if (!epSearch) return episodes;
+    const q = epSearch.toLowerCase();
+    return episodes.filter(ep =>
+      `Episode ${ep.episode}`.toLowerCase().includes(q) ||
+      (ep.title && ep.title.toLowerCase().includes(q))
+    );
+  }, [episodes, epSearch]);
+
+  const metadataItems = useMemo(() => {
+    const items = [];
+    if (detail) {
+      if (detail.year) items.push({ label: "Year", value: detail.year, icon: Calendar });
+      if (detail.season) items.push({ label: "Season", value: detail.season, icon: Clock });
+      if (detail.status) items.push({ label: "Status", value: detail.status, icon: Tv });
+      if (detail.studio) items.push({ label: "Studio", value: detail.studio, icon: Monitor });
+      if (detail.director) items.push({ label: "Director", value: detail.director, icon: Monitor });
+      if (detail.genres?.length) items.push({ label: "Genres", value: detail.genres.slice(0, 3).join(", "), icon: Film });
+    }
+    return items;
+  }, [detail]);
 
   return createPortal(
-    <motion.div className="watch-overlay" onClick={onClose}
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+    <motion.div className="watch-overlay"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
     >
       <div className="watch-bg-ornament" />
       <motion.div className="watch-shell" onClick={e => e.stopPropagation()}
-        initial={{ opacity: 0, scale: 0.96, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 20 }}
-        transition={{ type: "spring", stiffness: 260, damping: 26 }}
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.96 }}
+        transition={{ type: "spring", stiffness: 260, damping: 28 }}
       >
-        <header className="watch-topbar">
-          <button className="watch-back" onClick={onClose}>
-            <ChevronLeft size={18} />
-            <span className="watch-back-label">{animeName || anime.title}</span>
-          </button>
-          <div className="watch-topbar-mid">
-            {episode && (
-              <span className="watch-topbar-ep">Episode {episode.episode}</span>
-            )}
-            <span className="watch-source-badge">{anime.source}</span>
-          </div>
-          <div className="watch-topbar-right">
-            <button className="watch-topbar-btn" onClick={() => setAutoNext(!autoNext)} title="Auto-next episode">
-              <SkipForward size={14} />
-              <span className={`watch-topbar-indicator ${autoNext ? "on" : ""}`} />
-            </button>
-            <button className="watch-close" onClick={onClose}><X size={18} /></button>
-          </div>
-        </header>
-
         <div className="watch-main">
-          <div className="watch-player-col">
+          {/* ─── LEFT: INFO PANEL ─── */}
+          <aside className="watch-left-col">
+            <div className="watch-info-card">
+              <button className="watch-info-close" onClick={onClose} aria-label="Close">
+                <ArrowLeft size={16} />
+              </button>
+
+              <div className="watch-poster-wrap">
+                {detail?.img ? (
+                  <img src={detail.img} alt="" className="watch-poster" />
+                ) : (
+                  <div className="watch-poster-fallback">
+                    <Film size={32} />
+                  </div>
+                )}
+                <div className="watch-poster-glow" />
+              </div>
+
+              <h1 className="watch-info-title">{detail?.name || animeName || anime.title}</h1>
+              {detail?.jpTitle && <p className="watch-info-jp">{detail.jpTitle}</p>}
+
+              <div className="watch-info-badges">
+                {detail?.rating && (
+                  <span className="watch-badge">
+                    <Star size={10} /> {detail.rating.toFixed(1)}
+                  </span>
+                )}
+                <span className="watch-badge">
+                  <Tv size={10} /> {detail?.episodes || totalEpisodes || episodes.length || "?"} EP
+                </span>
+                {detail?.status && (
+                  <span className="watch-badge">{detail.status}</span>
+                )}
+              </div>
+
+              {detail?.synopsis && (
+                <p className="watch-info-synopsis">{detail.synopsis}</p>
+              )}
+
+              {metadataItems.length > 0 && (
+                <div className="watch-info-meta">
+                  {metadataItems.map((item, i) => (
+                    <div key={i} className="watch-meta-row">
+                      <span className="watch-meta-label">{item.label}</span>
+                      <span className="watch-meta-value">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="watch-info-actions">
+                <button className="watch-info-action" title="Watchlist">
+                  <Bookmark size={14} />
+                </button>
+                <button className="watch-info-action" title="Like">
+                  <Heart size={14} />
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          {/* ─── CENTER: PLAYER ─── */}
+          <div className="watch-center-col">
+            <header className="watch-topbar">
+              <button className="watch-back" onClick={onClose}>
+                <ChevronLeft size={16} />
+                <span className="watch-back-label">{animeName || anime.title}</span>
+              </button>
+              <div className="watch-topbar-mid">
+                {episode && (
+                  <span className="watch-topbar-ep">Episode {episode.episode}</span>
+                )}
+              </div>
+              <div className="watch-topbar-right">
+                <button className="watch-topbar-btn" onClick={() => setAutoNext(!autoNext)} title="Auto-next">
+                  <SkipForward size={13} />
+                  <span className={`watch-topbar-indicator ${autoNext ? "on" : ""}`} />
+                </button>
+                <button className="watch-close" onClick={onClose}><X size={16} /></button>
+              </div>
+            </header>
+
             <div className="watch-player-stage">
               {loading && (
                 <div className="watch-center">
                   <div className="watch-pulse" />
-                  <Loader size={24} className="watch-spin" />
                   <p className="watch-muted">Loading episodes...</p>
                 </div>
               )}
@@ -152,7 +238,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                   <div className="watch-err-badge">!</div>
                   <p className="watch-err-text">{error}</p>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button className="watch-btn watch-btn-ghost" onClick={() => {
+                    <button className="watch-btn" onClick={() => {
                       if (episodes.length === 0) setRetryCount(c => c + 1);
                       else setStreamRetryCount(c => c + 1);
                     }}>Retry</button>
@@ -160,16 +246,38 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                 </div>
               )}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && (
-                <iframe
-                  ref={iframeRef}
-                  key={`${episode?.episode || 0}-${serverIndex}`}
-                  className="watch-frame"
-                  src={streamUrl}
-                  title={`Episode ${episode?.episode || ""}`}
-                  allow="autoplay; fullscreen; encrypted-media"
-                  allowFullScreen
-                  onError={handleIframeError}
-                />
+                <>
+                  <iframe
+                    ref={iframeRef}
+                    key={`${episode?.episode || 0}-${serverIndex}`}
+                    className="watch-frame"
+                    src={streamUrl}
+                    title={`Episode ${episode?.episode || ""}`}
+                    allow="autoplay; fullscreen; encrypted-media"
+                    allowFullScreen
+                    onError={handleIframeError}
+                  />
+                  <div className="watch-player-controls">
+                    <div className="watch-controls-left">
+                      <button className="watch-ctrl-btn" title="Play/Pause">
+                        <Play size={14} fill="currentColor" />
+                      </button>
+                      <button className="watch-ctrl-btn" title="Volume">
+                        <Volume2 size={14} />
+                      </button>
+                      <div className="watch-timeline">
+                        <div className="watch-timeline-track">
+                          <div className="watch-timeline-progress" style={{ width: "0%" }} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="watch-controls-right">
+                      <button className="watch-ctrl-btn" title="Fullscreen">
+                        <Maximize size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </>
               )}
               {!loading && !error && iframeError && streamUrl && (
                 <div className="watch-center">
@@ -177,33 +285,26 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                   <p className="watch-err-text">Episode not available on this source.</p>
                   <div style={{ display: 'flex', gap: 8 }}>
                     {serverIndex < servers.length - 1 && (
-                      <button className="watch-btn" onClick={tryNextServer}>
-                        Try Next Source
-                      </button>
+                      <button className="watch-btn" onClick={tryNextServer}>Try Next Source</button>
                     )}
                     {epIndex < episodes.length - 1 && (
                       <button className="watch-btn watch-btn-ghost" onClick={() => {
                         setIframeError(false);
                         failedServers.current = new Set();
                         setEpIndex(i => i + 1);
-                      }}>
-                        Skip to Next Episode
-                      </button>
+                      }}>Skip to Next Episode</button>
                     )}
                     <button className="watch-btn watch-btn-ghost" onClick={() => {
                       setIframeError(false);
                       failedServers.current = new Set();
                       setStreamRetryCount(c => c + 1);
-                    }}>
-                      Retry
-                    </button>
+                    }}>Retry</button>
                   </div>
                 </div>
               )}
               {!loading && !error && streamLoading && (
                 <div className="watch-center">
                   <div className="watch-pulse" />
-                  <Loader size={24} className="watch-spin" />
                   <p className="watch-muted">Loading stream...</p>
                 </div>
               )}
@@ -212,63 +313,122 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
               )}
             </div>
 
-            <div className="watch-bottom-row">
-              <div className="watch-nav">
-                <button className="watch-btn watch-btn-nav" disabled={epIndex === 0} onClick={goPrev}>
-                  <ChevronLeft size={16} /> Prev
-                </button>
-                <div className="watch-ep-dropdown">
-                  <select value={epIndex} onChange={e => { const idx = Number(e.target.value); setEpIndex(idx); if (onEpisodeChange && episodes[idx]) onEpisodeChange(episodes[idx].episode); }}>
-                    {episodes.map((ep, i) => (<option key={i} value={i}>Episode {ep.episode}</option>))}
-                  </select>
-                </div>
-                <button className="watch-btn watch-btn-nav" disabled={epIndex >= episodes.length - 1} onClick={goNext}>
-                  Next <ChevronRight size={16} />
-                </button>
-              </div>
-              {servers.length > 1 && (
-                <div className="watch-servers">
-                  <span className="watch-servers-label">Source</span>
-                  <div className="watch-servers-list">
-                    {servers.map((s, i) => (
-                      <button key={i} className={`watch-server-chip ${i === serverIndex ? "active" : ""}`} onClick={() => switchServer(i)}>
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+            <div className="watch-notif-banner">
+              <span>Report broken episodes to help us improve</span>
+            </div>
 
+            <div className="watch-action-bar">
+              <button className="watch-action-btn">
+                <Monitor size={13} /> Theater
+              </button>
+              <button className="watch-action-btn active">
+                <Play size={13} /> Autoplay
+              </button>
+              <button className={`watch-action-btn ${autoNext ? "active" : ""}`} onClick={() => setAutoNext(!autoNext)}>
+                <SkipForward size={13} /> Auto Next
+              </button>
+              <button className="watch-action-btn">
+                <List size={13} /> Add to List
+              </button>
+            </div>
+
+            <div className="watch-info-bar">
+              <div className="watch-info-bar-left">
+                <span className="watch-info-bar-ep">
+                  Episode {episode?.episode || startEp}
+                  {totalEpisodes && <span className="watch-info-bar-total"> / {totalEpisodes}</span>}
+                </span>
+              </div>
+              <div className="watch-servers">
+                <span className="watch-servers-label">Servers</span>
+                <div className="watch-servers-list">
+                  {servers.map((s, i) => (
+                    <button
+                      key={i}
+                      className={`watch-server-chip ${i === serverIndex ? "active" : ""}`}
+                      onClick={() => switchServer(i)}
+                    >
+                      {s.label || `Server ${i + 1}`}
+                    </button>
+                  ))}
+                  {servers.length === 0 && !streamLoading && (
+                    <span className="watch-muted" style={{ fontSize: 12, padding: "5px 0" }}>No servers loaded</span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="watch-side-col">
+          {/* ─── RIGHT: EPISODES ─── */}
+          <aside className="watch-right-col">
             <div className="watch-side-head">
-              <Monitor size={14} />
+              <Monitor size={13} />
               <span>Episodes</span>
               <span className="watch-side-count">{episodes.length}</span>
             </div>
+
+            <div className="watch-search-wrap">
+              <Search size={13} className="watch-search-icon" />
+              <input
+                className="watch-search-input"
+                type="text"
+                placeholder="Search episodes..."
+                value={epSearch}
+                onChange={e => setEpSearch(e.target.value)}
+              />
+              {epSearch && (
+                <button className="watch-search-clear" onClick={() => setEpSearch("")}>
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+
             <div className="watch-side-scroll" ref={scrollRef}>
               {loading ? (
                 <div className="watch-center" style={{ padding: 40 }}><Loader size={18} className="watch-spin" /></div>
-              ) : episodes.length === 0 ? (
-                <div className="watch-center" style={{ padding: 40 }}><p className="watch-muted">No episodes</p></div>
+              ) : filteredEpisodes.length === 0 ? (
+                <div className="watch-center" style={{ padding: 40 }}>
+                  <p className="watch-muted">{epSearch ? "No matching episodes" : "No episodes"}</p>
+                </div>
               ) : (
-                episodes.map((ep, i) => (
-                  <motion.button key={ep.id || i} data-ep={i}
-                    className={`watch-ep-item ${i === epIndex ? "active" : ""} ${ep.watched ? "watched" : ""}`}
-                    whileHover={{ x: 4 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                    onClick={() => { setEpIndex(i); if (onEpisodeChange) onEpisodeChange(ep.episode); }}
-                  >
-                    <span className="watch-ep-num">{ep.episode}</span>
-                    <span className="watch-ep-name">Episode {ep.episode}</span>
-                    {i === epIndex && <Play size={10} className="watch-ep-indicator" />}
-                  </motion.button>
-                ))
+                filteredEpisodes.map((ep, i) => {
+                  const realIdx = episodes.indexOf(ep);
+                  return (
+                    <motion.button
+                      key={ep.id || realIdx}
+                      data-ep={realIdx}
+                      className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`}
+                      whileHover={{ x: 4 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                      onClick={() => {
+                        setEpIndex(realIdx);
+                        if (onEpisodeChange) onEpisodeChange(ep.episode);
+                      }}
+                    >
+                      <div className="watch-ep-thumb">
+                        {detail?.img && (
+                          <img src={detail.img} alt="" />
+                        )}
+                        <div className="watch-ep-thumb-overlay">
+                          <Play size={10} />
+                        </div>
+                      </div>
+                      <div className="watch-ep-info">
+                        <span className="watch-ep-name">Episode {ep.episode}</span>
+                        {ep.title && <span className="watch-ep-title">{ep.title}</span>}
+                        <span className="watch-ep-date">
+                          {ep.aired ? "Aired" : "Upcoming"}
+                        </span>
+                      </div>
+                      {realIdx === epIndex && (
+                        <div className="watch-ep-active-dot" />
+                      )}
+                    </motion.button>
+                  );
+                })
               )}
             </div>
-          </div>
+          </aside>
         </div>
       </motion.div>
     </motion.div>,

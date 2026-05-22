@@ -462,6 +462,7 @@ export default function AnimeDetail() {
             <AnimeWatch
               anime={watchAnime}
               animeName={anime?.name}
+              detail={anime}
               onClose={() => setShowPlayer(false)}
               startEp={selectedEp}
               onEpisodeChange={(ep) => setSelectedEp(ep)}
