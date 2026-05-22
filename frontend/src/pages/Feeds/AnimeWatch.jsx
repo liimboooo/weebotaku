@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Loader, Play,
   Star, Tv, Calendar, Clock, Monitor, Search, Film,
@@ -10,6 +11,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { getEpisodes, getStreamUrls } from "../../services/animeApi";
+import { fetchAnimeRecommendations } from "../../services/anilistApi";
 import "./AnimeWatch.css";
 
 const SORT_TABS = [
@@ -27,6 +29,7 @@ const MOCK_COMMENTS = [
 ];
 
 export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange, detail, totalEpisodes }) {
+  const navigate = useNavigate();
   const [episodes, setEpisodes] = useState([]);
   const [epIndex, setEpIndex] = useState(Math.max(0, startEp - 1));
   const [loading, setLoading] = useState(true);
@@ -39,6 +42,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
   const [epSearch, setEpSearch] = useState("");
+  const [recommendations, setRecommendations] = useState([]);
   const [language, setLanguage] = useState("sub");
 
   const filteredServers = useMemo(() => {
@@ -127,26 +131,16 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   }, [epIndex, episodes, anime.anilistId, streamCache]);
 
   useEffect(() => {
+    if (!anime.anilistId) return;
+    fetchAnimeRecommendations(anime.anilistId).then(setRecommendations).catch(() => {});
+  }, [anime.anilistId]);
+
+  useEffect(() => {
     if (scrollRef.current && episodes[epIndex]) {
       const el = scrollRef.current.querySelector(`[data-ep="${epIndex}"]`);
       el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
   }, [epIndex, episodes]);
-
-  const recommendedEps = useMemo(() => {
-    if (episodes.length === 0) return [];
-    const nextIdx = epIndex + 1;
-    const others = episodes.filter((_, i) => i !== epIndex);
-    const shuffled = [...others];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    const nextEp = episodes[nextIdx];
-    const rest = shuffled.filter(e => e !== nextEp);
-    return [nextEp, ...rest].filter(Boolean).slice(0, 4);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [episodes, epIndex]);
 
   const switchServer = (idx) => {
     const srv = filteredServers[idx];
@@ -461,29 +455,22 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
               )}
             </div>
 
-            {recommendedEps.length > 0 && (
+            {recommendations.length > 0 && (
               <div className="watch-side-rec">
                 <div className="watch-side-head" style={{ paddingTop: 8 }}>
                   <Star size={13} />
-                  <span>Recommended</span>
+                  <span>Recommended Anime</span>
                 </div>
-                {recommendedEps.map((ep) => {
-                  const realIdx = episodes.indexOf(ep);
-                  return (
-                    <motion.button key={ep.id || realIdx} data-ep={realIdx} className="watch-ep-item" whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300 }} onClick={() => { setEpIndex(realIdx); if (onEpisodeChange) onEpisodeChange(ep.episode); }}>
-                      <div className="watch-ep-thumb">
-                        {detail?.img && <img src={detail.img} alt="" />}
-                        <div className="watch-ep-thumb-overlay"><Play size={10} /></div>
-                      </div>
-                      <div className="watch-ep-info">
-                        <span className="watch-ep-name">Episode {ep.episode}</span>
-                        {ep.title && <span className="watch-ep-title">{ep.title}</span>}
-                        <span className="watch-ep-date">{ep.airDate ? new Date(ep.airDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" }) : ep.aired ? "Aired" : "Upcoming"}</span>
-                      </div>
-                      {realIdx === epIndex && <div className="watch-ep-active-dot" />}
-                    </motion.button>
-                  );
-                })}
+                {recommendations.map((rec, i) => (
+                  <button key={rec.id || i} className="watch-rec-item" onClick={() => navigate(`/anime/${rec.id}`)}>
+                    <div className="watch-rec-thumb">
+                      <img src={rec.image} alt="" />
+                    </div>
+                    <div className="watch-rec-info">
+                      <span className="watch-rec-name">{rec.name}</span>
+                    </div>
+                  </button>
+                ))}
               </div>
             )}
           </aside>
