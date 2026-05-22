@@ -448,16 +448,18 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                   <Star size={13} />
                   <span>Recommended Anime</span>
                 </div>
-                {recommendations.map((rec, i) => (
-                  <button key={rec.id || i} className="watch-rec-item" onClick={() => navigate(`/anime/${rec.id}`)}>
-                    <div className="watch-rec-thumb">
-                      <img src={rec.image} alt="" />
-                    </div>
-                    <div className="watch-rec-info">
-                      <span className="watch-rec-name">{rec.name}</span>
-                    </div>
-                  </button>
-                ))}
+                <div className="watch-rec-scroll">
+                  {recommendations.map((rec, i) => (
+                    <button key={rec.id || i} className="watch-rec-item" onClick={() => navigate(`/anime/${rec.id}`)}>
+                      <div className="watch-rec-thumb">
+                        <img src={rec.image} alt="" />
+                      </div>
+                      <div className="watch-rec-info">
+                        <span className="watch-rec-name">{rec.name}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </aside>
