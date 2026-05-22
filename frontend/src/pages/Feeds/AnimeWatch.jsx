@@ -6,21 +6,12 @@ import {
   Bookmark, Heart, Volume2, Maximize, List,
   ArrowLeft, MessageCircle, ThumbsUp, ThumbsDown,
   Reply, Pin, EyeOff, ChevronRight, Users,
-  Sparkles, Flame, AlertCircle
+  AlertCircle
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { getEpisodes, getStreamUrls } from "../../services/animeApi";
-import { fetchAnimeCharacters, fetchAnimeRecommendations } from "../../services/anilistApi";
+import { fetchAnimeRecommendations } from "../../services/anilistApi";
 import "./AnimeWatch.css";
-
-const REACTIONS = [
-  { emoji: "\uD83D\uDE06", label: "LOL", key: "lol" },
-  { emoji: "\uD83D\uDE0D", label: "Fire", key: "fire" },
-  { emoji: "\uD83D\uDE2E", label: "Shock", key: "shock" },
-  { emoji: "\u2764\uFE0F", label: "Love", key: "love" },
-  { emoji: "\uD83D\uDE22", label: "Sad", key: "sad" },
-  { emoji: "\uD83D\uDC4D", label: "Nice", key: "nice" },
-];
 
 const SORT_TABS = [
   { key: "top", label: "Top" },
@@ -54,19 +45,12 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const iframeRef = useRef(null);
   const failedServers = useRef(new Set());
 
-  /* ─── REACTIONS ─── */
-  const [reactions, setReactions] = useState({ lol: 284, fire: 512, shock: 156, love: 378, sad: 89, nice: 203 });
-  const [userReaction, setUserReaction] = useState(null);
-
   /* ─── COMMENTS ─── */
   const [comments, setComments] = useState(MOCK_COMMENTS);
   const [commentSort, setCommentSort] = useState("top");
   const [commentText, setCommentText] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [spoilerMode, setSpoilerMode] = useState({});
-
-  /* ─── CHARACTERS ─── */
-  const [characters, setCharacters] = useState(null);
 
   /* ─── RECOMMENDATIONS ─── */
   const [recommendations, setRecommendations] = useState(null);
@@ -121,12 +105,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
   }, [epIndex, episodes]);
-
-  /* ─── FETCH CHARACTERS ─── */
-  useEffect(() => {
-    if (!anime.anilistId) return;
-    fetchAnimeCharacters(anime.anilistId).then(setCharacters).catch(() => {});
-  }, [anime.anilistId]);
 
   /* ─── FETCH RECOMMENDATIONS ─── */
   useEffect(() => {
@@ -187,17 +165,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     return items;
   }, [detail]);
 
-  const handleReaction = (key) => {
-    if (userReaction === key) {
-      setReactions(r => ({ ...r, [key]: r[key] - 1 }));
-      setUserReaction(null);
-    } else {
-      if (userReaction) setReactions(r => ({ ...r, [userReaction]: r[userReaction] - 1 }));
-      setReactions(r => ({ ...r, [key]: r[key] + 1 }));
-      setUserReaction(key);
-    }
-  };
-
   const handleAddComment = () => {
     if (!commentText.trim()) return;
     const newComment = {
@@ -235,9 +202,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     if (commentSort === "liked") return [...pinned, ...rest.sort((a, b) => (b.likes - b.dislikes) - (a.likes - a.dislikes))];
     return [...pinned, ...rest];
   }, [comments, commentSort]);
-
-  const topReaction = Object.entries(reactions).sort((a, b) => b[1] - a[1])[0];
-  const totalReactions = Object.values(reactions).reduce((a, b) => a + b, 0);
 
   const similarAnime = useMemo(() => {
     if (!detail?.genres?.length) return [];
@@ -398,33 +362,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                 </div>
               </div>
 
-              {/* ═══ COMMUNITY REACTIONS ═══ */}
-              <section className="watch-section">
-                <div className="watch-section-head">
-                  <div className="watch-section-head-left">
-                    <Sparkles size={13} />
-                    <span>Community Reactions</span>
-                    <span className="watch-section-badge">{totalReactions}</span>
-                  </div>
-                  <span className="watch-section-trend">
-                    <Flame size={11} /> {REACTIONS.find(r => r.key === topReaction[0])?.emoji} {topReaction[1]}
-                  </span>
-                </div>
-                <div className="watch-reactions-bar">
-                  {REACTIONS.map(r => (
-                    <button
-                      key={r.key}
-                      className={`watch-reaction-btn ${userReaction === r.key ? "active" : ""}`}
-                      onClick={() => handleReaction(r.key)}
-                    >
-                      <span className="watch-reaction-emoji">{r.emoji}</span>
-                      <span className="watch-reaction-label">{r.label}</span>
-                      <span className="watch-reaction-count">{reactions[r.key]}</span>
-                    </button>
-                  ))}
-                </div>
-              </section>
-
               {/* ═══ COMMENTS ═══ */}
               <section className="watch-section">
                 <div className="watch-section-head">
@@ -552,51 +489,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                     ))}
                   </div>
                 </div>
-              </section>
-
-              {/* ═══ CHARACTERS & STAFF ═══ */}
-              <section className="watch-section">
-                <div className="watch-section-head">
-                  <div className="watch-section-head-left">
-                    <Users size={13} />
-                    <span>Characters & Staff</span>
-                  </div>
-                  {detail?.studio && <span className="watch-section-sub">{detail.studio}</span>}
-                </div>
-                {characters && characters.length > 0 ? (
-                  <div className="watch-char-scroll">
-                    <div className="watch-char-track">
-                      {characters.slice(0, 12).map(c => (
-                        <div key={c.id} className="watch-char-card">
-                          <div className="watch-char-img-wrap">
-                            {c.image ? (
-                              <img src={c.image} alt={c.name} />
-                            ) : (
-                              <div className="watch-char-fallback"><Users size={18} /></div>
-                            )}
-                          </div>
-                          <div className="watch-char-name">{c.name}</div>
-                          <div className="watch-char-role">{c.role}</div>
-                          {c.voiceActor && <div className="watch-char-va">VA: {c.voiceActor.name}</div>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="watch-char-scroll">
-                    <div className="watch-char-track">
-                      {[1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} className="watch-char-card">
-                          <div className="watch-char-img-wrap">
-                            <div className="watch-char-fallback"><Users size={18} /></div>
-                          </div>
-                          <div className="watch-char-name">—</div>
-                          <div className="watch-char-role">—</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </section>
 
             </div>

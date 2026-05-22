@@ -244,14 +244,14 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 10px 10px 10px 6px;
+  padding: 12px 14px 12px 10px;
 }
 
 .watch-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2px 8px;
+  padding: 0 2px 10px;
   flex-shrink: 0;
 }
 
@@ -353,25 +353,25 @@
 
 .watch-player-stage {
   flex: 0 0 auto;
-  height: 52vh;
-  min-height: 280px;
-  max-height: 520px;
+  height: 50vh;
+  min-height: 300px;
+  max-height: 560px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #000;
-  border-radius: 14px;
+  border-radius: 16px;
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(139,92,246,0.06);
-  box-shadow: 0 0 40px rgba(139,92,246,0.03), inset 0 0 60px rgba(139,92,246,0.02);
+  border: 1px solid rgba(139,92,246,0.08);
+  box-shadow: 0 0 60px rgba(139,92,246,0.03), inset 0 0 80px rgba(139,92,246,0.02);
 }
 
 .watch-scroll-area {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  padding-right: 2px;
+  padding: 0 2px 24px 0;
 }
 
 .watch-scroll-area::-webkit-scrollbar { width: 3px; }
@@ -465,9 +465,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 14px;
-  margin: 6px 0 0;
-  border-radius: 8px;
+  padding: 8px 16px;
+  margin: 8px 0 4px;
+  border-radius: 10px;
   background: rgba(139,92,246,0.08);
   border: 1px solid rgba(139,92,246,0.12);
   flex-shrink: 0;
@@ -483,8 +483,8 @@
 .watch-action-bar {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 0;
+  gap: 6px;
+  padding: 10px 0 4px;
   flex-shrink: 0;
   flex-wrap: wrap;
 }
@@ -526,9 +526,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 0;
+  padding: 8px 0 4px;
   flex-shrink: 0;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -921,19 +921,23 @@
    SECTIONS (Reactions, Comments, Recs, Characters)
    ══════════════════════════════════════════════ */
 .watch-section {
-  margin-top: 10px;
-  padding: 12px 14px;
+  margin-top: 20px;
+  padding: 18px 20px;
   background: rgba(10,10,14,0.6);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(139,92,246,0.05);
-  border-radius: 12px;
+  border: 1px solid rgba(139,92,246,0.06);
+  border-radius: 14px;
+}
+
+.watch-section:first-child {
+  margin-top: 12px;
 }
 
 .watch-section-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 
 .watch-section-head-left {
@@ -1006,17 +1010,17 @@
 /* ─── REACTIONS ─── */
 .watch-reactions-bar {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .watch-reaction-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(139,92,246,0.05);
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(139,92,246,0.06);
   background: rgba(139,92,246,0.02);
   color: #666;
   cursor: pointer;
@@ -1089,8 +1093,8 @@
 
 .watch-comment-input {
   display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .watch-comment-avatar {
@@ -1189,14 +1193,14 @@
 .watch-comments-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
 .watch-comment-item {
   display: flex;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 8px;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
   background: rgba(255,255,255,0.01);
   border: 1px solid rgba(255,255,255,0.02);
   position: relative;
@@ -1319,35 +1323,36 @@
 .watch-rec-scroll {
   overflow-x: auto;
   scrollbar-width: thin;
-  padding-bottom: 4px;
+  padding-bottom: 8px;
+  margin-top: 4px;
 }
 
-.watch-rec-scroll::-webkit-scrollbar { height: 3px; }
+.watch-rec-scroll::-webkit-scrollbar { height: 4px; }
 .watch-rec-scroll::-webkit-scrollbar-track { background: transparent; }
 .watch-rec-scroll::-webkit-scrollbar-thumb { background: #1a1a1e; border-radius: 2px; }
 .watch-rec-scroll::-webkit-scrollbar-thumb:hover { background: #a855f7; }
 
 .watch-rec-track {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   min-width: max-content;
 }
 
 .watch-rec-card {
-  width: 140px;
-  border-radius: 10px;
+  width: 160px;
+  border-radius: 12px;
   overflow: hidden;
-  background: rgba(255,255,255,0.01);
-  border: 1px solid rgba(139,92,246,0.04);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(139,92,246,0.05);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
   flex-shrink: 0;
 }
 
 .watch-rec-card:hover {
-  border-color: rgba(139,92,246,0.2);
-  transform: translateY(-2px);
-  box-shadow: 0 0 20px rgba(139,92,246,0.06);
+  border-color: rgba(139,92,246,0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 0 30px rgba(139,92,246,0.08);
 }
 
 .watch-rec-img-wrap {
@@ -1361,11 +1366,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s;
+  transition: transform 0.35s ease;
 }
 
 .watch-rec-card:hover .watch-rec-img-wrap img {
-  transform: scale(1.08);
+  transform: scale(1.1);
 }
 
 .watch-rec-overlay {
@@ -1373,9 +1378,9 @@
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(0,0,0,0.3);
+  background: rgba(0,0,0,0.35);
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.25s;
 }
 
 .watch-rec-card:hover .watch-rec-overlay {
@@ -1383,14 +1388,14 @@
 }
 
 .watch-rec-info {
-  padding: 8px 10px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .watch-rec-name {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: #d0d0d6;
   overflow: hidden;
@@ -1401,8 +1406,8 @@
 .watch-rec-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 9px;
+  gap: 8px;
+  font-size: 10px;
   color: #5c5c6b;
   font-weight: 600;
 }
@@ -1410,17 +1415,21 @@
 .watch-rec-rating {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   color: #a855f7;
+}
+
+.watch-rec-eps {
+  color: #5c5c6b;
 }
 
 .watch-rec-status {
   margin-left: auto;
-  padding: 1px 5px;
-  border-radius: 3px;
-  background: rgba(139,92,246,0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(139,92,246,0.08);
   color: #c084fc;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
 }
 
@@ -1438,7 +1447,7 @@
 
 .watch-char-track {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   min-width: max-content;
 }
 
