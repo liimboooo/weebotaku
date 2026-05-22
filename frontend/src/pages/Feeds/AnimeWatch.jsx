@@ -94,13 +94,23 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
 
   const episode = episodes[epIndex];
 
+  const [streamCache, setStreamCache] = useState({});
+
   useEffect(() => {
     if (!episode) return;
+    const cached = streamCache[episode.url];
+    if (cached) {
+      setError(""); setStreamLoading(false); setStreamUrl(""); setServers(cached); setServerIndex(0);
+      return;
+    }
     (async () => {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
         const urls = await getStreamUrls(episode.url, anime.source, anime.anilistId);
-        if (urls.length > 0) { setServers(urls); }
+        if (urls.length > 0) {
+          setServers(urls);
+          setStreamCache(c => ({ ...c, [episode.url]: urls }));
+        }
         else setError("No video servers found.");
       } catch { setError("Failed to load stream."); }
       finally { setStreamLoading(false); }
@@ -108,15 +118,13 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episode, streamRetryCount]);
 
-  const [prefetchCache, setPrefetchCache] = useState({});
   useEffect(() => {
     const nextEp = episodes[epIndex + 1];
-    if (!nextEp || !anime.anilistId || prefetchCache[nextEp.url]) return;
-    const nextUrl = `https://anime-proxy.mohamedlimam80000.workers.dev/?url=${encodeURIComponent(`https://reanime.to/api/flix/${anime.anilistId}/${nextEp.url}`)}`;
-    if (!nextUrl) return;
-    setPrefetchCache(p => ({ ...p, [nextEp.url]: true }));
-    fetch(nextUrl, { signal: AbortSignal.timeout(10000) }).catch(() => {});
-  }, [epIndex, episodes, anime.anilistId, prefetchCache]);
+    if (!nextEp || streamCache[nextEp.url]) return;
+    getStreamUrls(nextEp.url, anime.source, anime.anilistId).then(urls => {
+      if (urls.length > 0) setStreamCache(c => ({ ...c, [nextEp.url]: urls }));
+    }).catch(() => {});
+  }, [epIndex, episodes, anime.anilistId, streamCache]);
 
   useEffect(() => {
     if (scrollRef.current && episodes[epIndex]) {
