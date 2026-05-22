@@ -260,9 +260,9 @@ export default function AnimeDetail() {
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#000", display: "flex" }}>
+    <div style={{ width: "100%", minHeight: "100vh", background: "#000", display: "flex" }}>
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, background: "repeating-linear-gradient(180deg, rgba(255,255,255,0.008) 0, rgba(255,255,255,0.008) 1px, transparent 1px, transparent 3px), radial-gradient(circle at 80% 0%, rgba(139,92,246,0.08), transparent 50%), radial-gradient(circle at 20% 100%, rgba(139,92,246,0.03), transparent 40%)" }} />
-      <div style={{ position: "relative", zIndex: 1, width: "100%", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", background: "#050508" }}>
+      <div style={{ position: "relative", zIndex: 1, width: "100%", minHeight: "100vh", display: "flex", flexDirection: "column", background: "#050508" }}>
         <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
 
           {/* ─── CENTER: PLAYER ─── */}
