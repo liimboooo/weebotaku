@@ -444,7 +444,7 @@ export default function AnimeDetail() {
                       <div className="watch-ep-info">
                         <span className="watch-ep-name">Episode {ep.episode}</span>
                         {ep.title && <span className="watch-ep-title">{ep.title}</span>}
-                        <span className="watch-ep-date">{ep.aired ? "Aired" : "Upcoming"}</span>
+                        <span className="watch-ep-date">{ep.airDate ? new Date(ep.airDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" }) : ep.aired ? "Aired" : "Upcoming"}</span>
                       </div>
                       {realIdx === epIndex && <div className="watch-ep-active-dot" />}
                     </button>

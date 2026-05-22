@@ -210,7 +210,7 @@ export async function fetchAiringSchedule({ anilistId, malId } = {}) {
 
     const now = Math.floor(Date.now() / 1000);
     const nodes = media.airingSchedule?.nodes || [];
-    const episodes = nodes.filter(n => n.episode).sort((a, b) => a.episode - b.episode).map(n => ({ episode: n.episode, airingAt: n.airingAt, aired: n.airingAt <= now }));
+    const episodes = nodes.filter(n => n.episode).sort((a, b) => a.episode - b.episode).map(n => ({ episode: n.episode, airingAt: n.airingAt, aired: n.airingAt <= now, airDate: new Date(n.airingAt * 1000).toISOString() }));
 
     let cours = null;
     if (episodes.length > 0) {

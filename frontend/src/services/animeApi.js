@@ -147,6 +147,7 @@ async function getEpisodesReanime(slug) {
       thumbnail: ep.thumbnail || null,
       duration: ep.duration || null,
       aired: ep.aired || null,
+      airDate: ep.air_date || ep.aired || null,
     })).sort((a, b) => a.episode - b.episode);
   } catch {
     return [];
