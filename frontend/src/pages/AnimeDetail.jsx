@@ -51,6 +51,7 @@ export default function AnimeDetail() {
   const [language, setLanguage] = useState("sub");
   const [langKey, setLangKey] = useState(0);
   const [recommendations, setRecommendations] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(50);
 
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
@@ -154,6 +155,13 @@ export default function AnimeDetail() {
       el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
   }, [epIndex, episodes]);
+
+  const handleSideScroll = (e) => {
+    const el = e.currentTarget;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 200) {
+      setVisibleCount(c => Math.min(c + 50, filteredEpisodes.length));
+    }
+  };
 
   const langServers = () => servers.filter(s => s.type === language);
 
@@ -407,16 +415,16 @@ export default function AnimeDetail() {
             </div>
             <div className="watch-search-wrap">
               <Search size={13} className="watch-search-icon" />
-              <input className="watch-search-input" type="text" placeholder="Search episodes..." value={epSearch} onChange={e => setEpSearch(e.target.value)} />
-              {epSearch && <button className="watch-search-clear" onClick={() => setEpSearch("")}><X size={12} /></button>}
+              <input className="watch-search-input" type="text" placeholder="Search episodes..." value={epSearch} onChange={e => { setEpSearch(e.target.value); if (!e.target.value) setVisibleCount(50); }} />
+              {epSearch && <button className="watch-search-clear" onClick={() => { setEpSearch(""); setVisibleCount(50); }}><X size={12} /></button>}
             </div>
-            <div className="watch-side-scroll" ref={scrollRef}>
+            <div className="watch-side-scroll" ref={scrollRef} onScroll={handleSideScroll}>
               {loading ? (
                 <div className="watch-center" style={{ padding: 40 }}><Loader size={18} className="watch-spin" /></div>
               ) : filteredEpisodes.length === 0 ? (
                 <div className="watch-center" style={{ padding: 40 }}><p className="watch-muted">{epSearch ? "No matching episodes" : "No episodes"}</p></div>
               ) : (
-                filteredEpisodes.map((ep, i) => {
+                filteredEpisodes.slice(0, visibleCount).map((ep, i) => {
                   const realIdx = episodes.indexOf(ep);
                   return (
                     <button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} onClick={() => { setEpIndex(realIdx); }}>
