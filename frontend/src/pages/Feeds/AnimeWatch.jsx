@@ -133,6 +133,21 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     }
   }, [epIndex, episodes]);
 
+  const recommendedEps = useMemo(() => {
+    if (episodes.length === 0) return [];
+    const nextIdx = epIndex + 1;
+    const others = episodes.filter((_, i) => i !== epIndex);
+    const shuffled = [...others];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const nextEp = episodes[nextIdx];
+    const rest = shuffled.filter(e => e !== nextEp);
+    return [nextEp, ...rest].filter(Boolean).slice(0, 4);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [episodes, epIndex]);
+
   const switchServer = (idx) => {
     const srv = filteredServers[idx];
     if (srv) {
@@ -445,6 +460,32 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                 })
               )}
             </div>
+
+            {recommendedEps.length > 0 && (
+              <div className="watch-side-rec">
+                <div className="watch-side-head" style={{ paddingTop: 8 }}>
+                  <Star size={13} />
+                  <span>Recommended</span>
+                </div>
+                {recommendedEps.map((ep) => {
+                  const realIdx = episodes.indexOf(ep);
+                  return (
+                    <motion.button key={ep.id || realIdx} data-ep={realIdx} className="watch-ep-item" whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300 }} onClick={() => { setEpIndex(realIdx); if (onEpisodeChange) onEpisodeChange(ep.episode); }}>
+                      <div className="watch-ep-thumb">
+                        {detail?.img && <img src={detail.img} alt="" />}
+                        <div className="watch-ep-thumb-overlay"><Play size={10} /></div>
+                      </div>
+                      <div className="watch-ep-info">
+                        <span className="watch-ep-name">Episode {ep.episode}</span>
+                        {ep.title && <span className="watch-ep-title">{ep.title}</span>}
+                        <span className="watch-ep-date">{ep.airDate ? new Date(ep.airDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" }) : ep.aired ? "Aired" : "Upcoming"}</span>
+                      </div>
+                      {realIdx === epIndex && <div className="watch-ep-active-dot" />}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            )}
           </aside>
         </div>
       </motion.div>
