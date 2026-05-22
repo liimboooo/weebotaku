@@ -47,10 +47,21 @@ export default function AnimeDetail() {
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
   const [epSearch, setEpSearch] = useState("");
+  const [language, setLanguage] = useState("sub");
+  const [langKey, setLangKey] = useState(0);
 
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
   const failedServers = useRef(new Set());
+
+  const toStreamUrl = (srv) => {
+    if (!srv) return "";
+    try {
+      const u = new URL(srv.url);
+      if (srv.type === "dub") u.searchParams.set("type", "dub");
+      return u.toString();
+    } catch { return srv.url; }
+  };
 
   const [comments, setComments] = useState(MOCK_COMMENTS);
   const [commentSort, setCommentSort] = useState("top");
@@ -121,10 +132,14 @@ export default function AnimeDetail() {
 
   useEffect(() => {
     if (servers.length > 0) {
-      setServerIndex(0);
-      setStreamUrl(servers[0].url);
+      const ls = servers.filter(s => s.type === language);
+      if (ls.length > 0) {
+        setServerIndex(0);
+        setStreamUrl(toStreamUrl(ls[0]));
+        setLangKey(k => k + 1);
+      }
     }
-  }, [servers]);
+  }, [servers, language]);
 
   useEffect(() => {
     if (scrollRef.current && episodes[epIndex]) {
@@ -133,23 +148,26 @@ export default function AnimeDetail() {
     }
   }, [epIndex, episodes]);
 
+  const langServers = () => servers.filter(s => s.type === language);
+
   const switchServer = (idx) => {
-    const srv = servers[idx];
+    const srv = langServers()[idx];
     if (srv) {
       setServerIndex(idx);
       setIframeError(false);
       failedServers.current = new Set();
-      setStreamUrl(srv.url);
+      setStreamUrl(toStreamUrl(srv));
     }
   };
 
   const tryNextServer = () => {
     const nextIdx = serverIndex + 1;
-    if (servers[nextIdx]) {
+    const ls = langServers();
+    if (ls[nextIdx]) {
       failedServers.current.add(serverIndex);
       setServerIndex(nextIdx);
       setIframeError(false);
-      setStreamUrl(servers[nextIdx].url);
+      setStreamUrl(toStreamUrl(ls[nextIdx]));
     } else {
       setIframeError(true);
     }
@@ -158,10 +176,11 @@ export default function AnimeDetail() {
   const handleIframeError = () => {
     failedServers.current.add(serverIndex);
     const nextIdx = serverIndex + 1;
-    if (servers[nextIdx]) {
+    const ls = langServers();
+    if (ls[nextIdx]) {
       setIframeError(false);
       setServerIndex(nextIdx);
-      setStreamUrl(servers[nextIdx].url);
+      setStreamUrl(toStreamUrl(ls[nextIdx]));
     } else {
       setIframeError(true);
     }
@@ -297,14 +316,14 @@ export default function AnimeDetail() {
                 </div>
               )}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && (
-                <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}`} className="watch-frame" src={streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
+                <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}-${langKey}`} className="watch-frame" src={streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
               )}
               {!loading && !error && iframeError && streamUrl && (
                 <div className="watch-center">
                   <div className="watch-err-badge">!</div>
                   <p className="watch-err-text">Episode not available on this source.</p>
                   <div style={{ display: "flex", gap: 8 }}>
-                    {serverIndex < servers.length - 1 && <button className="watch-btn" onClick={tryNextServer}>Try Next Source</button>}
+                    {serverIndex < langServers().length - 1 && <button className="watch-btn" onClick={tryNextServer}>Try Next Source</button>}
                     {epIndex < episodes.length - 1 && <button className="watch-btn watch-btn-ghost" onClick={() => { setIframeError(false); failedServers.current = new Set(); setEpIndex(i => i + 1); }}>Skip to Next Episode</button>}
                     <button className="watch-btn watch-btn-ghost" onClick={() => { setIframeError(false); failedServers.current = new Set(); setStreamRetryCount(c => c + 1); }}>Retry</button>
                   </div>
@@ -328,11 +347,15 @@ export default function AnimeDetail() {
                   <span className="watch-info-bar-ep">Episode {episode?.episode || selectedEp}{totalEps && <span className="watch-info-bar-total"> / {totalEps}</span>}</span>
                 </div>
                 <div className="watch-servers">
+                  <div className="watch-lang-toggle">
+                    <button className={`watch-lang-btn ${language === "sub" ? "active" : ""}`} onClick={() => setLanguage("sub")}>SUB</button>
+                    <button className={`watch-lang-btn ${language === "dub" ? "active" : ""}`} onClick={() => setLanguage("dub")}>DUB</button>
+                  </div>
                   <div className="watch-servers-list">
-                    {servers.map((s, i) => (
-                      <button key={i} className={`watch-server-chip ${i === serverIndex ? "active" : ""}`} onClick={() => switchServer(i)}>{(s.label || `Server ${i + 1}`).replace(/\s*\((sub|dub)\)/gi, "")}</button>
+                    {langServers().map((s, i) => (
+                      <button key={i} className={`watch-server-chip ${i === serverIndex ? "active" : ""}`} onClick={() => switchServer(i)}>{s.label || `Server ${i + 1}`}</button>
                     ))}
-                    {servers.length === 0 && !streamLoading && <span className="watch-muted" style={{ fontSize: 12, padding: "5px 0" }}>No servers loaded</span>}
+                    {langServers().length === 0 && !streamLoading && <span className="watch-muted" style={{ fontSize: 12, padding: "5px 0" }}>No servers loaded</span>}
                   </div>
                 </div>
               </div>
