@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
 import { findStreamingSource, getEpisodes, getStreamUrls } from "../services/animeApi";
+import { fetchAnimeRecommendations } from "../services/anilistApi";
 import "./Feeds/AnimeWatch.css";
 
 const SORT_TABS = [
@@ -49,6 +50,7 @@ export default function AnimeDetail() {
   const [epSearch, setEpSearch] = useState("");
   const [language, setLanguage] = useState("sub");
   const [langKey, setLangKey] = useState(0);
+  const [recommendations, setRecommendations] = useState([]);
 
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
@@ -140,6 +142,11 @@ export default function AnimeDetail() {
       }
     }
   }, [servers, language]);
+
+  useEffect(() => {
+    if (!watchAnime?.anilistId) return;
+    fetchAnimeRecommendations(watchAnime.anilistId).then(setRecommendations).catch(() => {});
+  }, [watchAnime?.anilistId]);
 
   useEffect(() => {
     if (scrollRef.current && episodes[epIndex]) {
@@ -428,6 +435,25 @@ export default function AnimeDetail() {
                 })
               )}
             </div>
+
+            {recommendations.length > 0 && (
+              <div className="watch-side-rec">
+                <div className="watch-side-head" style={{ paddingTop: 8 }}>
+                  <Star size={13} />
+                  <span>Recommended Anime</span>
+                </div>
+                {recommendations.slice(0, 5).map((rec, i) => (
+                  <button key={rec.id || i} className="watch-rec-item" onClick={() => navigate(`/anime/${rec.id}`)}>
+                    <div className="watch-rec-thumb">
+                      <img src={rec.image} alt="" />
+                    </div>
+                    <div className="watch-rec-info">
+                      <span className="watch-rec-name">{rec.name}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </aside>
 
         </div>
