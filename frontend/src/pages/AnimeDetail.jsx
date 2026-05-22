@@ -267,9 +267,6 @@ export default function AnimeDetail() {
 
           {/* ─── CENTER: PLAYER ─── */}
           <div className="watch-center-col">
-            <header className="watch-topbar">
-              <span className="watch-topbar-ep">{episode && `Episode ${episode.episode}`}</span>
-            </header>
 
             <div className="watch-player-stage">
               {loading && (
@@ -308,6 +305,10 @@ export default function AnimeDetail() {
                 <div className="watch-center"><p className="watch-muted">Preparing stream...</p></div>
               )}
             </div>
+
+            <header className="watch-topbar">
+              <span className="watch-topbar-ep">{episode && `Episode ${episode.episode}`}</span>
+            </header>
 
             <div className="watch-scroll-area">
               <div className="watch-notif-banner">
