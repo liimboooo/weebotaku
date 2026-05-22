@@ -56,10 +56,10 @@ export default function AnimeDetail() {
   useEffect(() => {
     const langServers = servers.filter(s => s.type === language);
     if (langServers.length > 0) {
-      const idx = servers.indexOf(langServers[0]);
-      setServerIndex(idx);
+      setServerIndex(0);
+      setStreamUrl(makeStreamUrl(langServers[0]));
     }
-  }, [language, servers]);
+  }, [language, servers, makeStreamUrl]);
 
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
@@ -133,7 +133,7 @@ export default function AnimeDetail() {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
         const urls = await getStreamUrls(episode.url, watchAnime.source, watchAnime.anilistId);
-        if (urls.length > 0) { setServers(urls); setStreamUrl(makeStreamUrl(urls[0])); }
+        if (urls.length > 0) { setServers(urls); }
         else setError("No video servers found.");
       } catch { setError("Failed to load stream."); }
       finally { setStreamLoading(false); }
