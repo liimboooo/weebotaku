@@ -307,27 +307,6 @@ export default function AnimeDetail() {
             </div>
 
             <div className="watch-scroll-area">
-              <div className="watch-notif-banner">
-                <span>Report broken episodes to help us improve</span>
-              </div>
-
-              <div className="watch-info-bar">
-                <div className="watch-info-bar-left">
-                  <span className="watch-info-bar-ep">Episode {episode?.episode || selectedEp}{totalEps && <span className="watch-info-bar-total"> / {totalEps}</span>}</span>
-                </div>
-                <div className="watch-servers">
-                  <div className="watch-lang-toggle">
-                    <button className={`watch-lang-btn ${language === "sub" ? "active" : ""}`} onClick={() => setLanguage("sub")}>SUB</button>
-                    <button className={`watch-lang-btn ${language === "dub" ? "active" : ""}`} onClick={() => setLanguage("dub")}>DUB</button>
-                  </div>
-                  <div className="watch-servers-list">
-                    {langServers().map((s, i) => (
-                      <button key={i} className={`watch-server-chip ${i === serverIndex ? "active" : ""}`} onClick={() => switchServer(i)}>{s.label || `Server ${i + 1}`}</button>
-                    ))}
-                    {langServers().length === 0 && !streamLoading && <span className="watch-muted" style={{ fontSize: 12, padding: "5px 0" }}>No servers loaded</span>}
-                  </div>
-                </div>
-              </div>
 
               {/* ═══ COMMENTS ═══ */}
               <section className="watch-section">
