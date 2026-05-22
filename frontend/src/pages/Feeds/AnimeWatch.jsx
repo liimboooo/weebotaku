@@ -239,46 +239,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         transition={{ type: "spring", stiffness: 260, damping: 28 }}
       >
         <div className="watch-main">
-          <aside className="watch-left-col">
-            <div className="watch-info-card">
-              <button className="watch-info-close" onClick={onClose} aria-label="Close">
-                <ArrowLeft size={16} />
-              </button>
-              <div className="watch-poster-wrap">
-                {detail?.img ? (
-                  <img src={detail.img} alt="" className="watch-poster" />
-                ) : (
-                  <div className="watch-poster-fallback"><Film size={32} /></div>
-                )}
-                <div className="watch-poster-glow" />
-              </div>
-              <h1 className="watch-info-title">{detail?.name || animeName || anime.title}</h1>
-              {detail?.jpTitle && <p className="watch-info-jp">{detail.jpTitle}</p>}
-              <div className="watch-info-badges">
-                {detail?.rating && (
-                  <span className="watch-badge"><Star size={10} /> {detail.rating.toFixed(1)}</span>
-                )}
-                <span className="watch-badge"><Tv size={10} /> {detail?.episodes || totalEpisodes || episodes.length || "?"} EP</span>
-                {detail?.status && <span className="watch-badge">{detail.status}</span>}
-              </div>
-              {detail?.synopsis && <p className="watch-info-synopsis">{detail.synopsis}</p>}
-              {metadataItems.length > 0 && (
-                <div className="watch-info-meta">
-                  {metadataItems.map((item, i) => (
-                    <div key={i} className="watch-meta-row">
-                      <span className="watch-meta-label">{item.label}</span>
-                      <span className="watch-meta-value">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="watch-info-actions">
-                <button className="watch-info-action" title="Watchlist"><Bookmark size={14} /></button>
-                <button className="watch-info-action" title="Like"><Heart size={14} /></button>
-              </div>
-            </div>
-          </aside>
-
           <div className="watch-center-col">
             <header className="watch-topbar">
               <span className="watch-topbar-ep">{episode && `Episode ${episode.episode}`}</span>
