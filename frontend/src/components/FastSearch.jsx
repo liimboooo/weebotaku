@@ -1,3 +1,4 @@
+﻿import { STORAGE_KEYS } from '../utils/constants';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -234,7 +235,7 @@ export default function FastSearch() {
                                 <span className="fs-trending-name">{a.name}</span>
                                 <span className="fs-trending-meta">
                                   {a.rating > 0 && <><Star size={10} fill="currentColor" /> {a.rating.toFixed(1)}</>}
-                                  {a.episodes > 0 && <> · {a.episodes} eps</>}
+                                  {a.episodes > 0 && <> Â· {a.episodes} eps</>}
                                 </span>
                               </div>
                             </button>
@@ -264,8 +265,8 @@ export default function FastSearch() {
                             <span className="fs-result-title">{item.name}</span>
                             <span className="fs-result-meta">
                               {item.type || 'TV'}
-                              {item.year ? ` · ${item.year}` : ''}
-                              {item.episodes ? ` · ${item.episodes} eps` : ''}
+                              {item.year ? ` Â· ${item.year}` : ''}
+                              {item.episodes ? ` Â· ${item.episodes} eps` : ''}
                             </span>
                           </div>
                           {item.rating > 0 && (
@@ -329,3 +330,4 @@ export default function FastSearch() {
     </>
   );
 }
+

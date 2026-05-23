@@ -18,7 +18,7 @@ function safeHandler(fn) {
   };
 }
 
-const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
+const BROWSER_UA = process.env.SCRAPER_USER_AGENT || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
 
 async function fetchWithNative(url, extraHeaders = {}) {
   try {
@@ -77,8 +77,8 @@ async function tryFetchImage(url) {
     const response = await nodeFetch(url, {
       signal: controller.signal,
       headers: {
-        'Referer': 'https://mangadex.org/',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': process.env.MANGADEX_BASE_URL || 'https://mangadex.org/',
+        'User-Agent': process.env.SCRAPER_USER_AGENT || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
       },
     });
@@ -95,7 +95,7 @@ async function tryFetchImage(url) {
 
 async function fetchAtHome(chapterId) {
   try {
-    const res = await nodeFetch(`https://api.mangadex.org/at-home/server/${chapterId}`, {
+    const res = await nodeFetch(`${process.env.MANGADEX_API_URL || 'https://api.mangadex.org'}/at-home/server/${chapterId}`, {
       timeout: 15000,
       headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
     });
@@ -155,10 +155,10 @@ async function fetchWithHeaders(url) {
     const response = await nodeFetch(url, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': process.env.SCRAPER_USER_AGENT || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
-        'Referer': 'https://readmanganato.com/',
+        'Referer': process.env.MANGANATO_BASE_URL || 'https://readmanganato.com/',
       },
     });
     clearTimeout(id);
@@ -173,7 +173,7 @@ router.get('/manga-alt-search', safeHandler(async (req, res) => {
 
   try {
     const query = q.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '_');
-    const html = await fetchWithHeaders(`https://readmanganato.com/search/story/${query}`);
+    const html = await fetchWithHeaders(`${process.env.MANGANATO_BASE_URL || 'https://readmanganato.com'}/search/story/${query}`);
     if (!html) return res.json({ success: true, data: [] });
 
     const $ = cheerio.load(html);
@@ -199,7 +199,7 @@ router.get('/manga-alt-chapters', safeHandler(async (req, res) => {
   if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
 
   try {
-    const html = await fetchWithHeaders(`https://readmanganato.com/${id}`);
+    const html = await fetchWithHeaders(`${process.env.MANGANATO_BASE_URL || 'https://readmanganato.com'}/${id}`);
     if (!html) return res.json({ success: true, data: [] });
 
     const $ = cheerio.load(html);
@@ -230,7 +230,7 @@ router.get('/manga-alt-pages', safeHandler(async (req, res) => {
   if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
 
   try {
-    const html = await fetchWithHeaders(`https://readmanganato.com/${id}`);
+    const html = await fetchWithHeaders(`${process.env.MANGANATO_BASE_URL || 'https://readmanganato.com'}/${id}`);
     if (!html) return res.json({ success: true, data: [] });
 
     const $ = cheerio.load(html);
@@ -253,7 +253,7 @@ router.get('/manga-toonily-search', safeHandler(async (req, res) => {
   if (!q) return res.status(400).json({ success: false, message: 'Missing q' });
   try {
     const query = q.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '+');
-    const html = await fetchWithHeaders(`https://toonily.com/?s=${query}&post_type=wp-manga`);
+    const html = await fetchWithHeaders(`${process.env.TOONILY_BASE_URL || 'https://toonily.com'}/?s=${query}&post_type=wp-manga`);
     if (!html) return res.json({ success: true, data: [] });
     const $ = cheerio.load(html);
     const results = [];
@@ -286,7 +286,7 @@ router.get('/manga-toonily-chapters', safeHandler(async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
   try {
-    const html = await fetchWithHeaders(`https://toonily.com/manga/${id}/`);
+    const html = await fetchWithHeaders(`${process.env.TOONILY_BASE_URL || 'https://toonily.com'}/manga/${id}/`);
     if (!html) return res.json({ success: true, data: [] });
     const $ = cheerio.load(html);
     const chapters = [];
@@ -313,7 +313,7 @@ router.get('/manga-toonily-pages', safeHandler(async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
   try {
-    const url = id.includes('toonily.com') ? id : `https://toonily.com/${id}/`;
+    const url = id.includes('toonily.com') ? id : `${process.env.TOONILY_BASE_URL || 'https://toonily.com'}/${id}/`;
     const html = await fetchWithHeaders(url);
     if (!html) return res.json({ success: true, data: [] });
     const $ = cheerio.load(html);
@@ -338,11 +338,11 @@ router.get('/animechan-proxy', safeHandler(async (req, res) => {
   const { path } = req.query;
   if (!path) return res.status(400).json({ success: false, message: 'Missing path' });
   try {
-    const url = `https://animechan.xyz/api${path}`;
+    const url = `${process.env.ANIMECHAN_API_URL || 'https://animechan.xyz/api'}${path}`;
     const response = await nodeFetch(url, {
       timeout: 15000,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'User-Agent': process.env.SCRAPER_USER_AGENT || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': 'application/json',
       },
     });
@@ -355,13 +355,15 @@ router.get('/animechan-proxy', safeHandler(async (req, res) => {
   }
 }));
 
-router.get('/fetch-health', safeHandler(async (req, res) => {
-  const targets = [
+const HEALTH_CHECK_TARGETS = process.env.HEALTH_CHECK_TARGETS ? JSON.parse(process.env.HEALTH_CHECK_TARGETS) : [
     'https://api.mangadex.org/ping',
     'https://api.comick.io/search?q=test&limit=1',
     'https://animechan.xyz/api/random',
     'https://httpbin.org/get',
   ];
+
+router.get('/fetch-health', safeHandler(async (req, res) => {
+  const targets = HEALTH_CHECK_TARGETS;
   const results = [];
   for (const target of targets) {
     try {
@@ -383,7 +385,7 @@ router.get('/manga-bato-search', safeHandler(async (req, res) => {
   if (!q) return res.status(400).json({ success: false, message: 'Missing q' });
   try {
     const word = q.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '+');
-    const html = await fetchWithHeaders(`https://bato.to/search?word=${word}`);
+    const html = await fetchWithHeaders(`${process.env.BATO_BASE_URL || 'https://bato.to'}/search?word=${word}`);
     if (!html) return res.json({ success: true, data: [] });
     const $ = cheerio.load(html);
     const results = [];
@@ -415,7 +417,7 @@ router.get('/manga-bato-chapters', safeHandler(async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
   try {
-    const html = await fetchWithHeaders(`https://bato.to/series/${id}`);
+    const html = await fetchWithHeaders(`${process.env.BATO_BASE_URL || 'https://bato.to'}/series/${id}`);
     if (!html) return res.json({ success: true, data: [] });
     const $ = cheerio.load(html);
     const chapters = [];
@@ -443,7 +445,7 @@ router.get('/manga-bato-pages', safeHandler(async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
   try {
-    const html = await fetchWithHeaders(`https://bato.to/series/${id}`);
+    const html = await fetchWithHeaders(`${process.env.BATO_BASE_URL || 'https://bato.to'}/series/${id}`);
     if (!html) return res.json({ success: true, data: [] });
     const $ = cheerio.load(html);
     const pages = [];
@@ -461,11 +463,11 @@ router.get('/anipub-proxy', safeHandler(async (req, res) => {
   const { path } = req.query;
   if (!path) return res.status(400).json({ success: false, message: 'Missing path' });
   try {
-    const url = `https://anipub.xyz${path}`;
+    const url = `${process.env.ANIPUB_BASE_URL || 'https://anipub.xyz'}${path}`;
     const response = await nodeFetch(url, {
       timeout: 15000,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'User-Agent': process.env.SCRAPER_USER_AGENT || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': 'application/json',
       },
     });

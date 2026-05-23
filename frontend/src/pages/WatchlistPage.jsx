@@ -4,8 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Heart, BookOpen, Search, Star, Play, Sparkles } from "lucide-react";
 import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
-import { loadWatchlist, removeFromWatchlist } from "../services/storage";
-import { loadReadlist, removeFromReadlist } from "../services/storage";
+import { loadWatchlist, removeFromWatchlist, loadReadlist, removeFromReadlist, loadWatchHistory, getMangaProgress as getMangaProgressFromStorage } from "../services/storage";
 import "./WatchlistPage.css";
 
 export default function WatchlistPage() {
@@ -35,14 +34,13 @@ export default function WatchlistPage() {
   };
 
   const getProgress = (id) => {
-    const history = JSON.parse(localStorage.getItem("watchHistory") || "[]");
+    const history = loadWatchHistory();
     const entry = history.find(h => h.animeId === id);
     return entry ? entry.episode : 0;
   };
 
-  const getMangaProgress = (id) => {
-    const progress = JSON.parse(localStorage.getItem("mangaProgress") || "{}");
-    return progress[id] || 0;
+  const getMangaProgressLocal = (id) => {
+    return getMangaProgressFromStorage(id);
   };
 
   const activeList = tab === "anime" ? animeList : mangaList;
@@ -191,11 +189,11 @@ export default function WatchlistPage() {
                               <div className="wl-card-play"><Play size={20} fill="currentColor" /></div>
                               <div className="wl-card-tech">
                                 <span>{manga.ch} ch</span>
-                                {getMangaProgress(manga.id) > 0 && <span>Ch {getMangaProgress(manga.id)}</span>}
+                                {getMangaProgressLocal(manga.id) > 0 && <span>Ch {getMangaProgressLocal(manga.id)}</span>}
                               </div>
                             </div>
-                            {getMangaProgress(manga.id) > 0 && (
-                              <div className="wl-card-progress" style={{ width: `${(getMangaProgress(manga.id) / (manga.ch || 1)) * 100}%` }} />
+                            {getMangaProgressLocal(manga.id) > 0 && (
+                              <div className="wl-card-progress" style={{ width: `${(getMangaProgressLocal(manga.id) / (manga.ch || 1)) * 100}%` }} />
                             )}
                             <span className={`wl-badge ${(manga.status || "").toLowerCase()}`}>{manga.status || "Unknown"}</span>
                             <button

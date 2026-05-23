@@ -2,61 +2,49 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, Send, Heart } from "lucide-react";
 import reviewService from "../services/reviewService";
+import authService from "../services/authService";
 import "./Reviews.css";
 
 export default function Reviews({ animeId, selectedEp }) {
-  const [reviews, setReviews] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(`reviews-${animeId}`) || "[]");
-    } catch { return []; }
-  });
+  const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState("");
   const [reviewRating, setReviewRating] = useState(0);
-  const [backendReviews, setBackendReviews] = useState([]);
 
-  // Fetch reviews from backend on mount
   useEffect(() => {
     reviewService.getReviews("anime", animeId)
       .then(res => {
-        if (res?.data?.length > 0) {
-          setBackendReviews(res.data);
+        if (res?.data) {
+          setReviews(res.data.map(r => ({
+            id: r._id,
+            text: r.content,
+            title: r.title,
+            user: r.user?.username || "Unknown",
+            avatar: r.user?.avatar || "",
+            time: new Date(r.createdAt).getTime(),
+            rating: r.rating,
+            likes: r.likes?.length || 0,
+          })));
         }
       })
       .catch(() => {});
   }, [animeId]);
 
-  // Merge local + backend reviews (backend first, then local)
-  const allReviews = [
-    ...backendReviews.map(r => ({
-      id: r._id,
-      text: r.content,
-      title: r.title,
-      user: r.user?.username || "Unknown",
-      avatar: r.user?.avatar || "",
-      time: new Date(r.createdAt).getTime(),
-      rating: r.rating,
-      likes: r.likes?.length || 0,
-      isBackend: true,
-    })),
-    ...reviews.filter(r => !backendReviews.some(br => br.content === r.text)),
-  ];
-
   const addReview = async () => {
     if (!newReview.trim()) return;
-    const username = localStorage.getItem("username") || "Anime Fan";
+    const currentUser = authService.getCurrentUser();
+    const username = currentUser?.username || "Anime Fan";
 
-    // Add locally first for instant feedback
-    const review = {
+    const optimistic = {
       id: Date.now(),
       text: newReview,
       user: username,
+      avatar: currentUser?.avatar || "",
       time: Date.now(),
+      rating: reviewRating || null,
+      likes: 0,
     };
-    const updated = [review, ...reviews];
-    setReviews(updated);
-    localStorage.setItem(`reviews-${animeId}`, JSON.stringify(updated));
+    setReviews(prev => [optimistic, ...prev]);
 
-    // Sync to backend
     try {
       await reviewService.createReview(
         animeId,
@@ -66,14 +54,23 @@ export default function Reviews({ animeId, selectedEp }) {
         newReview,
         false
       );
-      // Refresh from backend
       const res = await reviewService.getReviews("anime", animeId);
-      if (res?.data) setBackendReviews(res.data);
-    } catch {
-      // Keep local-only review if backend fails
-    }
+      if (res?.data) {
+        setReviews(res.data.map(r => ({
+          id: r._id,
+          text: r.content,
+          title: r.title,
+          user: r.user?.username || "Unknown",
+          avatar: r.user?.avatar || "",
+          time: new Date(r.createdAt).getTime(),
+          rating: r.rating,
+          likes: r.likes?.length || 0,
+        })));
+      }
+    } catch {}
 
     setNewReview("");
+    setReviewRating(0);
   };
 
   return (
@@ -101,10 +98,10 @@ export default function Reviews({ animeId, selectedEp }) {
       </div>
 
       <div className="reviews-list">
-        {allReviews.length === 0 ? (
+        {reviews.length === 0 ? (
           <p className="reviews-empty">No reviews yet. Be the first!</p>
         ) : (
-          allReviews.map((r) => (
+          reviews.map((r) => (
             <motion.div
               key={r.id}
               className="review-item"
@@ -125,7 +122,7 @@ export default function Reviews({ animeId, selectedEp }) {
                   <span>{formatTimeAgo(r.time)}</span>
                 </div>
                 <p>{r.text}</p>
-                {r.isBackend && r.likes > 0 && (
+                {r.likes > 0 && (
                   <span className="review-likes"><Heart size={12} fill="currentColor" /> {r.likes}</span>
                 )}
               </div>

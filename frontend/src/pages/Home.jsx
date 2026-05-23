@@ -30,7 +30,7 @@ import Categories from "../components/Categories";
 import Background from "../components/Background";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
-import { loadWatchlist } from "../services/storage";
+import { loadWatchlist, loadWatchHistory, loadRatings } from "../services/storage";
 import { getCurrentLevel, getStreak } from "../services/progression";
 import "./Home.css";
 
@@ -135,8 +135,8 @@ const cardSlideUp = {
 function StatsBar() {
   const stats = useMemo(() => {
     const wl = loadWatchlist();
-    const history = JSON.parse(localStorage.getItem("watchHistory") || "[]");
-    const ratings = Object.keys(JSON.parse(localStorage.getItem("userRatings") || "{}")).length;
+    const history = loadWatchHistory();
+    const ratings = Object.keys(loadRatings()).length;
     const level = getCurrentLevel();
     const streak = getStreak();
     const items = [
@@ -205,7 +205,7 @@ function ContinueWatchingRow() {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("watchHistory") || "[]");
+    const stored = loadWatchHistory();
     const recent = stored.slice(0, 6);
     Promise.allSettled(
       recent.map(async item => {

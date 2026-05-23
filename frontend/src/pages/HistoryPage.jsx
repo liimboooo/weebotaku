@@ -5,6 +5,7 @@ import { Clock, Trash2, Play, X, Compass, Sparkles, Film } from "lucide-react";
 
 import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
+import { loadWatchHistory, clearWatchHistory as clearStorageHistory, removeFromWatchHistory } from "../services/storage";
 
 import "./HistoryPage.css";
 
@@ -38,18 +39,16 @@ export default function HistoryPage() {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("watchHistory") || "[]");
-    setHistory(stored);
+    setHistory(loadWatchHistory());
   }, []);
 
   const clearHistory = () => {
-    localStorage.removeItem("watchHistory");
+    clearStorageHistory();
     setHistory([]);
   };
 
   const removeItem = (timestamp) => {
-    const updated = history.filter(h => h.timestamp !== timestamp);
-    localStorage.setItem("watchHistory", JSON.stringify(updated));
+    const updated = removeFromWatchHistory(timestamp);
     setHistory(updated);
   };
 

@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, User, Bookmark, Settings, LogOut } from 'lucide-react';
 import authService from '../services/authService';
+import { loadWatchHistory } from '../services/storage';
 import './PremiumProfileDropdown.css';
 
 export default function PremiumProfileDropdown() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const username = localStorage.getItem('username') || 'load C';
-  const episodesWatched = Number(localStorage.getItem('userEpisodesWatched') || 128);
+  const currentUser = authService.getCurrentUser();
+  const username = currentUser?.username || 'Guest';
+  const avatar = currentUser?.avatar || '';
+  const episodesWatched = loadWatchHistory().length;
   return (
     <div className="premium-profile-dropdown-wrapper">
       <button 
@@ -18,7 +21,7 @@ export default function PremiumProfileDropdown() {
       >
         <div className="premium-avatar-wrapper">
           <img 
-            src={localStorage.getItem('userAvatar') || ''} 
+            src={avatar}
             alt={username} 
             className="premium-avatar"
             onError={(e) => {
@@ -38,7 +41,7 @@ export default function PremiumProfileDropdown() {
           <div className="premium-dropdown-header">
             <div className="premium-avatar-large">
               <img 
-                src={localStorage.getItem('userAvatar') || ''} 
+                src={avatar}
                 alt={username} 
                 className="premium-avatar-large-img"
                 onError={(e) => {

@@ -1,3 +1,4 @@
+﻿import { STORAGE_KEYS } from '../../utils/constants';
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -20,14 +21,15 @@ import AnimatedPage from "../../components/AnimatedPage";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import { formatCount, timeAgo, notify } from "../../utils/helpers";
 import { fetchTopAnime } from "../../services/anilistApi";
+import authService from "../../services/authService";
 
 import "./AMVsEdits.css";
 
-const HERO_VIDEO_ID = "-Ek_MAxM6cY";
+const HERO_VIDEO_ID = process.env.REACT_APP_HERO_VIDEO_ID || "-Ek_MAxM6cY";
 
-const STORAGE_KEY = "amv_edits";
-const LIKED_KEY = "amv_liked";
-const SAVED_KEY = "amv_saved";
+const STORAGE_KEY = (process.env.REACT_APP_STORAGE_PREFIX || "amv") + "_edits";
+const LIKED_KEY = (process.env.REACT_APP_STORAGE_PREFIX || "amv") + "_liked";
+const SAVED_KEY = (process.env.REACT_APP_STORAGE_PREFIX || "amv") + "_saved";
 
 function loadFromStorage(key, fallback) {
   try { const d = localStorage.getItem(key); return d ? JSON.parse(d) : fallback; }
@@ -36,7 +38,7 @@ function loadFromStorage(key, fallback) {
 
 function openVideoDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open("AnimeWCH_Videos", 2);
+    const req = indexedDB.open(process.env.REACT_APP_DB_NAME || "AnimeWCH_Videos", process.env.REACT_APP_DB_VERSION ? Number(process.env.REACT_APP_DB_VERSION) : 2);
     req.onupgradeneeded = (e) => {
       const db = req.result;
       if (!db.objectStoreNames.contains("videos")) db.createObjectStore("videos", { keyPath: "id" });
@@ -103,21 +105,27 @@ function generateThumbnail(file) {
     video.onloadeddata = () => { video.currentTime = 1; };
     video.onseeked = () => {
       const canvas = document.createElement("canvas");
-      const w = video.videoWidth || 640;
-      const h = video.videoHeight || 360;
+      const w = process.env.REACT_APP_THUMB_WIDTH ? Number(process.env.REACT_APP_THUMB_WIDTH) : (video.videoWidth || 640);
+      const h = process.env.REACT_APP_THUMB_HEIGHT ? Number(process.env.REACT_APP_THUMB_HEIGHT) : (video.videoHeight || 360);
       canvas.width = w;
       canvas.height = h;
       canvas.getContext("2d").drawImage(video, 0, 0, w, h);
       URL.revokeObjectURL(video.src);
-      resolve(canvas.toDataURL("image/jpeg", 0.5));
+      resolve(canvas.toDataURL("image/jpeg", process.env.REACT_APP_THUMB_QUALITY ? Number(process.env.REACT_APP_THUMB_QUALITY) : 0.5));
     };
     video.onerror = () => { URL.revokeObjectURL(video.src); resolve(""); };
-    setTimeout(() => { URL.revokeObjectURL(video.src); resolve(""); }, 5000);
+    setTimeout(() => { URL.revokeObjectURL(video.src); resolve(""); }, process.env.REACT_APP_THUMB_TIMEOUT ? Number(process.env.REACT_APP_THUMB_TIMEOUT) : 5000);
   });
 }
 
 export default function AMVsEdits() {
-  const [animeTitles, setAnimeTitles] = useState(["Jujutsu Kaisen", "One Piece", "Attack on Titan", "Demon Slayer", "Naruto", "Bleach", "My Hero Academia", "Chainsaw Man", "Solo Leveling"]);
+  const [animeTitles, setAnimeTitles] = useState([]);
+  useEffect(() => {
+    fetchTopAnime(1).then(r => {
+      const titles = r.data.map(a => a.name).filter(Boolean).slice(0, 12);
+      if (titles.length > 0) setAnimeTitles(titles);
+    }).catch(() => {});
+  }, []);
   const [ready, setReady] = useState(false);
   const [edits, setEdits] = useState([]);
   const [selectedEdit, setSelectedEdit] = useState(null);
@@ -133,7 +141,7 @@ export default function AMVsEdits() {
   const [videoMuted, setVideoMuted] = useState(true);
   const [videoError, setVideoError] = useState(false);
   const videoRef = useRef(null);
-  const viewedSet = useRef(new Set(loadFromStorage("amv_viewed", [])));
+  const viewedSet = useRef(new Set(loadFromStorage(STORAGE_KEYS.AMV_VIEWED, [])));
   const masonryRef = useRef(null);
   const heroBgRef = useRef(null);
   // Load metadata from localStorage + hydrate videos & covers from IndexedDB
@@ -372,7 +380,7 @@ export default function AMVsEdits() {
     const newEdit = {
       id,
       title: newTitle,
-      creator: "@" + (localStorage.getItem("username") || "you"),
+      creator: "@" + (authService.getCurrentUser()?.username || "you"),
       anime: newAnime || "Other",
       category: newCategory || "edit",
       cover: coverDataUrl || "",
@@ -426,8 +434,9 @@ export default function AMVsEdits() {
 
   const handlePostComment = () => {
     if (!selectedEdit || !commentText.trim()) return;
-    const user = localStorage.getItem("username") || "Anonymous";
-    const avatar = localStorage.getItem("userAvatar") || "";
+    const cu = authService.getCurrentUser();
+    const user = cu?.username || "Anonymous";
+    const avatar = cu?.avatar || "";
     const comment = { id: Date.now(), user, avatar, text: commentText.trim(), timestamp: Date.now() };
     const current = editComments[selectedEdit.id] || [];
     const updated = [...current, comment];
@@ -474,7 +483,7 @@ export default function AMVsEdits() {
           <div ref={heroBgRef} className="edits-hero-bg">
             <iframe
               className="edits-hero-video"
-              src={`https://www.youtube.com/embed/${HERO_VIDEO_ID}?autoplay=1&loop=1&mute=1&controls=0&showinfo=0&playlist=${HERO_VIDEO_ID}&modestbranding=1&rel=0&vq=hd1080`}
+              src={`${process.env.REACT_APP_YOUTUBE_EMBED_BASE || "https://www.youtube.com/embed/"}${HERO_VIDEO_ID}?autoplay=1&loop=1&mute=1&controls=0&showinfo=0&playlist=${HERO_VIDEO_ID}&modestbranding=1&rel=0&vq=hd1080`}
               frameBorder="0"
               allow="autoplay; encrypted-media"
               title="hero-bg"
@@ -564,7 +573,7 @@ export default function AMVsEdits() {
                     </div>
                     {savedEdits.includes(edit.id) && <div className="edits-saved-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="#6d28d9" stroke="#6d28d9" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>}
                     <div className="edits-poster-overlay">
-                      <p className="edits-overlay-desc">{(edit.hashtags || []).slice(0, 3).join(" · ")}</p>
+                      <p className="edits-overlay-desc">{(edit.hashtags || []).slice(0, 3).join(" Â· ")}</p>
                     </div>
                   </div>
                   <div className="edits-card-info">
@@ -593,7 +602,7 @@ export default function AMVsEdits() {
                 <div className="edits-empty-icon"><Play size={40} /></div>
                 {edits.length === 0 ? (
                   <>
-                    <p>No edits yet — upload your first edit!</p>
+                    <p>No edits yet â€” upload your first edit!</p>
                     <button className="edits-upload-btn" onClick={() => setIsUploadOpen(true)}>
                       <Plus size={18} /> Upload
                     </button>
@@ -656,7 +665,7 @@ export default function AMVsEdits() {
                           setVideoStarted(true);
                           if (!viewedSet.current.has(selectedEdit.id)) {
                             viewedSet.current.add(selectedEdit.id);
-                            localStorage.setItem("amv_viewed", JSON.stringify([...viewedSet.current]));
+                            localStorage.setItem(STORAGE_KEYS.AMV_VIEWED, JSON.stringify([...viewedSet.current]));
                             setEdits(prev => prev.map(e => e.id === selectedEdit.id ? { ...e, views: e.views + 1 } : e));
                             setSelectedEdit(prev => prev ? { ...prev, views: prev.views + 1 } : prev);
                           }
@@ -695,7 +704,7 @@ export default function AMVsEdits() {
                         </div>
                       )}
                       {selectedEdit.cover && <div className={`pin-video-cover ${videoStarted ? "faded" : ""}`} style={{ backgroundImage: `url(${selectedEdit.cover})` }} />}
-                      {/* Slim progress bar + tiny play/pause icon — visible on hover */}
+                      {/* Slim progress bar + tiny play/pause icon â€” visible on hover */}
                       <div className={`pin-video-bar ${videoHover ? "visible" : ""}`}>
                         <div className="pin-bar-left">
                           {videoPlaying ? <Pause size={11} /> : <Play size={11} fill="currentColor" />}
@@ -708,7 +717,7 @@ export default function AMVsEdits() {
                   </div>
 
                   <div className="pin-info-side">
-                    {/* ── Sticky Top: Creator, Title, Actions, Description ── */}
+                    {/* â”€â”€ Sticky Top: Creator, Title, Actions, Description â”€â”€ */}
                     <div className="pin-top-sticky">
                       <div className="pin-header">
                         <div className="pin-creator">
@@ -720,7 +729,7 @@ export default function AMVsEdits() {
                             <span>{selectedEdit.anime}</span>
                           </div>
                         </div>
-                        {selectedEdit.creator === "@" + (localStorage.getItem("username") || "you") && (
+                        {selectedEdit.creator === "@" + (authService.getCurrentUser()?.username || "you") && (
                           <div className="pin-owner-actions">
                             <button className="pin-edit-btn" onClick={() => { setEditingEdit(selectedEdit); setNewTitle(selectedEdit.title); setNewAnime(selectedEdit.anime); setNewCategory(selectedEdit.category || ""); setNewHashtags((selectedEdit.hashtags || []).join(" ")); setIsUploadOpen(true); }} title="Edit">
                               <Edit3 size={15} />
@@ -775,7 +784,7 @@ export default function AMVsEdits() {
                       </div>
                     </div>
 
-                    {/* ── Scrollable Middle: Comments ── */}
+                    {/* â”€â”€ Scrollable Middle: Comments â”€â”€ */}
                     <div className="pin-scrollable">
                       <div className="pin-comments-head">
                         <MessageSquare size={15} />
@@ -797,7 +806,7 @@ export default function AMVsEdits() {
                                 </div>
                                 <p>{c.text}</p>
                               </div>
-                              {c.user === (localStorage.getItem("username") || "Anonymous") && (
+                              {c.user === (authService.getCurrentUser()?.username || "Anonymous") && (
                                 <button className="pin-c-delete" onClick={() => handleDeleteComment(c.id)}>
                                   <Trash2 size={11} />
                                 </button>
@@ -813,10 +822,10 @@ export default function AMVsEdits() {
                       </div>
                     </div>
 
-                    {/* ── Sticky Bottom: Comment Composer ── */}
+                    {/* â”€â”€ Sticky Bottom: Comment Composer â”€â”€ */}
                     <div className="pin-composer-sticky">
                       <div className="pin-composer-avatar">
-                        {(localStorage.getItem("username") || "A").charAt(0).toUpperCase()}
+                        {(authService.getCurrentUser()?.username || "A").charAt(0).toUpperCase()}
                       </div>
                       <input
                         placeholder="Add a comment..."
@@ -949,7 +958,7 @@ export default function AMVsEdits() {
                               <div className="upload-existing-icon"><Play size={20} /></div>
                               <div className="upload-existing-info">
                                 <strong>Current video kept</strong>
-                                <span>{editingEdit.duration}s • Choose a file above to replace</span>
+                                <span>{editingEdit.duration}s â€¢ Choose a file above to replace</span>
                               </div>
                             </div>
                           ) : (
@@ -975,7 +984,7 @@ export default function AMVsEdits() {
                           ) : editingEdit && editingEdit.cover ? (
                             <div className="upload-existing-video">
                               <img src={editingEdit.cover} alt="Current cover" className="upload-existing-cover" />
-                              <span>Current cover kept — choose a file above to replace</span>
+                              <span>Current cover kept â€” choose a file above to replace</span>
                             </div>
                           ) : (
                             <label htmlFor="cover-upload" className="upload-video-label cover-label">
@@ -1018,7 +1027,7 @@ export default function AMVsEdits() {
                           <Clock size={14} />
                           <span>
                             Duration: {Math.round(videoDuration)}s
-                            {videoDuration > 40 && <span className="duration-warning"> — exceeds 40s, will be trimmed</span>}
+                            {videoDuration > 40 && <span className="duration-warning"> â€” exceeds 40s, will be trimmed</span>}
                           </span>
                         </div>
                       )}
@@ -1045,3 +1054,4 @@ export default function AMVsEdits() {
     </ErrorBoundary>
   );
 }
+

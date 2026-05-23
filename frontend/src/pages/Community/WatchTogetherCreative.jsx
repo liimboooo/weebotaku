@@ -34,7 +34,7 @@ function getEmbedSource(urlString) {
       if (videoId) {
         return {
           kind: "iframe",
-          url: `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`,
+          url: `${process.env.REACT_APP_YOUTUBE_EMBED_BASE || "https://www.youtube-nocookie.com/embed/"}${videoId}?autoplay=1&rel=0&modestbranding=1`,
           title: "YouTube broadcast",
         };
       }
@@ -46,7 +46,7 @@ function getEmbedSource(urlString) {
         const parentHost = typeof window !== "undefined" ? window.location.hostname : "localhost";
         return {
           kind: "iframe",
-          url: `https://player.twitch.tv/?channel=${channel}&parent=${parentHost}&autoplay=true&muted=true`,
+          url: `${process.env.REACT_APP_TWITCH_EMBED_BASE || "https://player.twitch.tv/"}?channel=${channel}&parent=${parentHost}&autoplay=true&muted=true`,
           title: "Twitch broadcast",
         };
       }

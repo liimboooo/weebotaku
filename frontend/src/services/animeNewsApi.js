@@ -1,4 +1,4 @@
-const BASE = "https://graphql.anilist.co";
+const BASE = process.env.REACT_APP_ANILIST_API_URL || "https://graphql.anilist.co";
 
 function getSeasonInfo() {
   const m = new Date().getMonth();

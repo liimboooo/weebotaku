@@ -1,8 +1,9 @@
+﻿import { STORAGE_KEYS } from '../utils/constants';
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAnimeById } from "../data/animeData";
-import { loadWatchlist, removeFromWatchlist } from "../services/storage";
+import { loadWatchlist, removeFromWatchlist, loadLikedAnime, loadRatings, loadWatchHistory } from "../services/storage";
 import authService from "../services/authService";
 import * as tierlistService from "../services/tierlistService";
 import AnimatedPage from "../components/AnimatedPage";
@@ -75,21 +76,17 @@ export default function ProfilePage() {
 
   const loadProfileData = () => {
     if (isRemoteProfile) return;
-    const storedUser = localStorage.getItem("username");
-    if (storedUser) setUsername(storedUser);
-    const storedAvatar = localStorage.getItem("userAvatar");
-    if (storedAvatar) { setAvatar(storedAvatar); setAvatarPreview(storedAvatar); }
-    const storedBanner = localStorage.getItem("userBanner");
-    if (storedBanner) { setBanner(storedBanner); setBannerPreview(storedBanner); }
-    const storedStatus = localStorage.getItem("userStatusMessage");
-    if (storedStatus) setStatusMsg(storedStatus);
+    const userData = authService.getCurrentUser();
+    if (userData) {
+      setUsername(userData.username || "Anime Fan");
+      if (userData.avatar) { setAvatar(userData.avatar); setAvatarPreview(userData.avatar); }
+      if (userData.banner) { setBanner(userData.banner); setBannerPreview(userData.banner); }
+      if (userData.statusMessage) setStatusMsg(userData.statusMessage);
+    }
     setWatchlist(loadWatchlist());
-    const storedL = JSON.parse(localStorage.getItem("likedAnime") || "[]");
-    setLiked(storedL);
-    const storedR = JSON.parse(localStorage.getItem("userRatings") || "{}");
-    setRated(storedR);
-    const storedH = JSON.parse(localStorage.getItem("watchHistory") || "[]");
-    setHistory(storedH.slice(0, 10));
+    setLiked(loadLikedAnime());
+    setRated(loadRatings());
+    setHistory(loadWatchHistory().slice(0, 10));
   };
 
   useEffect(() => {
@@ -128,7 +125,7 @@ export default function ProfilePage() {
 
   const userAvgRating = ratedAnime.length
     ? (ratedAnime.reduce((s, r) => s + r.rating, 0) / ratedAnime.length).toFixed(1)
-    : "—";
+    : "â€”";
 
   const favoriteGenres = {};
   watchlistAnime.forEach((a) => a.genres?.forEach((g) => { favoriteGenres[g] = (favoriteGenres[g] || 0) + 1; }));
@@ -142,7 +139,7 @@ export default function ProfilePage() {
   const dominantGenre = topGenres[0]?.[0];
   const auraColor = auraColors[dominantGenre] || "#8b5cf6";
 
-  const storedEdits = (() => { try { return JSON.parse(localStorage.getItem("amv_edits") || "[]"); } catch { return []; } })();
+  const storedEdits = (() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.AMV_EDITS) || "[]"); } catch { return []; } })();
   const totalEdits = formatCount(storedEdits.length);
   const totalCreators = formatCount(new Set(storedEdits.map(e => e.creator)).size);
   const totalViews = formatCount(storedEdits.reduce((s, e) => s + (e.views || 0), 0));
@@ -151,10 +148,21 @@ export default function ProfilePage() {
   const userLevel = getCurrentLevel();
   const xpProgress = getLevelProgress(userXP);
   const streakData = getStreak();
-  const earnedBadges = !isRemoteProfile ? getBadges({ watchlistCount: watchlist.length, episodesWatched, ratingCount: Object.keys(rated).length }) : [];
+  const [earnedBadges, setEarnedBadges] = useState([]);
+  const [allBadgeDefs, setAllBadgeDefs] = useState({});
+
+  useEffect(() => {
+    if (!isRemoteProfile) {
+      getBadges({ watchlistCount: watchlist.length, episodesWatched, ratingCount: Object.keys(rated).length }).then(setEarnedBadges).catch(() => {});
+      getAllBadgeDefs().then(setAllBadgeDefs).catch(() => {});
+    }
+  }, [isRemoteProfile, watchlist.length, episodesWatched, rated]);
 
   const allStats = isRemoteProfile
     ? [
+        { label: "Watchlist", value: watchlist.length, icon: Bookmark },
+        { label: "Episodes", value: episodesWatched, icon: Film },
+        { label: "Liked", value: liked.length, icon: Heart },
         { label: "Tier Lists", value: tierLists.length, icon: Layers },
       ]
     : [
@@ -167,26 +175,14 @@ export default function ProfilePage() {
       ];
 
   const saveProfile = async () => {
-    localStorage.setItem("username", username);
-    if (avatar) {
-      try {
-        const existing = localStorage.getItem("userAvatar");
-        if (existing && existing.length > 10000) localStorage.removeItem("userAvatar");
-        localStorage.setItem("userAvatar", avatar);
-      } catch (e) {
-        localStorage.removeItem("userAvatar");
-        try { localStorage.setItem("userAvatar", avatar); } catch {}
-      }
-    } else {
-      localStorage.removeItem("userAvatar");
-    }
-    if (banner) {
-      try { localStorage.setItem("userBanner", banner); } catch {}
-    } else {
-      localStorage.removeItem("userBanner");
-    }
     try {
-      await authService.updateProfile({ username, avatar, bio: statusMsg });
+      await authService.updateProfile({
+        username,
+        avatar,
+        banner,
+        bio: statusMsg,
+        statusMessage: statusMsg,
+      });
     } catch {}
     window.dispatchEvent(new Event("profile-avatar-updated"));
     setEditing(false);
@@ -198,17 +194,37 @@ export default function ProfilePage() {
         try {
           const res = await authService.getUserByUsername(profileUsername);
           if (res.success && res.user) {
-            setRemoteUser(res.user);
-            setUsername(res.user.username);
-            setAvatar(res.user.avatar || '');
-            setAvatarPreview(res.user.avatar || '');
-            setStatusMsg(res.user.statusMessage || '');
+            const u = res.user;
+            setRemoteUser(u);
+            setUsername(u.username);
+            setAvatar(u.avatar || '');
+            setAvatarPreview(u.avatar || '');
+            setBanner(u.banner || '');
+            setBannerPreview(u.banner || '');
+            setStatusMsg(u.statusMessage || '');
+            if (u.watchlist) {
+              setWatchlist(u.watchlist.map(item => ({
+                id: item.animeId, name: item.name, img: item.img,
+                rating: item.rating, episodes: item.episodes,
+                year: item.year, status: item.status, genres: item.genres || [],
+                listStatus: item.listStatus || 'Watch Later', type: 'anime',
+              })));
+            }
+            if (u.likedAnime) setLiked(u.likedAnime);
+            if (u.ratings) setRated(u.ratings);
+            if (u.watchHistory) {
+              setHistory(u.watchHistory.slice(0, 10).map(h => ({
+                animeId: h.animeId, episode: h.episode,
+                timestamp: new Date(h.timestamp).getTime(),
+                animeName: h.animeName || '', animeImg: h.animeImg || '',
+              })));
+            }
           }
         } catch { /* ignore */ }
       })();
       loadTierLists();
     } else {
-      const keys = ["userAvatar", "amv_edits", "amv_liked", "amv_saved"];
+      const keys = [STORAGE_KEYS.USER_AVATAR, STORAGE_KEYS.AMV_EDITS, "amv_liked", "amv_saved"];
       keys.forEach(k => {
         try {
           const v = localStorage.getItem(k);
@@ -270,11 +286,7 @@ export default function ProfilePage() {
   };
 
   const generateAvatar = async () => {
-    const apis = [
-      "https://nekos.best/api/v2/neko",
-      "https://nekos.best/api/v2/husbando",
-      "https://api.waifu.pics/sfw/waifu",
-    ].sort(() => Math.random() - 0.5);
+    const apis = (process.env.REACT_APP_AVATAR_API_URLS || "https://nekos.best/api/v2/neko,https://nekos.best/api/v2/husbando,https://api.waifu.pics/sfw/waifu").split(",").map(s => s.trim()).sort(() => Math.random() - 0.5);
     for (const api of apis) {
       try {
         const res = await fetch(api);
@@ -331,7 +343,7 @@ export default function ProfilePage() {
 
             {editing ? (
               <div className="profile-edit-area">
-                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="profile-input" />
+                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder=STORAGE_KEYS.USERNAME className="profile-input" />
                 <div className="profile-edit-row">
                   <label className="profile-btn profile-btn-secondary">
                     Choose Avatar
@@ -349,7 +361,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="profile-edit-row">
                     <button className="profile-btn profile-btn-primary" onClick={saveProfile}>Save</button>
-                    <button className="profile-btn profile-btn-ghost" onClick={() => { setEditing(false); setUsername(localStorage.getItem("username") || "Anime Fan"); setAvatar(localStorage.getItem("userAvatar") || ""); setAvatarPreview(localStorage.getItem("userAvatar") || ""); setBanner(localStorage.getItem("userBanner") || ""); setBannerPreview(localStorage.getItem("userBanner") || ""); }}>Cancel</button>
+                    <button className="profile-btn profile-btn-ghost" onClick={() => { setEditing(false); setUsername(localStorage.getItem(STORAGE_KEYS.USERNAME) || "Anime Fan"); setAvatar(localStorage.getItem(STORAGE_KEYS.USER_AVATAR) || ""); setAvatarPreview(localStorage.getItem(STORAGE_KEYS.USER_AVATAR) || ""); setBanner(localStorage.getItem(STORAGE_KEYS.USER_BANNER) || ""); setBannerPreview(localStorage.getItem(STORAGE_KEYS.USER_BANNER) || ""); }}>Cancel</button>
                   </div>
               </div>
             ) : (
@@ -365,12 +377,12 @@ export default function ProfilePage() {
                         onChange={(e) => setStatusMsg(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
-                            localStorage.setItem("userStatusMessage", statusMsg);
+                            localStorage.setItem(STORAGE_KEYS.USER_STATUS_MESSAGE, statusMsg);
                             window.dispatchEvent(new Event("user-status-updated"));
                             setEditingStatus(false);
                           }
                           if (e.key === "Escape") {
-                            setStatusMsg(localStorage.getItem("userStatusMessage") || "");
+                            setStatusMsg(localStorage.getItem(STORAGE_KEYS.USER_STATUS_MESSAGE) || "");
                             setEditingStatus(false);
                           }
                         }}
@@ -386,7 +398,7 @@ export default function ProfilePage() {
                   )}
                 </div>
                 <div className="profile-badges-row">
-                  <span className="profile-badge">Member since {remoteUser?.memberSince || localStorage.getItem("memberSince") || new Date().getFullYear()}</span>
+                  <span className="profile-badge">Member since {remoteUser?.memberSince || localStorage.getItem(STORAGE_KEYS.MEMBER_SINCE) || new Date().getFullYear()}</span>
                   {isRemoteProfile && (
                     <span className="hud-clearance-badge">Level {userLevel} Otaku</span>
                   )}
@@ -513,13 +525,12 @@ export default function ProfilePage() {
                   )}
 
                   {!isRemoteProfile && (() => {
-                    const allDefs = getAllBadgeDefs();
                     const earnedKeys = new Set(earnedBadges.map(b => b.key));
                     return (
                       <div className="overview-card overview-card--badges">
-                        <h3><Trophy size={12} /> Badges ({earnedBadges.length}/{Object.keys(allDefs).length})</h3>
+                        <h3><Trophy size={12} /> Badges ({earnedBadges.length}/{Object.keys(allBadgeDefs).length})</h3>
                         <div className="badges-grid">
-                          {Object.entries(allDefs).map(([key, def]) => {
+                          {Object.entries(allBadgeDefs).map(([key, def]) => {
                             const earned = earnedKeys.has(key);
                             return (
                               <div key={key} className={`badge-item ${earned ? 'earned' : 'locked'}`} title={def.desc}>
@@ -870,5 +881,6 @@ export function ProfileInfoModal({ username, avatar, onClose }) {
     </motion.div>
   );
 }
+
 
 

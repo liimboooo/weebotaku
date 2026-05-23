@@ -2,7 +2,6 @@ const User = require('../models/User');
 const { OAuth2Client } = require('google-auth-library');
 
 // @route   POST /api/auth/register
-// @access  Public
 exports.register = async (req, res) => {
   try {
     const { username, email, password, passwordConfirm } = req.body;
@@ -27,7 +26,7 @@ exports.register = async (req, res) => {
     res.status(201).json({
       success: true,
       token,
-      user: user.toPublic(),
+      user: user.toFullProfile(),
     });
   } catch (error) {
     if (error.code === 11000) {
@@ -43,7 +42,6 @@ exports.register = async (req, res) => {
 };
 
 // @route   POST /api/auth/login
-// @access  Public
 exports.login = async (req, res) => {
   try {
     const { email, password, username } = req.body;
@@ -74,7 +72,7 @@ exports.login = async (req, res) => {
     res.json({
       success: true,
       token,
-      user: user.toPublic(),
+      user: user.toFullProfile(),
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -83,7 +81,6 @@ exports.login = async (req, res) => {
 };
 
 // @route   POST /api/auth/google
-// @access  Public
 exports.googleLogin = async (req, res) => {
   try {
     const { credential } = req.body;
@@ -135,7 +132,7 @@ exports.googleLogin = async (req, res) => {
     res.json({
       success: true,
       token,
-      user: user.toPublic(),
+      user: user.toFullProfile(),
     });
   } catch (error) {
     console.error('Google login error:', error);
@@ -144,11 +141,10 @@ exports.googleLogin = async (req, res) => {
 };
 
 // @route   GET /api/auth/me
-// @access  Private
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    res.json({ success: true, user: user.toPublic() });
+    res.json({ success: true, user: user.toFullProfile() });
   } catch (error) {
     console.error('GetMe error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -156,10 +152,9 @@ exports.getMe = async (req, res) => {
 };
 
 // @route   PUT /api/auth/updateprofile
-// @access  Private
 exports.updateProfile = async (req, res) => {
   try {
-    const { username, bio, avatar, statusMessage } = req.body;
+    const { username, bio, avatar, banner, statusMessage, socialLinks } = req.body;
     const updateFields = {};
 
     if (username !== undefined) {
@@ -173,14 +168,16 @@ exports.updateProfile = async (req, res) => {
     }
     if (bio !== undefined) updateFields.bio = bio;
     if (avatar !== undefined) updateFields.avatar = avatar;
+    if (banner !== undefined) updateFields.banner = banner;
     if (statusMessage !== undefined) updateFields.statusMessage = statusMessage;
+    if (socialLinks !== undefined) updateFields.socialLinks = socialLinks;
 
     const user = await User.findByIdAndUpdate(req.user.id, updateFields, {
       new: true,
       runValidators: true,
     });
 
-    res.json({ success: true, user: user.toPublic() });
+    res.json({ success: true, user: user.toFullProfile() });
   } catch (error) {
     if (error.name === 'ValidationError') {
       const message = Object.values(error.errors).map(e => e.message).join(', ');
@@ -191,15 +188,106 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
+// @route   POST /api/auth/sync-progression
+exports.syncProgression = async (req, res) => {
+  try {
+    const { xp, currentStreak, longestStreak, lastActiveDate, lastDailyBonus } = req.body;
+    const user = await User.findById(req.user.id);
+
+    const serverXP = user.progression?.xp || 0;
+    const clientXP = xp || 0;
+
+    user.progression = {
+      xp: Math.max(serverXP, clientXP),
+      currentStreak: Math.max(user.progression?.currentStreak || 0, currentStreak || 0),
+      longestStreak: Math.max(user.progression?.longestStreak || 0, longestStreak || 0),
+      lastActiveDate: lastActiveDate || user.progression?.lastActiveDate || '',
+      lastDailyBonus: lastDailyBonus || user.progression?.lastDailyBonus || '',
+    };
+
+    await user.save();
+    res.json({ success: true, progression: user.progression });
+  } catch (error) {
+    console.error('SyncProgression error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   PUT /api/auth/manga-progress
+exports.updateMangaProgress = async (req, res) => {
+  try {
+    const { mangaId, chapter } = req.body;
+    if (!mangaId) {
+      return res.status(400).json({ success: false, message: 'mangaId required' });
+    }
+
+    const user = await User.findById(req.user.id);
+    user.mangaProgress.set(mangaId, chapter);
+    await user.save();
+
+    res.json({ success: true, mangaProgress: Object.fromEntries(user.mangaProgress) });
+  } catch (error) {
+    console.error('UpdateMangaProgress error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   PUT /api/auth/list-status
+exports.updateListStatus = async (req, res) => {
+  try {
+    const { animeId, listStatus } = req.body;
+    if (!animeId || !listStatus) {
+      return res.status(400).json({ success: false, message: 'animeId and listStatus required' });
+    }
+
+    const user = await User.findById(req.user.id);
+    const item = user.watchlist.find(w => w.animeId === parseInt(animeId));
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Anime not in watchlist' });
+    }
+
+    item.listStatus = listStatus;
+    await user.save();
+
+    res.json({ success: true, data: user.watchlist });
+  } catch (error) {
+    console.error('UpdateListStatus error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   GET /api/auth/search
+exports.searchUsers = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim().length < 1) {
+      return res.json({ success: true, users: [] });
+    }
+    const users = await User.find({ username: { $regex: q.trim(), $options: 'i' } })
+      .limit(8)
+      .select('username avatar statusMessage bio progression memberSince');
+    res.json({ success: true, users: users.map(u => ({
+      id: u._id,
+      username: u.username,
+      avatar: u.avatar,
+      statusMessage: u.statusMessage,
+      bio: u.bio,
+      level: Math.floor(Math.sqrt((u.progression?.xp || 0) / 100)) + 1,
+    })) });
+  } catch (error) {
+    console.error('SearchUsers error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // @route   GET /api/auth/by-username/:username
-// @access  Public
 exports.getUserByUsername = async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username });
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    res.json({ success: true, user: user.toPublic() });
+    res.json({ success: true, user: user.toRemoteProfile() });
   } catch (error) {
     console.error('GetUserByUsername error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -207,7 +295,6 @@ exports.getUserByUsername = async (req, res) => {
 };
 
 // @route   GET /api/auth/logout
-// @access  Private
 exports.logout = async (req, res) => {
   res.json({ success: true, message: 'Logged out' });
 };

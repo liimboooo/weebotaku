@@ -1,3 +1,4 @@
+﻿import { STORAGE_KEYS } from '../utils/constants';
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -29,7 +30,7 @@ export default function SearchPage() {
   const [trendingData, setTrendingData] = useState([]);
   const [trendingLoading, setTrendingLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("recentSearches") || "[]"); }
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.RECENT_SEARCHES) || "[]"); }
     catch { return []; }
   });
   const [watchlistIds, setWatchlistIds] = useState(() => loadWatchlist().map(i => i.id));
@@ -104,13 +105,13 @@ export default function SearchPage() {
   const removeRecent = (term) => {
     const next = recentSearches.filter(s => s !== term);
     setRecentSearches(next);
-    localStorage.setItem("recentSearches", JSON.stringify(next));
+    localStorage.setItem(STORAGE_KEYS.RECENT_SEARCHES, JSON.stringify(next));
   };
 
   const searchFromPill = (term) => {
     const next = [term, ...recentSearches.filter(s => s !== term)].slice(0, 8);
     setRecentSearches(next);
-    localStorage.setItem("recentSearches", JSON.stringify(next));
+    localStorage.setItem(STORAGE_KEYS.RECENT_SEARCHES, JSON.stringify(next));
     navigate(`/search?q=${encodeURIComponent(term)}`);
   };
 
@@ -166,7 +167,7 @@ export default function SearchPage() {
           >
             {searchParams.get("q")
               ? <>Results for "<strong>{searchParams.get("q")}</strong>"</>
-              : "Jump in — pick a genre or search above"}
+              : "Jump in â€” pick a genre or search above"}
           </motion.p>
         </div>
 
@@ -335,3 +336,4 @@ export default function SearchPage() {
     </AnimatedPage>
   );
 }
+

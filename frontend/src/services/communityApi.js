@@ -1,5 +1,5 @@
-const WAIFU_BASE = "https://api.waifu.pics/sfw";
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const WAIFU_BASE = process.env.REACT_APP_WAIFU_API_URL || "https://api.waifu.pics/sfw";
+const API_BASE = process.env.REACT_APP_API_URL;
 
 export async function fetchRandomQuote() {
   const url = `${API_BASE}/scrape/animechan-proxy?path=${encodeURIComponent('/random')}`;

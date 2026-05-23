@@ -1,14 +1,16 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import GenericRoutePage from "../../components/GenericRoutePage";
-
-const rules = [
-	{ title: "Keep it respectful", description: "No harassment, hate speech, or targeted abuse in public rooms and comments.", meta: "Rule 1", badge: "Core" },
-	{ title: "No spam or bait", description: "Avoid repetitive posting, bait threads, and disruptive link drops.", meta: "Rule 2", badge: "Community" },
-	{ title: "Spoiler discipline", description: "Mark spoilers clearly and avoid leaking major story beats without warning.", meta: "Rule 3", badge: "Etiquette" },
-	{ title: "Follow moderator calls", description: "Use the appeal flow if needed, but respect active moderation decisions.", meta: "Rule 4", badge: "Moderation" },
-];
+import configService from "../../services/configService";
 
 export default function Rules() {
+	const [rules, setRules] = useState([]);
+
+	useEffect(() => {
+		configService.getRules().then(res => {
+			if (res.success) setRules(res.data);
+		}).catch(() => {});
+	}, []);
+
 	return (
 		<GenericRoutePage
 			eyebrow="System"

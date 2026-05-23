@@ -7,6 +7,9 @@ import {
 import { getAnimeById } from "../data/animeData";
 import { findStreamingSource, getEpisodes, getStreamUrls } from "../services/animeApi";
 import { fetchAnimeRecommendations } from "../services/anilistApi";
+import { loadWatchHistory } from "../services/storage";
+import commentService from "../services/commentService";
+import authService from "../services/authService";
 import Comments from "../components/Comments";
 import "./Feeds/AnimeWatch.css";
 
@@ -57,13 +60,77 @@ export default function AnimeDetail() {
     } catch { return srv.url; }
   };
 
-  const [comments, setComments] = useState([
-    { id: 1, user: "AnimeKing", text: "This episode was absolutely insane! The animation quality is top tier 🔥🔥", time: (Date.now() - 120000).toString(), likes: 42, dislikes: 2, replies: [
-      { id: 11, user: "OtakuPro", text: "Totally agree, the fight scene was peak cinema", time: (Date.now() - 60000).toString(), likes: 12, dislikes: 0 }
-    ], pinned: true },
-    { id: 2, user: "MangaReader", text: "As a manga reader, I can say they adapted this perfectly. Cant wait for next week!", time: (Date.now() - 300000).toString(), likes: 28, dislikes: 1, replies: [], pinned: false },
-    { id: 3, user: "NightWatcher", text: "Spoiler: ||The main character finally unlocks his true power at the end||", time: (Date.now() - 480000).toString(), likes: 35, dislikes: 3, replies: [], pinned: false, hasSpoiler: true },
-  ]);
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+
+  const currentUser = authService.getCurrentUser();
+  const currentUsername = currentUser?.username || localStorage.getItem('username') || 'Guest';
+
+  const mapComment = useCallback((c) => ({
+    id: c._id,
+    user: c.user?.username || 'Unknown',
+    avatar: c.user?.avatar || '',
+    role: c.user?.role || 'user',
+    text: c.content,
+    time: new Date(c.createdAt).getTime().toString(),
+    likes: c.likes?.length || 0,
+    dislikes: c.dislikes?.length || 0,
+    replies: (c.replies || []).map(r => ({
+      id: r._id,
+      user: r.user?.username || 'Unknown',
+      avatar: r.user?.avatar || '',
+      role: r.user?.role || 'user',
+      text: r.content,
+      time: new Date(r.createdAt).getTime().toString(),
+      likes: r.likes?.length || 0,
+      dislikes: 0,
+      replies: [],
+    })),
+    pinned: c.pinned || false,
+    hasSpoiler: c.isSpoiler || false,
+  }), []);
+
+  useEffect(() => {
+    setCommentsLoading(true);
+    commentService.getComments(id, { episode: selectedEp })
+      .then(res => {
+        if (res.success) setComments(res.data.map(mapComment));
+      })
+      .catch(() => {})
+      .finally(() => setCommentsLoading(false));
+  }, [id, selectedEp, mapComment]);
+
+  const handleAddComment = useCallback(async (text) => {
+    const res = await commentService.createComment(parseInt(id), text, { episode: selectedEp });
+    if (res.success) setComments(prev => [mapComment(res.data), ...prev]);
+  }, [id, selectedEp, mapComment]);
+
+  const handleLikeComment = useCallback(async (commentId) => {
+    await commentService.likeComment(commentId);
+  }, []);
+
+  const handleDislikeComment = useCallback(async (commentId) => {
+    await commentService.dislikeComment(commentId);
+  }, []);
+
+  const handleReplyComment = useCallback(async (commentId, text) => {
+    const res = await commentService.replyToComment(commentId, text);
+    if (res.success) {
+      setComments(prev => prev.map(c => c.id === commentId ? mapComment(res.data) : c));
+    }
+  }, [mapComment]);
+
+  const handleEditComment = useCallback(async (commentId, newText) => {
+    const res = await commentService.editComment(commentId, newText);
+    if (res.success) {
+      setComments(prev => prev.map(c => c.id === commentId ? mapComment(res.data) : c));
+    }
+  }, [mapComment]);
+
+  const handleDeleteComment = useCallback(async (commentId) => {
+    const res = await commentService.deleteComment(commentId);
+    if (res.success) setComments(prev => prev.filter(c => c.id !== commentId));
+  }, []);
 
   const anime = apiAnime;
   const totalEps = anime?.episodes ?? 12;
@@ -71,7 +138,7 @@ export default function AnimeDetail() {
   useEffect(() => {
     const epFromUrl = searchParams.get("ep");
     if (epFromUrl) { setSelectedEp(Number(epFromUrl)); return; }
-    const history = JSON.parse(localStorage.getItem("watchHistory") || "[]");
+    const history = loadWatchHistory();
     const found = history.find((h) => h.animeId === parseInt(id));
     if (found) setSelectedEp(found.episode);
   }, [id, searchParams]);
@@ -284,7 +351,19 @@ export default function AnimeDetail() {
             <div className="watch-scroll-area">
 
               {/* ═══ COMMENTS ═══ */}
-              <Comments comments={comments} setComments={setComments} onSeek={handleSeek} />
+              <Comments
+                comments={comments}
+                setComments={setComments}
+                currentUser={currentUsername}
+                onSeek={handleSeek}
+                onAdd={handleAddComment}
+                onLikeComment={handleLikeComment}
+                onDislikeComment={handleDislikeComment}
+                onReplyComment={handleReplyComment}
+                onEditComment={handleEditComment}
+                onDeleteComment={handleDeleteComment}
+                loading={commentsLoading}
+              />
 
             </div>
           </div>

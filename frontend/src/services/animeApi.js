@@ -1,3 +1,5 @@
+﻿const REANIME_BASE = process.env.REACT_APP_REANIME_BASE_URL || "https://reanime.to";
+
 function cleanTitle(title) {
   return title.replace(/\s*\([^)]*\)/g, "").replace(/[^\w\s-]/g, "").trim();
 }
@@ -14,7 +16,7 @@ function stripSeasonSuffixes(title) {
 const titleVariants = (title) => {
   const base = stripSeasonSuffixes(title);
   const clean = cleanTitle(base || title);
-  const words = title.split(/[\s\-–—]+/).filter(w => w.length > 3);
+  const words = title.split(/[\s\-â€“â€”]+/).filter(w => w.length > 3);
   const uniqueWords = [...new Set(words.map(w => w.toLowerCase()))];
   const keywordSets = [];
   if (uniqueWords.length >= 2) keywordSets.push(uniqueWords.slice(0, 2).join(" "));
@@ -34,19 +36,19 @@ const titleVariants = (title) => {
   ].filter((s, i, a) => s && s.length > 2 && a.indexOf(s) === i);
 };
 
-const CF_WORKER = "https://anime-proxy.mohamedlimam80000.workers.dev/?url=";
+const CF_WORKER = process.env.REACT_APP_CF_PROXY_URL || "";
 const PROXIES = [
   CF_WORKER,
-  "https://api.codetabs.com/v1/proxy?quest=",
-  "https://corsproxy.io/?url=",
-  "https://api.allorigins.win/raw?url=",
+  ...(process.env.REACT_APP_FALLBACK_PROXIES || "").split(",").filter(Boolean),
 ];
 
 const ssCache = new Map();
 async function fetchJsonViaProxy(url) {
   const cached = ssCache.get(url);
   if (cached && Date.now() - cached.time < 300000) return cached.data;
-  for (const proxy of PROXIES) {
+  const proxies = PROXIES.filter(Boolean);
+  if (proxies.length === 0) return null;
+  for (const proxy of proxies) {
     try {
       const res = await Promise.race([
         fetch(`${proxy}${encodeURIComponent(url)}`, { mode: "cors" }),
@@ -96,12 +98,14 @@ function extractAnilistId(coverUrl) {
   return m ? parseInt(m[1], 10) : null;
 }
 
-const SOURCES = {
-  reanime: {
-    name: "reanime",
-    base: "https://reanime.to",
-  },
-};
+const SOURCES = process.env.REACT_APP_STREAM_SOURCES
+  ? JSON.parse(process.env.REACT_APP_STREAM_SOURCES)
+  : {
+      reanime: {
+        name: "reanime",
+        base: REANIME_BASE,
+      },
+    };
 
 async function searchReanimeSource(source, searchName) {
   const { base, name } = source;
@@ -136,7 +140,7 @@ async function searchReanimeSource(source, searchName) {
 
 async function getEpisodesReanime(slug) {
   try {
-    const url = `https://reanime.to/api/episodes/${slug}`;
+    const url = `${REANIME_BASE}/api/episodes/${slug}`;
     const data = await fetchJsonViaProxy(url);
     if (!data || !Array.isArray(data.data)) return [];
 
@@ -157,7 +161,7 @@ async function getEpisodesReanime(slug) {
 async function getStreamUrlsReanime(epNum, anilistId) {
   try {
     if (!anilistId) return [];
-    const url = `https://reanime.to/api/flix/${anilistId}/${epNum}`;
+    const url = `${REANIME_BASE}/api/flix/${anilistId}/${epNum}`;
     const data = await fetchJsonViaProxy(url);
     if (!data || !data.success || !Array.isArray(data.servers)) return [];
 
@@ -204,3 +208,4 @@ export async function findStreamingSource(animeName) {
 
   return null;
 }
+

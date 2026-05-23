@@ -25,7 +25,7 @@ import AnimatedPage from "../components/AnimatedPage";
 import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchTopAnime, fetchSearchAnime, fetchAnimeGenres } from "../services/anilistApi";
-import { loadWatchlist, addToWatchlist, removeFromWatchlist } from "../services/storage";
+import { loadWatchlist, addToWatchlist, removeFromWatchlist, loadWatchHistory } from "../services/storage";
 import { addNotification } from "../services/notificationService";
 import { findStreamingSource } from "../services/animeApi";
 import AnimeWatch from "./Feeds/AnimeWatch";
@@ -280,7 +280,7 @@ export default function Browse() {
     try {
       const src = await findStreamingSource(anime.name);
       if (!src) { addNotification({ title: "Not Available", body: "No streaming source for this title.", type: "error" }); return; }
-      const history = JSON.parse(localStorage.getItem("watchHistory") || "[]");
+      const history = loadWatchHistory();
       const found = history.find(h => h.animeId === anime.id);
       setWatchAnime({ ...src, _name: anime.name, _episodes: anime.episodes || 12, startEp: found?.episode || 1 });
       addNotification({ title: "Now Playing", body: anime.name, type: "watch" });

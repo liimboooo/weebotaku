@@ -1,14 +1,18 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Film, Users, TrendingUp, Trophy } from "lucide-react";
+import configService from "../services/configService";
 
-const features = [
-  { icon: Film, title: "Join Watch Parties", desc: "Synchronized rooms with live chat & reactions" },
-  { icon: Users, title: "Meet Anime Fans", desc: "Match profiles by taste, build your community" },
-  { icon: TrendingUp, title: "Track Everything", desc: "Watchlist, ratings, history — all synced" },
-  { icon: Trophy, title: "Earn Your Aura", desc: "Levels, badges, streaks, and reputation" },
-];
+const ICON_MAP = { Film, Users, TrendingUp, Trophy };
 
 export default function AuthImage() {
+  const [features, setFeatures] = useState([]);
+
+  useEffect(() => {
+    configService.getFeatures().then(res => {
+      if (res.success) setFeatures(res.data);
+    }).catch(() => {});
+  }, []);
+
   return (
     <div className="auth-image">
       <img src="/beta-1.jpg" alt="" aria-hidden />
@@ -35,15 +39,18 @@ export default function AuthImage() {
         </p>
 
         <div className="auth-image-features">
-          {features.map((f) => (
-            <div key={f.title} className="auth-image-feature">
-              <span className="aif-emoji">{React.createElement(f.icon, { size: 20 })}</span>
-              <div className="aif-text">
-                <strong>{f.title}</strong>
-                <span>{f.desc}</span>
+          {features.map((f) => {
+            const Icon = ICON_MAP[f.icon] || Film;
+            return (
+              <div key={f.title} className="auth-image-feature">
+                <span className="aif-emoji"><Icon size={20} /></span>
+                <div className="aif-text">
+                  <strong>{f.title}</strong>
+                  <span>{f.desc}</span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="auth-image-cta-row">

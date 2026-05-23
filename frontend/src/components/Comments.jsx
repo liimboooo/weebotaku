@@ -6,17 +6,14 @@ import {
   MoreHorizontal, Pencil, Trash2, Share2, Check, Loader, Copy,
   ThumbsUp, ThumbsDown, Send
 } from "lucide-react";
+import {
+  COMMENTS_SORT_OPTIONS as SORT_OPTIONS,
+  COMMENTS_INITIAL_VISIBLE as INITIAL_VISIBLE,
+  COMMENTS_LOAD_MORE_COUNT as LOAD_MORE_COUNT,
+  COMMENTS_MAX_CHARS as MAX_CHARS,
+  AVATAR_COLORS,
+} from "../utils/constants";
 import "./Comments.css";
-
-const SORT_OPTIONS = [
-  { key: "newest", label: "Most recent" },
-  { key: "top", label: "Top" },
-  { key: "liked", label: "Most Liked" },
-];
-
-const INITIAL_VISIBLE = 5;
-const LOAD_MORE_COUNT = 5;
-const MAX_CHARS = 500;
 
 const TIMESTAMP_RE = /\b(\d{1,2}:)?\d{1,2}:\d{2}\b/g;
 
@@ -46,23 +43,15 @@ function renderTextWithTimestamps(text, onSeek) {
   return parts.length ? parts : text;
 }
 
-const AVATAR_COLORS = [
-  "#a855f7", "#ec4899", "#3b82f6", "#06b6d4",
-  "#8b5cf6", "#f59e0b", "#10b981", "#ef4444",
-];
+function getUserColor(name) {
+  const idx = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % AVATAR_COLORS.length;
+  return AVATAR_COLORS[idx];
+}
 
-const USER_COLORS = {
-  "AnimeKing": "#a855f7",
-  "OtakuPro": "#06b6d4",
-  "MangaReader": "#f59e0b",
-  "NightWatcher": "#a0a0ab",
-};
-
-const USER_ROLES = {
-  "AnimeKing": { label: "OP", color: "#a855f7", bg: "rgba(168,85,247,0.15)" },
-  "OtakuPro": { label: "VERIFIED", color: "#06b6d4", bg: "rgba(6,182,212,0.15)" },
-  "MangaReader": { label: "CONTRIBUTOR", color: "#f59e0b", bg: "rgba(245,158,11,0.15)" },
-};
+function getRoleBadge(role) {
+  if (role === 'admin') return { label: "ADMIN", color: "#ef4444", bg: "rgba(239,68,68,0.15)" };
+  return null;
+}
 
 function getInitials(name) {
   return name
@@ -102,7 +91,17 @@ function getExactTime(timeStr) {
   return timeStr;
 }
 
-function CommentAvatar({ name, size = 40 }) {
+function CommentAvatar({ name, avatar, size = 40 }) {
+  if (avatar) {
+    return (
+      <img
+        className="awc-avatar"
+        src={avatar}
+        alt={name}
+        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }}
+      />
+    );
+  }
   const initials = getInitials(name);
   const colorIndex = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % AVATAR_COLORS.length;
   return (
@@ -294,14 +293,11 @@ function CommentItem({ comment, isOPCheck, isVerifiedCheck, onLike, onDislike, o
   const editInputRef = useRef(null);
 
   const isOwn = comment.user === currentUser;
-  const userColor = USER_COLORS[comment.user] || "#a0a0ab";
+  const userColor = getUserColor(comment.user);
   const isOP = isOPCheck(comment.user);
-  const isVerified = isVerifiedCheck(comment.user);
   const badge = isOP
     ? { label: "OP", color: "#a855f7", bg: "rgba(168,85,247,0.15)" }
-    : isVerified
-      ? { label: "Verified", color: "#06b6d4", bg: "rgba(6,182,212,0.15)" }
-      : USER_ROLES[comment.user] || null;
+    : getRoleBadge(comment.role);
 
   useEffect(() => {
     if (editing && editInputRef.current) {
@@ -346,17 +342,18 @@ function CommentItem({ comment, isOPCheck, isVerifiedCheck, onLike, onDislike, o
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleReplySubmit = (text) => {
+  const handleReplySubmit = async (text) => {
     const newReply = {
       id: Date.now() + 1,
       user: currentUser,
       text,
+      content: text,
       time: Date.now().toString(),
       likes: 0,
       dislikes: 0,
       replies: [],
     };
-    onPostReply(comment.id, newReply);
+    await onPostReply(comment.id, newReply);
     setReplyingTo(null);
   };
 
@@ -382,12 +379,12 @@ function CommentItem({ comment, isOPCheck, isVerifiedCheck, onLike, onDislike, o
       <div className={`awc-item ${depth > 0 ? "awc-reply" : ""}`}>
         {depth === 0 && (
           <div className="awc-item-gutter">
-            <CommentAvatar name={comment.user} size={40} />
+            <CommentAvatar name={comment.user} avatar={comment.avatar} size={40} />
           </div>
         )}
         <div className="awc-body">
           <div className="awc-top">
-            {depth > 0 && <CommentAvatar name={comment.user} size={20} />}
+            {depth > 0 && <CommentAvatar name={comment.user} avatar={comment.avatar} size={20} />}
             <span className="awc-user" style={{ color: userColor }}>
               {comment.user}
             </span>
@@ -550,7 +547,7 @@ function deleteCommentDeep(list, id) {
   }, []);
 }
 
-export default function Comments({ comments: externalComments, setComments, currentUser = "You", onSeek }) {
+export default function Comments({ comments: externalComments, setComments, currentUser = "You", onSeek, onAdd, onLikeComment, onDislikeComment, onReplyComment, onEditComment: onEditCommentApi, onDeleteComment: onDeleteCommentApi, loading: commentsLoading }) {
   const [sort, setSort] = useState("newest");
   const [sortOpen, setSortOpen] = useState(false);
   const [text, setText] = useState("");
@@ -585,50 +582,70 @@ export default function Comments({ comments: externalComments, setComments, curr
     return user === comments[0]?.user && user !== currentUser;
   }, [comments, currentUser]);
 
-  const isVerifiedCheck = useCallback((user) => {
-    return user === "OtakuPro" || user === "AnimeKing";
-  }, []);
+  const isVerifiedCheck = useCallback(() => false, []);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!text.trim()) return;
     setPosting(true);
-    setTimeout(() => {
-      const newComment = {
-        id: Date.now(),
-        user: currentUser,
-        text,
-        time: Date.now().toString(),
-        likes: 0,
-        dislikes: 0,
-        replies: [],
-      };
-      setComments?.(c => [newComment, ...c]);
+    try {
+      if (onAdd) {
+        await onAdd(text);
+      } else {
+        const newComment = {
+          id: Date.now(),
+          user: currentUser,
+          text,
+          time: Date.now().toString(),
+          likes: 0,
+          dislikes: 0,
+          replies: [],
+        };
+        setComments?.(c => [newComment, ...c]);
+      }
       setText("");
-      setPosting(false);
       setPosted(true);
       setTimeout(() => setPosted(false), 3000);
-    }, 400);
+    } catch {}
+    setPosting(false);
   };
 
-  const handlePostReply = useCallback((parentId, reply) => {
-    setComments?.(c => addReplyDeep(c, parentId, reply));
-  }, [setComments]);
+  const handlePostReply = useCallback(async (parentId, reply) => {
+    if (onReplyComment) {
+      await onReplyComment(parentId, reply.text || reply.content);
+    } else {
+      setComments?.(c => addReplyDeep(c, parentId, reply));
+    }
+  }, [setComments, onReplyComment]);
 
-  const handleLike = useCallback((id) => {
+  const handleLike = useCallback(async (id) => {
+    if (onLikeComment) {
+      await onLikeComment(id);
+    }
     setComments?.(c => toggleLikeDeep(c, id, 1));
-  }, [setComments]);
+  }, [setComments, onLikeComment]);
 
-  const handleDislike = useCallback((id) => {
+  const handleDislike = useCallback(async (id) => {
+    if (onDislikeComment) {
+      await onDislikeComment(id);
+    }
     setComments?.(c => toggleDislikeDeep(c, id, 1));
-  }, []);
+  }, [setComments, onDislikeComment]);
 
-  const handleEditComment = useCallback((id, newText) => {
-    setComments?.(c => editCommentDeep(c, id, newText));
-  }, [setComments]);
+  const handleEditComment = useCallback(async (id, newText) => {
+    if (onEditCommentApi) {
+      await onEditCommentApi(id, newText);
+    } else {
+      setComments?.(c => editCommentDeep(c, id, newText));
+    }
+  }, [setComments, onEditCommentApi]);
 
-  const handleDeleteComment = useCallback((id) => {
-    setComments?.(c => deleteCommentDeep(c, id));
-  }, [setComments]);
+  const handleDeleteComment = useCallback(async (id) => {
+    if (onDeleteCommentApi) {
+      await onDeleteCommentApi(id);
+    } else {
+      setComments?.(c => deleteCommentDeep(c, id));
+    }
+  }, [setComments, onDeleteCommentApi]);
 
   const handleLoadMore = () => {
     setVisibleCount(c => c + LOAD_MORE_COUNT);

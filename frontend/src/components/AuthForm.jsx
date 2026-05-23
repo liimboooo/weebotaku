@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Mail, User, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
 
-const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '952361732795-in2ha0ljhjadc2q9g4ib2hpd41jrbjn4.apps.googleusercontent.com';
+const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 export default function AuthForm({ type, username, email, password, setUsername, setEmail, setPassword, onSubmit, onModeChange, error, loading, onGoogleSuccess, onGoogleError }) {
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ export default function AuthForm({ type, username, email, password, setUsername,
     if (rendered.current) return;
 
     const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
+    script.src = process.env.REACT_APP_GOOGLE_API_URL || 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.defer = true;
     document.body.appendChild(script);

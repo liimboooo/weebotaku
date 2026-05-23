@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { getNotifications, markRead, markAllRead, clearNotifications } from '../services/notificationService';
 import authService from '../services/authService';
+import { loadWatchHistory } from '../services/storage';
 import FastSearch from './FastSearch';
 import './Header.css';
 
@@ -75,7 +76,7 @@ export default function Header() {
   const statusSaveTimeoutRef = useRef(null);
 
   const username = localStorage.getItem('username') || 'Guest';
-  const episodesWatched = (JSON.parse(localStorage.getItem('watchHistory') || '[]')).length;
+  const episodesWatched = loadWatchHistory().length;
   const hasUnclaimedRewards = localStorage.getItem('userUnclaimedRewards') === 'true';
 
   const feedItems = useMemo(

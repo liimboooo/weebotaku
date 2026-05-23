@@ -24,7 +24,7 @@ function buildEmptyTiers() {
   return { s: [], a: [], b: [], c: [], d: [], unranked: [] };
 }
 
-const ANILIST = "https://graphql.anilist.co";
+const ANILIST = process.env.REACT_APP_ANILIST_API_URL || "https://graphql.anilist.co";
 const AL_FIELDS = `id title { romaji english } coverImage { large } genres`;
 async function anilistSearch(type, q) {
   const query = `query($s:String){Page(page:1,perPage:20){media(search:$s,type:${type},sort:SEARCH_MATCH){${AL_FIELDS}}}}`;

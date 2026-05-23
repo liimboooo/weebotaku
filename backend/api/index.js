@@ -4,20 +4,9 @@ dotenv.config();
 const connectDB = require('../config/db');
 const app = require('../app');
 
-const STATIC_ORIGINS = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'https://liimboooo-animewch.vercel.app',
-  'https://frontend-beryl-theta-14.vercel.app',
-];
-
-const rawOrigins = process.env.CORS_ORIGIN
+const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean)
   : [];
-
-const allowedOrigins = rawOrigins.length > 0
-  ? [...new Set([...rawOrigins, ...STATIC_ORIGINS])]
-  : STATIC_ORIGINS;
 
 const setCorsHeaders = (req, res) => {
   const origin = req.headers.origin;

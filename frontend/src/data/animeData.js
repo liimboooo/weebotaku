@@ -1,3 +1,4 @@
+﻿import { statusLabel } from "../utils/constants";
 const CACHE_TTL = 10 * 60 * 1000;
 const CACHE_MAX = 100;
 const cache = new Map();
@@ -13,7 +14,7 @@ function setCache(key, data) {
   cache.set(key, { data, time: Date.now() });
 }
 
-const ANILIST = "https://graphql.anilist.co";
+const ANILIST = process.env.REACT_APP_ANILIST_API_URL || "https://graphql.anilist.co";
 
 async function gql(query, variables = {}) {
   const key = `gql:${query.replace(/\s+/g, " ").slice(0, 80)}:${JSON.stringify(variables)}`;
@@ -27,13 +28,6 @@ async function gql(query, variables = {}) {
 }
 
 const FIELDS = `id idMal title { romaji english } coverImage { large extraLarge } bannerImage averageScore episodes genres description status season seasonYear studios(isMain:true) { nodes { name } } trailer { site id } format startDate { year month day } nextAiringEpisode { episode airingAt timeUntilAiring }`;
-
-function statusLabel(s) {
-  if (s === "RELEASING") return "Ongoing";
-  if (s === "FINISHED") return "Completed";
-  if (s === "NOT_YET_RELEASED") return "Upcoming";
-  return s || "Unknown";
-}
 
 function mapAnime(a) {
   return {
@@ -57,7 +51,7 @@ function mapAnime(a) {
     currentEp: a.episodes || 0,
     nextEpDate: a.nextAiringEpisode?.airingAt ? new Date(a.nextAiringEpisode.airingAt * 1000).toLocaleDateString() : a.status === "RELEASING" ? "TBD" : "Ended",
     imdbId: "",
-    trailerUrl: a.trailer?.site === "youtube" ? `https://www.youtube.com/embed/${a.trailer.id}` : null,
+    trailerUrl: a.trailer?.site === "youtube" ? `${process.env.REACT_APP_YOUTUBE_EMBED_BASE || "https://www.youtube.com/embed/"}${a.trailer.id}` : null,
     airingDay: null,
     seasons: [],
   };
@@ -219,3 +213,4 @@ export async function getSchedule() {
     return results;
   }
 }
+

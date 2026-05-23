@@ -1,4 +1,4 @@
-const BASE = "https://api.mangadex.org";
+const BASE = process.env.REACT_APP_MANGADEX_API_URL || "https://api.mangadex.org";
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 let lastCall = 0;
@@ -69,7 +69,7 @@ function mapMangaResult(m) {
     title,
     altTitles: m.attributes?.altTitles || [],
     description: m.attributes?.description?.en || "",
-    coverUrl: coverFile ? `https://uploads.mangadex.org/covers/${m.id}/${coverFile}.256.jpg` : null,
+    coverUrl: coverFile ? `${process.env.REACT_APP_MANGADEX_CDN_URL || "https://uploads.mangadex.org/covers/"}${m.id}/${coverFile}.256.jpg` : null,
     status: m.attributes?.status || "unknown",
     year: m.attributes?.year,
     tags: m.attributes?.tags?.map(t => t.attributes.name.en) || [],
@@ -276,7 +276,7 @@ function parseMangaDexManga(m) {
     id: m.id,
     title,
     description: m.attributes?.description?.en || "",
-    coverUrl: coverFile ? `https://uploads.mangadex.org/covers/${m.id}/${coverFile}.256.jpg` : null,
+    coverUrl: coverFile ? `${process.env.REACT_APP_MANGADEX_CDN_URL || "https://uploads.mangadex.org/covers/"}${m.id}/${coverFile}.256.jpg` : null,
     status: m.attributes?.status || "unknown",
     year: m.attributes?.year,
     tags: m.attributes?.tags?.map(t => t.attributes.name.en) || [],

@@ -7,7 +7,7 @@ const start = async () => {
   try {
     await connectDB();
     const app = require('./app');
-    const PORT = process.env.PORT || 5000;
+    const PORT = process.env.PORT;
     app.listen(PORT, () => {
       console.log(`🚀 AnimeWch API running on port ${PORT}`);
       console.log(`📡 Environment: ${process.env.NODE_ENV}`);

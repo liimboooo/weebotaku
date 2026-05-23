@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import AuthPage from "./pages/AuthPage";
 import './App.css';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { syncFromBackend } from "./services/storage";
 import ScrollToTop from "./components/ScrollToTop";
 import Header from "./components/Header";
 import ToastContainer from "./components/Toast";
@@ -78,6 +80,10 @@ function AppLayout() {
   const location = useLocation();
   const isAuthPage = location.pathname === "/";
   const token = localStorage.getItem('token');
+
+  useEffect(() => {
+    if (token) syncFromBackend();
+  }, [token]);
 
   return (
     <>

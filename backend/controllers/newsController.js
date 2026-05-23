@@ -1,6 +1,6 @@
 const News = require('../models/News');
 
-const ANILIST_API = 'https://graphql.anilist.co';
+const ANILIST_API = process.env.ANILIST_API_URL || 'https://graphql.anilist.co';
 
 const trendingQuery = `
 query {

@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { getEpisodes, getStreamUrls } from "../../services/animeApi";
 import { fetchAnimeRecommendations } from "../../services/anilistApi";
 import Comments from "../../components/Comments";
+import commentService from "../../services/commentService";
 import "./AnimeWatch.css";
 
 export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange, detail, totalEpisodes }) {
@@ -61,16 +62,89 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const iframeRef = useRef(null);
   const failedServers = useRef(new Set());
 
-  const MOCK_COMMENTS = [
-    { id: 1, user: "AnimeKing", text: "This episode was absolutely insane! The animation quality is top tier 🔥🔥", time: (Date.now() - 120000).toString(), likes: 42, dislikes: 2, replies: [
-      { id: 11, user: "OtakuPro", text: "Totally agree, the fight scene was peak cinema", time: (Date.now() - 60000).toString(), likes: 12, dislikes: 0 }
-    ], pinned: true },
-    { id: 2, user: "MangaReader", text: "As a manga reader, I can say they adapted this perfectly. Cant wait for next week!", time: (Date.now() - 300000).toString(), likes: 28, dislikes: 1, replies: [], pinned: false },
-    { id: 3, user: "NightWatcher", text: "Spoiler: ||The main character finally unlocks his true power at the end||", time: (Date.now() - 480000).toString(), likes: 35, dislikes: 3, replies: [], pinned: false, hasSpoiler: true },
-  ];
-
   /* ─── COMMENTS ─── */
-  const [comments, setComments] = useState(MOCK_COMMENTS);
+  const [comments, setComments] = useState([]);
+
+  useEffect(() => {
+    if (!anime.anilistId) return;
+    commentService.getComments(anime.anilistId, { episode: (epIndex + 1), limit: 50 })
+      .then(res => {
+        if (res.success) {
+          const mapped = res.data.map(c => ({
+            id: c._id || c.id,
+            user: c.user?.username || "Unknown",
+            avatar: c.user?.avatar || null,
+            text: c.content,
+            time: new Date(c.createdAt).getTime().toString(),
+            likes: c.likes?.length || 0,
+            dislikes: c.dislikes?.length || 0,
+            replies: (c.replies || []).map(r => ({
+              id: r._id || r.id,
+              user: r.user?.username || "Unknown",
+              avatar: r.user?.avatar || null,
+              text: r.content,
+              time: new Date(r.createdAt).getTime().toString(),
+              likes: r.likes?.length || 0,
+              dislikes: 0,
+              replies: [],
+            })),
+            pinned: c.pinned || false,
+            hasSpoiler: c.isSpoiler || false,
+          }));
+          setComments(mapped);
+        }
+      }).catch(() => {});
+  }, [anime.anilistId, epIndex]);
+
+  const handleAddComment = async (text) => {
+    if (!anime.anilistId) return;
+    await commentService.createComment(anime.anilistId, text, { episode: epIndex + 1 });
+    const res = await commentService.getComments(anime.anilistId, { episode: epIndex + 1, limit: 50 });
+    if (res.success) {
+      const mapped = res.data.map(c => ({
+        id: c._id || c.id,
+        user: c.user?.username || "Unknown",
+        avatar: c.user?.avatar || null,
+        text: c.content,
+        time: new Date(c.createdAt).getTime().toString(),
+        likes: c.likes?.length || 0,
+        dislikes: c.dislikes?.length || 0,
+        replies: (c.replies || []).map(r => ({
+          id: r._id || r.id,
+          user: r.user?.username || "Unknown",
+          avatar: r.user?.avatar || null,
+          text: r.content,
+          time: new Date(r.createdAt).getTime().toString(),
+          likes: r.likes?.length || 0,
+          dislikes: 0,
+          replies: [],
+        })),
+        pinned: c.pinned || false,
+        hasSpoiler: c.isSpoiler || false,
+      }));
+      setComments(mapped);
+    }
+  };
+
+  const handleLikeComment = async (id) => {
+    await commentService.likeComment(id).catch(() => {});
+  };
+
+  const handleDislikeComment = async (id) => {
+    await commentService.dislikeComment(id).catch(() => {});
+  };
+
+  const handleReplyComment = async (parentId, content) => {
+    await commentService.replyToComment(parentId, content).catch(() => {});
+  };
+
+  const handleEditComment = async (id, content) => {
+    await commentService.editComment(id, content).catch(() => {});
+  };
+
+  const handleDeleteComment = async (id) => {
+    await commentService.deleteComment(id).catch(() => {});
+  };
 
   useEffect(() => {
     (async () => {
@@ -266,7 +340,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
               </div>
 
               {/* ═══ COMMENTS ═══ */}
-              <Comments comments={comments} setComments={setComments} onSeek={handleSeek} />
+              <Comments comments={comments} setComments={setComments} onSeek={handleSeek} onAdd={handleAddComment} onLikeComment={handleLikeComment} onDislikeComment={handleDislikeComment} onReplyComment={handleReplyComment} onEditComment={handleEditComment} onDeleteComment={handleDeleteComment} />
 
             </div>
           </div>

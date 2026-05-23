@@ -1,18 +1,32 @@
+﻿import api from './api';
+import { STORAGE_KEYS } from '../utils/constants';
+import badgeService from './badgeService';
+
 const XP_WATCH_EPISODE = 10;
 const XP_RATE_ANIME = 5;
 const XP_LIKE_ANIME = 2;
 const XP_WATCHLIST_ADD = 3;
 const XP_DAILY_BONUS = 20;
 
+function isLoggedIn() {
+  return !!localStorage.getItem(STORAGE_KEYS.TOKEN);
+}
+
 function getProgression() {
   try {
-    return JSON.parse(localStorage.getItem("userProgression") || "{}");
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_PROGRESSION) || "{}");
   } catch { return {}; }
 }
 
 function saveProgression(data) {
-  localStorage.setItem("userProgression", JSON.stringify(data));
-  window.dispatchEvent(new CustomEvent("progression-updated"));
+  localStorage.setItem(STORAGE_KEYS.USER_PROGRESSION, JSON.stringify(data));
+  window.dispatchEvent(new CustomEvent(STORAGE_KEYS.PROGRESSION_UPDATED));
+}
+
+function syncToBackend(data) {
+  if (isLoggedIn()) {
+    api.post('/auth/sync-progression', data).catch(() => {});
+  }
 }
 
 function getToday() {
@@ -54,6 +68,7 @@ export function addXP(amount, source = "") {
   prog.longestStreak = longestStreak;
   prog.lastActiveDate = today;
   saveProgression(prog);
+  syncToBackend(prog);
 
   if (newLevel > oldLevel) {
     window.dispatchEvent(new CustomEvent("level-up", { detail: { level: newLevel } }));
@@ -92,6 +107,7 @@ export function getStreak() {
   };
 }
 
+// @deprecated - kept as fallback; prefer fetching from API via getAllBadgeDefs()
 const BADGE_DEFS = {
   Collector: { label: "Collector", desc: "10 anime in watchlist", icon: "Library", check: (stats) => stats.watchlistCount >= 10 },
   "Hardcore Fan": { label: "Hardcore Fan", desc: "50 episodes watched", icon: "Flame", check: (stats) => stats.episodesWatched >= 50 },
@@ -105,16 +121,26 @@ const BADGE_DEFS = {
   Curator: { label: "Curator", desc: "25 anime in watchlist", icon: "FolderOpen", check: (stats) => stats.watchlistCount >= 25 },
 };
 
-export function getAllBadgeDefs() {
+let _badgeCache = null;
+export async function getAllBadgeDefs() {
+  if (_badgeCache) return _badgeCache;
+  try {
+    const res = await badgeService.getBadgeDefs();
+    if (res.success) {
+      _badgeCache = res.data;
+      return res.data;
+    }
+  } catch {}
   return BADGE_DEFS;
 }
 
-export function getBadges(stats = {}) {
+export async function getBadges(stats = {}) {
+  const defs = await getAllBadgeDefs();
   const prog = getProgression();
   const level = getLevel(prog.xp || 0);
   const streakData = getStreak();
   const earned = [];
-  for (const [key, def] of Object.entries(BADGE_DEFS)) {
+  for (const [key, def] of Object.entries(defs)) {
     if (def.check({ ...stats, level, streak: streakData.current })) {
       earned.push({ key, ...def });
     }
@@ -157,7 +183,9 @@ export function awardDailyBonus() {
   if (lastDaily === today) return null;
   prog.lastDailyBonus = today;
   saveProgression(prog);
+  syncToBackend(prog);
   const result = addXP(XP_DAILY_BONUS, "daily");
   notifyXP(XP_DAILY_BONUS, "Daily bonus");
   return result;
 }
+

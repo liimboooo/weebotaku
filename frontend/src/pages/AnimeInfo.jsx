@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   Play, Plus, Share2, Heart, Star, ChevronLeft, ChevronRight,
@@ -6,16 +6,11 @@ import {
   Film, Clock, RefreshCw, Calendar, Tv, Monitor, MessageCircle, AtSign
 } from "lucide-react";
 import { gql, fetchAnimeRecommendations, fetchAnimeCharacters } from "../services/anilistApi";
+import { statusLabel, LIST_OPTIONS } from "../utils/constants";
 import "./AnimeInfo.css";
 
 const DETAIL_FIELDS = `id idMal title { romaji english native } coverImage { extraLarge large } bannerImage averageScore popularity episodes duration genres description status season seasonYear startDate { year month day } studios(isMain:true) { nodes { name } } trailer { site id } format nextAiringEpisode { episode airingAt timeUntilAiring }`;
 
-function statusLabel(s) {
-  if (s === "RELEASING") return "Releasing";
-  if (s === "FINISHED") return "Finished";
-  if (s === "NOT_YET_RELEASED") return "Upcoming";
-  return s || "Unknown";
-}
 
 function mapDetail(a) {
   return {
@@ -37,7 +32,7 @@ function mapDetail(a) {
     season: a.season ? `${a.season.charAt(0).toUpperCase() + a.season.slice(1).toLowerCase()} ${a.seasonYear || ""}` : "",
     type: a.format || "TV",
     startDate: a.startDate ? { year: a.startDate.year, month: a.startDate.month, day: a.startDate.day } : null,
-    trailerUrl: a.trailer?.site === "youtube" ? `https://www.youtube.com/embed/${a.trailer.id}` : null,
+    trailerUrl: a.trailer?.site === "youtube" ? `${process.env.REACT_APP_YOUTUBE_EMBED_BASE || "https://www.youtube.com/embed/"}${a.trailer.id}` : null,
   };
 }
 
@@ -48,7 +43,6 @@ function formatDate(d) {
   return `${d.year}-${m}-${day}`;
 }
 
-const LIST_OPTIONS = ["Watch Later", "Watching", "Completed", "On Hold", "Dropped"];
 
 const SHARE_OPTIONS = [
   { key: "copy", icon: Copy, label: "Copy Link" },
@@ -179,10 +173,10 @@ export default function AnimeInfo() {
     const url = encodeURIComponent(window.location.href);
     const text = encodeURIComponent(anime?.name || "Check this out!");
     if (key === "copy") { handleCopyLink(); return; }
-    if (key === "twitter") window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, "_blank");
-    if (key === "facebook") window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, "_blank");
-    if (key === "discord") window.open(`https://discord.com/share?url=${url}`, "_blank");
-    if (key === "reddit") window.open(`https://reddit.com/submit?url=${url}&title=${text}`, "_blank");
+    if (key === "twitter") window.open(`${process.env.REACT_APP_TWITTER_SHARE_URL || "https://twitter.com/intent/tweet?"}text=${text}&url=${url}`, "_blank");
+    if (key === "facebook") window.open(`${process.env.REACT_APP_FACEBOOK_SHARE_URL || "https://www.facebook.com/sharer/"}sharer.php?u=${url}`, "_blank");
+    if (key === "discord") window.open(`${process.env.REACT_APP_DISCORD_SHARE_URL || "https://discord.com/share?url="}${url}`, "_blank");
+    if (key === "reddit") window.open(`${process.env.REACT_APP_REDDIT_SHARE_URL || "https://reddit.com/submit?url="}${url}&title=${text}`, "_blank");
     if (key === "mail") window.location.href = `mailto:?subject=${text}&body=${url}`;
     setShareOpen(false);
   };
@@ -230,7 +224,7 @@ export default function AnimeInfo() {
         <span style={{ color: "#888" }}>{anime.name}</span>
       </div>
 
-      {/* ─── HERO ─── */}
+      {/* â”€â”€â”€ HERO â”€â”€â”€ */}
       <div className="ai-hero">
         <div className="ai-carousel">
           <div className="glow-card">
@@ -368,10 +362,10 @@ export default function AnimeInfo() {
               </button>
               {downloadOpen && (
                 <div className="ai-dropdown-menu" role="menu">
-                  <a className="ai-dropdown-item" href={`https://nyaa.si/?f=0&c=1_0&q=${encodeURIComponent(anime.name)}`} target="_blank" rel="noopener noreferrer">
+                  <a className="ai-dropdown-item" href={`${process.env.REACT_APP_NYAA_SEARCH_URL || "https://nyaa.si/?f=0&c=1_0&q="}${encodeURIComponent(anime.name)}`} target="_blank" rel="noopener noreferrer">
                     <ExternalLink size={14} /> Nyaa.si
                   </a>
-                  <a className="ai-dropdown-item" href={`https://anidl.org/?s=${encodeURIComponent(anime.name)}`} target="_blank" rel="noopener noreferrer">
+                  <a className="ai-dropdown-item" href={`${process.env.REACT_APP_ANIDL_SEARCH_URL || "https://anidl.org/?s="}${encodeURIComponent(anime.name)}`} target="_blank" rel="noopener noreferrer">
                     <ExternalLink size={14} /> AniDL
                   </a>
                   <button className="ai-dropdown-item" onClick={() => { setDownloadOpen(false); }}>
@@ -384,9 +378,9 @@ export default function AnimeInfo() {
         </div>
       </div>
 
-      {/* ─── BODY ─── */}
+      {/* â”€â”€â”€ BODY â”€â”€â”€ */}
       <div className="ai-body">
-        {/* ─── SIDEBAR ─── */}
+        {/* â”€â”€â”€ SIDEBAR â”€â”€â”€ */}
         <div className="ai-sidebar">
           <div className="ai-info-box">
             <div className="ai-info-row">
@@ -422,7 +416,7 @@ export default function AnimeInfo() {
           </div>
         </div>
 
-        {/* ─── MAIN CONTENT ─── */}
+        {/* â”€â”€â”€ MAIN CONTENT â”€â”€â”€ */}
         <div className="ai-main">
           {/* Alternative Titles */}
           <div className="ai-section">
@@ -457,19 +451,19 @@ export default function AnimeInfo() {
             <h2 className="ai-section-title">Stats</h2>
             <div className="ai-stats-grid">
               <div className="ai-stat-card">
-                <div className="ai-stat-number">{anime.episodes || "—"}</div>
+                <div className="ai-stat-number">{anime.episodes || "â€”"}</div>
                 <div className="ai-stat-label"><Film size={12} style={{ verticalAlign: "middle", marginRight: 4 }} /> Episodes</div>
               </div>
               <div className="ai-stat-card">
-                <div className="ai-stat-number">{anime.duration ? `${anime.duration}` : "—"}</div>
+                <div className="ai-stat-number">{anime.duration ? `${anime.duration}` : "â€”"}</div>
                 <div className="ai-stat-label"><Clock size={12} style={{ verticalAlign: "middle", marginRight: 4 }} /> Duration (min)</div>
               </div>
               <div className="ai-stat-card">
-                <div className="ai-stat-number">{anime.rating ? anime.rating.toFixed(1) : "—"}</div>
+                <div className="ai-stat-number">{anime.rating ? anime.rating.toFixed(1) : "â€”"}</div>
                 <div className="ai-stat-label"><Star size={12} style={{ verticalAlign: "middle", marginRight: 4 }} /> Rating</div>
               </div>
               <div className="ai-stat-card">
-                <div className="ai-stat-number">{anime.popularity || "—"}</div>
+                <div className="ai-stat-number">{anime.popularity || "â€”"}</div>
                 <div className="ai-stat-label"><Globe size={12} style={{ verticalAlign: "middle", marginRight: 4 }} /> Popularity</div>
               </div>
             </div>
@@ -545,3 +539,5 @@ export default function AnimeInfo() {
     </div>
   );
 }
+
+

@@ -1,48 +1,46 @@
-import api from './api';
+﻿import api from './api';
+import { STORAGE_KEYS } from '../utils/constants';
 import { awardWatchEpisode, awardRateAnime, awardLikeAnime, awardWatchlistAdd, awardDailyBonus } from './progression';
 
-// ─── Helpers ────────────────────────────────────────────
-
 function isLoggedIn() {
-  return !!localStorage.getItem('token');
+  return !!localStorage.getItem(STORAGE_KEYS.TOKEN);
 }
 
-// ─── Migration ──────────────────────────────────────────
-
+// â”€â”€â”€ Migration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function migrateOldWatchlist() {
-  const old = localStorage.getItem("animewatchlist");
+  const old = localStorage.getItem(STORAGE_KEYS.ANIME_WATCHLIST);
   if (old) {
     try {
       const parsed = JSON.parse(old);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        localStorage.setItem("watchlist", old);
+        localStorage.setItem(STORAGE_KEYS.WATCHLIST, old);
       }
     } catch {}
-    localStorage.removeItem("animewatchlist");
+    localStorage.removeItem(STORAGE_KEYS.ANIME_WATCHLIST);
   }
 }
 migrateOldWatchlist();
 
-// ─── Watchlist (Anime) ─────────────────────────────────
+// â”€â”€â”€ Watchlist (Anime) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function loadWatchlist() {
   try {
-    return JSON.parse(localStorage.getItem("watchlist") || "[]");
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.WATCHLIST) || "[]");
   } catch { return []; }
 }
 
 export function saveWatchlist(list) {
-  localStorage.setItem("watchlist", JSON.stringify(list));
+  localStorage.setItem(STORAGE_KEYS.WATCHLIST, JSON.stringify(list));
+  window.dispatchEvent(new CustomEvent(STORAGE_KEYS.WATCHLIST_UPDATED));
 }
 
 export function addToWatchlist(item) {
   const current = loadWatchlist();
   if (current.some(i => i.id === item.id)) return current;
-  const entry = { ...item, type: "anime" };
+  const entry = { ...item, type: "anime", listStatus: item.listStatus || "Watch Later" };
   const next = [...current, entry];
   saveWatchlist(next);
 
-  // Sync to backend
   if (isLoggedIn()) {
     api.post(`/anime/${item.id}/watchlist`, {
       name: item.name,
@@ -52,13 +50,12 @@ export function addToWatchlist(item) {
       year: item.year,
       status: item.status,
       genres: item.genres,
+      listStatus: entry.listStatus,
     }).catch(() => {});
   }
 
   awardWatchlistAdd();
   awardDailyBonus();
-
-  window.dispatchEvent(new CustomEvent("watchlist-updated"));
 
   return next;
 }
@@ -68,12 +65,9 @@ export function removeFromWatchlist(id) {
   const next = current.filter(i => i.id !== id);
   saveWatchlist(next);
 
-  // Sync to backend
   if (isLoggedIn()) {
     api.delete(`/anime/${id}/watchlist`).catch(() => {});
   }
-
-  window.dispatchEvent(new CustomEvent("watchlist-updated"));
 
   return next;
 }
@@ -82,16 +76,29 @@ export function isInWatchlist(id) {
   return loadWatchlist().some(i => i.id === id);
 }
 
-// ─── Readlist (Manga) ──────────────────────────────────
+export function updateListStatus(animeId, listStatus) {
+  const current = loadWatchlist();
+  const item = current.find(i => i.id === animeId);
+  if (item) {
+    item.listStatus = listStatus;
+    saveWatchlist(current);
+  }
+
+  if (isLoggedIn()) {
+    api.put('/auth/list-status', { animeId, listStatus }).catch(() => {});
+  }
+}
+
+// â”€â”€â”€ Readlist (Manga) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function loadReadlist() {
   try {
-    return JSON.parse(localStorage.getItem("mangareadlist") || "[]");
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.MANGA_READ_LIST) || "[]");
   } catch { return []; }
 }
 
 export function saveReadlist(list) {
-  localStorage.setItem("mangareadlist", JSON.stringify(list));
+  localStorage.setItem(STORAGE_KEYS.MANGA_READ_LIST, JSON.stringify(list));
 }
 
 export function addToReadlist(item) {
@@ -101,7 +108,6 @@ export function addToReadlist(item) {
   const next = [...current, entry];
   saveReadlist(next);
 
-  // Sync to backend
   if (isLoggedIn()) {
     api.post(`/manga/${item.id}/list`, {
       title: item.title,
@@ -122,7 +128,6 @@ export function removeFromReadlist(id) {
   const next = current.filter(i => i.id !== id);
   saveReadlist(next);
 
-  // Sync to backend
   if (isLoggedIn()) {
     api.delete(`/manga/${id}/list`).catch(() => {});
   }
@@ -134,16 +139,57 @@ export function isInReadlist(id) {
   return loadReadlist().some(i => i.id === id);
 }
 
-// ─── Watch History Sync ────────────────────────────────
+// â”€â”€â”€ Manga Progress â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+export function getMangaProgress(mangaId) {
+  try {
+    const progress = JSON.parse(localStorage.getItem(STORAGE_KEYS.MANGA_PROGRESS) || "{}");
+    return progress[mangaId] || 0;
+  } catch { return 0; }
+}
+
+export function setMangaProgress(mangaId, chapter, extra) {
+  const progress = JSON.parse(localStorage.getItem(STORAGE_KEYS.MANGA_PROGRESS) || "{}");
+  progress[mangaId] = extra ? { ch: chapter, ...extra } : chapter;
+  localStorage.setItem(STORAGE_KEYS.MANGA_PROGRESS, JSON.stringify(progress));
+
+  if (isLoggedIn()) {
+    api.put('/auth/manga-progress', { mangaId, chapter }).catch(() => {});
+  }
+}
+
+// â”€â”€â”€ Watch History â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+export function loadWatchHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.WATCH_HISTORY) || "[]");
+  } catch { return []; }
+}
+
+export function saveWatchHistory(history) {
+  localStorage.setItem(STORAGE_KEYS.WATCH_HISTORY, JSON.stringify(history));
+}
+
+export function clearWatchHistory() {
+  localStorage.removeItem(STORAGE_KEYS.WATCH_HISTORY);
+  if (isLoggedIn()) {
+    api.delete('/auth/watch-history').catch(() => {});
+  }
+}
+
+export function removeFromWatchHistory(timestamp) {
+  const history = loadWatchHistory();
+  const updated = history.filter(h => h.timestamp !== timestamp);
+  saveWatchHistory(updated);
+  return updated;
+}
 
 export function addToWatchHistory(animeId, episode, animeName, animeImg) {
-  // Local
-  const history = JSON.parse(localStorage.getItem("watchHistory") || "[]");
+  const history = loadWatchHistory();
   history.unshift({ animeId, episode, timestamp: Date.now(), animeName: animeName || "", animeImg: animeImg || "" });
   if (history.length > 100) history.length = 100;
-  localStorage.setItem("watchHistory", JSON.stringify(history));
+  localStorage.setItem(STORAGE_KEYS.WATCH_HISTORY, JSON.stringify(history));
 
-  // Backend
   if (isLoggedIn()) {
     api.post(`/anime/${animeId}/history`, {
       animeId,
@@ -156,15 +202,21 @@ export function addToWatchHistory(animeId, episode, animeName, animeImg) {
   awardWatchEpisode();
   awardDailyBonus();
 
-  window.dispatchEvent(new CustomEvent("profile-data-changed"));
+  window.dispatchEvent(new CustomEvent(STORAGE_KEYS.PROFILE_DATA_CHANGED));
 }
 
-// ─── Ratings Sync ──────────────────────────────────────
+// â”€â”€â”€ Ratings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+export function loadRatings() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.USER_RATINGS) || "{}");
+  } catch { return {}; }
+}
 
 export function rateAnime(animeId, rating) {
-  const ratings = JSON.parse(localStorage.getItem("userRatings") || "{}");
+  const ratings = loadRatings();
   ratings[animeId] = rating;
-  localStorage.setItem("userRatings", JSON.stringify(ratings));
+  localStorage.setItem(STORAGE_KEYS.USER_RATINGS, JSON.stringify(ratings));
 
   if (isLoggedIn()) {
     api.post(`/anime/${animeId}/rate`, { rating }).catch(() => {});
@@ -173,20 +225,26 @@ export function rateAnime(animeId, rating) {
   awardRateAnime();
   awardDailyBonus();
 
-  window.dispatchEvent(new CustomEvent("profile-data-changed"));
+  window.dispatchEvent(new CustomEvent(STORAGE_KEYS.PROFILE_DATA_CHANGED));
 }
 
-// ─── Like Sync ─────────────────────────────────────────
+// â”€â”€â”€ Likes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+export function loadLikedAnime() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.LIKED_ANIME) || "[]");
+  } catch { return []; }
+}
 
 export function toggleLikeAnime(animeId) {
-  const liked = JSON.parse(localStorage.getItem("likedAnime") || "[]");
+  const liked = loadLikedAnime();
   const idx = liked.indexOf(animeId);
   if (idx > -1) {
     liked.splice(idx, 1);
   } else {
     liked.push(animeId);
   }
-  localStorage.setItem("likedAnime", JSON.stringify(liked));
+  localStorage.setItem(STORAGE_KEYS.LIKED_ANIME, JSON.stringify(liked));
 
   if (isLoggedIn()) {
     api.post(`/anime/${animeId}/like`).catch(() => {});
@@ -195,28 +253,34 @@ export function toggleLikeAnime(animeId) {
   awardLikeAnime();
   awardDailyBonus();
 
-  window.dispatchEvent(new CustomEvent("profile-data-changed"));
+  window.dispatchEvent(new CustomEvent(STORAGE_KEYS.PROFILE_DATA_CHANGED));
 
   return liked;
 }
 
-// ─── Sync from backend on login ────────────────────────
+// â”€â”€â”€ Full sync from backend â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function syncFromBackend() {
   if (!isLoggedIn()) return;
 
   try {
-    const [watchlistRes, readlistRes, historyRes, ratingsRes, likedRes] = await Promise.allSettled([
-      api.get('/anime/watchlist'),
-      api.get('/manga/readlist'),
-      api.get('/anime/history'),
-      api.get('/anime/ratings'),
-      api.get('/anime/liked'),
-    ]);
+    const res = await api.get('/auth/me');
+    if (!res.success || !res.user) return;
 
-    if (watchlistRes.status === 'fulfilled' && watchlistRes.value?.data?.length > 0) {
-      // Map backend format to local format
-      const mapped = watchlistRes.value.data.map(item => ({
+    const u = res.user;
+
+    // Store full user object
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(u));
+    localStorage.setItem(STORAGE_KEYS.USERNAME, u.username);
+    if (u.avatar) localStorage.setItem(STORAGE_KEYS.USER_AVATAR, u.avatar);
+    if (u.banner) localStorage.setItem(STORAGE_KEYS.USER_BANNER, u.banner);
+    if (u.statusMessage) localStorage.setItem(STORAGE_KEYS.USER_STATUS_MESSAGE, u.statusMessage);
+    if (u.memberSince) localStorage.setItem(STORAGE_KEYS.MEMBER_SINCE, String(u.memberSince));
+    if (u.socialLinks) localStorage.setItem(STORAGE_KEYS.SOCIAL_LINKS, JSON.stringify(u.socialLinks));
+
+    // Watchlist
+    if (u.watchlist && u.watchlist.length > 0) {
+      const mapped = u.watchlist.map(item => ({
         id: item.animeId,
         name: item.name,
         img: item.img,
@@ -225,13 +289,15 @@ export async function syncFromBackend() {
         year: item.year,
         status: item.status,
         genres: item.genres || [],
+        listStatus: item.listStatus || 'Watch Later',
         type: 'anime',
       }));
       saveWatchlist(mapped);
     }
 
-    if (readlistRes.status === 'fulfilled' && readlistRes.value?.data?.length > 0) {
-      const mapped = readlistRes.value.data.map(item => ({
+    // Readlist
+    if (u.readlist && u.readlist.length > 0) {
+      const mapped = u.readlist.map(item => ({
         id: item.mangaId,
         title: item.title,
         cover: item.cover,
@@ -245,27 +311,47 @@ export async function syncFromBackend() {
       saveReadlist(mapped);
     }
 
-    if (historyRes.status === 'fulfilled' && historyRes.value?.data?.length > 0) {
-      const mapped = historyRes.value.data.map(item => ({
+    // Watch history
+    if (u.watchHistory && u.watchHistory.length > 0) {
+      const mapped = u.watchHistory.map(item => ({
         animeId: item.animeId,
         episode: item.episode,
         timestamp: new Date(item.timestamp).getTime(),
         animeName: item.animeName || "",
         animeImg: item.animeImg || "",
       }));
-      localStorage.setItem("watchHistory", JSON.stringify(mapped));
+      localStorage.setItem(STORAGE_KEYS.WATCH_HISTORY, JSON.stringify(mapped));
     }
 
-    if (ratingsRes.status === 'fulfilled' && ratingsRes.value?.data) {
-      localStorage.setItem("userRatings", JSON.stringify(ratingsRes.value.data));
+    // Ratings
+    if (u.ratings && Object.keys(u.ratings).length > 0) {
+      localStorage.setItem(STORAGE_KEYS.USER_RATINGS, JSON.stringify(u.ratings));
     }
 
-    if (likedRes.status === 'fulfilled' && likedRes.value?.data) {
-      localStorage.setItem("likedAnime", JSON.stringify(likedRes.value.data));
+    // Liked
+    if (u.likedAnime) {
+      localStorage.setItem(STORAGE_KEYS.LIKED_ANIME, JSON.stringify(u.likedAnime));
     }
-    window.dispatchEvent(new CustomEvent("profile-data-changed"));
-    window.dispatchEvent(new CustomEvent("watchlist-updated"));
+
+    // Manga progress
+    if (u.mangaProgress && Object.keys(u.mangaProgress).length > 0) {
+      localStorage.setItem(STORAGE_KEYS.MANGA_PROGRESS, JSON.stringify(u.mangaProgress));
+    }
+
+    // Progression
+    if (u.progression) {
+      localStorage.setItem(STORAGE_KEYS.USER_PROGRESSION, JSON.stringify(u.progression));
+    }
+
+    window.dispatchEvent(new CustomEvent(STORAGE_KEYS.PROFILE_DATA_CHANGED));
+    window.dispatchEvent(new CustomEvent(STORAGE_KEYS.WATCHLIST_UPDATED));
+    window.dispatchEvent(new CustomEvent(STORAGE_KEYS.PROFILE_AVATAR_UPDATED));
   } catch (err) {
     console.warn('Backend sync failed, using local data:', err);
   }
 }
+
+
+
+
+

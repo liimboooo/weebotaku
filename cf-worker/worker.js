@@ -1,6 +1,6 @@
-const ALLOWED = ["reanime.to", "flixcloud.cc", "animeslayer.to", "kuudere.to"];
+const ALLOWED = process.env.ALLOWED_DOMAINS ? process.env.ALLOWED_DOMAINS.split(",") : ["reanime.to", "flixcloud.cc", "animeslayer.to", "kuudere.to"];
 
-const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
+const UA = process.env.WORKER_USER_AGENT || "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
 
 const FETCH_HEADERS = {
   "User-Agent": UA,
@@ -13,7 +13,7 @@ const FETCH_HEADERS = {
   "Sec-Fetch-Site": "none",
   "Sec-Fetch-User": "?1",
   "Upgrade-Insecure-Requests": "1",
-  "Referer": "https://www.google.com/",
+  "Referer": process.env.WORKER_REFERER || "https://www.google.com/",
 };
 
 function isCfChallenge(html) {

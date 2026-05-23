@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+﻿import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import en from "../locales/en";
 import ar from "../locales/ar";
 
-const LOCALE_KEY = "animewch_locale";
+const LOCALE_KEY = STORAGE_KEYS.LOCALE;
 const translations = { en, ar };
 
 function getInitialLocale() {
@@ -57,3 +57,4 @@ export function useLanguage() {
 }
 
 export default LanguageContext;
+

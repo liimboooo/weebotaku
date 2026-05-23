@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, X, Loader, Image as ImageIcon, ArrowLeftRight, Maximize2, BookOpen, ArrowDown } from "lucide-react";
 import { getChapterPages } from "../../services/mangaApi";
+import { setMangaProgress } from "../../services/storage";
 import "./MangaReader.css";
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE = process.env.REACT_APP_API_URL;
 const QUALITY_ICON = { data: "HD", "data-saver": "SD" };
 const PRELOAD_COUNT = 5;
 
@@ -162,12 +163,7 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
   // Save progress
   useEffect(() => {
     if (chapter && manga?.id) {
-      try {
-        const key = "mangaProgress";
-        const progress = JSON.parse(localStorage.getItem(key) || "{}");
-        progress[manga.id] = { ch: parseFloat(chapter.chapter) || chIndex + 1, page: pageIndex, chId: chapter.id };
-        localStorage.setItem(key, JSON.stringify(progress));
-      } catch {}
+      setMangaProgress(manga.id, parseFloat(chapter.chapter) || chIndex + 1, { page: pageIndex, chId: chapter.id });
     }
   }, [chapter, manga, chIndex, pageIndex]);
 

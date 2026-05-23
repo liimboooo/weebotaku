@@ -3,7 +3,7 @@ const router = express.Router();
 const { getReadlist, addToReadlist, removeFromReadlist } = require('../controllers/animeController');
 const { protect } = require('../middleware/auth');
 
-const MANGADEX_BASE = 'https://api.mangadex.org';
+const MANGADEX_BASE = process.env.MANGADEX_API_URL || 'https://api.mangadex.org';
 
 async function mangaFetch(path) {
   const res = await fetch(`${MANGADEX_BASE}${path}`);

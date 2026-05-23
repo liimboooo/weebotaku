@@ -1,8 +1,9 @@
-const CACHE_TTL = 10 * 60 * 1000;
+﻿const CACHE_TTL = 10 * 60 * 1000;
 const DETAIL_CACHE_TTL = 30 * 60 * 1000;
 const CACHE_MAX = 100;
 const cache = new Map();
-const LS_PREFIX = "al_";
+import { statusLabel, STATUS_MAP, FORMAT_MAP, LS_CACHE_PREFIX } from "../utils/constants";
+const LS_PREFIX = LS_CACHE_PREFIX;
 
 function getCached(key) {
   let entry = cache.get(key);
@@ -34,7 +35,7 @@ function setCache(key, data, ttl = CACHE_TTL) {
   }
 }
 
-const ANILIST = "https://graphql.anilist.co";
+const ANILIST = process.env.REACT_APP_ANILIST_API_URL || "https://graphql.anilist.co";
 
 const ANIME_FIELDS = `id idMal title { romaji english } coverImage { large extraLarge } bannerImage averageScore episodes genres description status season seasonYear studios(isMain:true) { nodes { name } } trailer { site id } format nextAiringEpisode { episode airingAt timeUntilAiring }`;
 
@@ -49,12 +50,6 @@ export async function gql(query, variables = {}) {
   return j.data;
 }
 
-function statusLabel(s) {
-  if (s === "RELEASING") return "Ongoing";
-  if (s === "FINISHED") return "Completed";
-  if (s === "NOT_YET_RELEASED") return "Upcoming";
-  return s || "Unknown";
-}
 
 function mapAnime(a) {
   return {
@@ -72,7 +67,7 @@ function mapAnime(a) {
     studio: a.studios?.nodes?.[0]?.name || "",
     season: a.season ? `${a.season.charAt(0).toUpperCase() + a.season.slice(1).toLowerCase()} ${a.seasonYear || ""}` : "",
     type: a.format || "TV",
-    trailerUrl: a.trailer?.site === "youtube" ? `https://www.youtube.com/embed/${a.trailer.id}` : null,
+    trailerUrl: a.trailer?.site === "youtube" ? `${process.env.REACT_APP_YOUTUBE_EMBED_BASE || "https://www.youtube.com/embed/"}${a.trailer.id}` : null,
     airingDay: null,
     currentEp: a.episodes || 0,
     nextEpDate: a.nextAiringEpisode?.airingAt ? new Date(a.nextAiringEpisode.airingAt * 1000).toLocaleDateString() : a.status === "RELEASING" ? "TBD" : "Ended",
@@ -107,8 +102,7 @@ function getCurrentSeason() {
   return "fall";
 }
 
-const FORMAT_MAP = { TV: "TV", MOVIE: "Movie", OVA: "OVA", ONA: "ONA", SPECIAL: "Special" };
-const STATUS_MAP = { Ongoing: "RELEASING", Completed: "FINISHED", Upcoming: "NOT_YET_RELEASED" };
+
 
 export async function fetchSearchAnime(query, page = 1, options = {}) {
   const vars = { page: Math.min(page, 50), search: query };
@@ -245,3 +239,5 @@ export async function fetchAiringSchedule({ anilistId, malId } = {}) {
 }
 
 export function clearCache() { cache.clear(); }
+
+

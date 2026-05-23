@@ -47,7 +47,10 @@ app.use('/api/news', require('./routes/news'));
 app.use('/api/tierlists', require('./routes/tierlists'));
 app.use('/api/rooms', require('./routes/rooms'));
 app.use('/api/reports', require('./routes/reports'));
+app.use('/api/comments', require('./routes/comments'));
 app.use('/api/scrape', require('./routes/scrape'));
+app.use('/api/config', require('./routes/config'));
+app.use('/api/badges', require('./routes/badges'));
 
 // Health check
 app.get('/api/health', (req, res) => {

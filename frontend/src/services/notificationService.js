@@ -1,4 +1,5 @@
-const STORAGE_KEY = "animewch_notifications";
+﻿import { STORAGE_KEYS } from '../utils/constants';
+const STORAGE_KEY = STORAGE_KEYS.NOTIFICATIONS;
 
 let counter = Date.now();
 
@@ -54,3 +55,4 @@ export function markAllRead() {
 export function clearNotifications() {
   localStorage.removeItem(STORAGE_KEY);
 }
+

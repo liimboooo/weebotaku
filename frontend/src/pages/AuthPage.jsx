@@ -17,18 +17,7 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onAuthSuccess = useCallback((response) => {
-    localStorage.setItem("username", response.user.username);
-    localStorage.setItem("isLoggedIn", "true");
-    if (!localStorage.getItem("memberSince")) {
-      localStorage.setItem("memberSince", String(response.user.memberSince || new Date().getFullYear()));
-    }
-    if (response.user.avatar) {
-      localStorage.setItem("userAvatar", response.user.avatar);
-    }
-    if (response.user.statusMessage) {
-      localStorage.setItem("userStatusMessage", response.user.statusMessage);
-    }
+  const onAuthSuccess = useCallback(() => {
     syncFromBackend().catch(() => {});
     navigate(from, { replace: true });
   }, [navigate, from]);
