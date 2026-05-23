@@ -477,33 +477,47 @@ export default function AnimeInfo() {
 
           {/* Related */}
           {related.length > 0 && (
-            <div className="ai-section">
-              <h2 className="ai-section-title">Related</h2>
+            <div className="ai-section ai-section-related">
+              <h2 className="ai-section-title">Recommendations</h2>
               <div className="ai-related-wrap">
-                <button className={`ai-related-arrow ai-related-arrow-left${canScrollLeft ? "" : " hidden"}`} onClick={() => scrollRelated(-1)} aria-label="Scroll left">
-                  <ChevronLeft size={24} />
-                </button>
-                <button className={`ai-related-arrow ai-related-arrow-right${canScrollRight ? "" : " hidden"}`} onClick={() => scrollRelated(1)} aria-label="Scroll right">
-                  <ChevronRight size={24} />
-                </button>
+                <div className={`ai-related-fade ai-related-fade-left${canScrollLeft ? " visible" : ""}`} />
+                <div className={`ai-related-fade ai-related-fade-right${canScrollRight ? " visible" : ""}`} />
+                {canScrollLeft && (
+                  <button className="ai-related-float ai-related-float-left" onClick={() => scrollRelated(-1)} aria-label="Scroll left">
+                    <ChevronLeft size={18} />
+                  </button>
+                )}
+                {canScrollRight && (
+                  <button className="ai-related-float ai-related-float-right" onClick={() => scrollRelated(1)} aria-label="Scroll right">
+                    <ChevronRight size={18} />
+                  </button>
+                )}
                 <div className="ai-related-scroll" ref={relatedRef}>
                   {related.map(r => (
-                    <Link key={r.id} to={`/anime/${r.id}/info`} className={`ai-related-card ${Number(r.id) === Number(id) ? "active" : ""}`}>
-                      <div className="ai-related-card-img-wrap">
-                        <img className="ai-related-card-img" src={r.image} alt={r.name} loading="lazy" />
+                    <Link key={r.id} to={`/anime/${r.id}/info`} className={`ai-related-card${Number(r.id) === Number(id) ? " active" : ""}`}>
+                      <div className="ai-related-card-thumb">
+                        <img src={r.image} alt={r.name} loading="lazy" />
                         <div className="ai-related-card-overlay">
-                          <div className="ai-related-card-overlay-title">{r.name}</div>
-                          <div className="ai-related-card-overlay-meta">
-                            <span>TV</span>
-                          </div>
+                          <div className="ai-related-card-play"><Play size={18} fill="currentColor" /></div>
+                        </div>
+                        {r.status === "RELEASING" && (
+                          <span className="ai-related-card-badge airing"><RefreshCw size={9} /> Airing</span>
+                        )}
+                        <div className="ai-related-card-tech">
+                          {r.episodes > 0 && <span>{r.episodes} eps</span>}
+                          <span>{r.format}</span>
                         </div>
                       </div>
                       <div className="ai-related-card-body">
-                        <div className="ai-related-card-title">{r.name}</div>
-                        <div className="ai-related-card-meta">
-                          <span>TV</span>
+                        <h3 className="ai-related-card-title">{r.name}</h3>
+                        <div className="ai-related-card-foot">
+                          {r.rating > 0 && (
+                            <span className="ai-related-card-rating"><Star size={10} fill="currentColor" /> {r.rating.toFixed(1)}</span>
+                          )}
+                          {r.genres[0] && <span className="ai-related-card-tag">{r.genres[0]}</span>}
                         </div>
                       </div>
+                      <div className="ai-related-card-glow" />
                     </Link>
                   ))}
                 </div>

@@ -171,15 +171,26 @@ export async function fetchAnimeCharacters(id) {
 }
 
 export async function fetchAnimeRecommendations(id) {
-  const q = `query($id:Int){Media(id:$id,type:ANIME){recommendations(page:1,perPage:8){edges{node{mediaRecommendation{id title{romaji english}coverImage{large}}}}}}}`;
+  const q = `query($id:Int){Media(id:$id,type:ANIME){recommendations(page:1,perPage:12){edges{node{rating mediaRecommendation{id title{romaji english}coverImage{large extraLarge}averageScore format episodes genres status season seasonYear}}}}}}`;
   try {
     const data = await gql(q, { id: Number(id) });
-    return (data?.Media?.recommendations?.edges || []).map(e => ({
-      id: e.node.mediaRecommendation.id,
-      name: e.node.mediaRecommendation.title?.english || e.node.mediaRecommendation.title?.romaji || "",
-      image: e.node.mediaRecommendation.coverImage?.large || "",
-      votes: 0,
-    }));
+    return (data?.Media?.recommendations?.edges || [])
+      .filter(e => e.node.mediaRecommendation)
+      .map(e => {
+        const m = e.node.mediaRecommendation;
+        return {
+          id: m.id,
+          name: m.title?.english || m.title?.romaji || "",
+          image: m.coverImage?.extraLarge || m.coverImage?.large || "",
+          rating: (m.averageScore || 0) / 10,
+          format: m.format || "TV",
+          episodes: m.episodes || 0,
+          genres: m.genres || [],
+          status: m.status,
+          season: m.season,
+          seasonYear: m.seasonYear,
+        };
+      });
   } catch { return []; }
 }
 
