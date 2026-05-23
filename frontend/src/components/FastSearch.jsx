@@ -1,5 +1,4 @@
-﻿import { STORAGE_KEYS } from '../utils/constants';
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+﻿import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Film, User, ArrowRight, Star, Clock, TrendingUp, Loader, Command } from 'lucide-react';
