@@ -660,7 +660,11 @@
   backdrop-filter: blur(12px);
   padding: 10px 10px 4px;
   max-height: 100vh;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
+
+.watch-right-col::-webkit-scrollbar { width: 0; }
 
 .watch-side-head {
   display: flex;
@@ -698,12 +702,8 @@
 }
 
 .watch-rec-scroll {
-  overflow-y: auto;
-  scrollbar-width: none;
-  max-height: 300px;
+  overflow-y: visible;
 }
-
-.watch-rec-scroll::-webkit-scrollbar { width: 0; }
 
 .watch-rec-item {
   display: flex;
@@ -820,11 +820,9 @@
 }
 
 .watch-side-scroll {
-  flex: 1;
-  overflow-y: auto;
+  overflow-y: visible;
   padding-right: 2px;
   scrollbar-width: none;
-  min-height: 600px;
 }
 
 .watch-side-scroll::-webkit-scrollbar { width: 0; }
