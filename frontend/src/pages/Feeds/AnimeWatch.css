@@ -698,7 +698,7 @@
 
 .watch-rec-scroll {
   overflow-y: auto;
-  max-height: 350px;
+  max-height: 900px;
   scrollbar-width: none;
 }
 
