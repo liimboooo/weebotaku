@@ -14,7 +14,6 @@ import {
   Menu,
   MessageSquare,
   Newspaper,
-  Search,
   Settings,
   Star,
   Swords,
@@ -25,6 +24,7 @@ import {
 } from 'lucide-react';
 import { getNotifications, markRead, markAllRead, clearNotifications } from '../services/notificationService';
 import authService from '../services/authService';
+import FastSearch from './FastSearch';
 import './Header.css';
 
 export default function Header() {
@@ -44,7 +44,6 @@ export default function Header() {
   const isFeedsActive = ['/feeds/amvs', '/watch-together', '/news'].some(p => path.startsWith(p));
   const isArenaActive = path.startsWith('/arena/') || path.startsWith('/rankings/');
   const isMoreActive = ['/settings', '/help', '/system/rules', '/report'].some(p => path.startsWith(p));
-  const [searchTerm, setSearchTerm] = useState('');
   const [profileImage, setProfileImage] = useState(() => localStorage.getItem('userAvatar') || '');
   const [statusMessage, setStatusMessage] = useState(() => localStorage.getItem('userStatusMessage') || '');
   const [isEditingStatus, setIsEditingStatus] = useState(false);
@@ -74,7 +73,6 @@ export default function Header() {
   const moreDropdownRef = useRef(null);
   const statusInputRef = useRef(null);
   const statusSaveTimeoutRef = useRef(null);
-  const searchRef = useRef(null);
 
   const username = localStorage.getItem('username') || 'Guest';
   const episodesWatched = (JSON.parse(localStorage.getItem('watchHistory') || '[]')).length;
@@ -114,17 +112,9 @@ export default function Header() {
     document.addEventListener('click', closeOnClickOutside);
     const onScroll = () => setScrollProgress(Math.min(1, window.scrollY / 120));
     window.addEventListener('scroll', onScroll, { passive: true });
-    const onKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        searchRef.current?.focus();
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('click', closeOnClickOutside);
       window.removeEventListener('scroll', onScroll);
-      document.removeEventListener('keydown', onKeyDown);
     };
   }, []);
 
@@ -155,15 +145,6 @@ export default function Header() {
     setProfileOpen(false);
     setMoreDropdownOpen(false);
     setNotifOpen(false);
-  };
-
-  const handleSearch = (term) => {
-    const query = (term || searchTerm).trim();
-    if (!query) return;
-    const recent = JSON.parse(localStorage.getItem("recentSearches") || "[]");
-    const next = [query, ...recent.filter(s => s !== query)].slice(0, 8);
-    localStorage.setItem("recentSearches", JSON.stringify(next));
-    navigateTo(`/search?q=${encodeURIComponent(query)}`);
   };
 
   useEffect(() => {
@@ -327,21 +308,7 @@ export default function Header() {
           </nav>
         </div>
 
-        <form className="search-form" onSubmit={(event) => { event.preventDefault(); handleSearch(searchTerm); }}>
-          <span className="search-icon"><Search size={16} /></span>
-          <input
-            ref={searchRef}
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search anime...  (Ctrl+K)"
-            aria-label="Search anime"
-          />
-          {searchTerm && (
-            <button type="button" className="search-clear" onClick={() => { setSearchTerm(''); searchRef.current?.focus(); }}>
-              <X size={14} />
-            </button>
-          )}
-        </form>
+        <FastSearch />
 
         <div className="header-actions">
 
