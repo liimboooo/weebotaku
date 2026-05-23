@@ -334,7 +334,7 @@ function SeasonGrid({ animeList }) {
           <motion.div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
+            onClick={() => navigate(`/anime/${anime.id}/info`)}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -375,7 +375,7 @@ function TopTenRow({ animeList }) {
           <motion.div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
+            onClick={() => navigate(`/anime/${anime.id}/info`)}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -441,7 +441,7 @@ function UpcomingSection({ animeList }) {
           <motion.div
             key={anime.id}
             className="upcoming-card"
-            onClick={() => navigate(`/anime/${anime.id}`)}
+            onClick={() => navigate(`/anime/${anime.id}/info`)}
             variants={cardSlideUp}
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
@@ -610,7 +610,7 @@ export default function Home() {
         quote={quote}
         onQuoteRefresh={refreshQuote}
         quoteLoading={quoteLoading}
-        onNavigate={() => spotlight && navigate(`/anime/${spotlight.id}`)}
+        onNavigate={() => spotlight && navigate(`/anime/${spotlight.id}/info`)}
       />
 
       <div className="home-container">
@@ -639,7 +639,7 @@ export default function Home() {
                 <div
                   key={anime.id}
                   className="upcoming-card"
-                  onClick={() => navigate(`/anime/${anime.id}`)}
+                  onClick={() => navigate(`/anime/${anime.id}/info`)}
                 >
                   <div className="upcoming-card-img">
                     <img src={anime.img} alt={anime.name} loading="lazy" />
@@ -681,7 +681,7 @@ export default function Home() {
                 <div
                   key={anime.id}
                   className="upcoming-card"
-                  onClick={() => navigate(`/anime/${anime.id}`)}
+                  onClick={() => navigate(`/anime/${anime.id}/info`)}
                 >
                   <div className="upcoming-card-img">
                     <img src={anime.img} alt={anime.name} loading="lazy" />

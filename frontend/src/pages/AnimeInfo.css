@@ -593,6 +593,25 @@
   font-weight: 500;
 }
 
+/* ─── TRAILER ─── */
+.ai-trailer-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ai-trailer-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
 /* ─── RELATED CAROUSEL ─── */
 .ai-section-related { overflow: hidden; }
 

@@ -475,6 +475,22 @@ export default function AnimeInfo() {
             </div>
           </div>
 
+          {/* Trailer */}
+          {anime.trailerUrl && (
+            <div className="ai-section">
+              <h2 className="ai-section-title">Trailer</h2>
+              <div className="ai-trailer-wrap">
+                <iframe
+                  src={`${anime.trailerUrl}?autoplay=0&rel=0&modestbranding=1`}
+                  title={`${anime.name} Trailer`}
+                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="ai-trailer-iframe"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Related */}
           {related.length > 0 && (
             <div className="ai-section ai-section-related">
