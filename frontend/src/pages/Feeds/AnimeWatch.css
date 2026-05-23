@@ -660,11 +660,8 @@
   backdrop-filter: blur(12px);
   padding: 10px 10px 4px;
   max-height: 100vh;
-  overflow-y: auto;
-  scrollbar-width: none;
+  overflow: hidden;
 }
-
-.watch-right-col::-webkit-scrollbar { width: 0; }
 
 .watch-side-head {
   display: flex;
@@ -696,14 +693,16 @@
   border-top: 1px solid rgba(139,92,246,0.06);
   margin-top: 4px;
   padding: 0 0 8px;
-  display: flex;
-  flex-direction: column;
   flex-shrink: 0;
 }
 
 .watch-rec-scroll {
-  overflow-y: visible;
+  overflow-y: auto;
+  max-height: 250px;
+  scrollbar-width: none;
 }
+
+.watch-rec-scroll::-webkit-scrollbar { width: 0; }
 
 .watch-rec-item {
   display: flex;
@@ -820,9 +819,11 @@
 }
 
 .watch-side-scroll {
-  overflow-y: visible;
+  flex: none;
+  overflow-y: auto;
   padding-right: 2px;
   scrollbar-width: none;
+  max-height: calc(100vh - 220px);
 }
 
 .watch-side-scroll::-webkit-scrollbar { width: 0; }
