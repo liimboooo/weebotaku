@@ -150,6 +150,8 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   };
 
   useEffect(() => {
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; setError("Request timed out. Try again."); setLoading(false); }, 25000);
     (async () => {
       setLoading(true); setError(""); setEpPage(0); setAllEpsLoaded(false);
       try {
@@ -157,6 +159,8 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
           anime.title || anime.slug, anime.tagSlug,
           anime.source, anime.sourceBase, anime.anilistId, 0
         );
+        if (timedOut) return;
+        clearTimeout(timer);
         if (result.episodes.length > 0) {
           setEpisodes(result.episodes);
           setHasMoreEps(result.hasMore);
@@ -165,8 +169,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
           return;
         }
       } catch {}
-      setError("No streaming links available.");
-      setLoading(false);
+      if (!timedOut) { clearTimeout(timer); setError("No streaming links available."); setLoading(false); }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anime.title, anime.slug, retryCount]);

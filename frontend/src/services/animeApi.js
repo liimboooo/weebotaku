@@ -1,4 +1,6 @@
 ﻿const REANIME_BASE = process.env.REACT_APP_REANIME_BASE_URL || "https://reanime.to";
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const FETCH_TIMEOUT = 8000;
 
 function cleanTitle(title) {
   return title.replace(/\s*\([^)]*\)/g, "").replace(/[^\w\s-]/g, "").trim();
@@ -37,43 +39,57 @@ const titleVariants = (title) => {
 };
 
 const CF_WORKER = process.env.REACT_APP_CF_PROXY_URL || "";
-const PROXIES = [
-  CF_WORKER,
-  ...(process.env.REACT_APP_FALLBACK_PROXIES || "").split(",").filter(Boolean),
-];
+const FALLBACK_PROXIES = (process.env.REACT_APP_FALLBACK_PROXIES || "").split(",").filter(Boolean);
+const BACKEND_PROXY = `${API_BASE}/scrape/fetch?url=`;
 
 const ssCache = new Map();
+async function fetchWithTimeout(url, timeout = FETCH_TIMEOUT) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const res = await fetch(url, { signal: controller.signal, mode: "cors" });
+    return res;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+async function tryFetch(url) {
+  try {
+    const res = await fetchWithTimeout(url);
+    if (!res.ok) return null;
+    const text = await res.text();
+    const parsed = JSON.parse(text);
+    if (parsed && parsed.success && typeof parsed.data === "string") {
+      return JSON.parse(parsed.data);
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchJsonViaProxy(url) {
   const cached = ssCache.get(url);
   if (cached && Date.now() - cached.time < 300000) return cached.data;
-  const proxies = PROXIES.filter(Boolean);
-  if (proxies.length === 0) return null;
-  for (const proxy of proxies) {
-    try {
-      const res = await Promise.race([
-        fetch(`${proxy}${encodeURIComponent(url)}`, { mode: "cors" }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 12000)),
-      ]);
-      if (!res.ok) continue;
-      const text = await res.text();
-      try {
-        const parsed = JSON.parse(text);
-        let data;
-        if (parsed && parsed.success && typeof parsed.data === "string") {
-          data = JSON.parse(parsed.data);
-        } else {
-          data = parsed;
-        }
-        ssCache.set(url, { data, time: Date.now() });
-        if (ssCache.size > 50) {
-          const oldest = ssCache.keys().next().value;
-          ssCache.delete(oldest);
-        }
-        return data;
-      } catch {
-        return null;
+
+  const attempts = [
+    () => tryFetch(url),
+    ...(CF_WORKER ? [() => tryFetch(`${CF_WORKER}${encodeURIComponent(url)}`)] : []),
+    ...FALLBACK_PROXIES.map(p => () => tryFetch(`${p}${encodeURIComponent(url)}`)),
+    () => tryFetch(`${BACKEND_PROXY}${encodeURIComponent(url)}`),
+  ];
+
+  for (const attempt of attempts) {
+    const data = await attempt();
+    if (data) {
+      ssCache.set(url, { data, time: Date.now() });
+      if (ssCache.size > 50) {
+        const oldest = ssCache.keys().next().value;
+        ssCache.delete(oldest);
       }
-    } catch {}
+      return data;
+    }
   }
   return null;
 }
