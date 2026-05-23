@@ -651,7 +651,7 @@
    RIGHT: EPISODES SIDEBAR
    ══════════════════════════════════════════════ */
 .watch-right-col {
-  width: 320px;
+  width: 360px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -660,8 +660,14 @@
   backdrop-filter: blur(12px);
   padding: 10px 10px 4px;
   height: 100vh;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
 }
+
+.watch-right-col::-webkit-scrollbar { width: 4px; }
+.watch-right-col::-webkit-scrollbar-track { background: transparent; }
+.watch-right-col::-webkit-scrollbar-thumb { background: #1a1a1e; border-radius: 2px; }
 
 .watch-side-head {
   display: flex;
@@ -697,8 +703,7 @@
 }
 
 .watch-rec-scroll {
-  overflow-y: auto;
-  max-height: 450px;
+  overflow-y: visible;
   scrollbar-width: none;
   border-bottom-left-radius: 12px;
   border-bottom-right-radius: 12px;
@@ -821,11 +826,9 @@
 }
 
 .watch-side-scroll {
-  flex: 1;
-  overflow-y: auto;
+  overflow-y: visible;
   padding-right: 2px;
   scrollbar-width: none;
-  min-height: 0;
 }
 
 .watch-side-scroll::-webkit-scrollbar { width: 0; }
