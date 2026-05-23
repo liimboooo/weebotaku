@@ -3,8 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   Loader, Play,
-  Star, Tv, Calendar, Clock, Monitor, Search, Film,
-  Bookmark, Heart,
+  Star, Monitor, Search,
   X
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -58,11 +57,11 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const failedServers = useRef(new Set());
 
   const MOCK_COMMENTS = [
-    { id: 1, user: "AnimeKing", text: "This episode was absolutely insane! The animation quality is top tier 🔥🔥", time: "2 min ago", likes: 42, dislikes: 2, replies: [
-      { id: 11, user: "OtakuPro", text: "Totally agree, the fight scene was peak cinema", time: "1 min ago", likes: 12, dislikes: 0 }
+    { id: 1, user: "AnimeKing", text: "This episode was absolutely insane! The animation quality is top tier 🔥🔥", time: (Date.now() - 120000).toString(), likes: 42, dislikes: 2, replies: [
+      { id: 11, user: "OtakuPro", text: "Totally agree, the fight scene was peak cinema", time: (Date.now() - 60000).toString(), likes: 12, dislikes: 0 }
     ], pinned: true },
-    { id: 2, user: "MangaReader", text: "As a manga reader, I can say they adapted this perfectly. Cant wait for next week!", time: "5 min ago", likes: 28, dislikes: 1, replies: [], pinned: false },
-    { id: 3, user: "NightWatcher", text: "Spoiler: ||The main character finally unlocks his true power at the end||", time: "8 min ago", likes: 35, dislikes: 3, replies: [], pinned: false, hasSpoiler: true },
+    { id: 2, user: "MangaReader", text: "As a manga reader, I can say they adapted this perfectly. Cant wait for next week!", time: (Date.now() - 300000).toString(), likes: 28, dislikes: 1, replies: [], pinned: false },
+    { id: 3, user: "NightWatcher", text: "Spoiler: ||The main character finally unlocks his true power at the end||", time: (Date.now() - 480000).toString(), likes: 35, dislikes: 3, replies: [], pinned: false, hasSpoiler: true },
   ];
 
   /* ─── COMMENTS ─── */
