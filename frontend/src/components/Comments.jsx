@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import {
-  MessageCircle, ThumbsUp, Reply, Pin, EyeOff, AlertCircle,
+  MessageCircle, Reply, Pin, EyeOff, AlertCircle,
   X, ArrowLeft, Heart, ChevronDown, ChevronUp, Flag, Clock,
-  MoreHorizontal, Pencil, Trash2, Share2
+  MoreHorizontal, Pencil, Trash2, Share2, Check, Loader, Copy
 } from "lucide-react";
 import "./Comments.css";
 
@@ -14,6 +14,7 @@ const SORT_TABS = [
 
 const INITIAL_VISIBLE = 5;
 const LOAD_MORE_COUNT = 5;
+const MAX_CHARS = 500;
 
 const AVATAR_COLORS = [
   "#a855f7", "#ec4899", "#3b82f6", "#06b6d4",
@@ -72,8 +73,7 @@ function CommentAvatar({ name, size = 30 }) {
     <div
       className="awc-avatar"
       style={{
-        width: size,
-        height: size,
+        width: size, height: size,
         background: `linear-gradient(135deg, ${AVATAR_COLORS[colorIndex]}, ${AVATAR_COLORS[(colorIndex + 1) % AVATAR_COLORS.length]})`,
         fontSize: size * 0.4,
       }}
@@ -83,40 +83,52 @@ function CommentAvatar({ name, size = 30 }) {
   );
 }
 
-function OptionsMenu({ isOwn, onEdit, onDelete, onReport, onShare }) {
+function OptionsMenu({ isOwn, onEdit, onDelete, onReport, onShare, onCopyLink }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
+  const btnRef = useRef(null);
 
   useEffect(() => {
     const handleClick = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false);
+      if (menuRef.current && !menuRef.current.contains(e.target) && !btnRef.current?.contains(e.target))
+        setOpen(false);
     };
     if (open) document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
+  useEffect(() => {
+    if (open) {
+      const first = menuRef.current?.querySelector("button");
+      first?.focus();
+    }
+  }, [open]);
+
   return (
-    <div className="awc-options-wrap" ref={menuRef}>
-      <button className="awc-options-btn" onClick={() => setOpen(o => !o)} title="More">
-        <MoreHorizontal size={13} />
+    <div className="awc-options-wrap">
+      <button ref={btnRef} className="awc-options-btn" onClick={() => setOpen(o => !o)} title="More" aria-label="More options" aria-expanded={open}>
+        <MoreHorizontal size={14} />
       </button>
       {open && (
-        <div className="awc-options-menu">
+        <div className="awc-options-menu" ref={menuRef} role="menu">
           {isOwn && (
             <>
-              <button className="awc-options-item" onClick={() => { onEdit?.(); setOpen(false); }}>
-                <Pencil size={11} /> Edit
+              <button className="awc-options-item" role="menuitem" onClick={() => { onEdit?.(); setOpen(false); }}>
+                <Pencil size={12} /> Edit
               </button>
-              <button className="awc-options-item awc-options-item-danger" onClick={() => { onDelete?.(); setOpen(false); }}>
-                <Trash2 size={11} /> Delete
+              <button className="awc-options-item awc-options-item-danger" role="menuitem" onClick={() => { onDelete?.(); setOpen(false); }}>
+                <Trash2 size={12} /> Delete
               </button>
             </>
           )}
-          <button className="awc-options-item" onClick={() => { onReport?.(); setOpen(false); }}>
-            <Flag size={11} /> Report
+          <button className="awc-options-item" role="menuitem" onClick={() => { onCopyLink?.(); setOpen(false); }}>
+            <Copy size={12} /> Copy Link
           </button>
-          <button className="awc-options-item" onClick={() => { onShare?.(); setOpen(false); }}>
-            <Share2 size={11} /> Share
+          <button className="awc-options-item" role="menuitem" onClick={() => { onReport?.(); setOpen(false); }}>
+            <Flag size={12} /> Report
+          </button>
+          <button className="awc-options-item" role="menuitem" onClick={() => { onShare?.(); setOpen(false); }}>
+            <Share2 size={12} /> Share
           </button>
         </div>
       )}
@@ -124,10 +136,32 @@ function OptionsMenu({ isOwn, onEdit, onDelete, onReport, onShare }) {
   );
 }
 
+function ConfirmDialog({ message, onConfirm, onCancel }) {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === "Escape") onCancel(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onCancel]);
+
+  return (
+    <div className="awc-dialog-overlay" onClick={onCancel} role="dialog" aria-modal="true">
+      <div className="awc-dialog" ref={dialogRef} onClick={e => e.stopPropagation()}>
+        <p className="awc-dialog-text">{message}</p>
+        <div className="awc-dialog-actions">
+          <button className="awc-dialog-btn" onClick={onCancel}>Cancel</button>
+          <button className="awc-dialog-btn awc-dialog-btn-danger" onClick={onConfirm}>Delete</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SpoilerContent({ revealed, onReveal, text }) {
   if (!revealed) {
     return (
-      <div className="awc-spoiler-blur" onClick={onReveal}>
+      <div className="awc-spoiler-blur" onClick={onReveal} role="button" tabIndex={0} onKeyDown={e => e.key === "Enter" && onReveal()}>
         <AlertCircle size={14} />
         <span>Spoiler — Click to reveal</span>
         <EyeOff size={12} className="awc-spoiler-eye" />
@@ -137,15 +171,22 @@ function SpoilerContent({ revealed, onReveal, text }) {
   return <p className="awc-text">{text}</p>;
 }
 
-function CommentItem({ comment, isOPCheck, isVerifiedCheck, onLike, onReply, depth = 0, currentUser, allComments, parentUser }) {
+function CommentItem({ comment, isOPCheck, isVerifiedCheck, onLike, onEditComment, onDeleteComment, onReply, depth = 0, currentUser, parentUser }) {
   const [spoilerRevealed, setSpoilerRevealed] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(comment.likes || 0);
   const [showReplies, setShowReplies] = useState(true);
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyText] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState(comment.text || "");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [posting, setPosting] = useState(false);
+  const [copied, setCopied] = useState(false);
   const replyInputRef = useRef(null);
+  const editInputRef = useRef(null);
 
+  const isOwn = comment.user === currentUser;
   const userRole = USER_ROLES[comment.user] || { color: "#a0a0ab", role: null, badgeBg: null };
   const isOP = isOPCheck(comment.user);
   const isVerified = isVerifiedCheck(comment.user);
@@ -161,6 +202,13 @@ function CommentItem({ comment, isOPCheck, isVerifiedCheck, onLike, onReply, dep
     if (showReplyInput && replyInputRef.current) replyInputRef.current.focus();
   }, [showReplyInput]);
 
+  useEffect(() => {
+    if (editing && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.setSelectionRange(editText.length, editText.length);
+    }
+  }, [editing, editText.length]);
+
   const handleLike = () => {
     if (!liked) {
       setLikes(l => l + 1);
@@ -171,17 +219,33 @@ function CommentItem({ comment, isOPCheck, isVerifiedCheck, onLike, onReply, dep
 
   const handleReplySubmit = () => {
     if (!replyText.trim()) return;
-    const newReply = {
-      id: Date.now() + 1,
-      user: currentUser,
-      text: replyText,
-      time: Date.now().toString(),
-      likes: 0,
-      replies: [],
-    };
-    onReply(comment.id, newReply);
-    setReplyText("");
-    setShowReplyInput(false);
+    setPosting(true);
+    setTimeout(() => {
+      const newReply = {
+        id: Date.now() + 1,
+        user: currentUser,
+        text: replyText,
+        time: Date.now().toString(),
+        likes: 0,
+        replies: [],
+      };
+      onReply(comment.id, newReply);
+      setReplyText("");
+      setShowReplyInput(false);
+      setPosting(false);
+    }, 300);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editText.trim()) return;
+    onEditComment?.(comment.id, editText, depth > 0);
+    setEditing(false);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard?.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const spoilerMatch = !comment.hasSpoiler && comment.text.match(/\|\|(.+?)\|\|/);
@@ -189,114 +253,150 @@ function CommentItem({ comment, isOPCheck, isVerifiedCheck, onLike, onReply, dep
   const cleanText = spoilerMatch ? comment.text.replace(/\|\|(.+?)\|\|/g, "$1") : comment.text;
 
   return (
-    <div className={`awc-item ${comment.pinned ? "awc-pinned" : ""} ${depth > 0 ? "awc-reply" : ""}`}>
-      <div className="awc-item-gutter">
-        {depth > 0 && <div className="awc-reply-line" />}
-        <CommentAvatar name={comment.user} size={depth > 0 ? 24 : 30} />
-      </div>
-      <div className="awc-body">
-        <div className="awc-top">
-          <span className="awc-user" style={{ color: userRole.color }}>
-            {comment.user}
-          </span>
-          {badge && (
-            <span
-              className="awc-badge"
-              style={{ color: badge.color, background: badge.bg }}
-              title={badge.tip}
-            >
-              {badge.label}
+    <>
+      {showDeleteConfirm && (
+        <ConfirmDialog
+          message="Are you sure you want to delete this comment?"
+          onConfirm={() => { onDeleteComment?.(comment.id, depth > 0); setShowDeleteConfirm(false); }}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
+      <div
+        className={`awc-item ${comment.pinned && depth === 0 ? "awc-pinned" : ""} ${depth > 0 ? "awc-reply" : ""}`}
+        style={{ "--depth": depth }}
+      >
+        <div className="awc-item-gutter">
+          {depth > 0 && <div className="awc-reply-line" />}
+          <CommentAvatar name={comment.user} size={depth > 0 ? 24 : 30} />
+        </div>
+        <div className="awc-body">
+          <div className="awc-top">
+            <span className="awc-user" style={{ color: userRole.color }}>
+              {comment.user}
             </span>
-          )}
-          {depth > 0 && parentUser && (
-            <span className="awc-reply-to">In reply to <strong>@{parentUser}</strong></span>
-          )}
-          <span className="awc-time" title={getExactTime(comment.time)}>
-            <Clock size={9} />
-            {formatTimestamp(comment.time)}
-          </span>
-          <OptionsMenu
-            isOwn={comment.user === currentUser}
-            onEdit={() => {}}
-            onDelete={() => {}}
-            onReport={() => {}}
-            onShare={() => {}}
-          />
-        </div>
-
-        {comment.pinned && depth === 0 && (
-          <div className="awc-pin-badge"><Pin size={10} /> Pinned by moderator</div>
-        )}
-
-        {hasSpoiler ? (
-          <div className={`awc-spoiler ${spoilerRevealed ? "revealed" : ""}`}>
-            <SpoilerContent
-              revealed={spoilerRevealed}
-              onReveal={() => setSpoilerRevealed(true)}
-              text={cleanText}
-            />
-          </div>
-        ) : (
-          <p className="awc-text">{cleanText}</p>
-        )}
-
-        <div className="awc-actions">
-          <button className={`awc-action ${liked ? "liked" : ""}`} onClick={handleLike}>
-            <Heart size={11} fill={liked ? "currentColor" : "none"} /> {likes}
-          </button>
-          <button className="awc-action" onClick={() => setShowReplyInput(s => !s)}>
-            <Reply size={11} /> Reply
-          </button>
-        </div>
-
-        {showReplyInput && (
-          <div className="awc-reply-input-wrap">
-            <CommentAvatar name={currentUser} size={22} />
-            <div className="awc-reply-input-inner">
-              <input
-                ref={replyInputRef}
-                className="awc-reply-input"
-                type="text"
-                placeholder={`Reply to @${comment.user}...`}
-                value={replyText}
-                onChange={e => setReplyText(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleReplySubmit()}
-              />
-              <button className="awc-reply-send" onClick={handleReplySubmit}>
-                <ArrowLeft size={11} style={{ transform: "rotate(90deg)" }} />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {comment.replies && comment.replies.length > 0 && (
-          <>
-            <button className="awc-reply-toggle" onClick={() => setShowReplies(s => !s)}>
-              {showReplies ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
-              {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
-            </button>
-            {showReplies && (
-              <div className="awc-replies">
-                {comment.replies.map(r => (
-                  <CommentItem
-                    key={r.id}
-                    comment={r}
-                    isOPCheck={isOPCheck}
-                    isVerifiedCheck={isVerifiedCheck}
-                    onLike={onLike}
-                    onReply={onReply}
-                    depth={depth + 1}
-                    currentUser={currentUser}
-                    allComments={allComments}
-                    parentUser={comment.user}
-                  />
-                ))}
-              </div>
+            {badge && (
+              <span className="awc-badge" style={{ color: badge.color, background: badge.bg }} title={badge.tip}>
+                {badge.label}
+              </span>
             )}
-          </>
-        )}
+            {depth > 0 && parentUser && (
+              <span className="awc-reply-to">In reply to <strong>@{parentUser}</strong></span>
+            )}
+            <span className="awc-time" title={getExactTime(comment.time)}>
+              <Clock size={9} />
+              {formatTimestamp(comment.time)}
+            </span>
+            <OptionsMenu
+              isOwn={isOwn}
+              onEdit={() => setEditing(true)}
+              onDelete={() => setShowDeleteConfirm(true)}
+              onReport={() => {}}
+              onShare={() => {}}
+              onCopyLink={handleCopyLink}
+            />
+            {copied && <span className="awc-copied-hint"><Check size={9} /> Copied</span>}
+          </div>
+
+          {comment.pinned && depth === 0 && (
+            <div className="awc-pin-badge"><Pin size={10} /> Pinned by moderator</div>
+          )}
+
+          {editing ? (
+            <div className="awc-edit-wrap">
+              <input
+                ref={editInputRef}
+                className="awc-edit-input"
+                type="text"
+                value={editText}
+                onChange={e => setEditText(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter") handleSaveEdit();
+                  if (e.key === "Escape") { setEditing(false); setEditText(comment.text || ""); }
+                }}
+              />
+              <div className="awc-edit-actions">
+                <button className="awc-edit-cancel" onClick={() => { setEditing(false); setEditText(comment.text || ""); }}>Cancel</button>
+                <button className="awc-edit-save" onClick={handleSaveEdit} disabled={!editText.trim()}>
+                  <Check size={11} /> Save
+                </button>
+              </div>
+            </div>
+          ) : hasSpoiler ? (
+            <div className={`awc-spoiler ${spoilerRevealed ? "revealed" : ""}`}>
+              <SpoilerContent revealed={spoilerRevealed} onReveal={() => setSpoilerRevealed(true)} text={cleanText} />
+            </div>
+          ) : (
+            <p className="awc-text">{cleanText}</p>
+          )}
+
+          <div className="awc-actions">
+            <button className={`awc-action ${liked ? "liked" : ""}`} onClick={handleLike}>
+              <Heart size={11} fill={liked ? "currentColor" : "none"} /> {likes}
+            </button>
+            <button className="awc-action" onClick={() => setShowReplyInput(s => !s)}>
+              <Reply size={11} /> Reply
+            </button>
+          </div>
+
+          {showReplyInput && (
+            <div className="awc-reply-input-wrap">
+              <CommentAvatar name={currentUser} size={22} />
+              <div className="awc-reply-input-inner">
+                <input
+                  ref={replyInputRef}
+                  className="awc-reply-input"
+                  type="text"
+                  placeholder={`Reply to @${comment.user}...`}
+                  value={replyText}
+                  onChange={e => setReplyText(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && !posting && handleReplySubmit()}
+                  disabled={posting}
+                  maxLength={MAX_CHARS}
+                />
+                <span className={`awc-reply-chars ${replyText.length > MAX_CHARS * 0.9 ? "warn" : ""}`}>
+                  {replyText.length}/{MAX_CHARS}
+                </span>
+                <div className="awc-reply-btns">
+                  <button className="awc-reply-cancel" onClick={() => { setShowReplyInput(false); setReplyText(""); }}>Cancel</button>
+                  <button className="awc-reply-post" onClick={handleReplySubmit} disabled={!replyText.trim() || posting}>
+                    {posting ? <Loader size={11} className="awc-spin" /> : <ArrowLeft size={11} style={{ transform: "rotate(90deg)" }} />}
+                    Post
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {comment.replies && comment.replies.length > 0 && (
+            <>
+              <button className="awc-reply-toggle" onClick={() => setShowReplies(s => !s)}>
+                {showReplies ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                {showReplies ? "Hide" : "Show"} {comment.replies.length} {comment.replies.length === 1 ? "reply" : "replies"}
+              </button>
+              {showReplies && (
+                <div className="awc-replies">
+                  {comment.replies.map(r => (
+                    <CommentItem
+                      key={r.id}
+                      comment={r}
+                      isOPCheck={isOPCheck}
+                      isVerifiedCheck={isVerifiedCheck}
+                      onLike={onLike}
+                      onEditComment={onEditComment}
+                      onDeleteComment={onDeleteComment}
+                      onReply={onReply}
+                      depth={depth + 1}
+                      currentUser={currentUser}
+                      parentUser={comment.user}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -305,6 +405,8 @@ export default function Comments({ comments: externalComments, setComments, curr
   const [text, setText] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
+  const [posting, setPosting] = useState(false);
+  const [posted, setPosted] = useState(false);
   const inputRef = useRef(null);
 
   const comments = externalComments || [];
@@ -332,33 +434,28 @@ export default function Comments({ comments: externalComments, setComments, curr
 
   const handleAdd = () => {
     if (!text.trim()) return;
-    const newComment = {
-      id: Date.now(),
-      user: currentUser,
-      text: text,
-      time: Date.now().toString(),
-      likes: 0,
-      replies: [],
-      pinned: false,
-    };
-    if (replyTo) {
-      setComments?.(c => c.map(cm =>
-        cm.id === replyTo
-          ? { ...cm, replies: [...cm.replies, { ...newComment, id: Date.now() + 1 }] }
-          : cm
-      ));
-      setReplyTo(null);
-    } else {
+    setPosting(true);
+    setTimeout(() => {
+      const newComment = {
+        id: Date.now(),
+        user: currentUser,
+        text: text,
+        time: Date.now().toString(),
+        likes: 0,
+        replies: [],
+        pinned: false,
+      };
       setComments?.(c => [newComment, ...c]);
-    }
-    setText("");
+      setText("");
+      setPosting(false);
+      setPosted(true);
+      setTimeout(() => setPosted(false), 3000);
+    }, 400);
   };
 
   const handleReply = useCallback((parentId, reply) => {
     setComments?.(c => c.map(cm =>
-      cm.id === parentId
-        ? { ...cm, replies: [...cm.replies, reply] }
-        : cm
+      cm.id === parentId ? { ...cm, replies: [...cm.replies, reply] } : cm
     ));
   }, [setComments]);
 
@@ -366,10 +463,22 @@ export default function Comments({ comments: externalComments, setComments, curr
     setComments?.(c => c.map(cm =>
       cm.id === id
         ? { ...cm, likes: (cm.likes || 0) + 1 }
-        : { ...cm, replies: cm.replies.map(r =>
-            r.id === id ? { ...r, likes: (r.likes || 0) + 1 } : r
-          ) }
+        : { ...cm, replies: cm.replies.map(r => r.id === id ? { ...r, likes: (r.likes || 0) + 1 } : r) }
     ));
+  }, [setComments]);
+
+  const handleEditComment = useCallback((id, newText, isReply) => {
+    setComments?.(c => c.map(cm => {
+      if (cm.id === id) return { ...cm, text: newText };
+      return { ...cm, replies: cm.replies.map(r => r.id === id ? { ...r, text: newText } : r) };
+    }));
+  }, [setComments]);
+
+  const handleDeleteComment = useCallback((id, isReply) => {
+    setComments?.(c => {
+      if (isReply) return c.map(cm => ({ ...cm, replies: cm.replies.filter(r => r.id !== id) }));
+      return c.filter(cm => cm.id !== id);
+    });
   }, [setComments]);
 
   const handleLoadMore = () => {
@@ -386,11 +495,7 @@ export default function Comments({ comments: externalComments, setComments, curr
         </div>
         <div className="awc-sorts">
           {SORT_TABS.map(st => (
-            <button
-              key={st.key}
-              className={`awc-sort ${sort === st.key ? "active" : ""}`}
-              onClick={() => setSort(st.key)}
-            >
+            <button key={st.key} className={`awc-sort ${sort === st.key ? "active" : ""}`} onClick={() => setSort(st.key)}>
               {st.label}
             </button>
           ))}
@@ -407,11 +512,16 @@ export default function Comments({ comments: externalComments, setComments, curr
             placeholder={replyTo ? "Write a reply..." : "Join the discussion..."}
             value={text}
             onChange={e => setText(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && handleAdd()}
+            onKeyDown={e => e.key === "Enter" && !posting && handleAdd()}
+            disabled={posting}
+            maxLength={MAX_CHARS}
           />
+          <span className={`awc-input-chars ${text.length > MAX_CHARS * 0.9 ? "warn" : ""}`}>
+            {text.length}/{MAX_CHARS}
+          </span>
           <div className="awc-input-actions">
-            <button className="awc-input-btn" title="Send" onClick={handleAdd}>
-              <ArrowLeft size={12} style={{ transform: "rotate(90deg)" }} />
+            <button className="awc-input-btn" title="Send" onClick={handleAdd} disabled={!text.trim() || posting}>
+              {posting ? <Loader size={12} className="awc-spin" /> : <ArrowLeft size={12} style={{ transform: "rotate(90deg)" }} />}
             </button>
           </div>
         </div>
@@ -421,9 +531,13 @@ export default function Comments({ comments: externalComments, setComments, curr
         <div className="awc-reply-indicator">
           <Reply size={11} />
           Replying to a comment
-          <button onClick={() => { setReplyTo(null); setText(""); }}>
-            <X size={12} />
-          </button>
+          <button onClick={() => { setReplyTo(null); setText(""); }}><X size={12} /></button>
+        </div>
+      )}
+
+      {posted && (
+        <div className="awc-success-banner">
+          <Check size={12} /> Comment posted successfully
         </div>
       )}
 
@@ -435,10 +549,11 @@ export default function Comments({ comments: externalComments, setComments, curr
             isOPCheck={isOPCheck}
             isVerifiedCheck={isVerifiedCheck}
             onLike={handleLike}
+            onEditComment={handleEditComment}
+            onDeleteComment={handleDeleteComment}
             onReply={handleReply}
             depth={0}
             currentUser={currentUser}
-            allComments={comments}
             parentUser={null}
           />
         ))}
