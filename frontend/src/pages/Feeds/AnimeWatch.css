@@ -659,7 +659,7 @@
   background: rgba(8,8,12,0.6);
   backdrop-filter: blur(12px);
   padding: 10px 10px 4px;
-  max-height: 100vh;
+  height: 100vh;
   overflow: hidden;
 }
 
@@ -698,7 +698,7 @@
 
 .watch-rec-scroll {
   overflow-y: auto;
-  max-height: none;
+  max-height: 450px;
   scrollbar-width: none;
   border-bottom-left-radius: 12px;
   border-bottom-right-radius: 12px;
@@ -709,11 +709,11 @@
 .watch-rec-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 8px;
-  margin-bottom: 4px;
-  border-radius: 10px;
+  padding: 5px 8px;
+  margin-bottom: 2px;
+  border-radius: 8px;
   background: none;
   border: none;
   color: #888;
@@ -721,7 +721,7 @@
   transition: all 0.15s ease;
   text-align: left;
   font-family: "Inter", sans-serif;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .watch-rec-item:hover {
@@ -730,9 +730,9 @@
 }
 
 .watch-rec-thumb {
-  width: 44px;
-  height: 62px;
-  border-radius: 6px;
+  width: 36px;
+  height: 50px;
+  border-radius: 5px;
   overflow: hidden;
   flex-shrink: 0;
   background: #0e0e10;
@@ -752,7 +752,7 @@
 
 .watch-rec-name {
   font-weight: 700;
-  font-size: 12px;
+  font-size: 11px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
