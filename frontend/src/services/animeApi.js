@@ -158,21 +158,24 @@ async function getEpisodesReanime(slug) {
   }
 }
 
-async function getStreamUrlsReanime(epNum, anilistId) {
-  try {
-    if (!anilistId) return [];
-    const url = `${REANIME_BASE}/api/flix/${anilistId}/${epNum}`;
-    const data = await fetchJsonViaProxy(url);
-    if (!data || !data.success || !Array.isArray(data.servers)) return [];
-
-    return data.servers.map(s => ({
-      label: `${s.serverName} (${s.dataType})`,
-      url: s.dataLink,
-      type: s.dataType,
-    }));
-  } catch {
-    return [];
+async function getStreamUrlsReanime(epNum, anilistId, fallbackId, slug) {
+  const ids = [anilistId, fallbackId].filter(Boolean);
+  if (ids.length === 0 && !slug) return [];
+  const tryIds = ids.length > 0 ? ids : [slug];
+  for (const id of tryIds) {
+    try {
+      const url = `${REANIME_BASE}/api/flix/${id}/${epNum}`;
+      const data = await fetchJsonViaProxy(url);
+      if (data && data.success && Array.isArray(data.servers) && data.servers.length > 0) {
+        return data.servers.map(s => ({
+          label: `${s.serverName} (${s.dataType})`,
+          url: s.dataLink,
+          type: s.dataType,
+        }));
+      }
+    } catch {}
   }
+  return [];
 }
 
 export async function getEpisodes(animeName, tagSlug, sourceName, sourceBase, anilistId) {
@@ -182,11 +185,24 @@ export async function getEpisodes(animeName, tagSlug, sourceName, sourceBase, an
   return [];
 }
 
-export async function getStreamUrls(episodeUrl, sourceName, anilistId) {
+export async function getStreamUrls(episodeUrl, sourceName, anilistId, fallbackId, slug) {
   if (sourceName === "reanime") {
-    return getStreamUrlsReanime(episodeUrl, anilistId);
+    return getStreamUrlsReanime(episodeUrl, anilistId, fallbackId, slug);
   }
   return [];
+}
+
+const EP_PAGE_SIZE = 50;
+
+export async function getEpisodePage(animeName, tagSlug, sourceName, sourceBase, anilistId, page = 0) {
+  if (sourceName !== "reanime") return { episodes: [], total: 0 };
+  const all = await getEpisodesReanime(tagSlug);
+  const start = page * EP_PAGE_SIZE;
+  return {
+    episodes: all.slice(start, start + EP_PAGE_SIZE),
+    total: all.length,
+    hasMore: start + EP_PAGE_SIZE < all.length,
+  };
 }
 
 export async function findStreamingSource(animeName) {

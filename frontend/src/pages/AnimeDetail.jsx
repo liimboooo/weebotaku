@@ -5,7 +5,7 @@ import {
   X
 } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
-import { findStreamingSource, getEpisodes, getStreamUrls } from "../services/animeApi";
+import { findStreamingSource, getEpisodes, getStreamUrls, getEpisodePage } from "../services/animeApi";
 import { fetchAnimeRecommendations } from "../services/anilistApi";
 import { loadWatchHistory } from "../services/storage";
 import commentService from "../services/commentService";
@@ -41,6 +41,9 @@ export default function AnimeDetail() {
   const [langKey, setLangKey] = useState(0);
   const [recommendations, setRecommendations] = useState([]);
   const [visibleCount, setVisibleCount] = useState(50);
+  const [epPage, setEpPage] = useState(0);
+  const [hasMoreEps, setHasMoreEps] = useState(false);
+  const [allEpsLoaded, setAllEpsLoaded] = useState(false);
   const [seekTo, setSeekTo] = useState(null);
 
   const handleSeek = useCallback((seconds) => {
@@ -161,12 +164,16 @@ export default function AnimeDetail() {
   useEffect(() => {
     if (!watchAnime) return;
     (async () => {
-      setLoading(true); setError("");
+      setLoading(true); setError(""); setEpPage(0); setAllEpsLoaded(false);
       try {
-        const eps = await getEpisodes(watchAnime.title || watchAnime.slug, watchAnime.tagSlug, watchAnime.source, watchAnime.sourceBase, watchAnime.anilistId);
-        if (eps.length > 0) {
-          setEpisodes(eps);
-          setEpIndex(Math.min(Math.max(0, selectedEp - 1), eps.length - 1));
+        const result = await getEpisodePage(
+          watchAnime.title || watchAnime.slug, watchAnime.tagSlug,
+          watchAnime.source, watchAnime.sourceBase, watchAnime.anilistId, 0
+        );
+        if (result.episodes.length > 0) {
+          setEpisodes(result.episodes);
+          setHasMoreEps(result.hasMore);
+          setEpIndex(Math.min(Math.max(0, selectedEp - 1), result.episodes.length - 1));
           setLoading(false);
           return;
         }
@@ -177,6 +184,20 @@ export default function AnimeDetail() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchAnime, retryCount]);
 
+  const loadMoreEpisodes = async () => {
+    const nextPage = epPage + 1;
+    const result = await getEpisodePage(
+      watchAnime.title || watchAnime.slug, watchAnime.tagSlug,
+      watchAnime.source, watchAnime.sourceBase, watchAnime.anilistId, nextPage
+    );
+    if (result.episodes.length > 0) {
+      setEpisodes(prev => [...prev, ...result.episodes]);
+      setEpPage(nextPage);
+      setHasMoreEps(result.hasMore);
+    }
+    if (!result.hasMore) setAllEpsLoaded(true);
+  };
+
   const episode = episodes[epIndex];
 
   useEffect(() => {
@@ -184,7 +205,7 @@ export default function AnimeDetail() {
     (async () => {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
-        const urls = await getStreamUrls(episode.url, watchAnime.source, watchAnime.anilistId);
+        const urls = await getStreamUrls(episode.url, watchAnime.source, watchAnime.anilistId, parseInt(id), watchAnime.slug);
         if (urls.length > 0) { setServers(urls); }
         else setError("No video servers found.");
       } catch { setError("Failed to load stream."); }
@@ -221,6 +242,13 @@ export default function AnimeDetail() {
     if (el.scrollTop + el.clientHeight >= el.scrollHeight - 200) {
       setVisibleCount(c => Math.min(c + 50, filteredEpisodes.length));
     }
+  };
+
+  const handleLoadMore = () => {
+    if (hasMoreEps && !allEpsLoaded) {
+      loadMoreEpisodes();
+    }
+    setVisibleCount(c => c + 50);
   };
 
   const langServers = () => servers.filter(s => s.type === language);
@@ -386,23 +414,30 @@ export default function AnimeDetail() {
               ) : filteredEpisodes.length === 0 ? (
                 <div className="watch-center" style={{ padding: 40 }}><p className="watch-muted">{epSearch ? "No matching episodes" : "No episodes"}</p></div>
               ) : (
-                filteredEpisodes.slice(0, visibleCount).map((ep, i) => {
-                  const realIdx = episodes.indexOf(ep);
-                  return (
-                    <button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} onClick={() => { setEpIndex(realIdx); }}>
-                      <div className="watch-ep-thumb">
-                        {anime.img && <img src={anime.img} alt="" />}
-                        <div className="watch-ep-thumb-overlay"><Play size={10} /></div>
-                      </div>
-                      <div className="watch-ep-info">
-                        <span className="watch-ep-name">Episode {ep.episode}</span>
-                        {ep.title && <span className="watch-ep-title">{ep.title}</span>}
-                        <span className="watch-ep-date">{ep.airDate ? new Date(ep.airDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" }) : ep.aired ? "Aired" : "Upcoming"}</span>
-                      </div>
-                      {realIdx === epIndex && <div className="watch-ep-active-dot" />}
+                <>
+                  {filteredEpisodes.slice(0, visibleCount).map((ep, i) => {
+                    const realIdx = episodes.indexOf(ep);
+                    return (
+                      <button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} onClick={() => { setEpIndex(realIdx); }}>
+                        <div className="watch-ep-thumb">
+                          {anime.img && <img src={anime.img} alt="" />}
+                          <div className="watch-ep-thumb-overlay"><Play size={10} /></div>
+                        </div>
+                        <div className="watch-ep-info">
+                          <span className="watch-ep-name">Episode {ep.episode}</span>
+                          {ep.title && <span className="watch-ep-title">{ep.title}</span>}
+                          <span className="watch-ep-date">{ep.airDate ? new Date(ep.airDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" }) : ep.aired ? "Aired" : "Upcoming"}</span>
+                        </div>
+                        {realIdx === epIndex && <div className="watch-ep-active-dot" />}
+                      </button>
+                    );
+                  })}
+                  {(hasMoreEps || filteredEpisodes.length > visibleCount) && (
+                    <button className="watch-ep-load-more" onClick={handleLoadMore}>
+                      Load More ({filteredEpisodes.length - visibleCount} remaining)
                     </button>
-                  );
-                })
+                  )}
+                </>
               )}
             </div>
 

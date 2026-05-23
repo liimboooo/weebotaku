@@ -7,7 +7,7 @@ import {
   X
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { getEpisodes, getStreamUrls } from "../../services/animeApi";
+import { getEpisodes, getStreamUrls, getEpisodePage } from "../../services/animeApi";
 import { fetchAnimeRecommendations } from "../../services/anilistApi";
 import Comments from "../../components/Comments";
 import commentService from "../../services/commentService";
@@ -29,6 +29,9 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [epSearch, setEpSearch] = useState("");
   const [recommendations, setRecommendations] = useState([]);
   const [visibleCount, setVisibleCount] = useState(50);
+  const [epPage, setEpPage] = useState(0);
+  const [hasMoreEps, setHasMoreEps] = useState(false);
+  const [allEpsLoaded, setAllEpsLoaded] = useState(false);
   const [language, setLanguage] = useState("sub");
   const [seekTo, setSeekTo] = useState(null);
 
@@ -148,12 +151,16 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
 
   useEffect(() => {
     (async () => {
-      setLoading(true); setError("");
+      setLoading(true); setError(""); setEpPage(0); setAllEpsLoaded(false);
       try {
-        const eps = await getEpisodes(anime.title || anime.slug, anime.tagSlug, anime.source, anime.sourceBase, anime.anilistId);
-        if (eps.length > 0) {
-          setEpisodes(eps);
-          setEpIndex(Math.min(Math.max(0, startEp - 1), eps.length - 1));
+        const result = await getEpisodePage(
+          anime.title || anime.slug, anime.tagSlug,
+          anime.source, anime.sourceBase, anime.anilistId, 0
+        );
+        if (result.episodes.length > 0) {
+          setEpisodes(result.episodes);
+          setHasMoreEps(result.hasMore);
+          setEpIndex(Math.min(Math.max(0, startEp - 1), result.episodes.length - 1));
           setLoading(false);
           return;
         }
@@ -163,6 +170,20 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [anime.title, anime.slug, retryCount]);
+
+  const loadMoreEpisodes = async () => {
+    const nextPage = epPage + 1;
+    const result = await getEpisodePage(
+      anime.title || anime.slug, anime.tagSlug,
+      anime.source, anime.sourceBase, anime.anilistId, nextPage
+    );
+    if (result.episodes.length > 0) {
+      setEpisodes(prev => [...prev, ...result.episodes]);
+      setEpPage(nextPage);
+      setHasMoreEps(result.hasMore);
+    }
+    if (!result.hasMore) setAllEpsLoaded(true);
+  };
 
   const episode = episodes[epIndex];
 
@@ -178,7 +199,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     (async () => {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
-        const urls = await getStreamUrls(episode.url, anime.source, anime.anilistId);
+        const urls = await getStreamUrls(episode.url, anime.source, anime.anilistId, anime.anilistId, anime.slug);
         if (urls.length > 0) {
           setServers(urls);
           setStreamCache(c => ({ ...c, [episode.url]: urls }));
@@ -362,23 +383,33 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
               ) : filteredEpisodes.length === 0 ? (
                 <div className="watch-center" style={{ padding: 40 }}><p className="watch-muted">{epSearch ? "No matching episodes" : "No episodes"}</p></div>
               ) : (
-                filteredEpisodes.slice(0, visibleCount).map((ep, i) => {
-                  const realIdx = episodes.indexOf(ep);
-                  return (
-                    <motion.button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300 }} onClick={() => { setEpIndex(realIdx); if (onEpisodeChange) onEpisodeChange(ep.episode); }}>
-                      <div className="watch-ep-thumb">
-                        {detail?.img && <img src={detail.img} alt="" />}
-                        <div className="watch-ep-thumb-overlay"><Play size={10} /></div>
-                      </div>
-                      <div className="watch-ep-info">
-                        <span className="watch-ep-name">Episode {ep.episode}</span>
-                        {ep.title && <span className="watch-ep-title">{ep.title}</span>}
-                        <span className="watch-ep-date">{ep.airDate ? new Date(ep.airDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" }) : ep.aired ? "Aired" : "Upcoming"}</span>
-                      </div>
-                      {realIdx === epIndex && <div className="watch-ep-active-dot" />}
-                    </motion.button>
-                  );
-                })
+                <>
+                  {filteredEpisodes.slice(0, visibleCount).map((ep, i) => {
+                    const realIdx = episodes.indexOf(ep);
+                    return (
+                      <motion.button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300 }} onClick={() => { setEpIndex(realIdx); if (onEpisodeChange) onEpisodeChange(ep.episode); }}>
+                        <div className="watch-ep-thumb">
+                          {detail?.img && <img src={detail.img} alt="" />}
+                          <div className="watch-ep-thumb-overlay"><Play size={10} /></div>
+                        </div>
+                        <div className="watch-ep-info">
+                          <span className="watch-ep-name">Episode {ep.episode}</span>
+                          {ep.title && <span className="watch-ep-title">{ep.title}</span>}
+                          <span className="watch-ep-date">{ep.airDate ? new Date(ep.airDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" }) : ep.aired ? "Aired" : "Upcoming"}</span>
+                        </div>
+                        {realIdx === epIndex && <div className="watch-ep-active-dot" />}
+                      </motion.button>
+                    );
+                  })}
+                  {(hasMoreEps || filteredEpisodes.length > visibleCount) && (
+                    <button className="watch-ep-load-more" onClick={() => {
+                      if (hasMoreEps && !allEpsLoaded) loadMoreEpisodes();
+                      setVisibleCount(c => c + 50);
+                    }}>
+                      Load More ({filteredEpisodes.length - visibleCount} remaining)
+                    </button>
+                  )}
+                </>
               )}
             </div>
 
