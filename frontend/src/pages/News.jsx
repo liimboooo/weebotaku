@@ -96,7 +96,7 @@ export default function News() {
     if (item.mediaType === "manga") {
       navigate(`/browse/manga`);
     } else if (item.animeId) {
-      navigate(`/anime/${item.animeId}`);
+      navigate(`/anime/${item.animeId}/info`);
     } else {
       navigate(`/browse/anime`);
     }
@@ -145,7 +145,7 @@ export default function News() {
                   <motion.div
                     key={anime.id}
                     className="featured-card"
-                    onClick={() => navigate(`/anime/${anime.id}`)}
+                    onClick={() => navigate(`/anime/${anime.id}/info`)}
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.12, duration: 0.5 }}

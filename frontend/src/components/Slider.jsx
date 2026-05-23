@@ -130,7 +130,7 @@ export default function Slider({ sliderData, noHeader }) {
         )}
         <div className="slider-track" ref={scrollRef} onScroll={checkScroll}>
           {sliderData.map((item) => (
-            <SliderCard key={item.id} item={item} onClick={() => navigate(`/anime/${item.id}`)} />
+            <SliderCard key={item.id} item={item} onClick={() => navigate(`/anime/${item.id}/info`)} />
           ))}
         </div>
       </div>

@@ -10,6 +10,7 @@ import AnimatedPage from "./components/AnimatedPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Home from "./pages/Home";
 import AnimeDetail from "./pages/AnimeDetail";
+import AnimeInfo from "./pages/AnimeInfo";
 import SearchPage from "./pages/SearchPage";
 import WatchlistPage from "./pages/WatchlistPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -103,6 +104,7 @@ function AppLayout() {
           <Route path="/system/rules" element={<RouteShell><Rules /></RouteShell>} />
           <Route path="/report" element={<RouteShell><Report /></RouteShell>} />
           <Route path="/anime/:id" element={<RouteShell><AnimeDetail /></RouteShell>} />
+          <Route path="/anime/:id/info" element={<RouteShell><AnimeInfo /></RouteShell>} />
           <Route path="/manga/:id" element={<RouteShell><MangaDetail /></RouteShell>} />
           <Route path="/search" element={<RouteShell><SearchPage /></RouteShell>} />
           <Route path="/news" element={<RouteShell><News /></RouteShell>} />

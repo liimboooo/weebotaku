@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Loader, Play, Star, Tv, Calendar, Clock, Monitor, Search, Film,
@@ -38,6 +38,11 @@ export default function AnimeDetail() {
   const [langKey, setLangKey] = useState(0);
   const [recommendations, setRecommendations] = useState([]);
   const [visibleCount, setVisibleCount] = useState(50);
+  const [seekTo, setSeekTo] = useState(null);
+
+  const handleSeek = useCallback((seconds) => {
+    setSeekTo(seconds);
+  }, []);
 
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
@@ -255,7 +260,7 @@ export default function AnimeDetail() {
                 </div>
               )}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && (
-                <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}-${langKey}`} className="watch-frame" src={streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
+                <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}-${langKey}-${seekTo ?? 0}`} className="watch-frame" src={seekTo != null ? `${streamUrl}${streamUrl.includes("#") ? "&" : "#"}t=${seekTo}` : streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
               )}
               {!loading && !error && iframeError && streamUrl && (
                 <div className="watch-center">
@@ -279,7 +284,7 @@ export default function AnimeDetail() {
             <div className="watch-scroll-area">
 
               {/* ═══ COMMENTS ═══ */}
-              <Comments comments={comments} setComments={setComments} />
+              <Comments comments={comments} setComments={setComments} onSeek={handleSeek} />
 
             </div>
           </div>
@@ -329,7 +334,7 @@ export default function AnimeDetail() {
                   <span>Recommended Anime</span>
                 </div>
                 {recommendations.slice(0, 5).map((rec, i) => (
-                  <button key={rec.id || i} className="watch-rec-item" onClick={() => navigate(`/anime/${rec.id}`)}>
+                  <button key={rec.id || i} className="watch-rec-item" onClick={() => navigate(`/anime/${rec.id}/info`)}>
                     <div className="watch-rec-thumb">
                       <img src={rec.image} alt="" />
                     </div>

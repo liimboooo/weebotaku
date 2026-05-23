@@ -29,6 +29,11 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [recommendations, setRecommendations] = useState([]);
   const [visibleCount, setVisibleCount] = useState(50);
   const [language, setLanguage] = useState("sub");
+  const [seekTo, setSeekTo] = useState(null);
+
+  const handleSeek = useCallback((seconds) => {
+    setSeekTo(seconds);
+  }, []);
 
   const filteredServers = useMemo(() => {
     return servers.filter(s => s.type === language);
@@ -227,9 +232,9 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
               {!loading && !error && streamUrl && !streamLoading && !iframeError && (
                 <iframe
                   ref={iframeRef}
-                  key={`${episode?.episode || 0}-${serverIndex}`}
+                  key={`${episode?.episode || 0}-${serverIndex}-${seekTo ?? 0}`}
                   className="watch-frame"
-                  src={streamUrl}
+                  src={seekTo != null ? `${streamUrl}${streamUrl.includes("#") ? "&" : "#"}t=${seekTo}` : streamUrl}
                   title={`Episode ${episode?.episode || ""}`}
                   allow="autoplay; fullscreen; encrypted-media"
                   allowFullScreen
@@ -261,7 +266,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
               </div>
 
               {/* ═══ COMMENTS ═══ */}
-              <Comments comments={comments} setComments={setComments} />
+              <Comments comments={comments} setComments={setComments} onSeek={handleSeek} />
 
             </div>
           </div>
@@ -311,7 +316,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                 </div>
                 <div className="watch-rec-scroll">
                   {recommendations.map((rec, i) => (
-                    <button key={rec.id || i} className="watch-rec-item" onClick={() => navigate(`/anime/${rec.id}`)}>
+                    <button key={rec.id || i} className="watch-rec-item" onClick={() => navigate(`/anime/${rec.id}/info`)}>
                       <div className="watch-rec-thumb">
                         <img src={rec.image} alt="" />
                       </div>

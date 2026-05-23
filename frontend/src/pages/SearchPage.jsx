@@ -270,12 +270,12 @@ export default function SearchPage() {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 100, damping: 12 }}
                     whileHover={{ y: -8 }}
-                    onClick={() => navigate(`/anime/${anime.id}`)}
+                    onClick={() => navigate(`/anime/${anime.id}/info`)}
                   >
                     <div className="sr-card-thumb">
                       <img src={anime.img} alt={anime.name} loading="lazy" />
                       <div className="sr-card-overlay">
-                        <button className="sr-card-play" onClick={(e) => { e.stopPropagation(); navigate(`/anime/${anime.id}`); }}>
+                        <button className="sr-card-play" onClick={(e) => { e.stopPropagation(); navigate(`/anime/${anime.id}/info`); }}>
                           <Play size={20} fill="currentColor" />
                         </button>
                         <div className="sr-card-tech">

@@ -442,7 +442,7 @@ export default function Browse() {
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.92 }}
                       transition={{ delay: (i % 12) * 0.025 }}
-                      onClick={() => navigate(`/anime/${anime.id}`)}
+                      onClick={() => navigate(`/anime/${anime.id}/info`)}
                     >
                       <AnimeCard
                         anime={anime}

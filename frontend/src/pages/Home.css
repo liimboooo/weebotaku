@@ -2,6 +2,17 @@
    HOME PAGE — Premium Dark Mode
    ═══════════════════════════════════════════════════════ */
 
+@property --rotate {
+  syntax: "<angle>";
+  initial-value: 132deg;
+  inherits: false;
+}
+
+@keyframes glow-spin {
+  0% { --rotate: 0deg; }
+  100% { --rotate: 360deg; }
+}
+
 /* ─── Container ──────────────────────────────────────── */
 .home-container {
   position: relative;
@@ -237,6 +248,27 @@
   border-color: var(--border-hover);
   color: var(--text-primary);
   transform: translateY(-1px);
+}
+
+/* ─── Glowing Card Border ──────────────────────────── */
+.glow-card-sidecard {
+  position: relative;
+  border-radius: 24px;
+}
+
+.glow-card-sidecard:hover::before {
+  animation: none;
+}
+
+.glow-card-sidecard::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 25px;
+  background-image: linear-gradient(var(--rotate), #c084fc, #7c3aed 43%, #4c1d95);
+  z-index: 0;
+  animation: glow-spin 2.5s linear infinite;
+  pointer-events: none;
 }
 
 /* ─── Hero Side Card ─────────────────────────────────── */

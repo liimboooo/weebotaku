@@ -40,7 +40,7 @@ export default function BestAnime() {
             description: anime.synopsis,
             meta: `${anime.rating.toFixed(1)} / 10`,
             badge: anime.status,
-            to: `/anime/${anime.id}`,
+            to: `/anime/${anime.id}/info`,
           })),
         },
       ]}

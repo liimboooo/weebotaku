@@ -295,7 +295,7 @@ export default function ProfilePage() {
     if (document.startViewTransition) {
       const x = event.clientX || event.currentTarget.getBoundingClientRect().left + 50;
       const y = event.clientY || event.currentTarget.getBoundingClientRect().top + 50;
-      document.startViewTransition(() => navigate(`/anime/${anime.id}`)).ready.then(() => {
+      document.startViewTransition(() => navigate(`/anime/${anime.id}/info`)).ready.then(() => {
         document.documentElement.style.setProperty("--reveal-radius", "0%");
         document.documentElement.style.setProperty("--reveal-x", `${x}px`);
         document.documentElement.style.setProperty("--reveal-y", `${y}px`);
@@ -304,7 +304,7 @@ export default function ProfilePage() {
         });
       });
     } else {
-      navigate(`/anime/${anime.id}`);
+      navigate(`/anime/${anime.id}/info`);
     }
   };
 
@@ -582,7 +582,7 @@ export default function ProfilePage() {
                     {watchlistAnime.length > 0 ? (
                       <div className="recent-mini-list">
                         {watchlistAnime.slice(0, 4).map((a) => (
-                          <div key={a.id} className="recent-mini-item" onClick={() => navigate(`/anime/${a.id}`)}>
+                          <div key={a.id} className="recent-mini-item" onClick={() => navigate(`/anime/${a.id}/info`)}>
                             <img src={a.img} alt={a.name} />
                             <div>
                               <strong>{a.name}</strong>

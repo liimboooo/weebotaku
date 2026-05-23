@@ -92,7 +92,7 @@ export default function HistoryPage() {
               </div>
             </div>
             {lastWatched && (
-              <div className="hp-hero-hud" onClick={() => navigate(`/anime/${lastWatched.animeId}?ep=${lastWatched.episode || 1}`)}>
+              <div className="hp-hero-hud" onClick={() => navigate(`/anime/${lastWatched.animeId}/info?ep=${lastWatched.episode || 1}`)}>
                 <div className="hp-hud-img">
                   <img src={lastWatched.img || lastWatched.animeImg || ""} alt="" />
                 </div>
@@ -146,7 +146,7 @@ export default function HistoryPage() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           transition={{ delay: (i % 12) * 0.03, type: "spring", stiffness: 120, damping: 16 }}
-                          onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode || 1}`)}
+                          onClick={() => navigate(`/anime/${item.animeId}/info?ep=${item.episode || 1}`)}
                         >
                           <div className="hp-card-thumb">
                             <img src={item.img || item.animeImg || ""} alt="" loading="lazy" />

@@ -38,7 +38,7 @@ const ANILIST = "https://graphql.anilist.co";
 
 const ANIME_FIELDS = `id idMal title { romaji english } coverImage { large extraLarge } bannerImage averageScore episodes genres description status season seasonYear studios(isMain:true) { nodes { name } } trailer { site id } format nextAiringEpisode { episode airingAt timeUntilAiring }`;
 
-async function gql(query, variables = {}) {
+export async function gql(query, variables = {}) {
   const key = `gql:${query.replace(/\s+/g, " ").slice(0, 80)}:${JSON.stringify(variables)}`;
   const cached = getCached(key);
   if (cached) return cached;

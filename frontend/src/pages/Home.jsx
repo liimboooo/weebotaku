@@ -542,21 +542,23 @@ function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onNavig
       </motion.div>
 
       <motion.div
-        className="home-hero-sidecard"
+        className="glow-card-sidecard"
         variants={heroItem}
         initial="hidden"
         animate="visible"
       >
-        <div className="hero-sidecard-img">
-          <img src={spotlight.img} alt={spotlight.name} />
-        </div>
-        <div className="hero-sidecard-info">
-          <span className="hero-sidecard-label">NOW TRENDING</span>
-          <strong className="hero-sidecard-title">{spotlight.name}</strong>
-          <span className="hero-sidecard-rating">
-            <Star size={11} fill="#ffd700" color="#ffd700" /> {spotlight.rating?.toFixed(1) || "?"}
-          </span>
-        </div>
+        <motion.div className="home-hero-sidecard">
+          <div className="hero-sidecard-img">
+            <img src={spotlight.img} alt={spotlight.name} />
+          </div>
+          <div className="hero-sidecard-info">
+            <span className="hero-sidecard-label">NOW TRENDING</span>
+            <strong className="hero-sidecard-title">{spotlight.name}</strong>
+            <span className="hero-sidecard-rating">
+              <Star size={11} fill="#ffd700" color="#ffd700" /> {spotlight.rating?.toFixed(1) || "?"}
+            </span>
+          </div>
+        </motion.div>
       </motion.div>
     </section>
   );

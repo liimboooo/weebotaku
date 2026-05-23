@@ -116,7 +116,7 @@ export default function WatchlistPage() {
                           transition={{ delay: (i % 12) * 0.03, type: "spring", stiffness: 100, damping: 14 }}
                           whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(139,92,246,0.3)", borderColor: "#8b5cf6" }}
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => navigate(`/anime/${anime.id}`)}
+                          onClick={() => navigate(`/anime/${anime.id}/info`)}
                         >
                           <div className="wl-card-thumb">
                             <img src={anime.img} alt={anime.name} loading="lazy" />
