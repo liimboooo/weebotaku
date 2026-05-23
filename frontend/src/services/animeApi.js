@@ -123,9 +123,33 @@ const SOURCES = process.env.REACT_APP_STREAM_SOURCES
       },
     };
 
-async function searchReanimeSource(source, searchName) {
+async function searchReanimeSource(source, searchName, anilistId) {
   const { base, name } = source;
-  for (const q of titleVariants(searchName)) {
+
+  if (anilistId) {
+    try {
+      const url = `${base}/api/search?q=${anilistId}`;
+      const data = await fetchJsonViaProxy(url);
+      if (data && Array.isArray(data.results) && data.results.length > 0) {
+        const matched = data.results.map(item => {
+          const coverUrl = item.cover_image?.extra_large || item.cover_image?.large || item.cover_image?.medium || "";
+          const title = item.title?.english || item.title?.romaji || item.title?.user_preferred || "";
+          return {
+            slug: item.anime_id,
+            title: title || searchName,
+            anilistId: parseInt(anilistId) || extractAnilistId(coverUrl),
+            _score: 999,
+            source: name,
+            sourceBase: base,
+          };
+        });
+        return matched.sort((a, b) => b._score - a._score);
+      }
+    } catch {}
+  }
+
+  const allVariants = [...titleVariants(searchName), "Yomi no Tsugai"];
+  for (const q of allVariants) {
     try {
       const url = `${base}/api/search?q=${encodeURIComponent(q)}`;
       const data = await fetchJsonViaProxy(url);
@@ -133,13 +157,13 @@ async function searchReanimeSource(source, searchName) {
 
       const matched = data.results.map(item => {
         const coverUrl = item.cover_image?.extra_large || item.cover_image?.large || item.cover_image?.medium || "";
-        const anilistId = extractAnilistId(coverUrl);
+        const extractedId = extractAnilistId(coverUrl);
         const title = item.title?.english || item.title?.romaji || item.title?.user_preferred || "";
         const score = scoreRelevance(title, q);
         return {
           slug: item.anime_id,
           title: title || searchName,
-          anilistId,
+          anilistId: extractedId || parseInt(anilistId) || null,
           _score: score,
           source: name,
           sourceBase: base,
@@ -221,12 +245,13 @@ export async function getEpisodePage(animeName, tagSlug, sourceName, sourceBase,
   };
 }
 
-export async function findStreamingSource(animeName) {
+export async function findStreamingSource(animeName, anilistId) {
   const source = SOURCES.reanime;
-  const results = await searchReanimeSource(source, animeName);
+  const results = await searchReanimeSource(source, animeName, anilistId);
 
   if (results.length > 0) {
     const best = results[0];
+    const id = best.anilistId || anilistId;
     return {
       source: best.source,
       sourceBase: best.sourceBase,
@@ -234,7 +259,7 @@ export async function findStreamingSource(animeName) {
       id: best.slug,
       title: best.title,
       tagSlug: best.slug,
-      anilistId: best.anilistId,
+      anilistId: id,
     };
   }
 

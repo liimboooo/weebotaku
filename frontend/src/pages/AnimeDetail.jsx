@@ -156,7 +156,7 @@ export default function AnimeDetail() {
 
   useEffect(() => {
     if (!anime) return;
-    findStreamingSource(anime.name).then((src) => {
+    findStreamingSource(anime.name, anime.id).then((src) => {
       if (src) setWatchAnime(src);
     }).catch(() => {});
   }, [anime]);

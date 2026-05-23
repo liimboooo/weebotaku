@@ -278,7 +278,7 @@ export default function Browse() {
   const openWatch = async (anime) => {
     setWatchLoading(true);
     try {
-      const src = await findStreamingSource(anime.name);
+      const src = await findStreamingSource(anime.name, anime.id);
       if (!src) { addNotification({ title: "Not Available", body: "No streaming source for this title.", type: "error" }); return; }
       const history = loadWatchHistory();
       const found = history.find(h => h.animeId === anime.id);
