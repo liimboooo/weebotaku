@@ -45,6 +45,7 @@ export default function AnimeDetail() {
   const [hasMoreEps, setHasMoreEps] = useState(false);
   const [allEpsLoaded, setAllEpsLoaded] = useState(false);
   const [seekTo, setSeekTo] = useState(null);
+  const [sourceLookupDone, setSourceLookupDone] = useState(false);
 
   const handleSeek = useCallback((seconds) => {
     setSeekTo(seconds);
@@ -156,12 +157,19 @@ export default function AnimeDetail() {
 
   useEffect(() => {
     if (!anime) return;
+    setSourceLookupDone(false);
+    setWatchAnime(null);
+    setError("");
     findStreamingSource(anime.name, anime.id).then((src) => {
       if (src) setWatchAnime(src);
-    }).catch(() => {});
+      setSourceLookupDone(true);
+    }).catch(() => {
+      setSourceLookupDone(true);
+    });
   }, [anime]);
 
   useEffect(() => {
+    if (!sourceLookupDone) return;
     if (!watchAnime) { setLoading(false); setError("Could not find streaming source."); return; }
     let timedOut = false;
     const timer = setTimeout(() => { timedOut = true; setError("Request timed out. Try again."); setLoading(false); }, 25000);

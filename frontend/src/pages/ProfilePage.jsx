@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAnimeById } from "../data/animeData";
@@ -9,7 +9,8 @@ import {
   Bookmark, Star, Eye, Plus, Settings, Share2, UserPlus, X,
   Edit3, Trash2, ExternalLink, Calendar, LogOut, Clock,
   CheckCircle, Play, Pause, XCircle, Search, ArrowUpDown,
-  Activity, ImagePlus,
+  Activity, ImagePlus, ChevronLeft, ChevronRight, Award,
+  TrendingUp, Zap, Trophy, Film, Heart,
 } from "lucide-react";
 import "./ProfilePage.css";
 
@@ -26,8 +27,20 @@ const STATUS_LIST = ["Watching", "Planning", "Completed", "Paused", "Dropped"];
 
 const SORT_OPTIONS = [
   { key: "recent", label: "Recent" },
-  { key: "alpha",  label: "A–Z" },
+  { key: "alpha",  label: "A-Z" },
   { key: "rating", label: "Rating" },
+  { key: "added",  label: "Date Added" },
+];
+
+const ACHIEVEMENTS = [
+  { id: "first_anime", icon: "🎬", name: "First Step", desc: "Added first anime", threshold: (s) => s.total >= 1 },
+  { id: "ten_anime", icon: "📚", name: "Collector", desc: "10 anime in list", threshold: (s) => s.total >= 10 },
+  { id: "five_completed", icon: "✅", name: "Finisher", desc: "Completed 5 anime", threshold: (s) => s.completed >= 5 },
+  { id: "binge_watcher", icon: "🔥", name: "Binge Lord", desc: "Watched 50+ episodes", threshold: (s) => s.episodes >= 50 },
+  { id: "critic", icon: "⭐", name: "Critic", desc: "Rated 10 anime", threshold: (s) => s.rated >= 10 },
+  { id: "veteran", icon: "🏆", name: "Veteran", desc: "100+ hours watched", threshold: (s) => s.hours >= 100 },
+  { id: "diverse", icon: "🌐", name: "Explorer", desc: "25 anime in list", threshold: (s) => s.total >= 25 },
+  { id: "dedicated", icon: "💎", name: "Dedicated", desc: "50 anime completed", threshold: (s) => s.completed >= 50 },
 ];
 
 function timeAgoShort(ts) {
@@ -67,6 +80,17 @@ export default function ProfilePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("recent");
   const [sortOpen, setSortOpen] = useState(false);
+  const [bannerOffset, setBannerOffset] = useState(0);
+
+  const activityScrollRef = useRef(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setBannerOffset(window.scrollY * 0.3);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const loadProfileData = useCallback(() => {
     if (isRemoteProfile) return;
@@ -190,6 +214,12 @@ export default function ProfilePage() {
     loadProfileData();
   };
 
+  const scrollActivity = (dir) => {
+    const el = activityScrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * 350, behavior: "smooth" });
+  };
+
   const counts = useMemo(() => ({
     all: watchlist.length,
     Watching: watchlist.filter(w => w.listStatus === "Watching").length,
@@ -202,6 +232,14 @@ export default function ProfilePage() {
   const totalAnime = watchlist.length;
   const totalEps = history.length;
   const hoursWatched = Math.round(totalEps * 24 / 60);
+
+  const achievementStats = useMemo(() => ({
+    total: totalAnime,
+    completed: counts.Completed,
+    episodes: totalEps,
+    rated: Object.keys(rated).length,
+    hours: hoursWatched,
+  }), [totalAnime, counts.Completed, totalEps, rated, hoursWatched]);
 
   const filteredAnime = useMemo(() => {
     let list = activeTab === "all" ? watchlist : watchlist.filter(w => w.listStatus === activeTab);
@@ -233,16 +271,22 @@ export default function ProfilePage() {
         <header className="pp-header">
           <div className="pp-banner">
             {userBanner ? (
-              <img src={userBanner} alt="" />
+              <img
+                src={userBanner}
+                alt=""
+                style={{ transform: `scale(1.05) translateY(${bannerOffset}px)` }}
+              />
             ) : (
               <div className="pp-banner-fallback" />
             )}
             <div className="pp-banner-overlay" />
+            <div className="pp-banner-blur" />
           </div>
 
           <div className="pp-header-inner">
             <div className="pp-header-left">
               <div className="pp-avatar-wrap">
+                <div className="pp-avatar-glow" />
                 <div className="pp-avatar-ring" />
                 <div className="pp-avatar" role="img" aria-label={`${username}'s avatar`}>
                   {userAvatar ? (
@@ -251,12 +295,25 @@ export default function ProfilePage() {
                     <span className="pp-avatar-initial">{userInitial}</span>
                   )}
                 </div>
+                {totalAnime >= 10 && (
+                  <span className="pp-avatar-badge">
+                    {totalAnime >= 50 ? "PRO" : totalAnime >= 25 ? "VET" : "FAN"}
+                  </span>
+                )}
               </div>
 
               <div className="pp-info-card">
                 <h1 className="pp-username">{username}</h1>
                 <span className="pp-handle">{handle}</span>
-                {statusMsg && <p className="pp-bio">{statusMsg}</p>}
+                {statusMsg ? (
+                  <p className="pp-bio">
+                    <span className="pp-bio-animated">{statusMsg}</span>
+                  </p>
+                ) : isOwnProfile ? (
+                  <p className="pp-bio">
+                    <span className="pp-bio-animated">Watching anime...</span>
+                  </p>
+                ) : null}
                 <span className="pp-joined"><Calendar size={12} /> Joined {joinDate}</span>
               </div>
             </div>
@@ -264,7 +321,7 @@ export default function ProfilePage() {
             <div className="pp-actions">
               {isOwnProfile && (
                 <button className="pp-btn-icon" onClick={() => setEditing(true)} aria-label="Edit Profile">
-                  <Settings size={18} />
+                  <Settings size={20} />
                   <span className="pp-tooltip">Settings</span>
                 </button>
               )}
@@ -276,7 +333,7 @@ export default function ProfilePage() {
                 }}
                 aria-label="Share Profile"
               >
-                <Share2 size={18} />
+                <Share2 size={20} />
                 <span className="pp-tooltip">Share</span>
               </button>
               {isRemoteProfile && (
@@ -299,40 +356,69 @@ export default function ProfilePage() {
 
         {/* ══════ STATS ══════ */}
         <div className="pp-stats">
-          <div className="pp-stat" onClick={() => setActiveTab("Completed")}>
-            <div className="pp-stat-icon pp-stat-icon--completed"><CheckCircle size={18} /></div>
-            <strong className="pp-stat-number">{counts.Completed}</strong>
+          <motion.div
+            className="pp-stat"
+            onClick={() => setActiveTab("Completed")}
+            whileHover={{ scale: 1.05, y: -4 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="pp-stat-icon pp-stat-icon--completed"><CheckCircle size={24} /></div>
+            <strong className="pp-stat-number pp-stat-number--completed">{counts.Completed}</strong>
             <span className="pp-stat-label">Completed</span>
+            {counts.Completed > 0 && (
+              <span className="pp-stat-trend pp-stat-trend--up"><TrendingUp size={11} /></span>
+            )}
             <div className="pp-stat-bar">
               <div className="pp-stat-bar-fill pp-stat-bar-fill--completed" style={{ width: `${(counts.Completed / statBarMax) * 100}%` }} />
             </div>
-          </div>
-          <div className="pp-stat" onClick={() => setActiveTab("Watching")}>
-            <div className="pp-stat-icon pp-stat-icon--watching"><Play size={18} /></div>
-            <strong className="pp-stat-number">{counts.Watching}</strong>
+          </motion.div>
+          <motion.div
+            className="pp-stat"
+            onClick={() => setActiveTab("Watching")}
+            whileHover={{ scale: 1.05, y: -4 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="pp-stat-icon pp-stat-icon--watching"><Play size={24} /></div>
+            <strong className="pp-stat-number pp-stat-number--watching">{counts.Watching}</strong>
             <span className="pp-stat-label">Watching</span>
+            {counts.Watching > 0 && (
+              <span className="pp-stat-trend pp-stat-trend--up"><TrendingUp size={11} /></span>
+            )}
             <div className="pp-stat-bar">
               <div className="pp-stat-bar-fill pp-stat-bar-fill--watching" style={{ width: `${(counts.Watching / statBarMax) * 100}%` }} />
             </div>
-          </div>
-          <div className="pp-stat" onClick={() => setActiveTab("Planning")}>
-            <div className="pp-stat-icon pp-stat-icon--planning"><Clock size={18} /></div>
-            <strong className="pp-stat-number">{counts.Planning}</strong>
+          </motion.div>
+          <motion.div
+            className="pp-stat"
+            onClick={() => setActiveTab("Planning")}
+            whileHover={{ scale: 1.05, y: -4 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="pp-stat-icon pp-stat-icon--planning"><Clock size={24} /></div>
+            <strong className="pp-stat-number pp-stat-number--planning">{counts.Planning}</strong>
             <span className="pp-stat-label">Planning</span>
             <div className="pp-stat-bar">
               <div className="pp-stat-bar-fill pp-stat-bar-fill--planning" style={{ width: `${(counts.Planning / statBarMax) * 100}%` }} />
             </div>
-          </div>
-          <div className="pp-stat">
-            <div className="pp-stat-icon pp-stat-icon--episodes"><Eye size={18} /></div>
-            <strong className="pp-stat-number">{totalEps}</strong>
+          </motion.div>
+          <motion.div
+            className="pp-stat"
+            whileHover={{ scale: 1.05, y: -4 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="pp-stat-icon pp-stat-icon--episodes"><Film size={24} /></div>
+            <strong className="pp-stat-number pp-stat-number--episodes">{totalEps}</strong>
             <span className="pp-stat-label">Episodes</span>
-          </div>
-          <div className="pp-stat">
-            <div className="pp-stat-icon pp-stat-icon--hours"><Star size={18} /></div>
-            <strong className="pp-stat-number">{hoursWatched}h</strong>
+          </motion.div>
+          <motion.div
+            className="pp-stat"
+            whileHover={{ scale: 1.05, y: -4 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="pp-stat-icon pp-stat-icon--hours"><Heart size={24} /></div>
+            <strong className="pp-stat-number pp-stat-number--hours">{hoursWatched}h</strong>
             <span className="pp-stat-label">Watched</span>
-          </div>
+          </motion.div>
         </div>
 
         {/* ══════ MAIN ══════ */}
@@ -343,35 +429,87 @@ export default function ProfilePage() {
             <section className="pp-activity">
               <div className="pp-activity-header">
                 <h2><Activity size={20} /> Recent Activity</h2>
+                <div className="pp-activity-controls">
+                  <button
+                    className="pp-activity-arrow"
+                    onClick={() => scrollActivity(-1)}
+                    aria-label="Scroll left"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button
+                    className="pp-activity-arrow"
+                    onClick={() => scrollActivity(1)}
+                    aria-label="Scroll right"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
               </div>
-              <div className="pp-activity-scroll">
-                {history.map((h, i) => {
-                  const anime = loadedAnime[h.animeId];
-                  const img = anime?.image || h.animeImg;
-                  const name = anime?.name || h.animeName || "Unknown";
-                  return (
-                    <motion.div
-                      key={`${h.animeId}-${h.timestamp}`}
-                      className="pp-activity-card"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.04, duration: 0.3 }}
-                      onClick={() => navigate(`/anime/${h.animeId}/info?ep=${h.episode || 1}`)}
-                    >
-                      <div className="pp-activity-poster">
-                        {img && <img src={img} alt={name} loading="lazy" />}
-                        <span className="pp-activity-ep">EP {h.episode || 1}</span>
-                      </div>
-                      <div className="pp-activity-body">
-                        <p className="pp-activity-title">{name}</p>
-                        <span className="pp-activity-time">{timeAgoShort(h.timestamp)}</span>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+              <div className="pp-activity-viewport">
+                <div className="pp-activity-scroll" ref={activityScrollRef}>
+                  {history.map((h, i) => {
+                    const anime = loadedAnime[h.animeId];
+                    const img = anime?.image || h.animeImg;
+                    const name = anime?.name || h.animeName || "Unknown";
+                    const totalEp = anime?.episodes || 24;
+                    const progress = Math.min(((h.episode || 1) / totalEp) * 100, 100);
+                    return (
+                      <motion.div
+                        key={`${h.animeId}-${h.timestamp}`}
+                        className="pp-activity-card"
+                        initial={{ opacity: 0, x: 30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05, duration: 0.35 }}
+                        onClick={() => navigate(`/anime/${h.animeId}/info?ep=${h.episode || 1}`)}
+                      >
+                        <div className="pp-activity-poster">
+                          {img && <img src={img} alt={name} loading="lazy" />}
+                          <span className="pp-activity-ep">EP {h.episode || 1}</span>
+                          <div className="pp-activity-overlay">
+                            <span className="pp-activity-overlay-title">{name}</span>
+                            <span className="pp-activity-overlay-time">{timeAgoShort(h.timestamp)}</span>
+                            <div className="pp-activity-overlay-progress">
+                              <div
+                                className="pp-activity-overlay-progress-fill"
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
               </div>
             </section>
           )}
+
+          {/* ── Achievements ── */}
+          <section className="pp-achievements">
+            <div className="pp-achievements-header">
+              <h2><Award size={20} /> Achievements</h2>
+            </div>
+            <div className="pp-achievements-grid">
+              {ACHIEVEMENTS.map((a, i) => {
+                const unlocked = a.threshold(achievementStats);
+                return (
+                  <motion.div
+                    key={a.id}
+                    className={`pp-achievement ${unlocked ? "" : "locked"}`}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06, duration: 0.3 }}
+                    title={unlocked ? `${a.name} - ${a.desc}` : `Locked: ${a.desc}`}
+                  >
+                    <span className="pp-achievement-icon">{a.icon}</span>
+                    <span className="pp-achievement-name">{a.name}</span>
+                    <span className="pp-achievement-desc">{a.desc}</span>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </section>
 
           {/* ── Watchlist ── */}
           <section className="pp-section">
@@ -394,7 +532,7 @@ export default function ProfilePage() {
                     <ArrowUpDown size={13} /> {SORT_OPTIONS.find(s => s.key === sortBy)?.label}
                   </button>
                   {sortOpen && (
-                    <div className="pp-status-menu" style={{ bottom: "auto", top: "calc(100% + 4px)", left: 0, right: "auto", minWidth: 100 }} onClick={e => e.stopPropagation()}>
+                    <div className="pp-status-menu" style={{ bottom: "auto", top: "calc(100% + 4px)", left: 0, right: "auto", minWidth: 120 }} onClick={e => e.stopPropagation()}>
                       {SORT_OPTIONS.map(s => (
                         <button
                           key={s.key}
@@ -451,10 +589,10 @@ export default function ProfilePage() {
                         key={item.id}
                         className="pp-card"
                         layout
-                        initial={{ opacity: 0, scale: 0.92 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.92 }}
-                        transition={{ delay: i * 0.025, duration: 0.3 }}
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ delay: i * 0.04, duration: 0.35, ease: "easeOut" }}
                         tabIndex={0}
                         role="button"
                         aria-label={`${item.name} — ${item.listStatus}`}
@@ -466,14 +604,13 @@ export default function ProfilePage() {
                           <div className="pp-card-overlay">
                             <span className="pp-card-overlay-title">{item.name}</span>
                             <div className="pp-card-overlay-info">
-                              <span className="pp-card-overlay-badge">{item.status || "TV"}</span>
                               {userRating && (
                                 <span className="pp-card-overlay-rating">
-                                  <Star size={11} fill="#ffd700" color="#ffd700" /> {userRating}
+                                  <Star size={12} fill="#ffd700" color="#ffd700" /> {userRating}
                                 </span>
                               )}
                               {item.episodes && (
-                                <span className="pp-card-overlay-badge">{item.episodes} ep</span>
+                                <span className="pp-card-overlay-progress">Ep {item.episodes}</span>
                               )}
                             </div>
                             <div className="pp-card-overlay-actions">
@@ -484,14 +621,14 @@ export default function ProfilePage() {
                                     onClick={(e) => { e.stopPropagation(); setShowStatusMenu(showStatusMenu === item.id ? null : item.id); }}
                                     aria-label="Change status"
                                   >
-                                    <Edit3 size={13} />
+                                    <Edit3 size={14} />
                                   </button>
                                   <button
                                     className="pp-card-action pp-card-action--delete"
                                     onClick={(e) => handleRemove(item.id, e)}
                                     aria-label="Remove from watchlist"
                                   >
-                                    <Trash2 size={13} />
+                                    <Trash2 size={14} />
                                   </button>
                                 </>
                               )}
@@ -500,7 +637,7 @@ export default function ProfilePage() {
                                 onClick={(e) => { e.stopPropagation(); navigate(`/anime/${item.id}/info`); }}
                                 aria-label="View details"
                               >
-                                <ExternalLink size={13} />
+                                <ExternalLink size={14} />
                               </button>
                             </div>
                           </div>
@@ -536,12 +673,14 @@ export default function ProfilePage() {
             ) : (
               <div className="pp-empty">
                 <div className="pp-empty-icon"><Bookmark size={80} /></div>
-                <h3 className="pp-empty-title">No Anime Found</h3>
+                <h3 className="pp-empty-title">
+                  {searchQuery ? "No Results Found" : "Your watchlist is empty"}
+                </h3>
                 <p className="pp-empty-msg">
                   {searchQuery
                     ? `No results for "${searchQuery}".`
                     : activeTab === "all"
-                      ? "This watchlist is empty. Start adding anime to build your collection."
+                      ? "Start adding anime to your watchlist to build your collection."
                       : `No anime with status "${activeTab}".`}
                 </p>
                 {isOwnProfile && activeTab === "all" && !searchQuery && (
