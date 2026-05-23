@@ -150,6 +150,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   };
 
   useEffect(() => {
+    if (!anime?.slug && !anime?.tagSlug) { setLoading(false); setError("Could not find streaming source."); return; }
     let timedOut = false;
     const timer = setTimeout(() => { timedOut = true; setError("Request timed out. Try again."); setLoading(false); }, 25000);
     (async () => {
