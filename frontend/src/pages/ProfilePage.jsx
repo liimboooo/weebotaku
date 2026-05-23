@@ -343,7 +343,7 @@ export default function ProfilePage() {
 
             {editing ? (
               <div className="profile-edit-area">
-                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder=STORAGE_KEYS.USERNAME className="profile-input" />
+                <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder={STORAGE_KEYS.USERNAME} className="profile-input" />
                 <div className="profile-edit-row">
                   <label className="profile-btn profile-btn-secondary">
                     Choose Avatar

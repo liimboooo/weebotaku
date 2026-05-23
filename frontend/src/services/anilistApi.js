@@ -1,8 +1,9 @@
-﻿const CACHE_TTL = 10 * 60 * 1000;
+﻿import { statusLabel, STATUS_MAP, FORMAT_MAP, LS_CACHE_PREFIX } from "../utils/constants";
+
+const CACHE_TTL = 10 * 60 * 1000;
 const DETAIL_CACHE_TTL = 30 * 60 * 1000;
 const CACHE_MAX = 100;
 const cache = new Map();
-import { statusLabel, STATUS_MAP, FORMAT_MAP, LS_CACHE_PREFIX } from "../utils/constants";
 const LS_PREFIX = LS_CACHE_PREFIX;
 
 function getCached(key) {
