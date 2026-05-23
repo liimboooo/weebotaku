@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   Loader, Play,
-  Star, Monitor, Search,
+  Star, Monitor, Search, Calendar, Clock, Tv, Film,
   X
 } from "lucide-react";
 import { motion } from "framer-motion";
