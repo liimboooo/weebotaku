@@ -165,8 +165,8 @@ export default function Header() {
   };
 
   return (
-    <header ref={headerRef} className="header">
-      <div className="header-bg" style={{ opacity: scrollProgress, backdropFilter: `blur(${scrollProgress * 24}px)`, WebkitBackdropFilter: `blur(${scrollProgress * 24}px)` }} />
+    <header ref={headerRef} className={`header${scrollProgress > 0.15 ? ' scrolled' : ''}`}>
+      <div className="header-bg" />
       <div className="header-shell">
         <button className="mobile-toggle" onClick={() => setMobileOpen((value) => !value)} aria-label="Toggle navigation">
           {mobileOpen ? <X size={18} /> : <Menu size={18} />}
@@ -366,6 +366,7 @@ export default function Header() {
             {profileOpen && (
               <div className="profile-mini-card">
                 <div className="profile-mini-card-glow" />
+                <div className="profile-mini-card-banner" />
                 <div className="profile-mini-card-header">
                   <div className="profile-mini-summary">
                     <span className="profile-avatar-shell profile-avatar-shell--compact">
