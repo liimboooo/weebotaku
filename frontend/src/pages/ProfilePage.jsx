@@ -1,15 +1,14 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAnimeById } from "../data/animeData";
 import { loadWatchlist, removeFromWatchlist, updateListStatus, loadLikedAnime, loadRatings, loadWatchHistory } from "../services/storage";
 import authService from "../services/authService";
 import AnimatedPage from "../components/AnimatedPage";
-import { timeAgo } from "../utils/helpers";
-import { Bookmark, Star, Eye, Film, Plus, Settings, Share2, UserPlus, X, Edit3, Trash2, ExternalLink, Calendar, ChevronDown } from "lucide-react";
+import { Bookmark, Star, Eye, Plus, Settings, Share2, UserPlus, X, Edit3, Trash2, ExternalLink, Calendar, LogOut } from "lucide-react";
 import "./ProfilePage.css";
 
-const WATCHLIST_TABS = [
+const TABS = [
   { key: "all", label: "All" },
   { key: "Watching", label: "Watching" },
   { key: "Planning", label: "Planning" },
@@ -33,13 +32,12 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [watchlist, setWatchlist] = useState([]);
-  const [liked, setLiked] = useState([]);
   const [rated, setRated] = useState({});
-  const [history, setHistory] = useState([]);
   const [loadedAnime, setLoadedAnime] = useState({});
   const [remoteUser, setRemoteUser] = useState(null);
   const [showStatusMenu, setShowStatusMenu] = useState(null);
   const [joinDate, setJoinDate] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const loadProfileData = () => {
     if (isRemoteProfile) return;
@@ -49,17 +47,14 @@ export default function ProfilePage() {
       if (userData.avatar) { setAvatar(userData.avatar); setAvatarPreview(userData.avatar); }
     }
     setWatchlist(loadWatchlist());
-    setLiked(loadLikedAnime());
     setRated(loadRatings());
-    setHistory(loadWatchHistory().slice(0, 10));
+    setLoading(false);
   };
 
   useEffect(() => {
     const ids = new Set();
     watchlist.forEach(item => ids.add(item.id));
-    liked.forEach(id => ids.add(id));
     Object.keys(rated).forEach(id => ids.add(parseInt(id)));
-    history.forEach(item => ids.add(item.animeId));
     const idsArr = [...ids].filter(Boolean);
     if (idsArr.length === 0) return;
     let cancelled = false;
@@ -67,46 +62,62 @@ export default function ProfilePage() {
       const results = await Promise.all(idsArr.map(id => getAnimeById(id)));
       if (cancelled) return;
       const map = {};
-      idsArr.forEach((id, i) => {
-        if (results[i]) map[id] = results[i];
-      });
+      idsArr.forEach((id, i) => { if (results[i]) map[id] = results[i]; });
       setLoadedAnime(prev => ({ ...prev, ...map }));
     })();
     return () => { cancelled = true; };
-  }, [watchlist, liked, rated, history]);
-
-  const watchingCount = watchlist.filter(w => w.listStatus === "Watching").length;
-  const planningCount = watchlist.filter(w => w.listStatus === "Planning").length;
-  const completedCount = watchlist.filter(w => w.listStatus === "Completed").length;
-  const pausedCount = watchlist.filter(w => w.listStatus === "Paused").length;
-  const droppedCount = watchlist.filter(w => w.listStatus === "Dropped").length;
-
-  const filteredAnime = activeTab === "all"
-    ? watchlist
-    : watchlist.filter(w => w.listStatus === activeTab);
-
-  const episodesWatched = history.length;
-  const ratedAnime = Object.entries(rated)
-    .map(([id, rating]) => {
-      const numId = parseInt(id);
-      const anime = loadedAnime[numId] || watchlist.find((w) => w.id === numId);
-      return anime ? { anime, rating } : null;
-    })
-    .filter(Boolean);
-
-  const userAvatar = avatarPreview || avatar;
-  const userInitial = username.charAt(0).toUpperCase();
-  const handle = `@${(currentUser?.username || username).toLowerCase().replace(/\s+/g, "")}`;
+  }, [watchlist, rated]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("animewch_joined") || localStorage.getItem("memberSince");
+    const stored = currentUser?.memberSince;
     if (stored) {
-      setJoinDate(stored);
+      setJoinDate(String(stored));
     } else {
-      const d = new Date();
-      setJoinDate(d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }));
+      setJoinDate(new Date().getFullYear().toString());
     }
-  }, []);
+  }, [currentUser?.memberSince]);
+
+  useEffect(() => {
+    if (isRemoteProfile) {
+      setLoading(true);
+      (async () => {
+        try {
+          const res = await authService.getUserByUsername(profileUsername);
+          if (res.success && res.user) {
+            const u = res.user;
+            setRemoteUser(u);
+            setUsername(u.username);
+            setAvatar(u.avatar || "");
+            setAvatarPreview(u.avatar || "");
+            if (u.watchlist) {
+              setWatchlist(u.watchlist.map(item => ({
+                id: item.animeId, name: item.name, img: item.img,
+                rating: item.rating, episodes: item.episodes,
+                year: item.year, status: item.status, genres: item.genres || [],
+                listStatus: item.listStatus || "Watch Later", type: "anime",
+              })));
+            }
+            if (u.ratings) setRated(u.ratings);
+            if (u.createdAt) {
+              setJoinDate(new Date(u.createdAt).getFullYear().toString());
+            }
+          }
+        } catch {}
+        setLoading(false);
+      })();
+    } else {
+      loadProfileData();
+      window.addEventListener("watchlist-updated", loadProfileData);
+      window.addEventListener("profile-data-changed", loadProfileData);
+      window.addEventListener("profile-avatar-updated", loadProfileData);
+      return () => {
+        window.removeEventListener("watchlist-updated", loadProfileData);
+        window.removeEventListener("profile-data-changed", loadProfileData);
+        window.removeEventListener("profile-avatar-updated", loadProfileData);
+      };
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileUsername]);
 
   const saveProfile = async () => {
     try {
@@ -115,63 +126,6 @@ export default function ProfilePage() {
     window.dispatchEvent(new Event("profile-avatar-updated"));
     setEditing(false);
   };
-
-  useEffect(() => {
-    if (isRemoteProfile) {
-      (async () => {
-        try {
-          const res = await authService.getUserByUsername(profileUsername);
-          if (res.success && res.user) {
-            const u = res.user;
-            setRemoteUser(u);
-            setUsername(u.username);
-            setAvatar(u.avatar || '');
-            setAvatarPreview(u.avatar || '');
-            if (u.watchlist) {
-              setWatchlist(u.watchlist.map(item => ({
-                id: item.animeId, name: item.name, img: item.img,
-                rating: item.rating, episodes: item.episodes,
-                year: item.year, status: item.status, genres: item.genres || [],
-                listStatus: item.listStatus || 'Watch Later', type: 'anime',
-              })));
-            }
-            if (u.likedAnime) setLiked(u.likedAnime);
-            if (u.ratings) setRated(u.ratings);
-            if (u.watchHistory) {
-              setHistory(u.watchHistory.slice(0, 10).map(h => ({
-                animeId: h.animeId, episode: h.episode,
-                timestamp: new Date(h.timestamp).getTime(),
-                animeName: h.animeName || '', animeImg: h.animeImg || '',
-              })));
-            }
-            if (u.createdAt) {
-              const d = new Date(u.createdAt);
-              setJoinDate(d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }));
-            }
-          }
-        } catch { /* ignore */ }
-      })();
-    } else {
-      loadProfileData();
-      window.addEventListener("storage", loadProfileData);
-      window.addEventListener("profile-avatar-updated", loadProfileData);
-      window.addEventListener("user-status-updated", loadProfileData);
-      window.addEventListener("watchlist-updated", loadProfileData);
-      window.addEventListener("profile-data-changed", loadProfileData);
-      window.addEventListener("focus", loadProfileData);
-      const interval = setInterval(loadProfileData, 5000);
-      return () => {
-        window.removeEventListener("storage", loadProfileData);
-        window.removeEventListener("profile-avatar-updated", loadProfileData);
-        window.removeEventListener("user-status-updated", loadProfileData);
-        window.removeEventListener("watchlist-updated", loadProfileData);
-        window.removeEventListener("profile-data-changed", loadProfileData);
-        window.removeEventListener("focus", loadProfileData);
-        clearInterval(interval);
-      };
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileUsername]);
 
   const handleAvatarUpload = (e) => {
     const file = e.target.files?.[0];
@@ -185,7 +139,7 @@ export default function ProfilePage() {
     reader.readAsDataURL(file);
   };
 
-  const handleRemoveFromWatchlist = (animeId, e) => {
+  const handleRemove = (animeId, e) => {
     e.stopPropagation();
     removeFromWatchlist(animeId);
     loadProfileData();
@@ -198,265 +152,280 @@ export default function ProfilePage() {
     loadProfileData();
   };
 
-  const tabCounts = {
+  const counts = useMemo(() => ({
     all: watchlist.length,
-    Watching: watchingCount,
-    Planning: planningCount,
-    Completed: completedCount,
-    Paused: pausedCount,
-    Dropped: droppedCount,
-  };
+    Watching: watchlist.filter(w => w.listStatus === "Watching").length,
+    Planning: watchlist.filter(w => w.listStatus === "Planning").length,
+    Completed: watchlist.filter(w => w.listStatus === "Completed").length,
+    Paused: watchlist.filter(w => w.listStatus === "Paused").length,
+    Dropped: watchlist.filter(w => w.listStatus === "Dropped").length,
+  }), [watchlist]);
+
+  const filteredAnime = activeTab === "all"
+    ? watchlist
+    : watchlist.filter(w => w.listStatus === activeTab);
+
+  const userAvatar = avatarPreview || avatar;
+  const userInitial = username.charAt(0).toUpperCase();
+  const handle = `@${(currentUser?.username || username).toLowerCase().replace(/\s+/g, "")}`;
 
   return (
     <AnimatedPage>
-      <div className="profile-page">
-        {/* Background gradient */}
-        <div className="profile-bg" />
+      <div className="pp">
+        <div className="pp-bg-glow" />
 
-        {/* Header */}
-        <div className="profile-header">
-          <div className="profile-header-bg" />
-          <div className="profile-header-content">
-            <div className="profile-header-main">
-              <div className="profile-avatar-section">
-                <div className="profile-avatar-wrap" onClick={() => editing && document.getElementById("avatar-upload")?.click()}>
-                  <div className="profile-avatar-circle">
-                    {userAvatar ? (
-                      <img src={userAvatar} alt={username} />
-                    ) : (
-                      <span>{userInitial}</span>
-                    )}
-                  </div>
-                </div>
-                <div className="profile-info">
-                  <h1 className="profile-username">{username}</h1>
-                  <span className="profile-handle">{handle}</span>
-                  <span className="profile-joined"><Calendar size={12} /> Joined {joinDate}</span>
-                </div>
-              </div>
-              <div className="profile-header-actions">
-                {isOwnProfile && (
-                  <button className="btn-icon" onClick={() => setEditing(true)} title="Edit Profile" aria-label="Edit Profile">
-                    <Settings size={18} />
-                  </button>
+        {/* ── Header ── */}
+        <header className="pp-header">
+          <div className="pp-header-inner">
+            <div className="pp-header-left">
+              <div className="pp-avatar" role="img" aria-label={`${username}'s avatar`}>
+                {userAvatar ? (
+                  <img src={userAvatar} alt={username} />
+                ) : (
+                  <span className="pp-avatar-initial">{userInitial}</span>
                 )}
-                <button className="btn-icon" onClick={() => { if (navigator.share) navigator.share({ title: username, url: window.location.href }); }} title="Share Profile" aria-label="Share Profile">
-                  <Share2 size={18} />
+              </div>
+              <div className="pp-info">
+                <h1 className="pp-username">{username}</h1>
+                <span className="pp-handle">{handle}</span>
+                <span className="pp-joined"><Calendar size={12} /> Joined {joinDate}</span>
+              </div>
+            </div>
+
+            <div className="pp-actions">
+              {isOwnProfile && (
+                <button className="pp-btn-icon" onClick={() => setEditing(true)} title="Settings" aria-label="Edit Profile">
+                  <Settings size={18} />
                 </button>
-                {isRemoteProfile && (
-                  <button className="btn-follow" aria-label="Follow User">
-                    <UserPlus size={16} /> Follow
-                  </button>
-                )}
-                {isOwnProfile && (
-                  <button className="btn-logout" onClick={async () => { await authService.logout(); navigate("/"); }} title="Sign Out" aria-label="Sign Out">
-                    Logout
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="profile-stats">
-              <div className="stat-card">
-                <strong className="stat-number">{completedCount}</strong>
-                <span className="stat-label">COMPLETED</span>
-              </div>
-              <div className="stat-card">
-                <strong className="stat-number">{watchingCount}</strong>
-                <span className="stat-label">WATCHING</span>
-              </div>
-              <div className="stat-card">
-                <strong className="stat-number">{planningCount}</strong>
-                <span className="stat-label">PLANNING</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Watchlist Section */}
-        <div className="profile-section">
-          <div className="section-header">
-            <h2><Bookmark size={20} /> Watchlist <span className="section-count">{watchlist.length} anime</span></h2>
-          </div>
-
-          {/* Tabs */}
-          <div className="watchlist-tabs" role="tablist" aria-label="Watchlist status filter">
-            {WATCHLIST_TABS.map(({ key, label }) => (
+              )}
               <button
-                key={key}
-                className={`watchlist-tab ${activeTab === key ? "active" : ""}`}
-                onClick={() => setActiveTab(key)}
-                role="tab"
-                aria-selected={activeTab === key}
-                aria-label={`${label} (${tabCounts[key]})`}
+                className="pp-btn-icon"
+                onClick={() => {
+                  if (navigator.share) navigator.share({ title: username, url: window.location.href });
+                  else navigator.clipboard?.writeText(window.location.href);
+                }}
+                title="Share"
+                aria-label="Share Profile"
               >
-                {label} <span className="tab-count">({tabCounts[key]})</span>
+                <Share2 size={18} />
               </button>
-            ))}
-          </div>
-
-          {/* Content */}
-          {filteredAnime.length > 0 ? (
-            <div className="anime-grid">
-              <AnimatePresence mode="popLayout">
-                {filteredAnime.map((item, i) => {
-                  const animeData = loadedAnime[item.id];
-                  const userRating = rated[item.id];
-                  return (
-                    <motion.div
-                      key={item.id}
-                      className="anime-card"
-                      layout
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ delay: i * 0.03, duration: 0.25 }}
-                      onClick={(e) => {
-                        if (document.startViewTransition) {
-                          const x = e.clientX || e.currentTarget.getBoundingClientRect().left + 50;
-                          const y = e.clientY || e.currentTarget.getBoundingClientRect().top + 50;
-                          document.startViewTransition(() => navigate(`/anime/${item.id}/info`)).ready.then(() => {
-                            document.documentElement.style.setProperty("--reveal-radius", "0%");
-                            document.documentElement.style.setProperty("--reveal-x", `${x}px`);
-                            document.documentElement.style.setProperty("--reveal-y", `${y}px`);
-                            requestAnimationFrame(() => {
-                              document.documentElement.style.setProperty("--reveal-radius", "110%");
-                            });
-                          });
-                        } else {
-                          navigate(`/anime/${item.id}/info`);
-                        }
-                      }}
-                    >
-                      <div className="anime-card-img-wrap">
-                        <img src={item.img} alt={item.name} loading="lazy" />
-                        <div className="anime-card-overlay">
-                          {isOwnProfile && (
-                            <>
-                              <button
-                                className="card-action card-action-edit"
-                                onClick={(e) => setShowStatusMenu(showStatusMenu === item.id ? null : item.id)}
-                                aria-label="Change status"
-                              >
-                                <Edit3 size={14} />
-                              </button>
-                              <button
-                                className="card-action card-action-delete"
-                                onClick={(e) => handleRemoveFromWatchlist(item.id, e)}
-                                aria-label="Remove from watchlist"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </>
-                          )}
-                          <button
-                            className="card-action card-action-view"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/anime/${item.id}/info`);
-                            }}
-                            aria-label="View details"
-                          >
-                            <ExternalLink size={14} />
-                          </button>
-                        </div>
-                        {showStatusMenu === item.id && (
-                          <div className="status-menu" onClick={e => e.stopPropagation()}>
-                            {STATUS_LIST.map(s => (
-                              <button
-                                key={s}
-                                className={`status-menu-item ${item.listStatus === s ? "current" : ""}`}
-                                onClick={(e) => handleStatusChange(item.id, s, e)}
-                              >
-                                {s}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div className="anime-card-info">
-                        <h4 className="anime-card-title">{item.name}</h4>
-                        <div className="anime-card-meta">
-                          {item.listStatus === "Watching" && item.episodes && (
-                            <span className="anime-card-progress"><Eye size={12} /> Ep {item.episodes || "?"}</span>
-                          )}
-                          {userRating && (
-                            <span className="anime-card-rating"><Star size={12} fill="#ffd700" color="#ffd700" /> {userRating}</span>
-                          )}
-                        </div>
-                        <span className={`anime-card-status status-${item.listStatus?.toLowerCase()}`}>{item.listStatus}</span>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <div className="empty-state">
-              <div className="empty-icon"><Bookmark size={80} /></div>
-              <h3 className="empty-title">No Anime Found</h3>
-              <p className="empty-msg">
-                {activeTab === "all"
-                  ? "This user's watchlist is empty."
-                  : `No anime with status "${activeTab}".`}
-              </p>
-              {isOwnProfile && activeTab === "all" && (
-                <button className="btn-primary" onClick={() => navigate("/browse/anime")}>
-                  <Plus size={16} /> Browse Anime
+              {isRemoteProfile && (
+                <button className="pp-btn-follow" aria-label="Follow User">
+                  <UserPlus size={16} /> Follow
+                </button>
+              )}
+              {isOwnProfile && (
+                <button
+                  className="pp-btn-logout"
+                  onClick={async () => { await authService.logout(); navigate("/"); }}
+                  aria-label="Sign Out"
+                >
+                  Logout
                 </button>
               )}
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Edit Profile Modal */}
+          {/* ── Stats ── */}
+          <div className="pp-stats">
+            <div className="pp-stat">
+              <strong className="pp-stat-number">{counts.Completed}</strong>
+              <span className="pp-stat-label">Completed</span>
+            </div>
+            <div className="pp-stat">
+              <strong className="pp-stat-number">{counts.Watching}</strong>
+              <span className="pp-stat-label">Watching</span>
+            </div>
+            <div className="pp-stat">
+              <strong className="pp-stat-number">{counts.Planning}</strong>
+              <span className="pp-stat-label">Planning</span>
+            </div>
+          </div>
+        </header>
+
+        {/* ── Main Content ── */}
+        <main className="pp-main">
+          <section className="pp-section">
+            <div className="pp-section-header">
+              <h2><Bookmark size={20} /> Watchlist <span className="pp-section-count">{watchlist.length} anime</span></h2>
+            </div>
+
+            {/* Tabs */}
+            <div className="pp-tabs" role="tablist" aria-label="Watchlist status filter">
+              {TABS.map(({ key, label }) => (
+                <button
+                  key={key}
+                  className={`pp-tab ${activeTab === key ? "active" : ""}`}
+                  onClick={() => setActiveTab(key)}
+                  role="tab"
+                  aria-selected={activeTab === key}
+                  aria-label={`${label} (${counts[key]})`}
+                >
+                  {label} <span className="pp-tab-count">({counts[key]})</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Grid */}
+            {loading ? (
+              <div className="pp-skeleton-grid">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div className="pp-skeleton-card" key={i}>
+                    <div className="pp-skeleton-poster" />
+                    <div className="pp-skeleton-body">
+                      <div className="pp-skeleton-line" />
+                      <div className="pp-skeleton-line pp-skeleton-line--short" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredAnime.length > 0 ? (
+              <div className="pp-grid">
+                <AnimatePresence mode="popLayout">
+                  {filteredAnime.map((item, i) => {
+                    const userRating = rated[item.id];
+                    return (
+                      <motion.div
+                        key={item.id}
+                        className="pp-card"
+                        layout
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ delay: i * 0.03, duration: 0.25 }}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`${item.name} — ${item.listStatus}`}
+                        onClick={() => navigate(`/anime/${item.id}/info`)}
+                        onKeyDown={(e) => { if (e.key === "Enter") navigate(`/anime/${item.id}/info`); }}
+                      >
+                        <div className="pp-card-poster">
+                          <img src={item.img} alt={item.name} loading="lazy" />
+                          <div className="pp-card-overlay">
+                            {isOwnProfile && (
+                              <>
+                                <button
+                                  className="pp-card-action pp-card-action--edit"
+                                  onClick={(e) => { e.stopPropagation(); setShowStatusMenu(showStatusMenu === item.id ? null : item.id); }}
+                                  aria-label="Change status"
+                                >
+                                  <Edit3 size={14} />
+                                </button>
+                                <button
+                                  className="pp-card-action pp-card-action--delete"
+                                  onClick={(e) => handleRemove(item.id, e)}
+                                  aria-label="Remove from watchlist"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </>
+                            )}
+                            <button
+                              className="pp-card-action pp-card-action--view"
+                              onClick={(e) => { e.stopPropagation(); navigate(`/anime/${item.id}/info`); }}
+                              aria-label="View details"
+                            >
+                              <ExternalLink size={14} />
+                            </button>
+                          </div>
+                          {showStatusMenu === item.id && (
+                            <div className="pp-status-menu" onClick={e => e.stopPropagation()}>
+                              {STATUS_LIST.map(s => (
+                                <button
+                                  key={s}
+                                  className={`pp-status-opt ${item.listStatus === s ? "current" : ""}`}
+                                  onClick={(e) => handleStatusChange(item.id, s, e)}
+                                >
+                                  {s}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="pp-card-body">
+                          <h4 className="pp-card-title">{item.name}</h4>
+                          <span className="pp-card-type">{item.status || "TV"}</span>
+                          <div className="pp-card-meta">
+                            {userRating && (
+                              <span className="pp-card-rating"><Star size={12} fill="#ffd700" color="#ffd700" /> {userRating}</span>
+                            )}
+                            {item.listStatus === "Watching" && item.episodes && (
+                              <span><Eye size={12} /> Ep {item.episodes}</span>
+                            )}
+                          </div>
+                          <span className={`pp-card-status pp-status-${item.listStatus?.toLowerCase()}`}>{item.listStatus}</span>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <div className="pp-empty">
+                <div className="pp-empty-icon"><Bookmark size={80} /></div>
+                <h3 className="pp-empty-title">No Anime Found</h3>
+                <p className="pp-empty-msg">
+                  {activeTab === "all"
+                    ? "This user's watchlist is empty."
+                    : `No anime with status "${activeTab}".`}
+                </p>
+                {isOwnProfile && activeTab === "all" && (
+                  <button className="pp-btn-primary" onClick={() => navigate("/browse/anime")}>
+                    <Plus size={16} /> Browse Anime
+                  </button>
+                )}
+              </div>
+            )}
+          </section>
+        </main>
+
+        {/* ── Edit Profile Modal ── */}
         <AnimatePresence>
           {editing && (
             <motion.div
-              className="modal-overlay"
+              className="pp-modal-overlay"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setEditing(false)}
             >
               <motion.div
-                className="modal"
+                className="pp-modal"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 onClick={e => e.stopPropagation()}
               >
-                <div className="modal-header">
+                <div className="pp-modal-head">
                   <h3>Edit Profile</h3>
-                  <button className="modal-close" onClick={() => setEditing(false)}><X size={18} /></button>
+                  <button className="pp-modal-close" onClick={() => setEditing(false)} aria-label="Close"><X size={18} /></button>
                 </div>
-                <div className="modal-body">
-                  <div className="edit-avatar-section">
-                    <div className="edit-avatar-circle">
+                <div className="pp-modal-body">
+                  <div className="pp-edit-avatar">
+                    <div className="pp-edit-avatar-circle">
                       {userAvatar ? <img src={userAvatar} alt={username} /> : <span>{userInitial}</span>}
                     </div>
-                    <div className="edit-avatar-actions">
-                      <label className="btn-secondary">
+                    <div className="pp-edit-btns">
+                      <label className="pp-btn-secondary">
                         Choose Avatar
                         <input type="file" accept="image/*" hidden onChange={handleAvatarUpload} />
                       </label>
-                      {avatar && <button className="btn-ghost" onClick={() => { setAvatar(""); setAvatarPreview(""); }}>Remove</button>}
+                      {avatar && <button className="pp-btn-ghost" onClick={() => { setAvatar(""); setAvatarPreview(""); }}>Remove</button>}
                     </div>
                   </div>
-                  <div className="edit-field">
-                    <label htmlFor="edit-username">Username</label>
+                  <div className="pp-field">
+                    <label htmlFor="pp-edit-username">Username</label>
                     <input
-                      id="edit-username"
+                      id="pp-edit-username"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="edit-input"
+                      className="pp-input"
                     />
                   </div>
                 </div>
-                <div className="modal-footer">
-                  <button className="btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
-                  <button className="btn-primary" onClick={saveProfile}>Save Changes</button>
+                <div className="pp-modal-foot">
+                  <button className="pp-btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
+                  <button className="pp-btn-primary" onClick={saveProfile}>Save Changes</button>
                 </div>
               </motion.div>
             </motion.div>
