@@ -455,10 +455,6 @@ export default function AnimeDetail() {
                     const realIdx = episodes.indexOf(ep);
                     return (
                       <button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} onClick={() => { setEpIndex(realIdx); }}>
-                        <div className="watch-ep-thumb">
-                          {anime.img && <img src={anime.img} alt="" />}
-                          <div className="watch-ep-thumb-overlay"><Play size={10} /></div>
-                        </div>
                         <div className="watch-ep-info">
                           <span className="watch-ep-name">Episode {ep.episode}</span>
                           {ep.title && <span className="watch-ep-title">{ep.title}</span>}

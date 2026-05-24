@@ -392,10 +392,6 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                     const realIdx = episodes.indexOf(ep);
                     return (
                       <motion.button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300 }} onClick={() => { setEpIndex(realIdx); if (onEpisodeChange) onEpisodeChange(ep.episode); }}>
-                        <div className="watch-ep-thumb">
-                          {detail?.img && <img src={detail.img} alt="" />}
-                          <div className="watch-ep-thumb-overlay"><Play size={10} /></div>
-                        </div>
                         <div className="watch-ep-info">
                           <span className="watch-ep-name">Episode {ep.episode}</span>
                           {ep.title && <span className="watch-ep-title">{ep.title}</span>}

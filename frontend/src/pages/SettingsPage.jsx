@@ -1058,6 +1058,7 @@ export default function SettingsPage() {
               <button className="sp-btn sp-btn--dark" onClick={() => setShowDeleteModal(false)}>Cancel</button>
               <button className="sp-btn sp-btn--danger" disabled={!deleteConfirm}>Confirm Deletion</button>
             </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
