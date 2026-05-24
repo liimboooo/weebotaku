@@ -53,10 +53,9 @@ export default function Header() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifList, setNotifList] = useState(getNotifications());
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [serverUnread, setServerUnread] = useState(0);
   const notifRef = useRef(null);
   const notifCount = Math.max(notifList.filter(n => !n.read).length, serverUnread);
-
-  const [serverUnread, setServerUnread] = useState(0);
 
   useEffect(() => {
     const handler = () => setNotifList(getNotifications());
