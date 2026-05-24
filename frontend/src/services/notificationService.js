@@ -1,4 +1,3 @@
-import api from './api';
 import { STORAGE_KEYS } from '../utils/constants';
 
 const STORAGE_KEY = STORAGE_KEYS.NOTIFICATIONS;
@@ -55,56 +54,4 @@ export function markAllRead() {
 
 export function clearNotifications() {
   localStorage.removeItem(STORAGE_KEY);
-}
-
-export async function fetchNotificationsFromServer(filter = 'all', page = 1, limit = 50) {
-  try {
-    const params = new URLSearchParams({ filter, page, limit });
-    const res = await api.get(`/notifications?${params}`);
-    return res;
-  } catch (err) {
-    console.error('Failed to fetch notifications:', err);
-    return { notifications: [], total: 0, unreadCount: 0 };
-  }
-}
-
-export async function fetchUnreadCount() {
-  try {
-    const res = await api.get('/notifications/unread-count');
-    return res.count || 0;
-  } catch {
-    return 0;
-  }
-}
-
-export async function markReadOnServer(notificationId) {
-  try {
-    await api.put(`/notifications/${notificationId}/read`);
-  } catch (err) {
-    console.error('Failed to mark notification as read:', err);
-  }
-}
-
-export async function markAllReadOnServer() {
-  try {
-    await api.put('/notifications/mark-all-read');
-  } catch (err) {
-    console.error('Failed to mark all as read:', err);
-  }
-}
-
-export async function deleteNotificationOnServer(notificationId) {
-  try {
-    await api.delete(`/notifications/${notificationId}`);
-  } catch (err) {
-    console.error('Failed to delete notification:', err);
-  }
-}
-
-export async function clearAllOnServer() {
-  try {
-    await api.delete('/notifications/clear');
-  } catch (err) {
-    console.error('Failed to clear notifications:', err);
-  }
 }

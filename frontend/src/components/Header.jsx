@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Bell,
   Bookmark,
   ChevronDown,
   Film,
@@ -17,12 +16,12 @@ import {
   Settings,
   Star,
   Swords,
+  Trophy,
   TrendingUp,
-
+  Users,
   Video,
   X,
 } from 'lucide-react';
-import { getNotifications, markRead, markAllRead, clearNotifications, fetchUnreadCount } from '../services/notificationService';
 import authService from '../services/authService';
 import { loadWatchHistory } from '../services/storage';
 import FastSearch from './FastSearch';
@@ -50,28 +49,7 @@ export default function Header() {
   const [isEditingStatus, setIsEditingStatus] = useState(false);
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [notifList, setNotifList] = useState(getNotifications());
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [serverUnread, setServerUnread] = useState(0);
-  const notifRef = useRef(null);
-  const notifCount = Math.max(notifList.filter(n => !n.read).length, serverUnread);
-
-  useEffect(() => {
-    const handler = () => setNotifList(getNotifications());
-    window.addEventListener("notification-added", handler);
-    window.addEventListener("storage", handler);
-    handler();
-    if (authService.isLoggedIn()) {
-      fetchUnreadCount().then(setServerUnread);
-      const interval = setInterval(() => fetchUnreadCount().then(setServerUnread), 30000);
-      return () => { clearInterval(interval); window.removeEventListener("notification-added", handler); window.removeEventListener("storage", handler); };
-    }
-    return () => {
-      window.removeEventListener("notification-added", handler);
-      window.removeEventListener("storage", handler);
-    };
-  }, []);
 
   const feedsRef = useRef(null);
   const exploreRef = useRef(null);
@@ -95,18 +73,6 @@ export default function Header() {
   );
 
 
-  function formatTimeAgo(ts) {
-    const diff = Date.now() - ts;
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    if (days < 7) return `${days}d ago`;
-    return `${Math.floor(days / 7)}w ago`;
-  }
-
   useEffect(() => {
     const closeOnClickOutside = (event) => {
       if (feedsRef.current && !feedsRef.current.contains(event.target)) setFeedsOpen(false);
@@ -114,7 +80,6 @@ export default function Header() {
       if (arenaRef.current && !arenaRef.current.contains(event.target)) setArenaOpen(false);
       if (profileRef.current && !profileRef.current.contains(event.target)) setProfileOpen(false);
       if (moreDropdownRef.current && !moreDropdownRef.current.contains(event.target)) setMoreDropdownOpen(false);
-      if (notifRef.current && !notifRef.current.contains(event.target)) setNotifOpen(false);
     };
     document.addEventListener('click', closeOnClickOutside);
     const onScroll = () => setScrollProgress(Math.min(1, window.scrollY / 120));
@@ -151,7 +116,6 @@ export default function Header() {
     setArenaOpen(false);
     setProfileOpen(false);
     setMoreDropdownOpen(false);
-    setNotifOpen(false);
   };
 
   useEffect(() => {
@@ -296,6 +260,16 @@ export default function Header() {
               )}
             </div>
 
+            <button className={`nav-link ${path === '/friends' ? 'active' : ''}`} onClick={() => navigateTo('/friends')}>
+              <Users size={16} />
+              <span>Friends</span>
+            </button>
+
+            <button className={`nav-link ${path === '/leaderboard' ? 'active' : ''}`} onClick={() => navigateTo('/leaderboard')}>
+              <Trophy size={16} />
+              <span>Leaderboard</span>
+            </button>
+
             <div className="more-dropdown-container" ref={moreDropdownRef}>
               <button className={`more-button ${moreDropdownOpen || isMoreActive ? 'active' : ''}`} onClick={() => setMoreDropdownOpen((value) => !value)}
                 aria-expanded={moreDropdownOpen} aria-haspopup="true">
@@ -303,21 +277,6 @@ export default function Header() {
               </button>
               {moreDropdownOpen && (
                 <div className="more-dropdown">
-                  <button className="more-item" onClick={() => navigateTo('/community')}>
-                    <MessageSquare size={16} /> <span>Community</span>
-                  </button>
-                  <button className="more-item" onClick={() => navigateTo('/chat')}>
-                    <MessageSquare size={16} /> <span>Chat Rooms</span>
-                  </button>
-                  <button className="more-item" onClick={() => navigateTo('/discover')}>
-                    <TrendingUp size={16} /> <span>Discover</span>
-                  </button>
-                  <button className="more-item" onClick={() => navigateTo('/leaderboard')}>
-                    <Star size={16} /> <span>Leaderboard</span>
-                  </button>
-                  <button className="more-item" onClick={() => navigateTo('/friends')}>
-                    <Globe size={16} /> <span>Friends</span>
-                  </button>
                   <button className="more-item" onClick={() => navigateTo('/settings')}>
                     <Settings size={16} /> <span>Settings</span>
                   </button>
@@ -335,42 +294,6 @@ export default function Header() {
         <div className="header-actions">
 
           {authService.isLoggedIn() ? (<>
-          <div className="notif-dropdown-container" ref={notifRef}>
-            <button className={`icon-button${notifCount > 0 ? " badge" : ""}`} data-badge={notifCount > 0 ? notifCount : undefined} onClick={() => setNotifOpen(v => !v)} title="Notifications">
-              <Bell size={16} />
-            </button>
-            {notifOpen && (
-              <div className="notif-dropdown">
-                <div className="notif-dropdown-header">
-                  <span>Notifications</span>
-                  {notifCount > 0 && <button className="notif-mark-all-btn" onClick={() => { markAllRead(); setNotifList(getNotifications()); }}>Mark all read</button>}
-                </div>
-                <div className="notif-dropdown-list">
-                  {notifList.length === 0 ? (
-                    <div className="notif-dropdown-empty">No notifications yet</div>
-                  ) : (
-                    notifList.slice(0, 10).map(n => (
-                      <div key={n.id} className={`notif-item${!n.read ? " unread" : ""}`} onClick={() => { if (!n.read) { markRead(n.id); setNotifList(getNotifications()); } }}>
-                        <div className="notif-item-dot" />
-                        <div className="notif-item-body">
-                          <div className="notif-item-title">{n.title}</div>
-                          {n.body && <div className="notif-item-text">{n.body}</div>}
-                          <div className="notif-item-time">{formatTimeAgo(n.time)}</div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                <div className="notif-dropdown-footer">
-                  {notifList.length > 0 && (
-                    <button className="notif-clear-btn" onClick={() => { clearNotifications(); setNotifList([]); }}>Clear all</button>
-                  )}
-                  <button className="notif-clear-btn" onClick={() => navigateTo('/notifications')}>View all</button>
-                </div>
-              </div>
-            )}
-          </div>
-
           <div className="profile-dropdown-container" ref={profileRef}>
             <button className="profile-button" onClick={() => setProfileOpen((value) => !value)}
               aria-expanded={profileOpen} aria-haspopup="true">

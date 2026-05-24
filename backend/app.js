@@ -49,19 +49,11 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
 
-const messageLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 30,
-  message: { success: false, message: 'Message rate limit reached' },
-});
-app.use('/api/chat/rooms/:id/messages', messageLimiter);
-
 // ─── Routes ──────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/anime', require('./routes/anime'));
 app.use('/api/manga', require('./routes/manga'));
 app.use('/api/reviews', require('./routes/reviews'));
-app.use('/api/community', require('./routes/community'));
 app.use('/api/news', require('./routes/news'));
 app.use('/api/tierlists', require('./routes/tierlists'));
 app.use('/api/rooms', require('./routes/rooms'));
@@ -70,12 +62,8 @@ app.use('/api/comments', require('./routes/comments'));
 app.use('/api/scrape', require('./routes/scrape'));
 app.use('/api/config', require('./routes/config'));
 app.use('/api/badges', require('./routes/badges'));
-app.use('/api/notifications', require('./routes/notifications'));
-app.use('/api/chat', require('./routes/chat'));
-app.use('/api/admin', require('./routes/admin'));
 app.use('/api/friends', require('./routes/friends'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
-app.use('/api/discover', require('./routes/trending'));
 
 // Health check
 app.get('/api/health', (req, res) => {
