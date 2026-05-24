@@ -120,12 +120,58 @@
   margin: 0 0 2.5rem;
 }
 
+/* ─── Section Groups (Dashboard) ─── */
+
+.st-section-group {
+  margin-bottom: 3rem;
+}
+
+.st-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 1.5rem;
+}
+
+.st-section-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 0.75rem;
+}
+
+.st-section-heading {
+  font-size: 24px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.st-section-sub {
+  font-size: 13px;
+  color: #888;
+}
+
+.st-section-divider {
+  height: 0.5px;
+  background: #667eea;
+  opacity: 0.3;
+  width: 100%;
+}
+
 /* ─── Dashboard Cards ─── */
 
 .st-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.25rem;
+}
+
+.st-card-grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.st-card-grid--1 {
+  grid-template-columns: 1fr;
 }
 
 .st-dash-card {
@@ -133,14 +179,14 @@
   flex-direction: column;
   gap: 1rem;
   padding: 1.5rem;
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.06);
-  background: linear-gradient(135deg, #12121a, #0f0f15);
+  background: #0f1629;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
   position: relative;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
   overflow: hidden;
 }
 
@@ -148,25 +194,35 @@
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 16px;
+  border-radius: 12px;
   opacity: 0;
   transition: opacity 0.3s ease;
   background: linear-gradient(135deg, rgba(102,126,234,0.03), transparent);
 }
 
 .st-dash-card:hover {
-  border-color: rgba(102,126,234,0.3);
-  box-shadow: 0 8px 40px rgba(102,126,234,0.08);
+  border-color: #667eea;
+  box-shadow: 0 8px 40px rgba(102,126,234,0.1);
 }
 
 .st-dash-card:hover::before {
   opacity: 1;
 }
 
+.st-dash-card--highlight {
+  border-color: rgba(74,222,128,0.25);
+  background: linear-gradient(135deg, #0f1a12, #0f1629);
+}
+
+.st-dash-card--highlight:hover {
+  border-color: #4ade80;
+  box-shadow: 0 8px 40px rgba(74,222,128,0.12);
+}
+
 .st-dash-card-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -189,6 +245,16 @@
   font-size: 13px;
   color: #888;
   line-height: 1.4;
+}
+
+.st-dash-card-status {
+  font-size: 12px;
+  color: #4ade80;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-weight: 500;
 }
 
 .st-dash-card-arrow {
@@ -241,20 +307,40 @@
   gap: 0;
 }
 
-/* ─── Section Title ─── */
+/* ─── Detail Section Header ─── */
 
-.st-section-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-  margin: 1.5rem 0 1rem;
+.st-detail-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 2rem 0 1.25rem;
 }
 
-.st-section-title:first-of-type {
+.st-detail-section-header:first-of-type {
   margin-top: 0;
 }
 
-.st-section-desc {
+.st-detail-section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.st-detail-section-sub {
+  font-size: 13px;
+  color: #888;
+}
+
+.st-detail-section-divider {
+  height: 0.5px;
+  background: #667eea;
+  opacity: 0.3;
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+.st-muted-text {
   font-size: 13px;
   color: #888;
   margin: -0.5rem 0 1rem;
@@ -719,13 +805,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.st-danger-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #ff6b6b;
-  margin: 0;
 }
 
 .st-danger-desc {
@@ -1269,7 +1348,8 @@
 /* ─── Responsive ─── */
 
 @media (max-width: 1024px) {
-  .st-card-grid { grid-template-columns: repeat(2, 1fr); }
+  .st-card-grid--3 { grid-template-columns: repeat(2, 1fr); }
+  .st-card-grid--1 { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
@@ -1277,7 +1357,9 @@
   .st-search-bar { display: none; }
   .st-body { padding: 1.25rem; }
   .st-page-title { font-size: 32px; }
-  .st-card-grid { grid-template-columns: 1fr; }
+  .st-card-grid--3 { grid-template-columns: 1fr; }
+  .st-card-grid--1 { grid-template-columns: 1fr; }
+  .st-section-heading { font-size: 20px; }
   .st-profile-card { flex-direction: column; align-items: flex-start; }
   .st-sync-card { flex-direction: column; align-items: flex-start; }
   .st-sync-card-right { width: 100%; }

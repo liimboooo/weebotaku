@@ -13,12 +13,33 @@ import {
 } from "lucide-react";
 import "./SettingsPage.css";
 
-const DASHBOARD_CARDS = [
-  { key: "account",       icon: User,     label: "Account",           desc: "Manage profile, email, bio",               color: "#667eea" },
-  { key: "preferences",   icon: Settings, label: "Preferences",       desc: "Theme, display, playback",                 color: "#4ade80" },
-  { key: "notifications", icon: Bell,     label: "Notifications",     desc: "Email, push, alerts",                      color: "#fbbf24" },
-  { key: "privacy",       icon: Shield,   label: "Privacy & Security",desc: "2FA, password, privacy",                   color: "#ff6b6b" },
-  { key: "sync",          icon: Link2,    label: "Sync & Apps",       desc: "MAL, AniList, auto-sync",                  color: "#00d4ff" },
+const SECTIONS = [
+  {
+    title: "Account & Security",
+    subtitle: null,
+    cols: 3,
+    cards: [
+      { key: "account",       icon: User,     label: "Account",           desc: "Manage profile, email, bio",               color: "#667eea" },
+      { key: "privacy",       icon: Shield,   label: "Privacy & Security",desc: "2FA, password, privacy",                   color: "#ff6b6b" },
+      { key: "notifications", icon: Bell,     label: "Notifications",     desc: "Email, push, alerts",                      color: "#fbbf24" },
+    ],
+  },
+  {
+    title: "Customization",
+    subtitle: null,
+    cols: 1,
+    cards: [
+      { key: "preferences",   icon: Settings, label: "Preferences",       desc: "Theme, display, playback",                 color: "#00d4ff" },
+    ],
+  },
+  {
+    title: "Integrations",
+    subtitle: "Connect your favorite services",
+    cols: 1,
+    cards: [
+      { key: "sync",          icon: Link2,    label: "Sync & Connected Apps", desc: "MAL, AniList, auto-sync",              color: "#4ade80" },
+    ],
+  },
 ];
 
 const pageVariants = {
@@ -211,31 +232,55 @@ export default function SettingsPage() {
     </nav>
   );
 
+  const countConnected = () => {
+    let c = 0;
+    if (settings.malConnected) c++;
+    if (settings.aniConnected) c++;
+    return c;
+  };
+
   const renderDashboard = () => (
     <motion.div className="st-dashboard" variants={stagger} initial="initial" animate="animate">
       <motion.h1 className="st-page-title" variants={cardItem}>Settings</motion.h1>
       <motion.p className="st-page-sub" variants={cardItem}>Manage your account, preferences, and connected services.</motion.p>
-      <div className="st-card-grid">
-        {DASHBOARD_CARDS.map(({ key, icon: Icon, label, desc, color }) => (
-          <motion.button
-            key={key}
-            className="st-dash-card"
-            variants={cardItem}
-            whileHover={{ scale: 1.04, y: -4 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => setPage(key)}
-          >
-            <div className="st-dash-card-icon" style={{ background: `${color}20`, color }}>
-              <Icon size={32} />
+
+      {SECTIONS.map(section => (
+        <div key={section.title} className="st-section-group">
+          <div className="st-section-header">
+            <div className="st-section-header-text">
+              <h2 className="st-section-heading">{section.title}</h2>
+              {section.subtitle && <span className="st-section-sub">{section.subtitle}</span>}
             </div>
-            <div className="st-dash-card-body">
-              <span className="st-dash-card-title">{label}</span>
-              <span className="st-dash-card-desc">{desc}</span>
-            </div>
-            <ArrowRight size={18} className="st-dash-card-arrow" style={{ color }} />
-          </motion.button>
-        ))}
-      </div>
+            <div className="st-section-divider" />
+          </div>
+          <div className={`st-card-grid st-card-grid--${section.cols}`}>
+            {section.cards.map(({ key, icon: Icon, label, desc, color }) => (
+              <motion.button
+                key={key}
+                className={`st-dash-card ${key === "sync" ? "st-dash-card--highlight" : ""}`}
+                variants={cardItem}
+                whileHover={{ scale: 1.04, y: -4 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setPage(key)}
+              >
+                <div className="st-dash-card-icon" style={{ background: `${color}18`, color }}>
+                  <Icon size={32} />
+                </div>
+                <div className="st-dash-card-body">
+                  <span className="st-dash-card-title">{label}</span>
+                  <span className="st-dash-card-desc">{desc}</span>
+                  {key === "sync" && countConnected() > 0 && (
+                    <span className="st-dash-card-status">
+                      <CheckCircle size={12} /> {countConnected()} Connected
+                    </span>
+                  )}
+                </div>
+                <ArrowRight size={16} className="st-dash-card-arrow" style={{ color }} />
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      ))}
     </motion.div>
   );
 
@@ -257,6 +302,14 @@ export default function SettingsPage() {
     </div>
   );
 
+  const renderSectionHeader = (title, subtitle) => (
+    <div className="st-detail-section-header">
+      <h3 className="st-detail-section-title">{title}</h3>
+      {subtitle && <span className="st-detail-section-sub">{subtitle}</span>}
+      <div className="st-detail-section-divider" />
+    </div>
+  );
+
   const renderField = (label, hint, children) => (
     <div className="st-field">
       <label className="st-field-label">{label}</label>
@@ -268,6 +321,9 @@ export default function SettingsPage() {
   const renderAccount = () => (
     <motion.div key="account" className="st-page" variants={pageVariants} initial="initial" animate="animate" exit="exit">
       <h1 className="st-page-title">Account</h1>
+      <p className="st-detail-section-sub" style={{ marginTop: "-0.5rem", marginBottom: "2rem" }}>Manage your profile information</p>
+
+      {renderSectionHeader("Profile Information")}
 
       <div className="st-profile-card">
         <div className="st-profile-left">
@@ -325,10 +381,11 @@ export default function SettingsPage() {
 
       <div className="st-divider" />
 
+      {renderSectionHeader("Danger Zone", "Irreversible actions")}
+
       <div className="st-danger-card">
         <div className="st-danger-inner">
-          <h4 className="st-danger-title">Danger Zone</h4>
-          <p className="st-danger-desc">Delete your account permanently. This action cannot be undone.</p>
+          <p className="st-danger-desc" style={{ marginTop: 0 }}>Delete your account permanently. This action cannot be undone.</p>
           <button className="st-btn st-btn--danger-outline" onClick={() => setShowDeleteModal(true)}>
             <Trash2 size={16} /> Delete Account
           </button>
@@ -341,7 +398,7 @@ export default function SettingsPage() {
     <motion.div key="preferences" className="st-page" variants={pageVariants} initial="initial" animate="animate" exit="exit">
       <h1 className="st-page-title">Preferences</h1>
 
-      <h3 className="st-section-title">Display</h3>
+      {renderSectionHeader("Display")}
       <div className="st-form">
         <div className="st-field">
           <label className="st-field-label">Theme</label>
@@ -384,7 +441,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="st-divider" />
-      <h3 className="st-section-title">Video Player</h3>
+      {renderSectionHeader("Video Player")}
       {renderToggle("autoNext", "Auto play next episode", "Automatically play next episode when current finishes")}
       {renderToggle("skipIntro", "Skip intro automatically", "Automatically skip opening sequences")}
       {renderToggle("skipOutro", "Skip outro automatically", "Automatically skip ending sequences")}
@@ -415,7 +472,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="st-divider" />
-      <h3 className="st-section-title">Content</h3>
+      {renderSectionHeader("Content")}
       {renderToggle("disableAds", "Remove advertisements", "Remove ads across the platform")}
       {renderToggle("showComments", "Show comments section", "Display community comments on watch pages")}
       {renderToggle("hideNsfw", "Hide NSFW content", "Filter out adult content")}
@@ -434,7 +491,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="st-divider" />
-      <h3 className="st-section-title">Anime List</h3>
+      {renderSectionHeader("Anime List")}
       <div className="st-field">
         <label className="st-field-label">Default List View</label>
         <div className="st-radio-group">
@@ -459,7 +516,7 @@ export default function SettingsPage() {
     <motion.div key="notifications" className="st-page" variants={pageVariants} initial="initial" animate="animate" exit="exit">
       <h1 className="st-page-title">Notifications</h1>
 
-      <h3 className="st-section-title">Email Notifications</h3>
+      {renderSectionHeader("Email Notifications")}
       {renderToggle("emailNotifs", "Enable email notifications", "Receive notifications via email")}
       {settings.emailNotifs && (
         <div className="st-sub-toggles">
@@ -472,8 +529,7 @@ export default function SettingsPage() {
       )}
 
       <div className="st-divider" />
-      <h3 className="st-section-title">Push Notifications</h3>
-      <p className="st-section-desc">Requires browser permission.</p>
+      {renderSectionHeader("Push Notifications", "Requires browser permission.")}
       {renderToggle("pushNotifs", "Enable push notifications", "Receive browser push notifications")}
       {settings.pushNotifs && (
         <div className="st-sub-toggles">
@@ -486,7 +542,7 @@ export default function SettingsPage() {
       )}
 
       <div className="st-divider" />
-      <h3 className="st-section-title">Newsletter</h3>
+      {renderSectionHeader("Newsletter")}
       {renderToggle("newsletterSub", "Subscribe to newsletter", "Weekly recommendations and updates")}
       {settings.newsletterSub && (
         <div className="st-sub-toggles">
@@ -507,7 +563,7 @@ export default function SettingsPage() {
       )}
 
       <div className="st-divider" />
-      <h3 className="st-section-title">Do Not Disturb</h3>
+      {renderSectionHeader("Do Not Disturb")}
       {renderToggle("dndMode", "Enable DND mode", "No notifications during this time")}
       {settings.dndMode && (
         <div className="st-dnd-row">
@@ -528,7 +584,7 @@ export default function SettingsPage() {
     <motion.div key="privacy" className="st-page" variants={pageVariants} initial="initial" animate="animate" exit="exit">
       <h1 className="st-page-title">Privacy & Security</h1>
 
-      <h3 className="st-section-title">Two-Factor Authentication</h3>
+      {renderSectionHeader("Two-Factor Authentication")}
       <div className="st-card-2fa">
         <div className="st-2fa-header">
           <div className="st-2fa-info">
@@ -572,7 +628,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="st-divider" />
-      <h3 className="st-section-title">Privacy</h3>
+      {renderSectionHeader("Privacy")}
       {renderToggle("publicProfile", "Public profile", "Others can view your profile")}
       {renderToggle("showWatchlistPublic", "Show watchlist publicly", "Your anime list is visible to everyone")}
       {renderToggle("showActivityStatus", "Show activity status", "Others see when you're watching")}
@@ -589,7 +645,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="st-divider" />
-      <h3 className="st-section-title">Password</h3>
+      {renderSectionHeader("Password")}
       <div className="st-pw-card">
         <div className="st-form">
           {renderField("Current Password", "Enter your existing password to verify your identity.", (
@@ -636,7 +692,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="st-divider" />
-      <h3 className="st-section-title">Blocked Users</h3>
+      {renderSectionHeader("Blocked Users")}
       <input className="st-input st-input--search" placeholder="Search blocked users..." value={blockedSearch} onChange={e => setBlockedSearch(e.target.value)} />
       <div className="st-blocked-empty">No blocked users</div>
     </motion.div>
@@ -646,7 +702,7 @@ export default function SettingsPage() {
     <motion.div key="sync" className="st-page" variants={pageVariants} initial="initial" animate="animate" exit="exit">
       <h1 className="st-page-title">Sync & Connected Apps</h1>
 
-      <h3 className="st-section-title">MyAnimeList (MAL)</h3>
+      {renderSectionHeader("MyAnimeList (MAL)")}
       <div className="st-sync-card">
         <div className="st-sync-card-left">
           <div className="st-sync-logo mal">MAL</div>
@@ -682,7 +738,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <h3 className="st-section-title">AniList</h3>
+      {renderSectionHeader("AniList")}
       <div className="st-sync-card">
         <div className="st-sync-card-left">
           <div className="st-sync-logo ani">AniL</div>
@@ -719,7 +775,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="st-divider" />
-      <h3 className="st-section-title">Auto-Sync Options</h3>
+      {renderSectionHeader("Auto-Sync Options")}
       {(settings.malConnected || settings.aniConnected) ? (
         <>
           {renderToggle("autoSyncEpisode", "Auto-sync when episode finishes", "Update MAL/AniList when you finish watching")}
@@ -728,11 +784,11 @@ export default function SettingsPage() {
           {renderToggle("autoSyncShutdown", "Sync on shutdown", "Sync before closing the app")}
         </>
       ) : (
-        <p className="st-section-desc">Connect at least one service to enable auto-sync options.</p>
+        <p className="st-muted-text">Connect at least one service to enable auto-sync options.</p>
       )}
 
       <div className="st-divider" />
-      <h3 className="st-section-title">Sync Information</h3>
+      {renderSectionHeader("Sync Information")}
       <div className="st-info-card">
         <p><strong>Manual sync</strong> takes 2-5 minutes</p>
         <p><strong>Auto-sync</strong> runs in background (max once per hour)</p>
@@ -741,7 +797,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="st-divider" />
-      <h3 className="st-section-title">Other Services</h3>
+      {renderSectionHeader("Other Services")}
       <div className="st-other-grid">
         <div className="st-other-card">
           <div className="st-other-icon" style={{ background: "#5865F220", color: "#5865F2" }}>
