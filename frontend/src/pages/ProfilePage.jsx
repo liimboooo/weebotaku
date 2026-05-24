@@ -6,16 +6,15 @@ import { loadWatchlist, removeFromWatchlist, updateListStatus, loadRatings, load
 import authService from "../services/authService";
 import AnimatedPage from "../components/AnimatedPage";
 import {
-  Bookmark, Star, Plus, Settings, Share2, UserPlus, X,
-  Edit3, Trash2, ExternalLink, Calendar, LogOut, Clock,
-  CheckCircle, Play, Pause, XCircle, Search, ArrowUpDown,
-  Activity, ImagePlus, Eye, Film, Heart, LayoutGrid, List,
+  Bookmark, Eye, Clock, CheckCircle, Pause, XCircle,
+  Settings, Share2, UserPlus, X, Plus, Star, Edit3, Trash2,
+  ExternalLink, Calendar, LogOut, ImagePlus, Search,
 } from "lucide-react";
 import "./ProfilePage.css";
 
 const TABS = [
   { key: "all",       label: "All",       icon: Bookmark },
-  { key: "Watching",  label: "Watching",  icon: Play },
+  { key: "Watching",  label: "Watching",  icon: Eye },
   { key: "Planning",  label: "Planning",  icon: Clock },
   { key: "Completed", label: "Completed", icon: CheckCircle },
   { key: "Paused",    label: "Paused",    icon: Pause },
@@ -23,24 +22,6 @@ const TABS = [
 ];
 
 const STATUS_LIST = ["Watching", "Planning", "Completed", "Paused", "Dropped"];
-
-const SORT_OPTIONS = [
-  { key: "recent", label: "Recent" },
-  { key: "alpha",  label: "A-Z" },
-  { key: "rating", label: "Rating" },
-];
-
-function timeAgoShort(ts) {
-  const diff = Date.now() - ts;
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
-  return `${Math.floor(days / 7)}w ago`;
-}
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -65,8 +46,6 @@ export default function ProfilePage() {
   const [joinDate, setJoinDate] = useState("");
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("recent");
-  const [sortOpen, setSortOpen] = useState(false);
   const [viewMode, setViewMode] = useState("list");
 
   const loadProfileData = useCallback(() => {
@@ -104,7 +83,13 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const stored = currentUser?.memberSince;
-    setJoinDate(stored ? String(stored) : new Date().getFullYear().toString());
+    if (stored) {
+      const d = new Date(stored);
+      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      setJoinDate(`${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`);
+    } else {
+      setJoinDate(new Date().getFullYear().toString());
+    }
   }, [currentUser?.memberSince]);
 
   useEffect(() => {
@@ -135,7 +120,11 @@ export default function ProfilePage() {
                 animeName: h.animeName || "", animeImg: h.animeImg || "",
               })));
             }
-            if (u.createdAt) setJoinDate(new Date(u.createdAt).getFullYear().toString());
+            if (u.createdAt) {
+              const d = new Date(u.createdAt);
+              const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+              setJoinDate(`${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`);
+            }
           }
         } catch {}
         setLoading(false);
@@ -200,530 +189,278 @@ export default function ProfilePage() {
     Dropped: watchlist.filter(w => w.listStatus === "Dropped").length,
   }), [watchlist]);
 
-  const totalAnime = watchlist.length;
-  const totalEps = history.length;
-  const hoursWatched = Math.round(totalEps * 24 / 60);
-
   const filteredAnime = useMemo(() => {
     let list = activeTab === "all" ? watchlist : watchlist.filter(w => w.listStatus === activeTab);
-
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(w => w.name?.toLowerCase().includes(q));
     }
-
-    if (sortBy === "alpha") list = [...list].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-    else if (sortBy === "rating") list = [...list].sort((a, b) => (rated[b.id] || 0) - (rated[a.id] || 0));
-
     return list;
-  }, [watchlist, activeTab, searchQuery, sortBy, rated]);
+  }, [watchlist, activeTab, searchQuery]);
 
   const userAvatar = avatarPreview || avatar;
   const userInitial = username.charAt(0).toUpperCase();
-  const handle = `@${(currentUser?.username || username).toLowerCase().replace(/\s+/g, "")}`;
+  const handle = `@${(currentUser?.username || username).replace(/\s+/g, "")}`;
 
   return (
     <AnimatedPage>
-      <div className="pp">
-        {/* ── Hero ── */}
-        <div className="pp-hero">
-          <div className="pp-hero-grid" />
-          <div className="pp-hero-shapes">
-            <div className="pp-shape pp-shape--circle" />
-            <div className="pp-shape pp-shape--triangle" />
-            <div className="pp-shape pp-shape--square" />
-            <div className="pp-shape pp-shape--dot" />
-            <div className="pp-shape pp-shape--dot" />
-            <div className="pp-shape pp-shape--dot" />
-          </div>
-        </div>
-
-        <div className="pp-container">
-          <div className="pp-layout">
-
-            {/* ═══ SIDEBAR ═══ */}
-            <aside className="pp-sidebar">
-              <div className="pp-user-card">
-                <div className="pp-avatar-wrap">
-                  <div className="pp-avatar" role="img" aria-label={`${username}'s avatar`}>
-                    {userAvatar ? (
-                      <img src={userAvatar} alt={username} />
-                    ) : (
-                      <span className="pp-avatar-initial">{userInitial}</span>
-                    )}
-                    {totalAnime >= 10 && (
-                      <span className="pp-avatar-badge">
-                        {totalAnime >= 50 ? "PRO" : totalAnime >= 25 ? "VET" : "FAN"}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="pp-user-info">
-                  <h1 className="pp-username">{username}</h1>
-                  <span className="pp-handle">{handle}</span>
-                  <p className="pp-bio">
-                    <span className="pp-bio-cursor">
-                      {statusMsg || (isOwnProfile ? "Watching anime..." : "")}
-                    </span>
-                  </p>
-                  <span className="pp-joined"><Calendar size={11} /> Joined {joinDate}</span>
-                </div>
-              </div>
-
-              <div className="pp-sidebar-actions">
-                {isOwnProfile && (
-                  <button className="pp-action-btn" onClick={() => setEditing(true)}>
-                    <Settings size={14} /> Edit
-                  </button>
-                )}
-                <button
-                  className="pp-action-btn"
-                  onClick={() => {
-                    if (navigator.share) navigator.share({ title: username, url: window.location.href });
-                    else navigator.clipboard?.writeText(window.location.href);
-                  }}
-                >
-                  <Share2 size={14} /> Share
-                </button>
-                {isRemoteProfile && (
-                  <button className="pp-action-btn pp-action-btn--follow">
-                    <UserPlus size={14} /> Follow
-                  </button>
-                )}
-                {isOwnProfile && (
-                  <button
-                    className="pp-action-btn pp-action-btn--danger"
-                    onClick={async () => { await authService.logout(); navigate("/"); }}
-                  >
-                    <LogOut size={14} /> Logout
-                  </button>
-                )}
-              </div>
-
-              <div className="pp-sidebar-stats">
-                <button className="pp-sidebar-stat" onClick={() => setActiveTab("Completed")}>
-                  <div className="pp-sidebar-stat-icon pp-sidebar-stat-icon--completed"><CheckCircle size={20} /></div>
-                  <div className="pp-sidebar-stat-info">
-                    <strong className="pp-sidebar-stat-number">{counts.Completed}</strong>
-                    <span className="pp-sidebar-stat-label">Completed</span>
-                  </div>
-                </button>
-                <button className="pp-sidebar-stat" onClick={() => setActiveTab("Watching")}>
-                  <div className="pp-sidebar-stat-icon pp-sidebar-stat-icon--watching"><Eye size={20} /></div>
-                  <div className="pp-sidebar-stat-info">
-                    <strong className="pp-sidebar-stat-number">{counts.Watching}</strong>
-                    <span className="pp-sidebar-stat-label">Watching</span>
-                  </div>
-                </button>
-                <button className="pp-sidebar-stat" onClick={() => setActiveTab("Planning")}>
-                  <div className="pp-sidebar-stat-icon pp-sidebar-stat-icon--planning"><Clock size={20} /></div>
-                  <div className="pp-sidebar-stat-info">
-                    <strong className="pp-sidebar-stat-number">{counts.Planning}</strong>
-                    <span className="pp-sidebar-stat-label">Planning</span>
-                  </div>
-                </button>
-                <button className="pp-sidebar-stat" onClick={() => {}}>
-                  <div className="pp-sidebar-stat-icon pp-sidebar-stat-icon--episodes"><Film size={20} /></div>
-                  <div className="pp-sidebar-stat-info">
-                    <strong className="pp-sidebar-stat-number">{totalEps}</strong>
-                    <span className="pp-sidebar-stat-label">Episodes</span>
-                  </div>
-                </button>
-                <button className="pp-sidebar-stat" onClick={() => {}}>
-                  <div className="pp-sidebar-stat-icon pp-sidebar-stat-icon--hours"><Heart size={20} /></div>
-                  <div className="pp-sidebar-stat-info">
-                    <strong className="pp-sidebar-stat-number">{hoursWatched}h</strong>
-                    <span className="pp-sidebar-stat-label">Watched</span>
-                  </div>
-                </button>
-              </div>
-            </aside>
-
-            {/* ═══ MAIN CONTENT ═══ */}
-            <div className="pp-content">
-
-              {/* ── Recent Activity ── */}
-              {history.length > 0 && (
-                <section className="pp-activity">
-                  <h2 className="pp-section-label">Recent Activity</h2>
-                  <div className="pp-activity-list">
-                    {history.slice(0, 6).map((h, i) => {
-                      const anime = loadedAnime[h.animeId];
-                      const img = anime?.image || h.animeImg;
-                      const name = anime?.name || h.animeName || "Unknown";
-                      return (
-                        <motion.div
-                          key={`${h.animeId}-${h.timestamp}`}
-                          className="pp-activity-item"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: i * 0.03, duration: 0.2 }}
-                          onClick={() => navigate(`/anime/${h.animeId}/info?ep=${h.episode || 1}`)}
-                        >
-                          <div className="pp-activity-img">
-                            {img && <img src={img} alt={name} loading="lazy" />}
-                          </div>
-                          <div className="pp-activity-info">
-                            <p className="pp-activity-name">{name}</p>
-                            <div className="pp-activity-meta">
-                              <span className="pp-activity-ep-badge">EP {h.episode || 1}</span>
-                              <span className="pp-activity-time">{timeAgoShort(h.timestamp)}</span>
-                            </div>
-                          </div>
-                          <button
-                            className="pp-activity-continue"
-                            onClick={(e) => { e.stopPropagation(); navigate(`/anime/${h.animeId}/info?ep=${h.episode || 1}`); }}
-                          >
-                            Continue
-                          </button>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                </section>
-              )}
-
-              {/* ── Watchlist ── */}
-              <section className="pp-watchlist">
-                <div className="pp-watchlist-header">
-                  <h2 className="pp-watchlist-title">
-                    Watchlist <span className="pp-watchlist-count">({totalAnime})</span>
-                  </h2>
-                  <div className="pp-toolbar">
-                    <div className="pp-search-box">
-                      <Search size={13} />
-                      <input
-                        className="pp-search-input"
-                        placeholder="Search..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
-                    </div>
-                    <div style={{ position: "relative" }}>
-                      <button className="pp-sort-btn" onClick={() => setSortOpen(!sortOpen)}>
-                        <ArrowUpDown size={12} /> {SORT_OPTIONS.find(s => s.key === sortBy)?.label}
-                      </button>
-                      {sortOpen && (
-                        <div className="pp-status-menu" style={{ top: "calc(100% + 4px)", left: 0, right: "auto" }} onClick={e => e.stopPropagation()}>
-                          {SORT_OPTIONS.map(s => (
-                            <button
-                              key={s.key}
-                              className={`pp-status-opt ${sortBy === s.key ? "current" : ""}`}
-                              onClick={() => { setSortBy(s.key); setSortOpen(false); }}
-                            >
-                              {s.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="pp-view-toggle">
-                      <button
-                        className={`pp-view-btn ${viewMode === "list" ? "active" : ""}`}
-                        onClick={() => setViewMode("list")}
-                        aria-label="List view"
-                      >
-                        <List size={14} />
-                      </button>
-                      <button
-                        className={`pp-view-btn ${viewMode === "grid" ? "active" : ""}`}
-                        onClick={() => setViewMode("grid")}
-                        aria-label="Grid view"
-                      >
-                        <LayoutGrid size={14} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tabs */}
-                <div className="pp-tabs" role="tablist">
-                  {TABS.map(({ key, label, icon: Icon }) => (
-                    <button
-                      key={key}
-                      className={`pp-tab ${activeTab === key ? "active" : ""}`}
-                      onClick={() => setActiveTab(key)}
-                      role="tab"
-                      aria-selected={activeTab === key}
-                    >
-                      <Icon size={13} />
-                      {label}
-                      <span className="pp-tab-count">({counts[key]})</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Content */}
-                {loading ? (
-                  <div className="pp-skeleton-list">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div className="pp-skeleton-row" key={i}>
-                        <div className="pp-skeleton-thumb" />
-                        <div className="pp-skeleton-lines">
-                          <div className="pp-skeleton-line pp-skeleton-line--med" />
-                          <div className="pp-skeleton-line pp-skeleton-line--short" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : filteredAnime.length > 0 ? (
-                  viewMode === "list" ? (
-                    <div className="pp-list">
-                      <div className="pp-list-header">
-                        <span></span>
-                        <span>Title</span>
-                        <span>Status</span>
-                        <span>Rating</span>
-                        <span>Actions</span>
-                      </div>
-                      <AnimatePresence mode="popLayout">
-                        {filteredAnime.map((item, i) => {
-                          const userRating = rated[item.id];
-                          return (
-                            <motion.button
-                              key={item.id}
-                              className="pp-list-row"
-                              layout
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ delay: i * 0.02, duration: 0.2 }}
-                              onClick={() => navigate(`/anime/${item.id}/info`)}
-                            >
-                              <div className="pp-list-img">
-                                <img src={item.img} alt={item.name} loading="lazy" />
-                              </div>
-                              <div className="pp-list-title-col">
-                                <h4 className="pp-list-title">{item.name}</h4>
-                                <span className="pp-list-type">{item.status || "TV"}{item.episodes ? ` · ${item.episodes} ep` : ""}</span>
-                              </div>
-                              <div>
-                                <span className={`pp-list-status pp-list-status--${item.listStatus?.toLowerCase()}`}>
-                                  {item.listStatus}
-                                </span>
-                              </div>
-                              <div className="pp-list-rating">
-                                {userRating ? (
-                                  <><Star size={11} fill="#fbbf24" /> {userRating}</>
-                                ) : (
-                                  <span style={{ color: "#333" }}>--</span>
-                                )}
-                              </div>
-                              <div className="pp-list-actions">
-                                {isOwnProfile && (
-                                  <>
-                                    <button
-                                      className="pp-list-action"
-                                      onClick={(e) => { e.stopPropagation(); setShowStatusMenu(showStatusMenu === item.id ? null : item.id); }}
-                                      aria-label="Change status"
-                                    >
-                                      <Edit3 size={13} />
-                                    </button>
-                                    <button
-                                      className="pp-list-action pp-list-action--delete"
-                                      onClick={(e) => handleRemove(item.id, e)}
-                                      aria-label="Remove"
-                                    >
-                                      <Trash2 size={13} />
-                                    </button>
-                                  </>
-                                )}
-                                <button
-                                  className="pp-list-action"
-                                  onClick={(e) => { e.stopPropagation(); navigate(`/anime/${item.id}/info`); }}
-                                  aria-label="View"
-                                >
-                                  <ExternalLink size={13} />
-                                </button>
-                                {showStatusMenu === item.id && (
-                                  <div className="pp-status-menu" style={{ position: "absolute", top: "100%", right: 0 }} onClick={e => e.stopPropagation()}>
-                                    {STATUS_LIST.map(s => (
-                                      <button
-                                        key={s}
-                                        className={`pp-status-opt ${item.listStatus === s ? "current" : ""}`}
-                                        onClick={(e) => handleStatusChange(item.id, s, e)}
-                                      >
-                                        {s}
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </motion.button>
-                          );
-                        })}
-                      </AnimatePresence>
-                    </div>
-                  ) : (
-                    <div className="pp-grid">
-                      <AnimatePresence mode="popLayout">
-                        {filteredAnime.map((item, i) => {
-                          const userRating = rated[item.id];
-                          return (
-                            <motion.div
-                              key={item.id}
-                              className="pp-card"
-                              layout
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ delay: i * 0.02, duration: 0.2 }}
-                              tabIndex={0}
-                              role="button"
-                              aria-label={`${item.name} — ${item.listStatus}`}
-                              onClick={() => navigate(`/anime/${item.id}/info`)}
-                              onKeyDown={(e) => { if (e.key === "Enter") navigate(`/anime/${item.id}/info`); }}
-                            >
-                              <div className="pp-card-poster">
-                                <img src={item.img} alt={item.name} loading="lazy" />
-                                <div className="pp-card-overlay">
-                                  <span className="pp-card-overlay-title">{item.name}</span>
-                                  <div className="pp-card-overlay-info">
-                                    {userRating && (
-                                      <span className="pp-card-overlay-rating">
-                                        <Star size={11} fill="#fbbf24" color="#fbbf24" /> {userRating}
-                                      </span>
-                                    )}
-                                    {item.episodes && (
-                                      <span className="pp-card-overlay-progress">{item.episodes} ep</span>
-                                    )}
-                                  </div>
-                                  <div className="pp-card-overlay-actions">
-                                    {isOwnProfile && (
-                                      <>
-                                        <button
-                                          className="pp-card-action"
-                                          onClick={(e) => { e.stopPropagation(); setShowStatusMenu(showStatusMenu === item.id ? null : item.id); }}
-                                          aria-label="Change status"
-                                        >
-                                          <Edit3 size={12} />
-                                        </button>
-                                        <button
-                                          className="pp-card-action pp-card-action--delete"
-                                          onClick={(e) => handleRemove(item.id, e)}
-                                          aria-label="Remove"
-                                        >
-                                          <Trash2 size={12} />
-                                        </button>
-                                      </>
-                                    )}
-                                    <button
-                                      className="pp-card-action"
-                                      onClick={(e) => { e.stopPropagation(); navigate(`/anime/${item.id}/info`); }}
-                                      aria-label="View"
-                                    >
-                                      <ExternalLink size={12} />
-                                    </button>
-                                  </div>
-                                </div>
-                                {showStatusMenu === item.id && (
-                                  <div className="pp-status-menu" style={{ position: "absolute", bottom: 0, left: 0, right: 0 }} onClick={e => e.stopPropagation()}>
-                                    {STATUS_LIST.map(s => (
-                                      <button
-                                        key={s}
-                                        className={`pp-status-opt ${item.listStatus === s ? "current" : ""}`}
-                                        onClick={(e) => handleStatusChange(item.id, s, e)}
-                                      >
-                                        {s}
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                              <div className="pp-card-body">
-                                <h4 className="pp-card-title">{item.name}</h4>
-                                <div className="pp-card-meta">
-                                  <span className="pp-card-type">{item.status || "TV"}</span>
-                                  {userRating && (
-                                    <span className="pp-card-rating"><Star size={10} fill="#fbbf24" color="#fbbf24" /> {userRating}</span>
-                                  )}
-                                </div>
-                                <span className={`pp-card-status-badge pp-card-status-badge--${item.listStatus?.toLowerCase()}`}>{item.listStatus}</span>
-                              </div>
-                            </motion.div>
-                          );
-                        })}
-                      </AnimatePresence>
-                    </div>
-                  )
+      <div className="upp">
+        {/* ───────────────────────────────────────────────
+            TOP SECTION — User Card + Stats
+        ─────────────────────────────────────────────── */}
+        <div className="upp-top">
+          <div className="upp-top-inner">
+            <div className="upp-user-card">
+              <div className="upp-avatar" role="img" aria-label={`${username}'s avatar`}>
+                {userAvatar ? (
+                  <img src={userAvatar} alt={username} />
                 ) : (
-                  <div className="pp-empty">
-                    <div className="pp-empty-icon"><Bookmark size={48} /></div>
-                    <h3 className="pp-empty-title">
-                      {searchQuery ? "No results" : "Nothing here yet"}
-                    </h3>
-                    <p className="pp-empty-msg">
-                      {searchQuery
-                        ? `No match for "${searchQuery}".`
-                        : activeTab === "all"
-                          ? "Start adding anime to your watchlist."
-                          : `No anime marked as "${activeTab}".`}
-                    </p>
-                    {isOwnProfile && activeTab === "all" && !searchQuery && (
-                      <button className="pp-btn-primary" onClick={() => navigate("/browse/anime")}>
-                        <Plus size={14} /> Browse Anime
-                      </button>
-                    )}
-                  </div>
+                  <span className="upp-avatar-initial">{userInitial}</span>
                 )}
-              </section>
+              </div>
+              <h1 className="upp-username">{username}</h1>
+              <span className="upp-handle">{handle}</span>
+              <span className="upp-joined">
+                <Calendar size={13} /> Joined {joinDate}
+              </span>
+            </div>
+
+            <div className="upp-stats">
+              <button className="upp-stat" onClick={() => setActiveTab("Completed")}>
+                <span className="upp-stat-number">{counts.Completed}</span>
+                <span className="upp-stat-label">COMPLETED</span>
+              </button>
+              <button className="upp-stat" onClick={() => setActiveTab("Watching")}>
+                <span className="upp-stat-number">{counts.Watching}</span>
+                <span className="upp-stat-label">WATCHING</span>
+              </button>
+              <button className="upp-stat" onClick={() => setActiveTab("Planning")}>
+                <span className="upp-stat-number">{counts.Planning}</span>
+                <span className="upp-stat-label">PLANNING</span>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* ══════ EDIT MODAL ══════ */}
+        {/* ───────────────────────────────────────────────
+            WATCHLIST SECTION
+        ─────────────────────────────────────────────── */}
+        <div className="upp-watchlist-section">
+          <div className="upp-watchlist-inner">
+            <div className="upp-watchlist-header">
+              <h2 className="upp-watchlist-title">
+                Watchlist <span className="upp-watchlist-count">{filteredAnime.length} anime</span>
+              </h2>
+              <div className="upp-watchlist-actions">
+                {isOwnProfile && (
+                  <div className="upp-search-box">
+                    <Search size={13} />
+                    <input
+                      className="upp-search-input"
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="upp-tabs" role="tablist">
+              {TABS.map(({ key, label, icon: Icon }) => (
+                <button
+                  key={key}
+                  className={`upp-tab ${activeTab === key ? "active" : ""}`}
+                  onClick={() => setActiveTab(key)}
+                  role="tab"
+                  aria-selected={activeTab === key}
+                >
+                  <Icon size={14} />
+                  <span>{label}</span>
+                  <span className="upp-tab-count">({counts[key]})</span>
+                </button>
+              ))}
+            </div>
+
+            {loading ? (
+              <div className="upp-skeleton-list">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div className="upp-skeleton-row" key={i}>
+                    <div className="upp-skeleton-thumb" />
+                    <div className="upp-skeleton-lines">
+                      <div className="upp-skeleton-line upp-skeleton-line--med" />
+                      <div className="upp-skeleton-line upp-skeleton-line--short" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredAnime.length > 0 ? (
+              <div className="upp-list">
+                <AnimatePresence mode="popLayout">
+                  {filteredAnime.map((item, i) => {
+                    const userRating = rated[item.id];
+                    return (
+                      <motion.button
+                        key={item.id}
+                        className="upp-list-row"
+                        layout
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ delay: i * 0.02, duration: 0.2 }}
+                        onClick={() => navigate(`/anime/${item.id}/info`)}
+                      >
+                        <div className="upp-list-img">
+                          <img src={item.img} alt={item.name} loading="lazy" />
+                        </div>
+                        <div className="upp-list-info">
+                          <h4 className="upp-list-title">{item.name}</h4>
+                          <span className="upp-list-meta">
+                            {item.status || "TV"}{item.episodes ? ` \u00b7 ${item.episodes} ep` : ""}
+                          </span>
+                        </div>
+                        <span className={`upp-list-status upp-list-status--${item.listStatus?.toLowerCase()}`}>
+                          {item.listStatus}
+                        </span>
+                        <div className="upp-list-rating">
+                          {userRating ? (
+                            <><Star size={11} fill="#4ade80" color="#4ade80" /> {userRating}</>
+                          ) : (
+                            <span className="upp-list-rating-empty">--</span>
+                          )}
+                        </div>
+                        {isOwnProfile && (
+                          <div className="upp-list-actions">
+                            <button
+                              className="upp-list-action"
+                              onClick={(e) => { e.stopPropagation(); setShowStatusMenu(showStatusMenu === item.id ? null : item.id); }}
+                              aria-label="Change status"
+                            >
+                              <Edit3 size={14} />
+                            </button>
+                            <button
+                              className="upp-list-action upp-list-action--delete"
+                              onClick={(e) => handleRemove(item.id, e)}
+                              aria-label="Remove"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                            {showStatusMenu === item.id && (
+                              <div className="upp-status-menu" onClick={e => e.stopPropagation()}>
+                                {STATUS_LIST.map(s => (
+                                  <button
+                                    key={s}
+                                    className={`upp-status-opt ${item.listStatus === s ? "current" : ""}`}
+                                    onClick={(e) => handleStatusChange(item.id, s, e)}
+                                  >
+                                    {s}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <div className="upp-empty">
+                <div className="upp-empty-icon">
+                  <Bookmark size={60} />
+                </div>
+                <h3 className="upp-empty-title">No Anime Found</h3>
+                <p className="upp-empty-msg">
+                  {searchQuery
+                    ? `No results for "${searchQuery}".`
+                    : activeTab === "all"
+                      ? "This user's watchlist is empty."
+                      : `No anime marked as "${activeTab}".`}
+                </p>
+                {isOwnProfile && activeTab === "all" && !searchQuery && (
+                  <button className="upp-browse-btn" onClick={() => navigate("/browse/anime")}>
+                    <Plus size={14} /> Browse Anime
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ───────────────────────────────────────────────
+            EDIT MODAL
+        ─────────────────────────────────────────────── */}
         <AnimatePresence>
           {editing && (
             <motion.div
-              className="pp-modal-overlay"
+              className="upp-modal-overlay"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setEditing(false)}
             >
               <motion.div
-                className="pp-modal"
+                className="upp-modal"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 8 }}
                 onClick={e => e.stopPropagation()}
               >
-                <div className="pp-modal-head">
+                <div className="upp-modal-head">
                   <h3>Edit Profile</h3>
-                  <button className="pp-modal-close" onClick={() => setEditing(false)} aria-label="Close"><X size={16} /></button>
+                  <button className="upp-modal-close" onClick={() => setEditing(false)} aria-label="Close">
+                    <X size={16} />
+                  </button>
                 </div>
-                <div className="pp-modal-body">
-                  <div className="pp-edit-avatar">
-                    <div className="pp-edit-avatar-preview">
+                <div className="upp-modal-body">
+                  <div className="upp-edit-avatar">
+                    <div className="upp-edit-avatar-preview">
                       {userAvatar ? <img src={userAvatar} alt={username} /> : <span>{userInitial}</span>}
                     </div>
-                    <div className="pp-edit-btns">
-                      <label className="pp-btn-secondary">
+                    <div className="upp-edit-btns">
+                      <label className="upp-btn-secondary">
                         Choose Avatar
                         <input type="file" accept="image/*" hidden onChange={handleAvatarUpload} />
                       </label>
-                      {avatar && <button className="pp-btn-ghost" onClick={() => { setAvatar(""); setAvatarPreview(""); }}>Remove</button>}
+                      {avatar && (
+                        <button className="upp-btn-ghost" onClick={() => { setAvatar(""); setAvatarPreview(""); }}>
+                          Remove
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <div className="pp-field">
+                  <div className="upp-field">
                     <label>Banner</label>
-                    <label className="pp-btn-secondary" style={{ width: "fit-content" }}>
+                    <label className="upp-btn-secondary" style={{ width: "fit-content" }}>
                       <ImagePlus size={13} /> {banner ? "Change" : "Upload"}
                       <input type="file" accept="image/*" hidden onChange={handleBannerUpload} />
                     </label>
                   </div>
-                  <div className="pp-field">
-                    <label htmlFor="pp-edit-username">Username</label>
-                    <input id="pp-edit-username" value={username} onChange={(e) => setUsername(e.target.value)} className="pp-input" />
+                  <div className="upp-field">
+                    <label htmlFor="upp-edit-username">Username</label>
+                    <input
+                      id="upp-edit-username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="upp-input"
+                    />
                   </div>
-                  <div className="pp-field">
-                    <label htmlFor="pp-edit-bio">Status</label>
-                    <textarea id="pp-edit-bio" value={statusMsg} onChange={(e) => setStatusMsg(e.target.value)} className="pp-textarea" placeholder="What are you watching?" maxLength={200} />
+                  <div className="upp-field">
+                    <label htmlFor="upp-edit-bio">Status</label>
+                    <textarea
+                      id="upp-edit-bio"
+                      value={statusMsg}
+                      onChange={(e) => setStatusMsg(e.target.value)}
+                      className="upp-textarea"
+                      placeholder="What are you watching?"
+                      maxLength={200}
+                    />
                   </div>
                 </div>
-                <div className="pp-modal-foot">
-                  <button className="pp-btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
-                  <button className="pp-btn-primary" onClick={saveProfile}>Save</button>
+                <div className="upp-modal-foot">
+                  <button className="upp-btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
+                  <button className="upp-btn-primary" onClick={saveProfile}>Save</button>
                 </div>
               </motion.div>
             </motion.div>
