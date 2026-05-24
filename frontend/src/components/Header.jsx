@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
+  Bell,
   Bookmark,
   ChevronDown,
   Film,
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react';
 import authService from '../services/authService';
 import { loadWatchHistory } from '../services/storage';
+import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications } from '../services/notificationService';
 import FastSearch from './FastSearch';
 import './Header.css';
 
@@ -50,7 +52,11 @@ export default function Header() {
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState(() => getNotifications());
+  const [unreadCount, setUnreadCount] = useState(() => getUnreadCount());
 
+  const notifRef = useRef(null);
   const feedsRef = useRef(null);
   const exploreRef = useRef(null);
   const arenaRef = useRef(null);
@@ -80,6 +86,7 @@ export default function Header() {
       if (arenaRef.current && !arenaRef.current.contains(event.target)) setArenaOpen(false);
       if (profileRef.current && !profileRef.current.contains(event.target)) setProfileOpen(false);
       if (moreDropdownRef.current && !moreDropdownRef.current.contains(event.target)) setMoreDropdownOpen(false);
+      if (notifRef.current && !notifRef.current.contains(event.target)) setNotifOpen(false);
     };
     document.addEventListener('click', closeOnClickOutside);
     const onScroll = () => setScrollProgress(Math.min(1, window.scrollY / 120));
@@ -94,17 +101,20 @@ export default function Header() {
     const syncAvatar = () => setProfileImage(localStorage.getItem('userAvatar') || '');
     const syncStatus = () => setStatusMessage(localStorage.getItem('userStatusMessage') || '');
     const syncOnline = () => setIsOnline(navigator.onLine);
+    const refreshNotifs = () => { setNotifications(getNotifications()); setUnreadCount(getUnreadCount()); };
     window.addEventListener('storage', syncAvatar);
     window.addEventListener('profile-avatar-updated', syncAvatar);
     window.addEventListener('online', syncOnline);
     window.addEventListener('offline', syncOnline);
     window.addEventListener('user-status-updated', syncStatus);
+    window.addEventListener('notification-added', refreshNotifs);
     return () => {
       window.removeEventListener('storage', syncAvatar);
       window.removeEventListener('profile-avatar-updated', syncAvatar);
       window.removeEventListener('online', syncOnline);
       window.removeEventListener('offline', syncOnline);
       window.removeEventListener('user-status-updated', syncStatus);
+      window.removeEventListener('notification-added', refreshNotifs);
     };
   }, []);
 
@@ -116,6 +126,7 @@ export default function Header() {
     setArenaOpen(false);
     setProfileOpen(false);
     setMoreDropdownOpen(false);
+    setNotifOpen(false);
   };
 
   useEffect(() => {
@@ -294,6 +305,47 @@ export default function Header() {
         <div className="header-actions">
 
           {authService.isLoggedIn() ? (<>
+          <div className="notif-dropdown-container" ref={notifRef}>
+            <button className="notif-bell" onClick={() => setNotifOpen((v) => !v)} aria-label="Notifications" aria-expanded={notifOpen} aria-haspopup="true">
+              <Bell size={18} />
+              {unreadCount > 0 && <span className="notif-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+            </button>
+            {notifOpen && (
+              <div className="notif-dropdown">
+                <div className="notif-dropdown-header">
+                  <span>Notifications</span>
+                  <button className="notif-mark-all-btn" onClick={() => { markAllRead(); setNotifications(getNotifications()); setUnreadCount(getUnreadCount()); }}>
+                    Mark all read
+                  </button>
+                </div>
+                <div className="notif-dropdown-list">
+                  {notifications.length === 0 && <div className="notif-dropdown-empty">No notifications yet</div>}
+                  {notifications.map((n) => (
+                    <div key={n.id} className={`notif-item${n.read ? '' : ' unread'}`} onClick={() => {
+                      markRead(n.id);
+                      setNotifications(getNotifications());
+                      setUnreadCount(getUnreadCount());
+                      if (n.link) navigateTo(n.link);
+                    }}>
+                      <span className="notif-item-dot" />
+                      <div className="notif-item-body">
+                        <div className="notif-item-title">{n.title}</div>
+                        {n.body && <div className="notif-item-text">{n.body}</div>}
+                        <div className="notif-item-time">{new Date(n.time).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {notifications.length > 0 && (
+                  <div className="notif-dropdown-footer">
+                    <button className="notif-clear-btn" onClick={() => { clearNotifications(); setNotifications([]); setUnreadCount(0); }}>
+                      Clear all
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <div className="profile-dropdown-container" ref={profileRef}>
             <button className="profile-button" onClick={() => setProfileOpen((value) => !value)}
               aria-expanded={profileOpen} aria-haspopup="true">
