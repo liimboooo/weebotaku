@@ -16,15 +16,31 @@ function setCache(key, data) {
 
 const ANILIST = process.env.REACT_APP_ANILIST_API_URL || "https://graphql.anilist.co";
 
-async function gql(query, variables = {}) {
+async function gql(query, variables = {}, retries = 2) {
   const key = `gql:${query.replace(/\s+/g, " ").slice(0, 80)}:${JSON.stringify(variables)}`;
   const cached = getCached(key);
   if (cached) return cached;
-  const r = await fetch(ANILIST, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query, variables }) });
-  const j = await r.json();
-  if (j.errors) throw new Error(j.errors[0]?.message);
-  setCache(key, j.data);
-  return j.data;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const r = await fetch(ANILIST, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query, variables }) });
+      if (r.status === 429) {
+        const wait = Math.min((attempt + 1) * 1500, 5000);
+        await new Promise(res => setTimeout(res, wait));
+        continue;
+      }
+      if (!r.ok) {
+        if (attempt < retries) { await new Promise(res => setTimeout(res, 1000)); continue; }
+        throw new Error(`AniList HTTP ${r.status}`);
+      }
+      const j = await r.json();
+      if (j.errors) throw new Error(j.errors[0]?.message);
+      setCache(key, j.data);
+      return j.data;
+    } catch (e) {
+      if (attempt < retries) { await new Promise(res => setTimeout(res, 1000)); continue; }
+      throw e;
+    }
+  }
 }
 
 const FIELDS = `id idMal title { romaji english } coverImage { large extraLarge } bannerImage averageScore episodes genres description status season seasonYear studios(isMain:true) { nodes { name } } trailer { site id } format startDate { year month day } nextAiringEpisode { episode airingAt timeUntilAiring }`;

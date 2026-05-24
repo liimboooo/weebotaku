@@ -151,7 +151,32 @@ export default function AnimeDetail() {
     let cancelled = false;
     setAnimeLoading(true);
     setAnimeError("");
-    getAnimeById(id).then((a) => { if (!cancelled) { setApiAnime(a); setAnimeLoading(false); if (!a) setAnimeError("Could not load this anime."); } }).catch(() => { if (!cancelled) { setAnimeLoading(false); setAnimeError("Failed to load anime details."); } });
+    const load = async (attempt = 0) => {
+      try {
+        const a = await getAnimeById(id);
+        if (cancelled) return;
+        if (a) {
+          setApiAnime(a);
+          setAnimeLoading(false);
+        } else if (attempt < 2) {
+          await new Promise(r => setTimeout(r, 1500));
+          if (!cancelled) load(attempt + 1);
+        } else {
+          setAnimeLoading(false);
+          setAnimeError("Could not load this anime.");
+        }
+      } catch {
+        if (cancelled) return;
+        if (attempt < 2) {
+          await new Promise(r => setTimeout(r, 1500));
+          if (!cancelled) load(attempt + 1);
+        } else {
+          setAnimeLoading(false);
+          setAnimeError("Failed to load anime details.");
+        }
+      }
+    };
+    load();
     return () => { cancelled = true; };
   }, [id]);
 
