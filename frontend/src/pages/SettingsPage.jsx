@@ -4,11 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import authService from "../services/authService";
 import AnimatedPage from "../components/AnimatedPage";
 import {
-  User, Settings, Bell, Shield, Link2, FileText, CreditCard, HelpCircle,
-  Eye, EyeOff, LogOut, Sun, Moon, Monitor, SkipForward, SkipBack,
-  Volume2, Upload, Download, CheckCircle, X, Search, Trash2,
-  Smartphone, Globe, Clock, AlertTriangle, QrCode, Copy,
-  ChevronDown, ChevronRight, MessageSquare, Gift, Film,
+  User, Settings, Bell, Shield,
+  Eye, EyeOff, LogOut, Sun, Moon, Monitor,
+  CheckCircle, X, Trash2,
+  AlertTriangle, QrCode, Copy,
 } from "lucide-react";
 import "./SettingsPage.css";
 
@@ -17,30 +16,16 @@ const stagger = {
   show: { opacity: 1, transition: { staggerChildren: 0.05 } },
 };
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
-};
-
 const fadeIn = {
   hidden: { opacity: 0, x: -8 },
   show: { opacity: 1, x: 0, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } },
 };
 
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.95 },
-  show: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } },
-};
-
 const SIDEBAR_ITEMS = [
-  { key: "account",           label: "Account",           icon: User },
-  { key: "preferences",       label: "Preferences",       icon: Settings },
-  { key: "notifications",     label: "Notifications",     icon: Bell },
-  { key: "privacy",           label: "Privacy & Security", icon: Shield },
-  { key: "connected",         label: "Connected Apps",    icon: Link2 },
-  { key: "data",              label: "Data & Privacy",    icon: FileText },
-  { key: "billing",           label: "Billing",           icon: CreditCard },
-  { key: "help",              label: "Help & Support",    icon: HelpCircle },
+  { key: "account",       label: "Account",           icon: User },
+  { key: "preferences",   label: "Preferences",       icon: Settings },
+  { key: "notifications", label: "Notifications",     icon: Bell },
+  { key: "privacy",       label: "Privacy & Security", icon: Shield },
 ];
 
 const THEME_ACCENTS = [
@@ -60,7 +45,6 @@ const FONT_SIZES = [
 const CONTENT_RATINGS = ["G", "PG", "PG-13", "R", "R+ (17+)", "Rx (18+)"];
 const LIST_VIEWS = ["Grid view", "List view", "Compact view"];
 const FREQ_OPTIONS = ["Weekly", "Monthly", "Never"];
-const HISTORY_FILTERS = ["Last 7 days", "Last 30 days", "Last 90 days", "All time"];
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -75,9 +59,6 @@ export default function SettingsPage() {
   const [emailVerified, setEmailVerified] = useState(true);
   const [show2FA, setShow2FA] = useState(false);
   const [showBackupCodes, setShowBackupCodes] = useState(false);
-  const [blockedSearch, setBlockedSearch] = useState("");
-  const [faqSearch, setFaqSearch] = useState("");
-  const [faqOpen, setFaqOpen] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [showPassword, setShowPassword] = useState({ current: false, newPass: false, confirm: false });
@@ -584,86 +565,6 @@ export default function SettingsPage() {
                 )}
               </div>
 
-              <div className="sp-divider" />
-
-              {/* Active Sessions */}
-              <h3 className="sp-section-title">Active Sessions</h3>
-              <p className="sp-section-desc">Your account is logged in to these devices.</p>
-              <div className="sp-table-wrap">
-                <table className="sp-table">
-                  <thead>
-                    <tr>
-                      <th>Device</th>
-                      <th>Location</th>
-                      <th>IP Address</th>
-                      <th>Last Active</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { device: "Chrome on Windows", icon: Monitor, loc: "New York, US", ip: "192.168.1.1", active: "Active now" },
-                      { device: "Safari on iPhone", icon: Smartphone, loc: "New York, US", ip: "10.0.0.1", active: "2 hours ago" },
-                    ].map((s, i) => (
-                      <tr key={i}>
-                        <td><div className="sp-session-device"><s.icon size={16} /> {s.device}</div></td>
-                        <td>{s.loc}</td>
-                        <td><code className="sp-ip">{s.ip}</code></td>
-                        <td><span className={s.active === "Active now" ? "sp-active-now" : ""}>{s.active}</span></td>
-                        <td><button className="sp-btn sp-btn--sm sp-btn--dark">Sign Out</button></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <button className="sp-btn sp-btn--danger-outline sp-btn--full mt-1">Sign out from all other devices</button>
-
-              <div className="sp-divider" />
-
-              {/* Login History */}
-              <h3 className="sp-section-title">Login History</h3>
-              <div className="sp-radio-group sp-radio-group--sm">
-                {HISTORY_FILTERS.map(f => (
-                  <button key={f} className={`sp-radio-btn ${toggles.historyFilter === f ? "active" : ""}`}
-                    onClick={() => setToggle("historyFilter", f)}>
-                    {f}
-                  </button>
-                ))}
-              </div>
-              <div className="sp-table-wrap">
-                <table className="sp-table">
-                  <thead>
-                    <tr>
-                      <th>Date & Time</th>
-                      <th>Device</th>
-                      <th>Location</th>
-                      <th>IP</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { time: "May 24, 2026 14:32", device: "Chrome / Windows", loc: "New York, US", ip: "192.168.1.1", status: "Success" },
-                      { time: "May 23, 2026 09:15", device: "Safari / iOS", loc: "New York, US", ip: "10.0.0.1", status: "Success" },
-                      { time: "May 22, 2026 03:41", device: "Firefox / Windows", loc: "Moscow, RU", ip: "87.250.250.242", status: "Failed" },
-                    ].map((h, i) => (
-                      <tr key={i}>
-                        <td>{h.time}</td>
-                        <td>{h.device}</td>
-                        <td>{h.loc}</td>
-                        <td><code className="sp-ip">{h.ip}</code></td>
-                        <td><span className={`sp-badge ${h.status === "Success" ? "sp-badge--green" : "sp-badge--red"}`}>{h.status}</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="sp-alert sp-alert--warning">
-                <AlertTriangle size={16} /> Suspicious activity detected — unrecognized login from Moscow, RU
-              </div>
-
-              <div className="sp-divider" />
-
               {/* Privacy Settings */}
               <h3 className="sp-section-title">Privacy Settings</h3>
               <div className="sp-toggles-list">
@@ -695,18 +596,6 @@ export default function SettingsPage() {
                     </button>
                   ))}
                 </div>
-              </div>
-
-              <div className="sp-divider" />
-
-              {/* Blocked Users */}
-              <h3 className="sp-section-title">Blocked Users</h3>
-              <div className="sp-search-field">
-                <Search size={16} />
-                <input className="sp-input sp-input--search" placeholder="Search blocked users..." value={blockedSearch} onChange={e => setBlockedSearch(e.target.value)} />
-              </div>
-              <div className="sp-blocked-list">
-                <div className="sp-blocked-empty">No blocked users</div>
               </div>
 
               <div className="sp-divider" />
@@ -755,269 +644,8 @@ export default function SettingsPage() {
             </section>
           )}
 
-          {/* ════════════════════════════════════════════
-              PAGE 5: CONNECTED APPS
-          ════════════════════════════════════════════ */}
-          {activePage === "connected" && (
-            <section className="sp-section">
-              <h1 className="sp-page-title">Connected Apps</h1>
-
-              <h3 className="sp-section-title">Link Your Streaming Accounts</h3>
-              <div className="sp-conn-grid">
-                {["Netflix", "Crunchyroll", "HiDive", "Funimation", "Prime Video"].map(name => (
-                  <div key={name} className="sp-conn-card">
-                    <div className="sp-conn-icon">
-                      <Film size={24} />
-                    </div>
-                    <span className="sp-conn-name">{name}</span>
-                    <span className="sp-conn-status sp-conn-status--off">Not Connected</span>
-                    <button className="sp-btn sp-btn--green sp-btn--sm">Connect</button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="sp-divider" />
-
-              <h3 className="sp-section-title">Anime List Sync</h3>
-              <div className="sp-conn-list">
-                {[
-                  { name: "MyAnimeList (MAL)", desc: "Import/export your MAL list" },
-                  { name: "AniList", desc: "Sync with AniList account" },
-                  { name: "Kitsu", desc: "Keep lists in sync" },
-                ].map(svc => (
-                  <div key={svc.name} className="sp-conn-list-item">
-                    <div className="sp-conn-list-info">
-                      <span className="sp-conn-name">{svc.name}</span>
-                      <span className="sp-conn-desc">{svc.desc}</span>
-                    </div>
-                    <button className="sp-btn sp-btn--green">Connect</button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="sp-divider" />
-
-              <h3 className="sp-section-title">Social Media</h3>
-              <div className="sp-conn-list">
-                {["Discord", "Twitter / X"].map(sm => (
-                  <div key={sm} className="sp-conn-list-item">
-                    <div className="sp-conn-list-info">
-                      <span className="sp-conn-name">{sm}</span>
-                      <span className="sp-conn-desc">Connect your {sm} account.</span>
-                    </div>
-                    <button className="sp-btn sp-btn--green">Connect</button>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* ════════════════════════════════════════════
-              PAGE 6: DATA & PRIVACY
-          ════════════════════════════════════════════ */}
-          {activePage === "data" && (
-            <section className="sp-section">
-              <h1 className="sp-page-title">Data & Privacy</h1>
-
-              <h3 className="sp-section-title">Export Your Data</h3>
-              <p className="sp-section-desc">Download your personal data in various formats.</p>
-              <div className="sp-card">
-                <div className="sp-card-row">
-                  <div className="sp-export-info">
-                    <span className="sp-export-info-title">Download My Data (GDPR)</span>
-                    <span className="sp-export-info-desc">Get a copy of all your data. Ready in 24 hours.</span>
-                  </div>
-                  <button className="sp-btn sp-btn--primary">Request Download</button>
-                </div>
-              </div>
-
-              <div className="sp-divider" />
-
-              <h3 className="sp-section-title">Export Watchlist</h3>
-              <div className="sp-export-grid">
-                {[
-                  { title: "JSON (Re:ANIME)", desc: "Native format with full profile data.", icon: FileText },
-                  { title: "XML (MyAnimeList)", desc: "Standard schema for tracker compatibility.", icon: FileText },
-                  { title: "Plain Text", desc: "Simple list format (legacy Re:ANIME).", icon: FileText },
-                ].map((opt, i) => (
-                  <div key={i} className="sp-export-card">
-                    <div className="sp-export-card-icon"><opt.icon size={24} /></div>
-                    <span className="sp-export-card-title">{opt.title}</span>
-                    <span className="sp-export-card-desc">{opt.desc}</span>
-                    <div className="sp-export-card-actions">
-                      <button className="sp-btn sp-btn--dark sp-btn--sm">Export</button>
-                      <button className="sp-btn sp-btn--dark sp-btn--sm">Import</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="sp-divider" />
-
-              {/* Delete Account */}
-              <div className="sp-danger-card">
-                <div className="sp-danger-card-inner">
-                  <h4 className="sp-danger-title">Delete Account</h4>
-                  <p className="sp-danger-desc">Permanently delete your account and all associated data. This action cannot be undone.</p>
-                  <button className="sp-btn sp-btn--danger-outline" onClick={() => setShowDeleteModal(true)}>
-                    <Trash2 size={16} /> Delete Account
-                  </button>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* ════════════════════════════════════════════
-              PAGE 7: BILLING
-          ════════════════════════════════════════════ */}
-          {activePage === "billing" && (
-            <section className="sp-section">
-              <h1 className="sp-page-title">Billing</h1>
-
-              <h3 className="sp-section-title">Current Plan</h3>
-              <div className="sp-plan-card">
-                <div className="sp-plan-header">
-                  <span className="sp-plan-name">Premium</span>
-                  <span className="sp-plan-price">$9.99/month</span>
-                </div>
-                <ul className="sp-plan-features">
-                  <li><CheckCircle size={16} /> Ad-free</li>
-                  <li><CheckCircle size={16} /> 4K streaming</li>
-                  <li><CheckCircle size={16} /> Offline downloads</li>
-                </ul>
-                <span className="sp-plan-renewal">Next billing: June 24, 2026</span>
-                <div className="sp-plan-actions">
-                  <button className="sp-btn sp-btn--primary">Change Plan</button>
-                  <button className="sp-btn sp-btn--danger-outline">Cancel Subscription</button>
-                </div>
-              </div>
-
-              <div className="sp-divider" />
-
-              <h3 className="sp-section-title">Payment Methods</h3>
-              <div className="sp-payment-card">
-                <div className="sp-payment-info">
-                  <CreditCard size={24} />
-                  <div className="sp-payment-detail">
-                    <span className="sp-payment-name">Visa ••••5678</span>
-                    <span className="sp-payment-expiry">Expires 12/26</span>
-                  </div>
-                </div>
-                <div className="sp-payment-actions">
-                  <button className="sp-btn sp-btn--dark sp-btn--sm">Set as primary</button>
-                  <button className="sp-btn sp-btn--danger-outline sp-btn--sm">Remove</button>
-                </div>
-              </div>
-              <button className="sp-btn sp-btn--green mt-1">Add Payment Method</button>
-
-              <div className="sp-divider" />
-
-              <h3 className="sp-section-title">Billing History</h3>
-              <div className="sp-table-wrap">
-                <table className="sp-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Description</th>
-                      <th>Amount</th>
-                      <th>Status</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { date: "May 24, 2026", desc: "Premium subscription", amount: "$9.99", status: "Paid" },
-                      { date: "Apr 24, 2026", desc: "Premium subscription", amount: "$9.99", status: "Paid" },
-                      { date: "Mar 24, 2026", desc: "Premium subscription", amount: "$9.99", status: "Paid" },
-                    ].map((b, i) => (
-                      <tr key={i}>
-                        <td>{b.date}</td>
-                        <td>{b.desc}</td>
-                        <td>{b.amount}</td>
-                        <td><span className="sp-badge sp-badge--green">{b.status}</span></td>
-                        <td><button className="sp-btn sp-btn--dark sp-btn--sm">Download Invoice</button></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          )}
-
-          {/* ════════════════════════════════════════════
-              PAGE 8: HELP & SUPPORT
-          ════════════════════════════════════════════ */}
-          {activePage === "help" && (
-            <section className="sp-section">
-              <h1 className="sp-page-title">Help & Support</h1>
-
-              <h3 className="sp-section-title">FAQ</h3>
-              <div className="sp-search-field">
-                <Search size={16} />
-                <input className="sp-input sp-input--search" placeholder="Search FAQs..." value={faqSearch} onChange={e => setFaqSearch(e.target.value)} />
-              </div>
-              <div className="sp-faq-list">
-                {[
-                  { q: "How do I change my password?", a: "Go to Privacy & Security in Settings, scroll to Change Password, enter your current and new password, then click Save." },
-                  { q: "How do I export my watchlist?", a: "Go to Data & Privacy in Settings, find Export Watchlist, select your preferred format (JSON, XML, or Plain Text), and click Export." },
-                  { q: "How do I enable 2FA?", a: "Go to Privacy & Security in Settings, find Two-Factor Authentication, click Enable, scan the QR code with your authenticator app, and save your backup codes." },
-                  { q: "How do I delete my account?", a: "Go to Data & Privacy in Settings, scroll to Delete Account, click the button, confirm your decision, and your account will be scheduled for deletion after 30 days." },
-                ].map((faq, i) => (
-                  <div key={i} className="sp-faq-item">
-                    <button className="sp-faq-question" onClick={() => setFaqOpen(faqOpen === i ? null : i)}>
-                      <span>{faq.q}</span>
-                      {faqOpen === i ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                    </button>
-                    {faqOpen === i && <div className="sp-faq-answer">{faq.a}</div>}
-                  </div>
-                ))}
-              </div>
-
-              <div className="sp-divider" />
-
-              <h3 className="sp-section-title">Contact Support</h3>
-              <div className="sp-form">
-                <div className="sp-field">
-                  <label className="sp-field-label">Subject</label>
-                  <select className="sp-input sp-select">
-                    <option>Account Issue</option>
-                    <option>Technical Problem</option>
-                    <option>Billing Question</option>
-                    <option>Feature Request</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-                <div className="sp-field">
-                  <label className="sp-field-label">Message</label>
-                  <textarea className="sp-textarea" rows={5} placeholder="Describe your issue in detail..." />
-                </div>
-                <button className="sp-btn sp-btn--green">Submit</button>
-              </div>
-
-              <div className="sp-divider" />
-
-              <h3 className="sp-section-title">Quick Links</h3>
-              <div className="sp-links-grid">
-                {[
-                  { label: "Report a Bug", icon: AlertTriangle },
-                  { label: "Request a Feature", icon: Gift },
-                  { label: "View Documentation", icon: FileText },
-                  { label: "Community Forum", icon: MessageSquare },
-                  { label: "Status Page", icon: Monitor },
-                ].map((link, i) => {
-                  const Icon = link.icon;
-                  return (
-                    <motion.button key={i} className="sp-link-card" variants={scaleIn} whileHover={{ y: -4, borderColor: "#8b5cf6" }}>
-                      <Icon size={20} />
-                      <span>{link.label}</span>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-        </motion.main>
-      </div>
+          </motion.main>
+        </div>
 
       {/* ─── Delete Confirmation Modal ─── */}
       <AnimatePresence>
