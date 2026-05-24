@@ -9,93 +9,6 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
 }
 
-/* ─── Navbar ─── */
-
-.st-navbar {
-  background: #0e0e10;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
-
-.st-navbar-inner {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.st-logo {
-  font-size: 20px;
-  font-weight: 800;
-  color: #e5ff00;
-  letter-spacing: -0.5px;
-  flex-shrink: 0;
-}
-
-.st-search-bar {
-  flex: 1;
-  max-width: 480px;
-}
-
-.st-search-input {
-  width: 100%;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.04);
-  color: #fff;
-  font-size: 13px;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-
-.st-search-input::placeholder { color: #555; }
-.st-search-input:focus { border-color: #667eea; }
-
-.st-navbar-right {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-shrink: 0;
-}
-
-.st-nav-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255,255,255,0.04);
-  color: #888;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: all 0.2s ease;
-}
-
-.st-nav-icon:hover {
-  background: rgba(255,255,255,0.08);
-  color: #fff;
-}
-
-.st-nav-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
 /* ─── Body ─── */
 
 .st-body {
@@ -1353,8 +1266,6 @@
 }
 
 @media (max-width: 768px) {
-  .st-navbar-inner { padding: 0 1rem; }
-  .st-search-bar { display: none; }
   .st-body { padding: 1.25rem; }
   .st-page-title { font-size: 32px; }
   .st-card-grid--3 { grid-template-columns: 1fr; }

@@ -114,7 +114,7 @@ export default function SettingsPage() {
   }, [settings]);
 
   const avatar = currentUser?.avatar || "";
-  const initial = profile.username.charAt(0).toUpperCase();
+  const initial = (profile.username || "U").charAt(0).toUpperCase();
   const joinDate = currentUser?.memberSince
     ? new Date(currentUser.memberSince).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
     : "May 24, 2026";
@@ -216,21 +216,6 @@ export default function SettingsPage() {
   };
 
   const back = () => setPage("home");
-
-  const renderNavbar = () => (
-    <nav className="st-navbar">
-      <div className="st-navbar-inner">
-        <div className="st-logo">AnimeWch</div>
-        <div className="st-search-bar">
-          <input className="st-search-input" placeholder="Search settings..." />
-        </div>
-        <div className="st-navbar-right">
-          <button className="st-nav-icon"><Bell size={20} /></button>
-          <div className="st-nav-avatar">{initial}</div>
-        </div>
-      </div>
-    </nav>
-  );
 
   const countConnected = () => {
     let c = 0;
@@ -822,8 +807,6 @@ export default function SettingsPage() {
   return (
     <AnimatedPage>
       <div className="st">
-        {renderNavbar()}
-
         {toast && (
           <div className={`st-toast st-toast--${toast.type}`}>
             <span>{toast.message}</span>
