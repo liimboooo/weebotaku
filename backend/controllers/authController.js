@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const { OAuth2Client } = require('google-auth-library');
+const { sendVerificationEmail, sendPasswordResetEmail } = require('../emailService');
 
 // @route   POST /api/auth/register
 exports.register = async (req, res) => {
@@ -21,12 +22,21 @@ exports.register = async (req, res) => {
     }
 
     const user = await User.create({ username, email, password });
-    const token = user.getSignedJwtToken();
+
+    const token = require('crypto').randomBytes(32).toString('hex');
+    user.emailVerificationToken = token;
+    user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    user.emailVerified = false;
+    await user.save();
+
+    await sendVerificationEmail(email, token, username).catch(err => {
+      console.error('Failed to send verification email:', err.message);
+    });
 
     res.status(201).json({
       success: true,
-      token,
-      user: user.toFullProfile(),
+      message: 'Registration successful! Please check your email to verify your account.',
+      needsEmailVerification: true,
     });
   } catch (error) {
     if (error.code === 11000) {
@@ -65,6 +75,25 @@ exports.login = async (req, res) => {
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    if (!user.emailVerified) {
+      return res.json({
+        success: true,
+        needsEmailVerification: true,
+        email: user.email,
+        message: 'Please verify your email before logging in',
+      });
+    }
+
+    // Check 2FA
+    if (user.settings && user.settings.twoFactorEnabled && user.twoFactorSecret) {
+      return res.json({
+        success: true,
+        requires2FA: true,
+        userId: user._id,
+        message: '2FA code required',
+      });
     }
 
     const token = user.getSignedJwtToken();
@@ -377,46 +406,340 @@ exports.deleteAccount = async (req, res) => {
   }
 };
 
-// @route   POST /api/auth/2fa/toggle
-exports.toggle2FA = async (req, res) => {
+// ─── 2FA ──────────────────────────────────────────────────
+
+const speakeasy = require('speakeasy');
+const QRCode = require('qrcode');
+const crypto = require('crypto');
+
+// @route   POST /api/auth/2fa/setup
+exports.setup2FA = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('settings');
-    user.settings.twoFactorEnabled = !user.settings.twoFactorEnabled;
+    const secret = speakeasy.generateSecret({ name: `AnimeWch (${req.user.username})` });
+    const user = await User.findById(req.user.id);
+    user.twoFactorSecret = secret.base32;
     await user.save();
-    res.json({ success: true, enabled: user.settings.twoFactorEnabled });
+    const qr = await QRCode.toDataURL(secret.otpauth_url);
+    res.json({ success: true, secret: secret.base32, qr });
   } catch (error) {
-    console.error('Toggle2FA error:', error);
+    console.error('Setup2FA error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
-// ─── MAL / AniList Sync ──────────────────────────────────
+// @route   POST /api/auth/2fa/verify-setup
+exports.verifySetup2FA = async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ success: false, message: 'Verification code required' });
+    const user = await User.findById(req.user.id);
+    if (!user.twoFactorSecret) return res.status(400).json({ success: false, message: '2FA not set up yet' });
+    const verified = speakeasy.totp.verify({ secret: user.twoFactorSecret, encoding: 'base32', token: code.replace(/\s/g, ''), window: 1 });
+    if (!verified) return res.status(400).json({ success: false, message: 'Invalid code' });
+    user.settings.twoFactorEnabled = true;
+    const codes = [];
+    for (let i = 0; i < 10; i++) {
+      const code = crypto.randomBytes(4).toString('hex').toUpperCase().match(/.{1,4}/g).join('-');
+      const hashed = await bcrypt.hash(code, 8);
+      codes.push({ plain: code, hashed });
+      user.backupCodes.push(hashed);
+    }
+    await user.save();
+    res.json({ success: true, enabled: true, backupCodes: codes.map(c => c.plain) });
+  } catch (error) {
+    console.error('VerifySetup2FA error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/2fa/disable
+exports.disable2FA = async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password) return res.status(400).json({ success: false, message: 'Password required' });
+    const user = await User.findById(req.user.id).select('+password');
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid password' });
+    user.settings.twoFactorEnabled = false;
+    user.twoFactorSecret = '';
+    user.backupCodes = [];
+    await user.save();
+    res.json({ success: true, enabled: false });
+  } catch (error) {
+    console.error('Disable2FA error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/2fa/verify-login
+exports.verifyLogin2FA = async (req, res) => {
+  try {
+    const { userId, code } = req.body;
+    if (!userId || !code) return res.status(400).json({ success: false, message: 'User ID and code required' });
+    const user = await User.findById(userId);
+    if (!user || !user.settings.twoFactorEnabled) return res.status(400).json({ success: false, message: '2FA not enabled' });
+    const cleanCode = code.replace(/\s/g, '');
+    const isValid = speakeasy.totp.verify({ secret: user.twoFactorSecret, encoding: 'base32', token: cleanCode, window: 1 });
+    if (isValid) {
+      const token = user.getSignedJwtToken();
+      return res.json({ success: true, token, user: user.toFullProfile() });
+    }
+    const matchedIndex = user.backupCodes.findIndex(hc => bcrypt.compareSync(cleanCode, hc));
+    if (matchedIndex !== -1) {
+      user.backupCodes.splice(matchedIndex, 1);
+      await user.save();
+      const token = user.getSignedJwtToken();
+      return res.json({ success: true, token, user: user.toFullProfile(), usedBackup: true });
+    }
+    res.status(400).json({ success: false, message: 'Invalid code' });
+  } catch (error) {
+    console.error('VerifyLogin2FA error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   GET /api/auth/2fa/status
+exports.get2FAStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('settings twoFactorSecret backupCodes');
+    res.json({ success: true, enabled: user.settings.twoFactorEnabled, hasSecret: !!user.twoFactorSecret, backupCodeCount: user.backupCodes.length });
+  } catch (error) {
+    console.error('Get2FAStatus error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// ─── Email Verification ──────────────────────────────────
+
+// @route   POST /api/auth/email/request-verify
+exports.requestEmailVerify = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (user.emailVerified) return res.json({ success: true, message: 'Email already verified' });
+    const token = require('crypto').randomBytes(32).toString('hex');
+    user.emailVerificationToken = token;
+    user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await user.save();
+    await sendVerificationEmail(user.email, token, user.username).catch(err => {
+      console.error('Failed to send verification email:', err.message);
+    });
+    res.json({ success: true, message: 'Verification email sent' });
+  } catch (error) {
+    console.error('RequestEmailVerify error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/email/verify/:token
+exports.verifyEmail = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      emailVerificationToken: req.params.token,
+      emailVerificationExpires: { $gt: new Date() },
+    });
+    if (!user) return res.status(400).json({ success: false, message: 'Invalid or expired token' });
+    user.emailVerified = true;
+    user.emailVerificationToken = '';
+    user.emailVerificationExpires = null;
+    await user.save();
+    res.json({ success: true, message: 'Email verified' });
+  } catch (error) {
+    console.error('VerifyEmail error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// ─── Password Reset ──────────────────────────────────────
+
+// @route   POST /api/auth/password/forgot
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+    const user = await User.findOne({ email });
+    if (!user) return res.json({ success: true, message: 'If that email exists, a reset link was sent' });
+    const token = require('crypto').randomBytes(32).toString('hex');
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000);
+    await user.save();
+    await sendPasswordResetEmail(email, token, user.username).catch(err => {
+      console.error('Failed to send password reset email:', err.message);
+    });
+    res.json({ success: true, message: 'If that email exists, a reset link was sent' });
+  } catch (error) {
+    console.error('ForgotPassword error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/password/reset/:token
+exports.resetPassword = async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password || password.length < 8) return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
+    const user = await User.findOne({
+      resetPasswordToken: req.params.token,
+      resetPasswordExpires: { $gt: new Date() },
+    });
+    if (!user) return res.status(400).json({ success: false, message: 'Invalid or expired token' });
+    user.password = password;
+    user.resetPasswordToken = '';
+    user.resetPasswordExpires = null;
+    await user.save();
+    res.json({ success: true, message: 'Password reset successful' });
+  } catch (error) {
+    console.error('ResetPassword error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   GET /api/auth/password/reset/:token
+exports.validateResetToken = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: req.params.token,
+      resetPasswordExpires: { $gt: new Date() },
+    });
+    if (!user) return res.status(400).json({ success: false, message: 'Invalid or expired token' });
+    res.json({ success: true, valid: true, email: user.email });
+  } catch (error) {
+    console.error('ValidateResetToken error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// ─── MAL / AniList Sync (OAuth) ──────────────────────────
+
+const Sync = require('../models/Sync');
+const malService = require('../services/malService');
+const anilistService = require('../services/anilistService');
+
+function mergeIntoWatchlist(existing, incoming) {
+  const existingIds = new Set(existing.map(w => w.animeId));
+  const added = [];
+  const updated = [];
+  for (const item of incoming) {
+    const idx = existing.findIndex(w => w.animeId === item.animeId);
+    if (idx === -1) {
+      existing.push({ ...item, addedAt: new Date() });
+      added.push(item);
+    } else {
+      existing[idx].rating = item.rating || existing[idx].rating;
+      existing[idx].listStatus = item.listStatus || existing[idx].listStatus;
+      updated.push(item);
+    }
+  }
+  return { watchlist: existing, addedCount: added.length, updatedCount: updated.length };
+}
+
+// @route   GET /api/auth/sync/status
+exports.getSyncStatus = async (req, res) => {
+  try {
+    const [malSync, aniSync] = await Promise.all([
+      Sync.findOne({ userId: req.user.id, service: 'mal' }),
+      Sync.findOne({ userId: req.user.id, service: 'anilist' }),
+    ]);
+    res.json({
+      success: true,
+      mal: malSync ? {
+        connected: true,
+        status: malSync.syncStatus,
+        lastSynced: malSync.lastSynced,
+        username: malSync.username,
+        autoSync: malSync.autoSync,
+      } : { connected: false },
+      anilist: aniSync ? {
+        connected: true,
+        status: aniSync.syncStatus,
+        lastSynced: aniSync.lastSynced,
+        username: aniSync.username,
+        autoSync: aniSync.autoSync,
+      } : { connected: false },
+    });
+  } catch (error) {
+    console.error('GetSyncStatus error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
 
 // @route   POST /api/auth/sync/mal/connect
 exports.connectMAL = async (req, res) => {
   try {
-    const { username } = req.body;
-    if (!username) {
-      return res.status(400).json({ success: false, message: 'MAL username required' });
-    }
-    const user = await User.findById(req.user.id).select('settings');
-    user.settings.malConnected = true;
-    user.settings.malUsername = username;
-    await user.save();
-    res.json({ success: true, connected: true, username });
+    const { url, codeVerifier } = malService.getConnectUrl();
+    res.json({ success: true, authUrl: url, codeVerifier });
   } catch (error) {
     console.error('ConnectMAL error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Failed to generate MAL auth URL' });
+  }
+};
+
+// @route   POST /api/auth/sync/mal/callback
+exports.malCallback = async (req, res) => {
+  try {
+    const { code, codeVerifier } = req.body;
+    if (!code) return res.status(400).json({ success: false, message: 'Authorization code required' });
+
+    const tokenData = await malService.exchangeCode(code, codeVerifier || code);
+    const userInfo = await malService.getUserInfo(tokenData.accessToken);
+    const list = await malService.fetchAnimeList(tokenData.accessToken);
+
+    const existing = await Sync.findOne({ userId: req.user.id, service: 'mal' });
+    if (existing) {
+      existing.accessToken = tokenData.accessToken;
+      existing.refreshToken = tokenData.refreshToken || existing.refreshToken;
+      existing.expiresAt = tokenData.expiresAt;
+      existing.syncStatus = 'syncing';
+      existing.username = userInfo.username;
+      existing.lastError = '';
+      await existing.save();
+    } else {
+      await Sync.create({
+        userId: req.user.id,
+        service: 'mal',
+        accessToken: tokenData.accessToken,
+        refreshToken: tokenData.refreshToken || '',
+        expiresAt: tokenData.expiresAt,
+        syncStatus: 'syncing',
+        username: userInfo.username,
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+    const { watchlist, addedCount, updatedCount } = mergeIntoWatchlist(user.watchlist, list);
+    user.watchlist = watchlist;
+    await user.save();
+
+    await Sync.updateOne(
+      { userId: req.user.id, service: 'mal' },
+      { syncStatus: 'synced', lastSynced: new Date() }
+    );
+
+    res.json({
+      success: true,
+      connected: true,
+      username: userInfo.username,
+      imported: addedCount,
+      updated: updatedCount,
+      total: list.length,
+    });
+  } catch (error) {
+    await Sync.updateOne(
+      { userId: req.user.id, service: 'mal' },
+      { syncStatus: 'failed', lastError: error.message }
+    ).catch(() => {});
+    console.error('MalCallback error:', error);
+    res.status(500).json({ success: false, message: error.message || 'MAL callback failed' });
   }
 };
 
 // @route   POST /api/auth/sync/mal/disconnect
 exports.disconnectMAL = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('settings');
-    user.settings.malConnected = false;
-    user.settings.malUsername = '';
-    await user.save();
+    const sync = await Sync.findOne({ userId: req.user.id, service: 'mal' });
+    if (sync?.accessToken) {
+      malService.revokeToken(sync.accessToken).catch(() => {});
+    }
+    await Sync.deleteOne({ userId: req.user.id, service: 'mal' });
     res.json({ success: true, connected: false });
   } catch (error) {
     console.error('DisconnectMAL error:', error);
@@ -427,42 +750,118 @@ exports.disconnectMAL = async (req, res) => {
 // @route   POST /api/auth/sync/mal/sync
 exports.syncMAL = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('settings');
-    if (!user.settings.malConnected) {
-      return res.status(400).json({ success: false, message: 'MAL not connected' });
-    }
-    res.json({ success: true, lastSync: new Date().toISOString(), service: 'mal' });
+    const sync = await Sync.findOne({ userId: req.user.id, service: 'mal' });
+    if (!sync) return res.status(400).json({ success: false, message: 'MAL not connected' });
+    if (sync.syncStatus === 'syncing') return res.json({ success: false, message: 'Already syncing...' });
+
+    sync.syncStatus = 'syncing';
+    sync.lastError = '';
+    await sync.save();
+
+    let accessToken = sync.accessToken;
+    const list = await malService.fetchAnimeList(accessToken);
+
+    const user = await User.findById(req.user.id);
+    const { watchlist, addedCount, updatedCount } = mergeIntoWatchlist(user.watchlist, list);
+    user.watchlist = watchlist;
+    await user.save();
+
+    sync.syncStatus = 'synced';
+    sync.lastSynced = new Date();
+    await sync.save();
+
+    res.json({
+      success: true,
+      lastSync: sync.lastSynced.toISOString(),
+      service: 'mal',
+      imported: addedCount,
+      updated: updatedCount,
+      total: list.length,
+    });
   } catch (error) {
-    console.error('SyncMAL error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    await Sync.updateOne(
+      { userId: req.user.id, service: 'mal' },
+      { syncStatus: 'failed', lastError: error.message }
+    ).catch(() => {});
+    console.error('SyncMAL error:', error.message);
+    res.status(500).json({ success: false, message: error.message || 'Sync failed' });
   }
 };
 
 // @route   POST /api/auth/sync/anilist/connect
 exports.connectAniList = async (req, res) => {
   try {
-    const { username } = req.body;
-    if (!username) {
-      return res.status(400).json({ success: false, message: 'AniList username required' });
-    }
-    const user = await User.findById(req.user.id).select('settings');
-    user.settings.aniConnected = true;
-    user.settings.aniUsername = username;
-    await user.save();
-    res.json({ success: true, connected: true, username });
+    const authUrl = anilistService.getAuthUrl();
+    res.json({ success: true, authUrl });
   } catch (error) {
     console.error('ConnectAniList error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Failed to generate AniList auth URL' });
+  }
+};
+
+// @route   POST /api/auth/sync/anilist/callback
+exports.aniListCallback = async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ success: false, message: 'Authorization code required' });
+
+    const tokenData = await anilistService.exchangeCode(code);
+    const userInfo = await anilistService.getUserInfo(tokenData.accessToken);
+    const list = await anilistService.fetchAnimeList(tokenData.accessToken);
+
+    const existing = await Sync.findOne({ userId: req.user.id, service: 'anilist' });
+    if (existing) {
+      existing.accessToken = tokenData.accessToken;
+      existing.refreshToken = tokenData.refreshToken || existing.refreshToken;
+      existing.expiresAt = tokenData.expiresAt;
+      existing.syncStatus = 'syncing';
+      existing.username = userInfo.username;
+      existing.lastError = '';
+      await existing.save();
+    } else {
+      await Sync.create({
+        userId: req.user.id,
+        service: 'anilist',
+        accessToken: tokenData.accessToken,
+        refreshToken: tokenData.refreshToken || '',
+        expiresAt: tokenData.expiresAt,
+        syncStatus: 'syncing',
+        username: userInfo.username,
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+    const { watchlist, addedCount, updatedCount } = mergeIntoWatchlist(user.watchlist, list);
+    user.watchlist = watchlist;
+    await user.save();
+
+    await Sync.updateOne(
+      { userId: req.user.id, service: 'anilist' },
+      { syncStatus: 'synced', lastSynced: new Date() }
+    );
+
+    res.json({
+      success: true,
+      connected: true,
+      username: userInfo.username,
+      imported: addedCount,
+      updated: updatedCount,
+      total: list.length,
+    });
+  } catch (error) {
+    await Sync.updateOne(
+      { userId: req.user.id, service: 'anilist' },
+      { syncStatus: 'failed', lastError: error.message }
+    ).catch(() => {});
+    console.error('AniListCallback error:', error);
+    res.status(500).json({ success: false, message: error.message || 'AniList callback failed' });
   }
 };
 
 // @route   POST /api/auth/sync/anilist/disconnect
 exports.disconnectAniList = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('settings');
-    user.settings.aniConnected = false;
-    user.settings.aniUsername = '';
-    await user.save();
+    await Sync.deleteOne({ userId: req.user.id, service: 'anilist' });
     res.json({ success: true, connected: false });
   } catch (error) {
     console.error('DisconnectAniList error:', error);
@@ -473,13 +872,67 @@ exports.disconnectAniList = async (req, res) => {
 // @route   POST /api/auth/sync/anilist/sync
 exports.syncAniList = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('settings');
-    if (!user.settings.aniConnected) {
-      return res.status(400).json({ success: false, message: 'AniList not connected' });
+    const sync = await Sync.findOne({ userId: req.user.id, service: 'anilist' });
+    if (!sync) return res.status(400).json({ success: false, message: 'AniList not connected' });
+    if (sync.syncStatus === 'syncing') return res.json({ success: false, message: 'Already syncing...' });
+
+    sync.syncStatus = 'syncing';
+    sync.lastError = '';
+    await sync.save();
+
+    let accessToken = sync.accessToken;
+    if (sync.expiresAt && new Date() > sync.expiresAt && sync.refreshToken) {
+      const refreshed = await anilistService.refreshAccessToken(sync.refreshToken);
+      accessToken = refreshed.accessToken;
+      sync.accessToken = refreshed.accessToken;
+      sync.refreshToken = refreshed.refreshToken || sync.refreshToken;
+      sync.expiresAt = refreshed.expiresAt;
+      await sync.save();
     }
-    res.json({ success: true, lastSync: new Date().toISOString(), service: 'anilist' });
+
+    const list = await anilistService.fetchAnimeList(accessToken);
+
+    const user = await User.findById(req.user.id);
+    const { watchlist, addedCount, updatedCount } = mergeIntoWatchlist(user.watchlist, list);
+    user.watchlist = watchlist;
+    await user.save();
+
+    sync.syncStatus = 'synced';
+    sync.lastSynced = new Date();
+    await sync.save();
+
+    res.json({
+      success: true,
+      lastSync: sync.lastSynced.toISOString(),
+      service: 'anilist',
+      imported: addedCount,
+      updated: updatedCount,
+      total: list.length,
+    });
   } catch (error) {
-    console.error('SyncAniList error:', error);
+    await Sync.updateOne(
+      { userId: req.user.id, service: 'anilist' },
+      { syncStatus: 'failed', lastError: error.message }
+    ).catch(() => {});
+    console.error('SyncAniList error:', error.message);
+    res.status(500).json({ success: false, message: error.message || 'Sync failed' });
+  }
+};
+
+// @route   PUT /api/auth/sync/auto
+exports.updateSyncAuto = async (req, res) => {
+  try {
+    const { service, autoSync } = req.body;
+    if (!['mal', 'anilist'].includes(service)) {
+      return res.status(400).json({ success: false, message: 'Invalid service' });
+    }
+    const sync = await Sync.findOne({ userId: req.user.id, service });
+    if (!sync) return res.status(400).json({ success: false, message: 'Service not connected' });
+    sync.autoSync = !!autoSync;
+    await sync.save();
+    res.json({ success: true, autoSync: sync.autoSync });
+  } catch (error) {
+    console.error('UpdateSyncAuto error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

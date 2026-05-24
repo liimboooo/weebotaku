@@ -77,11 +77,6 @@ class AuthService {
       username, email, password, passwordConfirm,
     }, { auth: false });
 
-    if (response.success) {
-      localStorage.setItem(STORAGE_KEYS.TOKEN, response.token);
-      storeUserData(response.user);
-    }
-
     return response;
   }
 
@@ -90,12 +85,53 @@ class AuthService {
       username, password,
     }, { auth: false });
 
+    if (response.success && response.requires2FA) {
+      return response;
+    }
+
+    if (response.success && response.needsEmailVerification) {
+      return response;
+    }
+
     if (response.success) {
       localStorage.setItem(STORAGE_KEYS.TOKEN, response.token);
       storeUserData(response.user);
     }
 
     return response;
+  }
+
+  async verify2FA(userId, code) {
+    const response = await api.post('/auth/2fa/verify-login', { userId, code }, { auth: false });
+    if (response.success) {
+      localStorage.setItem(STORAGE_KEYS.TOKEN, response.token);
+      storeUserData(response.user);
+    }
+    return response;
+  }
+
+  async sendVerificationEmail(email) {
+    return api.post('/auth/email/request-verify', { email }, { auth: false });
+  }
+
+  async verifyEmailToken(token) {
+    return api.post(`/auth/email/verify/${token}`, {}, { auth: false });
+  }
+
+  async forgotPassword(email) {
+    return api.post('/auth/password/forgot', { email }, { auth: false });
+  }
+
+  async validateResetToken(token) {
+    return api.get(`/auth/password/reset/${token}`, { auth: false });
+  }
+
+  async resetPassword(token, password) {
+    return api.post(`/auth/password/reset/${token}`, { password }, { auth: false });
+  }
+
+  async changePassword(currentPassword, newPassword) {
+    return api.put('/auth/change-password', { currentPassword, newPassword });
   }
 
   async googleLogin(credential) {
@@ -167,6 +203,57 @@ class AuthService {
 
   async refreshUser() {
     return syncFromBackend();
+  }
+
+  // ─── Sync (MAL / AniList) ───
+
+  async getSyncStatus() {
+    return api.get('/auth/sync/status');
+  }
+
+  async connectMAL() {
+    const res = await api.post('/auth/sync/mal/connect', {});
+    if (res?.authUrl) {
+      localStorage.setItem('mal_code_verifier', res.codeVerifier || '');
+      window.open(res.authUrl, '_self');
+    }
+    return res;
+  }
+
+  async syncMALCallback(code, codeVerifier) {
+    return api.post('/auth/sync/mal/callback', { code, codeVerifier });
+  }
+
+  async disconnectMAL() {
+    return api.post('/auth/sync/mal/disconnect', {});
+  }
+
+  async manualSyncMAL() {
+    return api.post('/auth/sync/mal/sync', {});
+  }
+
+  async connectAniList() {
+    const res = await api.post('/auth/sync/anilist/connect', {});
+    if (res?.authUrl) {
+      window.open(res.authUrl, '_self');
+    }
+    return res;
+  }
+
+  async syncAniListCallback(code) {
+    return api.post('/auth/sync/anilist/callback', { code });
+  }
+
+  async disconnectAniList() {
+    return api.post('/auth/sync/anilist/disconnect', {});
+  }
+
+  async manualSyncAniList() {
+    return api.post('/auth/sync/anilist/sync', {});
+  }
+
+  async updateSyncAuto(service, autoSync) {
+    return api.put('/auth/sync/auto', { service, autoSync });
   }
 }
 

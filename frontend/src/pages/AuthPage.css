@@ -4,6 +4,14 @@
   background: var(--bg-deep);
 }
 
+@keyframes auth-spin {
+  to { transform: rotate(360deg); }
+}
+
+.auth-spinner {
+  animation: auth-spin 0.8s linear infinite;
+}
+
 @media (max-width: 768px) {
   .auth-container {
     flex-direction: column;

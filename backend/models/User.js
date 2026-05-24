@@ -102,6 +102,13 @@ const UserSchema = new mongoose.Schema({
     lastActiveDate: { type: String, default: '' },
     lastDailyBonus: { type: String, default: '' },
   },
+  twoFactorSecret: { type: String, default: '' },
+  backupCodes: [{ type: String }],
+  emailVerified: { type: Boolean, default: false },
+  emailVerificationToken: { type: String, default: '' },
+  emailVerificationExpires: { type: Date },
+  resetPasswordToken: { type: String, default: '' },
+  resetPasswordExpires: { type: Date },
   settings: {
     darkMode: { type: String, default: 'auto' },
     fontSize: { type: String, default: 'Medium' },

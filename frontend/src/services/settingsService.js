@@ -112,7 +112,7 @@ const settingsService = {
     const sync = this.loadSync();
     sync.malLastSync = data.lastSync || new Date().toISOString();
     this.saveSync(sync);
-    return { success: true, lastSync: sync.malLastSync };
+    return { success: true, lastSync: sync.malLastSync, imported: data.imported || 0, total: data.total || 0 };
   },
 
   async syncWithAniList() {
@@ -120,7 +120,7 @@ const settingsService = {
     const sync = this.loadSync();
     sync.aniLastSync = data.lastSync || new Date().toISOString();
     this.saveSync(sync);
-    return { success: true, lastSync: sync.aniLastSync };
+    return { success: true, lastSync: sync.aniLastSync, imported: data.imported || 0, total: data.total || 0 };
   },
 
   async connectMAL(username) {
@@ -170,9 +170,32 @@ const settingsService = {
     return { success: true };
   },
 
-  async toggle2FA(enabled) {
-    const data = await api.post("/auth/2fa/toggle");
+  async get2FAStatus() {
+    try {
+      const data = await api.get("/auth/2fa/status");
+      return data;
+    } catch {
+      return { enabled: false, hasSecret: false, backupCodeCount: 0 };
+    }
+  },
+
+  async setup2FA() {
+    const data = await api.post("/auth/2fa/setup");
     return data;
+  },
+
+  async verify2FASetup(code) {
+    const data = await api.post("/auth/2fa/verify-setup", { code });
+    return data;
+  },
+
+  async disable2FA(password) {
+    const data = await api.post("/auth/2fa/disable", { password });
+    return data;
+  },
+
+  async requestEmailVerify() {
+    return api.post("/auth/email/request-verify");
   },
 };
 

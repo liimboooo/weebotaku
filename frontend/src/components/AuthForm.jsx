@@ -133,7 +133,7 @@ export default function AuthForm({ type, username, email, password, setUsername,
               <>{type === "login" ? "Sign In" : "Sign Up"} <ArrowRight size={18} /></>
             )}
           </button>
-          {type === "login" && <span className="auth-forgot" onClick={() => navigate('/help')}>Forgot?</span>}
+          {type === "login" && <span className="auth-forgot" onClick={() => navigate('/auth/forgot-password')}>Forgot?</span>}
         </div>
       </form>
 

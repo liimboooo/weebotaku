@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import authService from "../services/authService";
 import settingsService from "../services/settingsService";
 import AnimatedPage from "../components/AnimatedPage";
+import SyncCard from "../components/SyncCard";
 import {
   User, Settings, Bell, Shield, Link2,
   Eye, EyeOff, LogOut, Sun, Moon, Monitor,
@@ -101,6 +102,8 @@ export default function SettingsPage() {
     malLastSync: syncInit.current.malLastSync,
     aniLastSync: syncInit.current.aniLastSync,
   });
+  const [syncStatus, setSyncStatus] = useState({ mal: { connected: false }, anilist: { connected: false } });
+  const [syncLoading, setSyncLoading] = useState({ mal: false, anilist: false });
 
   const [profile, setProfile] = useState(() => settingsService.loadUserProfile() || {
     username: currentUser?.username || "formula09",
@@ -119,6 +122,14 @@ export default function SettingsPage() {
   const [pwErrors, setPwErrors] = useState([]);
   const [pwChanging, setPwChanging] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+  const [twoFASecret, setTwoFASecret] = useState("");
+  const [twoFAQr, setTwoFAQr] = useState("");
+  const [twoFACode, setTwoFACode] = useState("");
+  const [twoFAStep, setTwoFAStep] = useState("idle");
+  const [twoFABackupCodes, setTwoFABackupCodes] = useState([]);
+  const [twoFADisablePw, setTwoFADisablePw] = useState("");
+  const [twoFALoading, setTwoFALoading] = useState(false);
 
   const isFirstRender = useRef(true);
 
@@ -127,6 +138,22 @@ export default function SettingsPage() {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
     settingsService.save(settings);
   }, [settings, settingsReady]);
+
+  useEffect(() => {
+    if (!settingsReady) return;
+    settingsService.get2FAStatus().then(status => {
+      if (status?.enabled) setTwoFAEnabled(true);
+    }).catch(() => {});
+  }, [settingsReady]);
+
+  useEffect(() => {
+    if (!settingsReady) return;
+    authService.getSyncStatus().then(res => {
+      if (res?.success) {
+        setSyncStatus({ mal: res.mal, anilist: res.anilist });
+      }
+    }).catch(() => {});
+  }, [settingsReady]);
 
   const avatar = currentUser?.avatar || "";
   const initial = (profile.username || "U").charAt(0).toUpperCase();
@@ -152,56 +179,84 @@ export default function SettingsPage() {
     navigate("/");
   };
 
-  const handleSync = async (service) => {
-    const key = service === "mal" ? "malSyncing" : "aniSyncing";
-    setSyncStates(prev => ({ ...prev, [key]: true }));
+  const handleSyncMAL = async () => {
+    setSyncLoading(prev => ({ ...prev, mal: true }));
     try {
-      const fn = service === "mal" ? settingsService.syncWithMAL : settingsService.syncWithAniList;
-      const result = await fn();
-      setSyncStates(prev => ({
-        ...prev,
-        [key]: false,
-        [`${service}LastSync`]: result.lastSync,
-      }));
-      showToast(`${service === "mal" ? "MAL" : "AniList"} synced successfully!`);
+      const result = await authService.manualSyncMAL();
+      if (result?.success) {
+        const s = await authService.getSyncStatus();
+        if (s?.success) setSyncStatus({ mal: s.mal, anilist: s.anilist });
+        showToast(`MAL: ${result.imported || 0} imported, ${result.total || 0} total`);
+      } else {
+        showToast(result?.message || "Sync failed", "error");
+      }
     } catch {
-      setSyncStates(prev => ({ ...prev, [key]: false }));
       showToast("Sync failed. Try again.", "error");
     }
+    setSyncLoading(prev => ({ ...prev, mal: false }));
   };
 
-  const connectService = async (service) => {
-    const name = service === "mal" ? "MAL" : "AniList";
-    const username = window.prompt(`Enter your ${name} username:`);
-    if (!username || !username.trim()) return;
+  const handleConnectMAL = async () => {
     try {
-      if (service === "mal") {
-        await settingsService.connectMAL(username.trim());
-      } else {
-        await settingsService.connectAniList(username.trim());
+      const res = await authService.connectMAL();
+      if (!res?.authUrl) {
+        showToast("Failed to get MAL auth URL", "error");
       }
-      setTog(`${service}Connected`, true);
-      showToast(`${name} connected as ${username.trim()}!`);
-      handleSync(service);
     } catch {
-      showToast(`Failed to connect to ${name}.`, "error");
+      showToast("Failed to connect MAL", "error");
     }
   };
 
-  const disconnectService = async (service) => {
-    const name = service === "mal" ? "MAL" : "AniList";
+  const handleDisconnectMAL = async () => {
+    setSyncLoading(prev => ({ ...prev, mal: true }));
     try {
-      if (service === "mal") {
-        await settingsService.disconnectMAL();
-      } else {
-        await settingsService.disconnectAniList();
-      }
-      setTog(`${service}Connected`, false);
-      setSyncStates(prev => ({ ...prev, [`${service}LastSync`]: null }));
-      showToast(`${name} disconnected.`, "info");
+      await authService.disconnectMAL();
+      setSyncStatus(prev => ({ ...prev, mal: { connected: false } }));
+      showToast("MAL disconnected.", "info");
     } catch {
-      showToast(`Failed to disconnect ${name}.`, "error");
+      showToast("Failed to disconnect", "error");
     }
+    setSyncLoading(prev => ({ ...prev, mal: false }));
+  };
+
+  const handleSyncAniList = async () => {
+    setSyncLoading(prev => ({ ...prev, anilist: true }));
+    try {
+      const result = await authService.manualSyncAniList();
+      if (result?.success) {
+        const s = await authService.getSyncStatus();
+        if (s?.success) setSyncStatus({ mal: s.mal, anilist: s.anilist });
+        showToast(`AniList: ${result.imported || 0} imported, ${result.total || 0} total`);
+      } else {
+        showToast(result?.message || "Sync failed", "error");
+      }
+    } catch {
+      showToast("Sync failed. Try again.", "error");
+    }
+    setSyncLoading(prev => ({ ...prev, anilist: false }));
+  };
+
+  const handleConnectAniList = async () => {
+    try {
+      const res = await authService.connectAniList();
+      if (!res?.authUrl) {
+        showToast("Failed to get AniList auth URL", "error");
+      }
+    } catch {
+      showToast("Failed to connect AniList", "error");
+    }
+  };
+
+  const handleDisconnectAniList = async () => {
+    setSyncLoading(prev => ({ ...prev, anilist: true }));
+    try {
+      await authService.disconnectAniList();
+      setSyncStatus(prev => ({ ...prev, anilist: { connected: false } }));
+      showToast("AniList disconnected.", "info");
+    } catch {
+      showToast("Failed to disconnect", "error");
+    }
+    setSyncLoading(prev => ({ ...prev, anilist: false }));
   };
 
   const handlePwChange = (field, val) => {
@@ -239,6 +294,77 @@ export default function SettingsPage() {
     setTimeout(() => {
       window.location.href = "/";
     }, 1500);
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      const data = await authService.updateProfile({
+        username: profile.username,
+        bio: profile.bio,
+      });
+      if (data?.success) {
+        settingsService.saveUserProfile(profile);
+        showToast("Profile saved!");
+      }
+    } catch {
+      showToast("Failed to save profile.", "error");
+    }
+  };
+
+  const handleSetup2FA = async () => {
+    setTwoFALoading(true);
+    try {
+      const data = await settingsService.setup2FA();
+      if (data?.success) {
+        setTwoFASecret(data.secret);
+        setTwoFAQr(data.qr);
+        setTwoFAStep("scan");
+      }
+    } catch {
+      showToast("Failed to start 2FA setup.", "error");
+    }
+    setTwoFALoading(false);
+  };
+
+  const handleVerify2FA = async () => {
+    if (twoFACode.length < 6) return;
+    setTwoFALoading(true);
+    try {
+      const data = await settingsService.verify2FASetup(twoFACode);
+      if (data?.success) {
+        setTwoFAEnabled(true);
+        setTwoFABackupCodes(data.backupCodes || []);
+        setTwoFAStep("backup");
+        showToast("2FA enabled successfully!");
+      } else {
+        showToast(data?.message || "Invalid code", "error");
+      }
+    } catch {
+      showToast("Verification failed.", "error");
+    }
+    setTwoFALoading(false);
+  };
+
+  const handleDisable2FA = async () => {
+    if (!twoFADisablePw) { showToast("Enter your password", "error"); return; }
+    setTwoFALoading(true);
+    try {
+      const data = await settingsService.disable2FA(twoFADisablePw);
+      if (data?.success) {
+        setTwoFAEnabled(false);
+        setTwoFAStep("idle");
+        setTwoFASecret("");
+        setTwoFAQr("");
+        setTwoFABackupCodes([]);
+        setTwoFADisablePw("");
+        showToast("2FA disabled");
+      } else {
+        showToast(data?.message || "Failed to disable", "error");
+      }
+    } catch {
+      showToast("Failed to disable 2FA.", "error");
+    }
+    setTwoFALoading(false);
   };
 
   const handleSavePreferences = async () => {
@@ -394,6 +520,10 @@ export default function SettingsPage() {
       {renderField("Website", null, (
         <input className="st-input" value={profile.website} onChange={e => updateProfile("website", e.target.value)} placeholder="https://yoursite.com" />
       ))}
+
+      <button className="st-btn st-btn--green st-btn--full" onClick={handleSaveProfile} style={{ marginTop: "0.5rem" }}>
+        Save Profile
+      </button>
 
       <div className="st-divider" />
 
@@ -600,6 +730,58 @@ export default function SettingsPage() {
     <motion.div key="privacy" className="st-page" variants={pageVariants} initial="initial" animate="animate" exit="exit">
       <h1 className="st-page-title">Privacy & Security</h1>
 
+      {renderSectionHeader("Two-Factor Authentication")}
+      {!twoFAEnabled && twoFAStep === "idle" && (
+        <div className="st-2fa-card">
+          <p className="st-2fa-desc">Add an extra layer of security to your account using an authenticator app (Google Authenticator, Authy, etc.)</p>
+          <button className="st-btn st-btn--green" onClick={handleSetup2FA} disabled={twoFALoading}>
+            {twoFALoading ? "Loading..." : "Enable 2FA"}
+          </button>
+        </div>
+      )}
+      {twoFAStep === "scan" && (
+        <div className="st-2fa-card">
+          <p className="st-2fa-desc">Scan this QR code with your authenticator app, then enter the 6-digit code below.</p>
+          <div className="st-2fa-qr-wrap">
+            <img src={twoFAQr} alt="2FA QR Code" className="st-2fa-qr-img" />
+          </div>
+          <p className="st-2fa-desc" style={{ fontSize: "12px" }}>Or enter this key manually: <code className="st-2fa-key">{twoFASecret}</code></p>
+          <div className="st-2fa-verify-row">
+            <input className="st-input" style={{ width: "160px", textAlign: "center", letterSpacing: "4px" }} type="text" inputMode="numeric" maxLength={6} placeholder="000000" value={twoFACode} onChange={e => setTwoFACode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+            <button className="st-btn st-btn--green" onClick={handleVerify2FA} disabled={twoFALoading || twoFACode.length < 6}>
+              {twoFALoading ? "Verifying..." : "Verify & Enable"}
+            </button>
+          </div>
+        </div>
+      )}
+      {twoFAStep === "backup" && (
+        <div className="st-2fa-card">
+          <p className="st-2fa-desc" style={{ color: "#fbbf24" }}>Save these backup codes in a safe place. Each can be used once if you lose access to your authenticator app.</p>
+          <div className="st-2fa-codes">
+            {twoFABackupCodes.map((code, i) => (
+              <code key={i} className="st-backup-code">{code}</code>
+            ))}
+          </div>
+          <div className="st-2fa-verify-row">
+            <button className="st-btn st-btn--dark" onClick={() => { navigator.clipboard.writeText(twoFABackupCodes.join("\n")); showToast("Codes copied!"); }}>Copy All</button>
+            <button className="st-btn st-btn--dark" onClick={() => { const blob = new Blob([twoFABackupCodes.join("\n")], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "backup-codes.txt"; a.click(); }}>Download</button>
+          </div>
+          <button className="st-btn st-btn--green" style={{ marginTop: "1rem" }} onClick={() => { setTwoFAStep("idle"); setTwoFACode(""); setTwoFASecret(""); setTwoFAQr(""); }}>Done</button>
+        </div>
+      )}
+      {twoFAEnabled && twoFAStep === "idle" && (
+        <div className="st-2fa-card" style={{ borderColor: "rgba(74,222,128,0.3)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
+            <CheckCircle size={20} color="#4ade80" />
+            <span style={{ color: "#4ade80", fontWeight: 600 }}>2FA is enabled</span>
+          </div>
+          <input className="st-input" style={{ width: "200px", marginBottom: "0.5rem" }} type="password" placeholder="Enter password to disable" value={twoFADisablePw} onChange={e => setTwoFADisablePw(e.target.value)} />
+          <button className="st-btn st-btn--danger" onClick={handleDisable2FA} disabled={twoFALoading || !twoFADisablePw}>
+            {twoFALoading ? "Disabling..." : "Disable 2FA"}
+          </button>
+        </div>
+      )}
+
       <div className="st-divider" />
       {renderSectionHeader("Privacy")}
       {renderToggle("publicProfile", "Public profile", "Others can view your profile")}
@@ -659,79 +841,33 @@ export default function SettingsPage() {
     <motion.div key="sync" className="st-page" variants={pageVariants} initial="initial" animate="animate" exit="exit">
       <h1 className="st-page-title">Sync & Connected Apps</h1>
 
-      {renderSectionHeader("MyAnimeList (MAL)")}
-      <div className="st-sync-card">
-        <div className="st-sync-card-left">
-          <div className="st-sync-logo mal">MAL</div>
-          <div className="st-sync-info">
-            <span className="st-sync-name">MyAnimeList (MAL)</span>
-            <span className={`st-badge ${settings.malConnected ? "st-badge--green" : ""}`}>
-              {settings.malConnected ? "Connected" : "Not Connected"}
-            </span>
-            {syncStates.malLastSync && <span className="st-sync-last">Last synced: {syncStates.malLastSync}</span>}
-            <div className="st-sync-features">
-              <span>Auto-sync support</span>
-            </div>
-          </div>
-        </div>
-        <div className="st-sync-card-right">
-          {!settings.malConnected ? (
-            <button className="st-btn st-btn--green" onClick={() => connectService("mal")}>
-              Connect to MAL
-            </button>
-          ) : (
-            <div className="st-sync-actions">
-              <button className="st-btn st-btn--cyan" onClick={() => handleSync("mal")} disabled={syncStates.malSyncing}>
-                <RefreshCw size={16} className={syncStates.malSyncing ? "st-spin" : ""} />
-                {syncStates.malSyncing ? "Syncing..." : "Sync Now"}
-              </button>
-              <button className="st-btn st-btn--dark" onClick={() => disconnectService("mal")}>
-                Disconnect
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {renderSectionHeader("AniList")}
-      <div className="st-sync-card">
-        <div className="st-sync-card-left">
-          <div className="st-sync-logo ani">AniL</div>
-          <div className="st-sync-info">
-            <span className="st-sync-name">AniList</span>
-            <span className={`st-badge ${settings.aniConnected ? "st-badge--green" : ""}`}>
-              {settings.aniConnected ? "Connected" : "Not Connected"}
-            </span>
-            {syncStates.aniLastSync && <span className="st-sync-last">Last synced: {syncStates.aniLastSync}</span>}
-            <div className="st-sync-features">
-              <span>Real-time sync</span>
-              <span>Two-way sync</span>
-              <span>Automatic updates</span>
-            </div>
-          </div>
-        </div>
-        <div className="st-sync-card-right">
-          {!settings.aniConnected ? (
-            <button className="st-btn st-btn--green" onClick={() => connectService("ani")}>
-              Connect to AniList
-            </button>
-          ) : (
-            <div className="st-sync-actions">
-              <button className="st-btn st-btn--cyan" onClick={() => handleSync("ani")} disabled={syncStates.aniSyncing}>
-                <RefreshCw size={16} className={syncStates.aniSyncing ? "st-spin" : ""} />
-                {syncStates.aniSyncing ? "Syncing..." : "Sync Now"}
-              </button>
-              <button className="st-btn st-btn--dark" onClick={() => disconnectService("ani")}>
-                Disconnect
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      <div className="st-divider" />
+      {renderSectionHeader("Connected Services")}
+      <SyncCard
+        service="mal"
+        status={syncStatus.mal}
+        username={syncStatus.mal?.username}
+        lastSynced={syncStatus.mal?.lastSynced}
+        loading={syncLoading.mal}
+        onConnect={handleConnectMAL}
+        onDisconnect={handleDisconnectMAL}
+        onSync={handleSyncMAL}
+      />
+      <div style={{ height: 12 }} />
+      <SyncCard
+        service="anilist"
+        status={syncStatus.anilist}
+        username={syncStatus.anilist?.username}
+        lastSynced={syncStatus.anilist?.lastSynced}
+        loading={syncLoading.anilist}
+        onConnect={handleConnectAniList}
+        onDisconnect={handleDisconnectAniList}
+        onSync={handleSyncAniList}
+      />
 
       <div className="st-divider" />
       {renderSectionHeader("Auto-Sync Options")}
-      {(settings.malConnected || settings.aniConnected) ? (
+      {(syncStatus.mal?.connected || syncStatus.anilist?.connected) ? (
         <>
           {renderToggle("autoSyncEpisode", "Auto-sync when episode finishes", "Update MAL/AniList when you finish watching")}
           {renderToggle("autoSyncInterval", "Auto-sync every 6 hours", "Periodically sync your watchlist")}
@@ -745,31 +881,17 @@ export default function SettingsPage() {
       <div className="st-divider" />
       {renderSectionHeader("Sync Information")}
       <div className="st-info-card">
-        <p><strong>Manual sync</strong> takes 2-5 minutes</p>
-        <p><strong>Auto-sync</strong> runs in background (max once per hour)</p>
-        <p><strong>Latest changes synced:</strong> {syncStates.malLastSync || syncStates.aniLastSync || "Never"}</p>
-        <p className="st-info-ok"><CheckCircle size={14} /> Sync status: All synced</p>
+        <p><strong>Manual sync</strong> uses OAuth to fetch your latest list</p>
+        <p><strong>MAL</strong> uses MyAnimeList OAuth v1 + official API</p>
+        <p><strong>AniList</strong> uses AniList OAuth v2 + GraphQL API</p>
+        <p className="st-info-ok"><CheckCircle size={14} /> Data synced with your authorization</p>
       </div>
 
       <div className="st-divider" />
-      {renderSectionHeader("Other Services")}
-      <div className="st-other-grid">
-        <div className="st-other-card">
-          <div className="st-other-icon" style={{ background: "#5865F220", color: "#5865F2" }}>
-            <Mail size={24} />
-          </div>
-          <span className="st-other-name">Discord</span>
-          <span className="st-other-desc">Connect for notifications</span>
-          <button className="st-btn st-btn--dark st-btn--sm">Coming Soon</button>
-        </div>
-        <div className="st-other-card">
-          <div className="st-other-icon" style={{ background: "#1DA1F220", color: "#1DA1F2" }}>
-            <Mail size={24} />
-          </div>
-          <span className="st-other-name">Twitter / X</span>
-          <span className="st-other-desc">Share your watchlist</span>
-          <button className="st-btn st-btn--dark st-btn--sm">Coming Soon</button>
-        </div>
+      {renderSectionHeader("Need Credentials?")}
+      <div className="st-info-card">
+        <p>To enable OAuth sync, the server needs MAL and AniList app credentials configured in <code>.env</code>.</p>
+        <p style={{ marginTop: 8 }}>Contact the admin if sync isn't working.</p>
       </div>
     </motion.div>
   );
@@ -786,6 +908,31 @@ export default function SettingsPage() {
 
         {!loading && (
           <>
+        {showDeleteModal && (
+          <div className="st-modal-overlay" onClick={() => setShowDeleteModal(false)}>
+            <div className="st-modal" onClick={e => e.stopPropagation()}>
+              <div className="st-modal-head">
+                <h3>Delete Account</h3>
+                <button className="st-modal-close" onClick={() => setShowDeleteModal(false)}><X size={18} /></button>
+              </div>
+              <div className="st-modal-body">
+                <div className="st-modal-icon"><AlertTriangle size={40} /></div>
+                <p className="st-modal-desc">This action is permanent and cannot be undone. All your data will be deleted.</p>
+                <label className="st-check-label">
+                  <input type="checkbox" checked={deleteConfirm} onChange={e => setDeleteConfirm(e.target.checked)} />
+                  <span>I understand, delete my account</span>
+                </label>
+              </div>
+              <div className="st-modal-foot">
+                <button className="st-btn st-btn--dark" onClick={() => setShowDeleteModal(false)}>Cancel</button>
+                <button className="st-btn st-btn--danger" disabled={!deleteConfirm || deleting} onClick={handleDeleteAccount}>
+                  {deleting ? "Deleting..." : "Delete Account"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {toast && (
           <div className={`st-toast st-toast--${toast.type}`}>
             <span>{toast.message}</span>

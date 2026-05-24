@@ -1,5 +1,10 @@
 import { useEffect } from "react";
 import AuthPage from "./pages/AuthPage";
+import VerifyEmailPage from "./pages/VerifyEmailPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import SyncCallbackMAL from "./pages/SyncCallbackMAL";
+import SyncCallbackAniList from "./pages/SyncCallbackAniList";
 import './App.css';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { syncFromBackend } from "./services/storage";
@@ -79,7 +84,7 @@ function RouteShell({ children }) {
 
 function AppLayout() {
   const location = useLocation();
-  const isAuthPage = location.pathname === "/";
+  const isAuthPage = location.pathname === "/" || location.pathname.startsWith("/auth/sync/");
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -94,6 +99,11 @@ function AppLayout() {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={token ? <Navigate to="/home" replace /> : <AuthPage />} />
+          <Route path="/auth/verify-email/:token" element={<RouteShell><VerifyEmailPage /></RouteShell>} />
+          <Route path="/auth/forgot-password" element={<RouteShell><ForgotPasswordPage /></RouteShell>} />
+          <Route path="/auth/reset-password/:token" element={<RouteShell><ResetPasswordPage /></RouteShell>} />
+          <Route path="/auth/sync/mal/callback" element={<SyncCallbackMAL />} />
+          <Route path="/auth/sync/anilist/callback" element={<SyncCallbackAniList />} />
           <Route path="/home" element={<RouteShell><Home /></RouteShell>} />
           <Route path="/browse/anime" element={<RouteShell><Browse /></RouteShell>} />
           <Route path="/browse/manga" element={<RouteShell><MangaVault /></RouteShell>} />

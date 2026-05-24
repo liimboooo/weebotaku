@@ -4,9 +4,14 @@ const {
   register, login, googleLogin, getMe, getUserByUsername,
   searchUsers, updateProfile, syncProgression,
   updateMangaProgress, updateListStatus, logout,
-  getSettings, updateSettings, changePassword, deleteAccount, toggle2FA,
-  connectMAL, disconnectMAL, syncMAL,
-  connectAniList, disconnectAniList, syncAniList,
+  getSettings, updateSettings, changePassword, deleteAccount,
+  setup2FA, verifySetup2FA, disable2FA, verifyLogin2FA, get2FAStatus,
+  requestEmailVerify, verifyEmail,
+  forgotPassword, resetPassword, validateResetToken,
+  getSyncStatus,
+  connectMAL, malCallback, disconnectMAL, syncMAL,
+  connectAniList, aniListCallback, disconnectAniList, syncAniList,
+  updateSyncAuto,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
@@ -26,13 +31,32 @@ router.get('/settings', protect, getSettings);
 router.put('/settings', protect, updateSettings);
 router.put('/change-password', protect, changePassword);
 router.delete('/account', protect, deleteAccount);
-router.post('/2fa/toggle', protect, toggle2FA);
+
+router.post('/2fa/setup', protect, setup2FA);
+router.post('/2fa/verify-setup', protect, verifySetup2FA);
+router.post('/2fa/disable', protect, disable2FA);
+router.post('/2fa/verify-login', verifyLogin2FA);
+router.get('/2fa/status', protect, get2FAStatus);
+
+router.post('/email/request-verify', protect, requestEmailVerify);
+router.post('/email/verify/:token', verifyEmail);
+
+router.post('/password/forgot', forgotPassword);
+router.post('/password/reset/:token', resetPassword);
+router.get('/password/reset/:token', validateResetToken);
+
+router.get('/sync/status', protect, getSyncStatus);
 
 router.post('/sync/mal/connect', protect, connectMAL);
+router.post('/sync/mal/callback', protect, malCallback);
 router.post('/sync/mal/disconnect', protect, disconnectMAL);
 router.post('/sync/mal/sync', protect, syncMAL);
+
 router.post('/sync/anilist/connect', protect, connectAniList);
+router.post('/sync/anilist/callback', protect, aniListCallback);
 router.post('/sync/anilist/disconnect', protect, disconnectAniList);
 router.post('/sync/anilist/sync', protect, syncAniList);
+
+router.put('/sync/auto', protect, updateSyncAuto);
 
 module.exports = router;
