@@ -95,6 +95,38 @@ const UserSchema = new mongoose.Schema({
     of: Number,
     default: {},
   },
+  favorites: [{
+    animeId: { type: Number, required: true },
+    name: String,
+    img: String,
+  }],
+  activities: [{
+    type: { type: String, enum: ['completed', 'rated', 'added', 'started', 'dropped', 'review'] },
+    animeId: Number,
+    animeName: String,
+    animeImg: String,
+    detail: String,
+    createdAt: { type: Date, default: Date.now },
+  }],
+  recommendations: [{
+    from: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    animeId: { type: Number, required: true },
+    animeName: String,
+    animeImg: String,
+    message: String,
+    createdAt: { type: Date, default: Date.now },
+  }],
+  collections: [{
+    name: { type: String, required: true, maxlength: 50 },
+    description: { type: String, default: '', maxlength: 200 },
+    anime: [{
+      animeId: { type: Number, required: true },
+      name: String,
+      img: String,
+    }],
+    isPublic: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now },
+  }],
   progression: {
     xp: { type: Number, default: 0 },
     currentStreak: { type: Number, default: 0 },
@@ -112,7 +144,7 @@ const UserSchema = new mongoose.Schema({
   settings: {
     darkMode: { type: String, default: 'auto' },
     fontSize: { type: String, default: 'Medium' },
-    accentColor: { type: String, default: '#667eea' },
+    accentColor: { type: String, default: '#7c3aed' },
     autoNext: { type: Boolean, default: true },
     skipIntro: { type: Boolean, default: false },
     skipOutro: { type: Boolean, default: false },
@@ -236,6 +268,10 @@ UserSchema.methods.toFullProfile = function () {
     ratings: this.ratings ? Object.fromEntries(this.ratings) : {},
     likedAnime: this.likedAnime,
     mangaProgress: this.mangaProgress ? Object.fromEntries(this.mangaProgress) : {},
+    favorites: this.favorites || [],
+    activities: (this.activities || []).slice(0, 30),
+    recommendations: this.recommendations || [],
+    collections: this.collections || [],
   };
 };
 
@@ -261,6 +297,9 @@ UserSchema.methods.toRemoteProfile = function () {
     likedAnime: this.likedAnime,
     ratings: this.ratings ? Object.fromEntries(this.ratings) : {},
     watchHistory: this.watchHistory.slice(0, 20),
+    favorites: this.favorites || [],
+    activities: (this.activities || []).slice(0, 30),
+    collections: (this.collections || []).filter(c => c.isPublic),
   };
 };
 

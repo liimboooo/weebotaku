@@ -328,6 +328,169 @@ exports.logout = async (req, res) => {
   res.json({ success: true, message: 'Logged out' });
 };
 
+// @route   PUT /api/auth/favorites
+exports.updateFavorites = async (req, res) => {
+  try {
+    const { favorites } = req.body;
+    if (!Array.isArray(favorites) || favorites.length > 5) {
+      return res.status(400).json({ success: false, message: 'Max 5 favorites allowed' });
+    }
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { favorites: favorites.map(f => ({ animeId: f.animeId, name: f.name, img: f.img })) },
+      { new: true }
+    );
+    res.json({ success: true, favorites: user.favorites });
+  } catch (error) {
+    console.error('UpdateFavorites error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/activity
+exports.logActivity = async (req, res) => {
+  try {
+    const { type, animeId, animeName, animeImg, detail } = req.body;
+    const validTypes = ['completed', 'rated', 'added', 'started', 'dropped', 'review'];
+    if (!validTypes.includes(type)) {
+      return res.status(400).json({ success: false, message: 'Invalid activity type' });
+    }
+    const user = await User.findById(req.user.id);
+    user.activities.unshift({ type, animeId, animeName, animeImg, detail, createdAt: new Date() });
+    if (user.activities.length > 50) user.activities = user.activities.slice(0, 50);
+    await user.save();
+    res.json({ success: true });
+  } catch (error) {
+    console.error('LogActivity error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/recommend
+exports.sendRecommendation = async (req, res) => {
+  try {
+    const { toUsername, animeId, animeName, animeImg, message } = req.body;
+    if (!toUsername || !animeId) {
+      return res.status(400).json({ success: false, message: 'toUsername and animeId required' });
+    }
+    const target = await User.findOne({ username: toUsername });
+    if (!target) return res.status(404).json({ success: false, message: 'User not found' });
+    if (target._id.toString() === req.user.id) {
+      return res.status(400).json({ success: false, message: 'Cannot recommend to yourself' });
+    }
+    const existing = target.recommendations.find(
+      r => r.from.toString() === req.user.id && r.animeId === animeId
+    );
+    if (existing) return res.status(400).json({ success: false, message: 'Already recommended' });
+    target.recommendations.unshift({
+      from: req.user.id, animeId, animeName, animeImg, message: message || '', createdAt: new Date(),
+    });
+    if (target.recommendations.length > 30) target.recommendations = target.recommendations.slice(0, 30);
+    await target.save();
+    res.json({ success: true, message: 'Recommendation sent' });
+  } catch (error) {
+    console.error('SendRecommendation error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   DELETE /api/auth/recommendations/:id
+exports.dismissRecommendation = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    user.recommendations = user.recommendations.filter(r => r._id.toString() !== req.params.id);
+    await user.save();
+    res.json({ success: true });
+  } catch (error) {
+    console.error('DismissRecommendation error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/collections
+exports.createCollection = async (req, res) => {
+  try {
+    const { name, description, isPublic } = req.body;
+    if (!name) return res.status(400).json({ success: false, message: 'Collection name required' });
+    const user = await User.findById(req.user.id);
+    if (user.collections.length >= 20) {
+      return res.status(400).json({ success: false, message: 'Max 20 collections' });
+    }
+    user.collections.push({ name, description: description || '', anime: [], isPublic: isPublic !== false });
+    await user.save();
+    res.json({ success: true, collections: user.collections });
+  } catch (error) {
+    console.error('CreateCollection error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   PUT /api/auth/collections/:id
+exports.updateCollection = async (req, res) => {
+  try {
+    const { name, description, isPublic } = req.body;
+    const user = await User.findById(req.user.id);
+    const col = user.collections.id(req.params.id);
+    if (!col) return res.status(404).json({ success: false, message: 'Collection not found' });
+    if (name !== undefined) col.name = name;
+    if (description !== undefined) col.description = description;
+    if (isPublic !== undefined) col.isPublic = isPublic;
+    await user.save();
+    res.json({ success: true, collection: col });
+  } catch (error) {
+    console.error('UpdateCollection error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   DELETE /api/auth/collections/:id
+exports.deleteCollection = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    user.collections = user.collections.filter(c => c._id.toString() !== req.params.id);
+    await user.save();
+    res.json({ success: true });
+  } catch (error) {
+    console.error('DeleteCollection error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/collections/:id/anime
+exports.addToCollection = async (req, res) => {
+  try {
+    const { animeId, name, img } = req.body;
+    if (!animeId) return res.status(400).json({ success: false, message: 'animeId required' });
+    const user = await User.findById(req.user.id);
+    const col = user.collections.id(req.params.id);
+    if (!col) return res.status(404).json({ success: false, message: 'Collection not found' });
+    if (col.anime.some(a => a.animeId === animeId)) {
+      return res.status(400).json({ success: false, message: 'Already in collection' });
+    }
+    col.anime.push({ animeId, name, img });
+    await user.save();
+    res.json({ success: true, collection: col });
+  } catch (error) {
+    console.error('AddToCollection error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   DELETE /api/auth/collections/:id/anime/:animeId
+exports.removeFromCollection = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const col = user.collections.id(req.params.id);
+    if (!col) return res.status(404).json({ success: false, message: 'Collection not found' });
+    col.anime = col.anime.filter(a => a.animeId !== parseInt(req.params.animeId));
+    await user.save();
+    res.json({ success: true, collection: col });
+  } catch (error) {
+    console.error('RemoveFromCollection error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // ─── Settings ────────────────────────────────────────────
 
 // @route   GET /api/auth/settings

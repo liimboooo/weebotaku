@@ -255,6 +255,10 @@ class AuthService {
   async updateSyncAuto(service, autoSync) {
     return api.put('/auth/sync/auto', { service, autoSync });
   }
+
+  async updateFavorites(favorites) {
+    return api.put('/auth/favorites', { favorites });
+  }
 }
 
 const authService = new AuthService();

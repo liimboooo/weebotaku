@@ -66,8 +66,8 @@
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  background: rgba(229, 9, 20, 0.12);
-  border: 1px solid rgba(229, 9, 20, 0.3);
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.3);
   border-radius: 99px;
   font-size: 0.6rem;
   font-weight: 800;
@@ -124,12 +124,12 @@
   background: #6d28d9;
   color: #fff;
   border: none;
-  box-shadow: 0 0 30px rgba(229, 9, 20, 0.25);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.25);
 }
 
 .edits-cta-primary:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 40px rgba(229, 9, 20, 0.45);
+  box-shadow: 0 8px 40px rgba(139, 92, 246, 0.45);
 }
 
 .edits-cta-secondary {
@@ -178,7 +178,7 @@
 
 .edits-upload-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(229, 9, 20, 0.4);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
 }
 
 /* Filter controls + search nav */
@@ -239,7 +239,7 @@
 .edits-cat-btn.active {
   background: #6d28d9;
   color: #fff;
-  box-shadow: 0 0 20px rgba(229, 9, 20, 0.2);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
 }
 
 /* ─── Sort Row ─── */
@@ -264,7 +264,7 @@
 
 .edits-nav-search:focus-within {
   background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(229, 9, 20, 0.3);
+  border-color: rgba(139, 92, 246, 0.3);
   width: 260px;
 }
 
@@ -369,7 +369,7 @@
 .edits-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-  border-color: rgba(229, 9, 20, 0.2);
+  border-color: rgba(139, 92, 246, 0.2);
 }
 
 /* ─── Poster Thumbnail ─── */
@@ -398,7 +398,7 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #111111 0%, #0e0e14 100%);
-  color: rgba(229, 9, 20, 0.4);
+  color: rgba(139, 92, 246, 0.4);
 }
 
 /* ─── Hover Overlay (hashtags) ─── */
@@ -540,7 +540,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(229, 9, 20, 0.4);
+  color: rgba(139, 92, 246, 0.4);
   border-radius: 12px;
   min-height: 80px;
 }
@@ -552,7 +552,7 @@
 }
 
 .edits-empty-icon {
-  color: rgba(229, 9, 20, 0.2);
+  color: rgba(139, 92, 246, 0.2);
   margin-bottom: 16px;
 }
 
@@ -578,7 +578,7 @@
 .edits-loading-spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid rgba(229, 9, 20, 0.15);
+  border: 3px solid rgba(139, 92, 246, 0.15);
   border-top-color: #6d28d9;
   border-radius: 50%;
   animation: edits-spin 0.7s linear infinite;
@@ -636,8 +636,8 @@
 }
 
 .pin-close:hover {
-  background: rgba(229, 9, 20, 0.6);
-  border-color: rgba(229, 9, 20, 0.4);
+  background: rgba(139, 92, 246, 0.6);
+  border-color: rgba(139, 92, 246, 0.4);
   transform: scale(1.1);
 }
 
@@ -970,24 +970,24 @@
 }
 
 .pin-glass-btn:hover {
-  border-color: rgba(229, 9, 20, 0.3);
-  background: rgba(229, 9, 20, 0.08);
+  border-color: rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.08);
   color: #fff;
   transform: translateY(-2px);
 }
 
 .pin-glass-btn.active {
-  background: rgba(229, 9, 20, 0.15);
-  border-color: rgba(229, 9, 20, 0.4);
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.4);
   color: #6d28d9;
-  box-shadow: 0 0 20px rgba(229, 9, 20, 0.15);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
 }
 
 .pin-glass-btn.saved {
-  background: rgba(229, 9, 20, 0.15);
-  border-color: rgba(229, 9, 20, 0.4);
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.4);
   color: #6d28d9;
-  box-shadow: 0 0 24px rgba(229, 9, 20, 0.25);
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.25);
 }
 
 /* ─── Related Edits (compact, inside panel) ─── */
@@ -1012,14 +1012,14 @@
 }
 
 .pin-hashtag {
-  border: 1px solid rgba(229, 9, 20, 0.5);
+  border: 1px solid rgba(139, 92, 246, 0.5);
   color: #c084fc;
   font-size: 0.65rem;
   font-weight: 700;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(229, 9, 20, 0.04);
-  box-shadow: 0 0 12px rgba(229, 9, 20, 0.06);
+  background: rgba(139, 92, 246, 0.04);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.06);
 }
 
 .pin-divider {
@@ -1048,7 +1048,7 @@
 
 .pin-comments-list::-webkit-scrollbar { width: 3px; }
 .pin-comments-list::-webkit-scrollbar-thumb {
-  background: rgba(229, 9, 20, 0.2);
+  background: rgba(139, 92, 246, 0.2);
   border-radius: 2px;
 }
 
@@ -1182,13 +1182,13 @@
 }
 
 .pin-composer-sticky input:focus {
-  border-color: rgba(229, 9, 20, 0.25);
+  border-color: rgba(139, 92, 246, 0.25);
 }
 
 .pin-post-btn {
-  background: rgba(229, 9, 20, 0.12);
+  background: rgba(139, 92, 246, 0.12);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(229, 9, 20, 0.25);
+  border: 1px solid rgba(139, 92, 246, 0.25);
   color: #6d28d9;
   padding: 9px 18px;
   border-radius: 10px;
@@ -1234,7 +1234,7 @@
 }
 
 .creator-bar-grid::-webkit-scrollbar { height: 3px; }
-.creator-bar-grid::-webkit-scrollbar-thumb { background: rgba(229,9,20,0.2); border-radius: 2px; }
+.creator-bar-grid::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.2); border-radius: 2px; }
 
 .creator-bar-card {
   flex: 0 0 160px;
@@ -1313,7 +1313,7 @@
   max-height: 90vh;
   overflow-y: auto;
   background: rgba(15, 15, 15, 0.96);
-  border: 1px solid rgba(229, 9, 20, 0.25);
+  border: 1px solid rgba(139, 92, 246, 0.25);
   border-radius: 24px;
   box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
 }
@@ -1379,7 +1379,7 @@
 
 .field input:focus,
 .field select:focus {
-  border-color: rgba(229, 9, 20, 0.4);
+  border-color: rgba(139, 92, 246, 0.4);
 }
 
 .upload-video-input {
@@ -1400,7 +1400,7 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: rgba(229, 9, 20, 0.1);
+  background: rgba(139, 92, 246, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1475,7 +1475,7 @@
 
 .upload-video-label:hover {
   border-color: #6d28d9;
-  background: rgba(229, 9, 20, 0.04);
+  background: rgba(139, 92, 246, 0.04);
   color: #fff;
 }
 
@@ -1564,7 +1564,7 @@
 
 .upload-confirm-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
 }
 
 /* Trimmer */
@@ -1641,7 +1641,7 @@
 }
 
 .upload-modal::-webkit-scrollbar-thumb {
-  background: rgba(229, 9, 20, 0.25);
+  background: rgba(139, 92, 246, 0.25);
   border-radius: 2px;
 }
 
@@ -1772,7 +1772,7 @@
 }
 
 .edits-sort-btn:hover {
-  border-color: rgba(229, 9, 20, 0.3);
+  border-color: rgba(139, 92, 246, 0.3);
   color: #fff;
   background: rgba(255, 255, 255, 0.06);
 }
@@ -1781,5 +1781,5 @@
   background: #6d28d9;
   border-color: #6d28d9;
   color: #fff;
-  box-shadow: 0 0 20px rgba(229, 9, 20, 0.2);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
 }

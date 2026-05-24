@@ -34,7 +34,7 @@
 
 .toast-success { border-left: 3px solid #22c55e; }
 .toast-error { border-left: 3px solid #7c3aed; }
-.toast-info { border-left: 3px solid #3b82f6; }
+.toast-info { border-left: 3px solid #7c3aed; }
 
 .toast-xp {
   border-left: 3px solid #8b5cf6;
