@@ -1,15 +1,36 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import authService from "../services/authService";
+import AnimatedPage from "../components/AnimatedPage";
 import {
   User, Settings, Bell, Shield, Link2, FileText, CreditCard, HelpCircle,
   Eye, EyeOff, LogOut, Sun, Moon, Monitor, SkipForward, SkipBack,
   Volume2, Upload, Download, CheckCircle, X, Search, Trash2,
   Smartphone, Globe, Clock, AlertTriangle, QrCode, Copy,
   ChevronDown, ChevronRight, MessageSquare, Gift, Film,
-  Music, Camera, Twitter, Key, Unlock, Lock,
 } from "lucide-react";
 import "./SettingsPage.css";
+
+const stagger = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } },
+};
+
+const fadeIn = {
+  hidden: { opacity: 0, x: -8 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } },
+};
+
+const scaleIn = {
+  hidden: { opacity: 0, scale: 0.95 },
+  show: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } },
+};
 
 const SIDEBAR_ITEMS = [
   { key: "account",           label: "Account",           icon: User },
@@ -92,27 +113,42 @@ export default function SettingsPage() {
   const handleLogout = async () => { await authService.logout(); navigate("/"); };
 
   return (
-    <div className="sp">
-      <div className="sp-layout">
-        {/* ─── Sidebar ─── */}
-        <aside className="sp-sidebar">
-          <div className="sp-sidebar-title">SETTINGS</div>
-          <nav className="sp-sidebar-nav">
-            {SIDEBAR_ITEMS.map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                className={`sp-sidebar-item ${activePage === key ? "active" : ""}`}
-                onClick={() => setActivePage(key)}
-              >
-                <Icon size={18} />
-                <span>{label}</span>
-              </button>
-            ))}
-          </nav>
-        </aside>
+    <AnimatedPage>
+      <div className="sp">
+        <div className="sp-layout">
+          {/* ─── Sidebar ─── */}
+          <motion.aside
+            className="sp-sidebar"
+            variants={stagger}
+            initial="hidden"
+            animate="show"
+          >
+            <div className="sp-sidebar-title">SETTINGS</div>
+            <nav className="sp-sidebar-nav">
+              {SIDEBAR_ITEMS.map(({ key, label, icon: Icon }) => (
+                <motion.button
+                  key={key}
+                  variants={fadeIn}
+                  className={`sp-sidebar-item ${activePage === key ? "active" : ""}`}
+                  onClick={() => setActivePage(key)}
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <Icon size={18} />
+                  <span>{label}</span>
+                </motion.button>
+              ))}
+            </nav>
+          </motion.aside>
 
-        {/* ─── Main Content ─── */}
-        <main className="sp-content">
+          {/* ─── Main Content ─── */}
+          <motion.main
+            className="sp-content"
+            key={activePage}
+            variants={stagger}
+            initial="hidden"
+            animate="show"
+          >
 
           {/* ════════════════════════════════════════════
               PAGE 1: ACCOUNT
@@ -971,21 +1007,28 @@ export default function SettingsPage() {
                 ].map((link, i) => {
                   const Icon = link.icon;
                   return (
-                    <button key={i} className="sp-link-card">
+                    <motion.button key={i} className="sp-link-card" variants={scaleIn} whileHover={{ y: -4, borderColor: "#8b5cf6" }}>
                       <Icon size={20} />
                       <span>{link.label}</span>
-                    </button>
+                    </motion.button>
                   );
                 })}
               </div>
             </section>
           )}
-        </main>
+        </motion.main>
       </div>
 
       {/* ─── Delete Confirmation Modal ─── */}
-      {showDeleteModal && (
-        <div className="sp-modal-overlay" onClick={() => setShowDeleteModal(false)}>
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div
+            className="sp-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowDeleteModal(false)}
+          >
           <div className="sp-modal" onClick={e => e.stopPropagation()}>
             <div className="sp-modal-head">
               <h3>Delete Account</h3>
@@ -1015,9 +1058,10 @@ export default function SettingsPage() {
               <button className="sp-btn sp-btn--dark" onClick={() => setShowDeleteModal(false)}>Cancel</button>
               <button className="sp-btn sp-btn--danger" disabled={!deleteConfirm}>Confirm Deletion</button>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
+    </AnimatedPage>
   );
 }
