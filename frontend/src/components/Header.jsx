@@ -22,7 +22,7 @@ import {
   Video,
   X,
 } from 'lucide-react';
-import { getNotifications, markRead, markAllRead, clearNotifications } from '../services/notificationService';
+import { getNotifications, markRead, markAllRead, clearNotifications, fetchUnreadCount } from '../services/notificationService';
 import authService from '../services/authService';
 import { loadWatchHistory } from '../services/storage';
 import FastSearch from './FastSearch';
@@ -54,13 +54,20 @@ export default function Header() {
   const [notifList, setNotifList] = useState(getNotifications());
   const [previewOpen, setPreviewOpen] = useState(false);
   const notifRef = useRef(null);
-  const notifCount = notifList.filter(n => !n.read).length;
+  const notifCount = Math.max(notifList.filter(n => !n.read).length, serverUnread);
+
+  const [serverUnread, setServerUnread] = useState(0);
 
   useEffect(() => {
     const handler = () => setNotifList(getNotifications());
     window.addEventListener("notification-added", handler);
     window.addEventListener("storage", handler);
     handler();
+    if (authService.isLoggedIn()) {
+      fetchUnreadCount().then(setServerUnread);
+      const interval = setInterval(() => fetchUnreadCount().then(setServerUnread), 30000);
+      return () => { clearInterval(interval); window.removeEventListener("notification-added", handler); window.removeEventListener("storage", handler); };
+    }
     return () => {
       window.removeEventListener("notification-added", handler);
       window.removeEventListener("storage", handler);
@@ -297,6 +304,21 @@ export default function Header() {
               </button>
               {moreDropdownOpen && (
                 <div className="more-dropdown">
+                  <button className="more-item" onClick={() => navigateTo('/community')}>
+                    <MessageSquare size={16} /> <span>Community</span>
+                  </button>
+                  <button className="more-item" onClick={() => navigateTo('/chat')}>
+                    <MessageSquare size={16} /> <span>Chat Rooms</span>
+                  </button>
+                  <button className="more-item" onClick={() => navigateTo('/discover')}>
+                    <TrendingUp size={16} /> <span>Discover</span>
+                  </button>
+                  <button className="more-item" onClick={() => navigateTo('/leaderboard')}>
+                    <Star size={16} /> <span>Leaderboard</span>
+                  </button>
+                  <button className="more-item" onClick={() => navigateTo('/friends')}>
+                    <Globe size={16} /> <span>Friends</span>
+                  </button>
                   <button className="more-item" onClick={() => navigateTo('/settings')}>
                     <Settings size={16} /> <span>Settings</span>
                   </button>
@@ -340,11 +362,12 @@ export default function Header() {
                     ))
                   )}
                 </div>
-                {notifList.length > 0 && (
-                  <div className="notif-dropdown-footer">
+                <div className="notif-dropdown-footer">
+                  {notifList.length > 0 && (
                     <button className="notif-clear-btn" onClick={() => { clearNotifications(); setNotifList([]); }}>Clear all</button>
-                  </div>
-                )}
+                  )}
+                  <button className="notif-clear-btn" onClick={() => navigateTo('/notifications')}>View all</button>
+                </div>
               </div>
             )}
           </div>

@@ -51,6 +51,12 @@ app.use('/api/comments', require('./routes/comments'));
 app.use('/api/scrape', require('./routes/scrape'));
 app.use('/api/config', require('./routes/config'));
 app.use('/api/badges', require('./routes/badges'));
+app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/chat', require('./routes/chat'));
+app.use('/api/admin', require('./routes/admin'));
+app.use('/api/friends', require('./routes/friends'));
+app.use('/api/leaderboard', require('./routes/leaderboard'));
+app.use('/api/discover', require('./routes/trending'));
 
 // Health check
 app.get('/api/health', (req, res) => {

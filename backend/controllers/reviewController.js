@@ -54,13 +54,24 @@ exports.getReviews = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    const sort = req.query.sort || 'recent';
 
     const query = type === 'anime' ? { animeId: parseInt(id) } : { mangaId: id };
+
+    let sortObj;
+    switch (sort) {
+      case 'most_liked': sortObj = { likes: -1, createdAt: -1 }; break;
+      case 'most_helpful': sortObj = { helpful: -1, createdAt: -1 }; break;
+      case 'highest': sortObj = { rating: -1, createdAt: -1 }; break;
+      case 'lowest': sortObj = { rating: 1, createdAt: -1 }; break;
+      default: sortObj = { createdAt: -1 };
+    }
 
     const [reviews, total] = await Promise.all([
       Review.find(query)
         .populate('user', 'username avatar')
-        .sort({ createdAt: -1 })
+        .populate('replies.user', 'username avatar')
+        .sort(sortObj)
         .skip(skip)
         .limit(limit),
       Review.countDocuments(query),
@@ -75,6 +86,83 @@ exports.getReviews = async (req, res) => {
     });
   } catch (error) {
     console.error('GetReviews error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   PUT /api/reviews/:id
+// @access  Private
+exports.updateReview = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) {
+      return res.status(404).json({ success: false, message: 'Review not found' });
+    }
+    if (review.user.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    const { rating, title, content, isSpoiler } = req.body;
+    if (rating !== undefined) review.rating = rating;
+    if (title !== undefined) review.title = title;
+    if (content !== undefined) review.content = content;
+    if (isSpoiler !== undefined) review.isSpoiler = isSpoiler;
+    await review.save();
+
+    await review.populate('user', 'username avatar');
+    res.json({ success: true, data: review });
+  } catch (error) {
+    console.error('UpdateReview error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/reviews/:id/helpful
+// @access  Private
+exports.markHelpful = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) {
+      return res.status(404).json({ success: false, message: 'Review not found' });
+    }
+
+    const idx = review.helpful.indexOf(req.user.id);
+    if (idx > -1) {
+      review.helpful.splice(idx, 1);
+    } else {
+      review.helpful.push(req.user.id);
+    }
+
+    await review.save();
+    res.json({ success: true, data: review, marked: idx === -1 });
+  } catch (error) {
+    console.error('MarkHelpful error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/reviews/:id/reply
+// @access  Private
+exports.addReply = async (req, res) => {
+  try {
+    const { content } = req.body;
+    if (!content) {
+      return res.status(400).json({ success: false, message: 'Reply content required' });
+    }
+
+    const review = await Review.findById(req.params.id);
+    if (!review) {
+      return res.status(404).json({ success: false, message: 'Review not found' });
+    }
+
+    review.replies.push({ user: req.user.id, content });
+    await review.save();
+
+    await review.populate('user', 'username avatar');
+    await review.populate('replies.user', 'username avatar');
+    res.status(201).json({ success: true, data: review });
+  } catch (error) {
+    console.error('AddReply error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

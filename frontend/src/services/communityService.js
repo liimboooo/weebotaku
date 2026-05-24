@@ -6,28 +6,44 @@ class CommunityService {
     return api.get(`/community${queryString ? `?${queryString}` : ''}`);
   }
 
-  async createPost(title, content, category = 'discussion', tags = [], images = []) {
-    return api.post('/community', {
-      title,
-      content,
-      category,
-      tags,
-      images,
-    });
+  async getTrending() {
+    return api.get('/community/trending');
+  }
+
+  async getByTag(tag, page = 1) {
+    return api.get(`/community/hashtag/${encodeURIComponent(tag)}?page=${page}`);
+  }
+
+  async createPost(data) {
+    return api.post('/community', data);
   }
 
   async getPostById(id) {
     return api.get(`/community/${id}`);
   }
 
+  async updatePost(id, data) {
+    return api.put(`/community/${id}`, data);
+  }
+
   async likePost(id) {
     return api.post(`/community/${id}/like`);
   }
 
-  async addComment(id, content) {
-    return api.post(`/community/${id}/comment`, {
-      content,
-    });
+  async addComment(postId, content, mentions = []) {
+    return api.post(`/community/${postId}/comment`, { content, mentions });
+  }
+
+  async updateComment(postId, commentId, content) {
+    return api.put(`/community/comment/${postId}/${commentId}`, { content });
+  }
+
+  async deleteComment(postId, commentId) {
+    return api.delete(`/community/comment/${postId}/${commentId}`);
+  }
+
+  async likeComment(postId, commentId) {
+    return api.post(`/community/comment/${postId}/${commentId}/like`);
   }
 
   async deletePost(id) {

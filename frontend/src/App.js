@@ -21,6 +21,7 @@ import AnimeInfo from "./pages/AnimeInfo";
 import SearchPage from "./pages/SearchPage";
 import WatchlistPage from "./pages/WatchlistPage";
 import ProfilePage from "./pages/ProfilePage";
+import NotificationsPage from "./pages/NotificationsPage";
 import SettingsPage from "./pages/SettingsPage";
 import HistoryPage from "./pages/HistoryPage";
 
@@ -32,8 +33,14 @@ import MangaDetail from "./pages/MangaDetail";
 import News from "./pages/News";
 import NotFound from "./pages/NotFound";
 
+import ChatPage from "./pages/Chat/ChatPage";
+import AdminDashboard from "./pages/Admin/AdminDashboard";
+import FriendsPage from "./pages/Friends/FriendsPage";
+import LeaderboardPage from "./pages/Leaderboard/LeaderboardPage";
+import DiscoverPage from "./pages/Discover/DiscoverPage";
 import AMVsEdits from "./pages/Feeds/AMVsEdits";
 import WatchTogetherCreative from "./pages/Community/WatchTogetherCreative";
+import CommunityPage from "./pages/Community/CommunityPage";
 import Rankings from "./pages/Rankings/Rankings";
 import BestAnime from "./pages/Rankings/BestAnime";
 import TierLists from "./pages/Rankings/TierLists";
@@ -109,6 +116,8 @@ function AppLayout() {
           <Route path="/browse/manga" element={<RouteShell><MangaVault /></RouteShell>} />
           <Route path="/watch-together" element={<RouteShell><WatchTogetherCreative /></RouteShell>} />
           <Route path="/watch-together/new" element={<RouteShell><WatchTogetherCreative /></RouteShell>} />
+          <Route path="/community" element={<RouteShell><CommunityPage /></RouteShell>} />
+          <Route path="/chat" element={<RouteShell><ProtectedRoute><ChatPage /></ProtectedRoute></RouteShell>} />
           <Route path="/feeds/amvs" element={<RouteShell><AMVsEdits /></RouteShell>} />
           <Route path="/arena" element={<RouteShell><Rankings /></RouteShell>} />
           <Route path="/rankings/anime" element={<RouteShell><BestAnime /></RouteShell>} />
@@ -128,7 +137,12 @@ function AppLayout() {
           <Route path="/watchlist" element={<RouteShell><ProtectedRoute><WatchlistPage /></ProtectedRoute></RouteShell>} />
           <Route path="/profile" element={<RouteShell><ProtectedRoute><ProfilePage /></ProtectedRoute></RouteShell>} />
           <Route path="/profile/:username" element={<RouteShell><ProfilePage /></RouteShell>} />
+          <Route path="/notifications" element={<RouteShell><ProtectedRoute><NotificationsPage /></ProtectedRoute></RouteShell>} />
           <Route path="/history" element={<RouteShell><ProtectedRoute><HistoryPage /></ProtectedRoute></RouteShell>} />
+          <Route path="/admin" element={<RouteShell><ProtectedRoute><AdminDashboard /></ProtectedRoute></RouteShell>} />
+          <Route path="/friends" element={<RouteShell><ProtectedRoute><FriendsPage /></ProtectedRoute></RouteShell>} />
+          <Route path="/leaderboard" element={<RouteShell><LeaderboardPage /></RouteShell>} />
+          <Route path="/discover" element={<RouteShell><DiscoverPage /></RouteShell>} />
           <Route path="/following" element={<Navigate to="/home" replace />} />
           <Route path="*" element={<RouteShell><NotFound /></RouteShell>} />
         </Routes>

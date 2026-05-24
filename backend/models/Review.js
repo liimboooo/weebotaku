@@ -39,6 +39,15 @@ const ReviewSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   }],
+  helpful: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  replies: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    content: { type: String, required: true, maxlength: 2000 },
+    createdAt: { type: Date, default: Date.now },
+  }],
 }, { timestamps: true });
 
 // Prevent duplicate reviews

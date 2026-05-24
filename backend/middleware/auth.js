@@ -19,6 +19,9 @@ exports.protect = async (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'User not found' });
     }
+    if (req.user.role === 'banned') {
+      return res.status(403).json({ success: false, message: 'Account suspended' });
+    }
     next();
   } catch (error) {
     return res.status(401).json({ success: false, message: 'Not authorized' });

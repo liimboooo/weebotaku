@@ -21,7 +21,9 @@
     "node-fetch": "^2.7.0",
     "nodemailer": "^8.0.8",
     "qrcode": "^1.5.4",
+    "socket.io": "^4.8.3",
     "speakeasy": "^2.0.0",
+    "web-push": "^3.6.7",
     "wreq-js": "^2.3.0"
   },
   "devDependencies": {

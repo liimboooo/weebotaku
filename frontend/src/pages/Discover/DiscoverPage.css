@@ -1,0 +1,258 @@
+.dc-page {
+  min-height: 100vh;
+  background: #0a0a0a;
+  color: #fff;
+  padding: 2rem 0;
+}
+
+.dc-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.dc-header { margin-bottom: 1.5rem; }
+
+.dc-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dc-title svg { color: #4ade80; }
+
+.dc-subtitle {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}
+
+/* ── Tabs ── */
+.dc-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #1a1a1a;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.dc-tabs::-webkit-scrollbar { display: none; }
+
+.dc-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  color: #666;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.dc-tab:hover { color: #aaa; }
+.dc-tab.active { color: #4ade80; border-bottom-color: #4ade80; }
+
+/* ── Season Filters ── */
+.dc-season-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.dc-select {
+  padding: 8px 14px;
+  border: 1px solid #222;
+  background: #111;
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+}
+
+/* ── Grid ── */
+.dc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.dc-card {
+  cursor: pointer;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #111;
+  border: 1px solid #1a1a1a;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.dc-card:hover {
+  transform: translateY(-2px);
+  border-color: #333;
+}
+
+.dc-card-img-wrap {
+  position: relative;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+}
+
+.dc-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dc-card-score {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fbbf24;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.dc-card-info {
+  padding: 10px 12px 12px;
+}
+
+.dc-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dc-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.dc-card-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dc-genre {
+  font-size: 10px;
+  background: rgba(74, 222, 128, 0.08);
+  color: #4ade80;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+/* ── Pagination ── */
+.dc-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 0;
+}
+
+.dc-pagination button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #222;
+  background: #111;
+  color: #aaa;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.dc-pagination button:hover:not(:disabled) { border-color: #4ade80; color: #4ade80; }
+.dc-pagination button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.dc-pagination span {
+  font-size: 13px;
+  color: #666;
+}
+
+/* ── Skeleton ── */
+.dc-skeleton {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #111;
+  border: 1px solid #1a1a1a;
+}
+
+.dc-skeleton-img {
+  aspect-ratio: 3/4;
+  background: #1a1a1a;
+  animation: dc-shimmer 1.5s infinite;
+}
+
+.dc-skeleton-info {
+  padding: 10px 12px 12px;
+}
+
+.dc-skeleton-line {
+  height: 10px;
+  border-radius: 4px;
+  background: #1a1a1a;
+  margin-bottom: 6px;
+  animation: dc-shimmer 1.5s infinite;
+}
+
+.dc-skeleton-line--long { width: 80%; }
+.dc-skeleton-line--short { width: 45%; }
+
+@keyframes dc-shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ── Empty ── */
+.dc-empty {
+  text-align: center;
+  padding: 60px 24px;
+  color: #333;
+}
+
+.dc-empty h3 {
+  font-size: 16px;
+  color: #fff;
+  margin: 12px 0 4px;
+}
+
+.dc-empty p {
+  font-size: 13px;
+  color: #555;
+  margin: 0;
+}
+
+@media (max-width: 599px) {
+  .dc-container { padding: 0 1rem; }
+  .dc-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+}
