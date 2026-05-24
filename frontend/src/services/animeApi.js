@@ -128,27 +128,30 @@ async function searchReanimeSource(source, searchName, anilistId) {
 
   if (anilistId) {
     try {
-      const url = `${base}/api/search?q=${anilistId}`;
+      const url = `${base}/api/search?q=${encodeURIComponent(searchName)}`;
       const data = await fetchJsonViaProxy(url);
       if (data && Array.isArray(data.results) && data.results.length > 0) {
-        const matched = data.results.map(item => {
+        const idNum = parseInt(anilistId);
+        for (const item of data.results) {
           const coverUrl = item.cover_image?.extra_large || item.cover_image?.large || item.cover_image?.medium || "";
-          const title = item.title?.english || item.title?.romaji || item.title?.user_preferred || "";
-          return {
-            slug: item.anime_id,
-            title: title || searchName,
-            anilistId: parseInt(anilistId) || extractAnilistId(coverUrl),
-            _score: 999,
-            source: name,
-            sourceBase: base,
-          };
-        });
-        return matched.sort((a, b) => b._score - a._score);
+          const extractedId = extractAnilistId(coverUrl);
+          if (extractedId === idNum) {
+            const title = item.title?.english || item.title?.romaji || item.title?.user_preferred || "";
+            return [{
+              slug: item.anime_id,
+              title: title || searchName,
+              anilistId: idNum,
+              _score: 999,
+              source: name,
+              sourceBase: base,
+            }];
+          }
+        }
       }
     } catch {}
   }
 
-  const allVariants = [...titleVariants(searchName), "Yomi no Tsugai"];
+  const allVariants = titleVariants(searchName);
   for (const q of allVariants) {
     try {
       const url = `${base}/api/search?q=${encodeURIComponent(q)}`;
