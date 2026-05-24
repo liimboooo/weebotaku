@@ -1,6 +1,6 @@
 ﻿const REANIME_BASE = process.env.REACT_APP_REANIME_BASE_URL || "https://reanime.to";
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
-const FETCH_TIMEOUT = 8000;
+const FETCH_TIMEOUT = 6000;
 
 function cleanTitle(title) {
   return title.replace(/\s*\([^)]*\)/g, "").replace(/[^\w\s-]/g, "").trim();
@@ -38,7 +38,7 @@ const titleVariants = (title) => {
   ].filter((s, i, a) => s && s.length > 2 && a.indexOf(s) === i);
 };
 
-const CF_WORKER = process.env.REACT_APP_CF_PROXY_URL || "https://anime-proxy.mohamedlimam80000.workers.dev/?url=";
+const CF_WORKER = "https://anime-proxy.mohamedlimam80000.workers.dev/?url=";
 const FALLBACK_PROXIES = (process.env.REACT_APP_FALLBACK_PROXIES || "").split(",").filter(Boolean);
 const BACKEND_PROXY = `${API_BASE}/scrape/fetch?url=`;
 
@@ -74,10 +74,10 @@ async function fetchJsonViaProxy(url) {
   if (cached && Date.now() - cached.time < 300000) return cached.data;
 
   const attempts = [
-    ...(CF_WORKER ? [() => tryFetch(`${CF_WORKER}${encodeURIComponent(url)}`)] : []),
+    () => tryFetch(`${CF_WORKER}${encodeURIComponent(url)}`),
     ...FALLBACK_PROXIES.map(p => () => tryFetch(`${p}${encodeURIComponent(url)}`)),
-    () => tryFetch(`${BACKEND_PROXY}${encodeURIComponent(url)}`),
     () => tryFetch(url),
+    () => tryFetch(`${BACKEND_PROXY}${encodeURIComponent(url)}`),
   ];
 
   for (const attempt of attempts) {
@@ -231,22 +231,25 @@ export async function getEpisodePage(animeName, tagSlug, sourceName, sourceBase,
 
 export async function findStreamingSource(animeName, anilistId) {
   const source = SOURCES.reanime;
-  const results = await searchReanimeSource(source, animeName, anilistId);
-
-  if (results.length > 0) {
-    const best = results[0];
-    const id = best.anilistId || anilistId;
-    return {
-      source: best.source,
-      sourceBase: best.sourceBase,
-      slug: best.slug,
-      id: best.slug,
-      title: best.title,
-      tagSlug: best.slug,
-      anilistId: id,
-    };
+  try {
+    const results = await searchReanimeSource(source, animeName, anilistId);
+    if (results.length > 0) {
+      const best = results[0];
+      const id = best.anilistId || anilistId;
+      return {
+        source: best.source,
+        sourceBase: best.sourceBase,
+        slug: best.slug,
+        id: best.slug,
+        title: best.title,
+        tagSlug: best.slug,
+        anilistId: id,
+      };
+    }
+    console.warn("[stream] No results for:", animeName, "id:", anilistId);
+  } catch (e) {
+    console.error("[stream] findStreamingSource error:", e);
   }
-
   return null;
 }
 
