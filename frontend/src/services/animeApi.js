@@ -74,10 +74,10 @@ async function fetchJsonViaProxy(url) {
   if (cached && Date.now() - cached.time < 300000) return cached.data;
 
   const attempts = [
-    () => tryFetch(url),
     ...(CF_WORKER ? [() => tryFetch(`${CF_WORKER}${encodeURIComponent(url)}`)] : []),
     ...FALLBACK_PROXIES.map(p => () => tryFetch(`${p}${encodeURIComponent(url)}`)),
     () => tryFetch(`${BACKEND_PROXY}${encodeURIComponent(url)}`),
+    () => tryFetch(url),
   ];
 
   for (const attempt of attempts) {

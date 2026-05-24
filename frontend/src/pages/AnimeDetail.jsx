@@ -193,7 +193,7 @@ export default function AnimeDetail() {
       if (!timedOut) { clearTimeout(timer); setError("No streaming links available."); setLoading(false); }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watchAnime, retryCount]);
+  }, [watchAnime, sourceLookupDone, retryCount]);
 
   const loadMoreEpisodes = async () => {
     const nextPage = epPage + 1;
