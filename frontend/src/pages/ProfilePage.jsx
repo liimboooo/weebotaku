@@ -46,7 +46,6 @@ export default function ProfilePage() {
   const [joinDate, setJoinDate] = useState("");
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState("list");
 
   const loadProfileData = useCallback(() => {
     if (isRemoteProfile) return;
@@ -205,18 +204,18 @@ export default function ProfilePage() {
   return (
     <AnimatedPage>
       <div className="upp">
-        {/* ───────────────────────────────────────────────
-            TOP SECTION — User Card + Stats
-        ─────────────────────────────────────────────── */}
+        {/* ── TOP SECTION ── */}
         <div className="upp-top">
           <div className="upp-top-inner">
             <div className="upp-user-card">
-              <div className="upp-avatar" role="img" aria-label={`${username}'s avatar`}>
-                {userAvatar ? (
-                  <img src={userAvatar} alt={username} />
-                ) : (
-                  <span className="upp-avatar-initial">{userInitial}</span>
-                )}
+              <div className="upp-avatar-wrap">
+                <div className="upp-avatar" role="img" aria-label={`${username}'s avatar`}>
+                  {userAvatar ? (
+                    <img src={userAvatar} alt={username} />
+                  ) : (
+                    <span className="upp-avatar-initial">{userInitial}</span>
+                  )}
+                </div>
               </div>
               <h1 className="upp-username">{username}</h1>
               <span className="upp-handle">{handle}</span>
@@ -240,29 +239,45 @@ export default function ProfilePage() {
               </button>
             </div>
           </div>
+
+          <div className="upp-actions">
+            {isOwnProfile && (
+              <button className="upp-action-btn" onClick={() => setEditing(true)}>
+                <Settings size={14} /> Edit Profile
+              </button>
+            )}
+            <button className="upp-action-btn" onClick={() => { if (navigator.share) navigator.share({ title: username, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
+              <Share2 size={14} /> Share
+            </button>
+            {isRemoteProfile && (
+              <button className="upp-action-btn upp-action-btn--follow">
+                <UserPlus size={14} /> Follow
+              </button>
+            )}
+            {isOwnProfile && (
+              <button className="upp-action-btn upp-action-btn--danger" onClick={async () => { await authService.logout(); navigate("/"); }}>
+                <LogOut size={14} /> Logout
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* ───────────────────────────────────────────────
-            WATCHLIST SECTION
-        ─────────────────────────────────────────────── */}
+        {/* ── WATCHLIST SECTION ── */}
         <div className="upp-watchlist-section">
           <div className="upp-watchlist-inner">
             <div className="upp-watchlist-header">
-              <h2 className="upp-watchlist-title">
-                Watchlist <span className="upp-watchlist-count">{filteredAnime.length} anime</span>
-              </h2>
-              <div className="upp-watchlist-actions">
-                {isOwnProfile && (
-                  <div className="upp-search-box">
-                    <Search size={13} />
-                    <input
-                      className="upp-search-input"
-                      placeholder="Search..."
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                )}
+              <h2 className="upp-watchlist-title">Watchlist</h2>
+              <div className="upp-watchlist-header-right">
+                <span className="upp-watchlist-count">{filteredAnime.length} anime</span>
+                <div className="upp-search-box">
+                  <Search size={14} />
+                  <input
+                    className="upp-search-input"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
 
@@ -275,7 +290,7 @@ export default function ProfilePage() {
                   role="tab"
                   aria-selected={activeTab === key}
                 >
-                  <Icon size={14} />
+                  <Icon size={15} />
                   <span>{label}</span>
                   <span className="upp-tab-count">({counts[key]})</span>
                 </button>
@@ -324,7 +339,7 @@ export default function ProfilePage() {
                         </span>
                         <div className="upp-list-rating">
                           {userRating ? (
-                            <><Star size={11} fill="#4ade80" color="#4ade80" /> {userRating}</>
+                            <><Star size={12} fill="#667eea" color="#667eea" /> {userRating}</>
                           ) : (
                             <span className="upp-list-rating-empty">--</span>
                           )}
@@ -367,7 +382,7 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="upp-empty">
-                <div className="upp-empty-icon">
+                <div className="upp-empty-icon-bg">
                   <Bookmark size={60} />
                 </div>
                 <h3 className="upp-empty-title">No Anime Found</h3>
@@ -380,7 +395,7 @@ export default function ProfilePage() {
                 </p>
                 {isOwnProfile && activeTab === "all" && !searchQuery && (
                   <button className="upp-browse-btn" onClick={() => navigate("/browse/anime")}>
-                    <Plus size={14} /> Browse Anime
+                    <Plus size={15} /> Browse Anime
                   </button>
                 )}
               </div>
@@ -388,9 +403,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ───────────────────────────────────────────────
-            EDIT MODAL
-        ─────────────────────────────────────────────── */}
+        {/* ── EDIT MODAL ── */}
         <AnimatePresence>
           {editing && (
             <motion.div

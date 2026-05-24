@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════
-   ProfilePage — Clean Minimal Design
-   Background: #0a0a0a  |  Accent: #4ade80
+   ProfilePage — Purple Theme · Rounded Everywhere
+   Background: #0a0a0a  |  Accent: #667eea
    ════════════════════════════════════════════ */
 
 .upp {
@@ -20,32 +20,37 @@
 .upp-top-inner {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 1.5rem 2rem;
+  padding: 1.5rem 2rem 0.75rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 3rem;
+  gap: 4rem;
 }
 
-/* ─── User Card (Left) ──────────────────── */
+/* ─── User Card (Left, centered) ─────────── */
 .upp-user-card {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.25rem;
   flex-shrink: 0;
 }
 
+.upp-avatar-wrap {
+  margin-bottom: 0.75rem;
+}
+
 .upp-avatar {
-  width: 96px;
-  height: 96px;
-  border-radius: 12px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.06);
-  margin-bottom: 0.75rem;
+  border: 3px solid #667eea;
+  transition: border-color 0.2s ease;
 }
 
 .upp-avatar img {
@@ -55,9 +60,9 @@
 }
 
 .upp-avatar-initial {
-  font-size: 36px;
+  font-size: 38px;
   font-weight: 700;
-  color: #4ade80;
+  color: #667eea;
 }
 
 .upp-username {
@@ -89,11 +94,50 @@
   flex-shrink: 0;
 }
 
+/* ─── Action Buttons (below top row) ─────── */
+.upp-actions {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.75rem 2rem 1rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.upp-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border: none;
+  background: rgba(102, 126, 234, 0.1);
+  color: #888;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.upp-action-btn:hover {
+  background: rgba(102, 126, 234, 0.2);
+  color: #fff;
+}
+
+.upp-action-btn--danger:hover {
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
+}
+
+.upp-action-btn--follow {
+  color: #667eea;
+}
+
 /* ─── Stats (Right) ─────────────────────── */
 .upp-stats {
   display: flex;
   align-items: center;
-  gap: 3rem;
+  gap: 4rem;
   flex-shrink: 0;
 }
 
@@ -143,17 +187,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .upp-watchlist-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   color: #fff;
   margin: 0;
+}
+
+.upp-watchlist-header-right {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .upp-watchlist-count {
@@ -162,44 +209,39 @@
   color: #888;
 }
 
-.upp-watchlist-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 .upp-search-box {
   position: relative;
 }
 
 .upp-search-box svg {
   position: absolute;
-  left: 10px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: #555;
+  color: #667eea;
   pointer-events: none;
 }
 
 .upp-search-input {
-  padding: 7px 12px 7px 30px;
-  width: 180px;
-  border: none;
-  background: rgba(255, 255, 255, 0.06);
+  padding: 8px 14px 8px 36px;
+  width: 200px;
+  border: 1px solid #667eea;
+  background: #1a1a2e;
   color: #fff;
   font-size: 13px;
   outline: none;
   font-family: inherit;
-  border-radius: 6px;
-  transition: background 0.2s ease;
+  border-radius: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .upp-search-input::placeholder {
-  color: #555;
+  color: #666;
 }
 
 .upp-search-input:focus {
-  background: rgba(255, 255, 255, 0.1);
+  border-color: #764ba2;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
 }
 
 /* ─── Tabs ──────────────────────────────── */
@@ -214,37 +256,37 @@
 .upp-tab {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
+  gap: 7px;
+  padding: 10px 16px;
   border: none;
-  background: none;
+  background: transparent;
   color: #888;
-  font-size: 13px;
-  font-weight: 400;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   font-family: inherit;
-  border-radius: 6px;
+  border-radius: 8px;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .upp-tab:hover {
-  color: #aaa;
-  background: rgba(255, 255, 255, 0.04);
+  color: #bbb;
+  background: rgba(102, 126, 234, 0.08);
 }
 
 .upp-tab.active {
-  background: #4ade80;
-  color: #0a0a0a;
+  background: #667eea;
+  color: #fff;
   font-weight: 500;
 }
 
 .upp-tab.active .upp-tab-count {
-  color: rgba(10, 10, 10, 0.7);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .upp-tab-count {
-  font-size: 12px;
+  font-size: 13px;
   color: #666;
 }
 
@@ -256,7 +298,7 @@
 .upp-list {
   display: flex;
   flex-direction: column;
-  border-radius: 8px;
+  border-radius: 14px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
@@ -281,13 +323,13 @@
 }
 
 .upp-list-row:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(102, 126, 234, 0.04);
 }
 
 .upp-list-img {
   width: 40px;
   height: 56px;
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
   flex-shrink: 0;
   background: rgba(255, 255, 255, 0.06);
@@ -322,15 +364,15 @@
 .upp-list-status {
   font-size: 12px;
   font-weight: 500;
-  padding: 3px 10px;
-  border-radius: 4px;
+  padding: 4px 12px;
+  border-radius: 8px;
   display: inline-block;
   width: fit-content;
   flex-shrink: 0;
 }
 
 .upp-list-status--watching  { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
-.upp-list-status--planning  { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+.upp-list-status--planning  { color: #667eea; background: rgba(102, 126, 234, 0.1); }
 .upp-list-status--completed { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
 .upp-list-status--paused    { color: #fbbf24; background: rgba(251, 191, 36, 0.1); }
 .upp-list-status--dropped   { color: #f87171; background: rgba(248, 113, 113, 0.1); }
@@ -361,20 +403,21 @@
   border: none;
   color: #555;
   cursor: pointer;
-  padding: 4px;
+  padding: 5px;
   display: flex;
   align-items: center;
-  border-radius: 4px;
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .upp-list-action:hover {
   color: #fff;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(102, 126, 234, 0.12);
 }
 
 .upp-list-action--delete:hover {
   color: #f87171;
+  background: rgba(248, 113, 113, 0.12);
 }
 
 /* ─── Status Menu ───────────────────────── */
@@ -382,39 +425,39 @@
   position: absolute;
   right: 0;
   top: 100%;
-  background: #141414;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
+  background: #1a1a2e;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 12px;
   padding: 4px;
   display: flex;
   flex-direction: column;
   gap: 1px;
   z-index: 10;
-  min-width: 110px;
+  min-width: 120px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 .upp-status-opt {
-  padding: 7px 12px;
+  padding: 8px 12px;
   border: none;
   background: none;
   color: #888;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 8px;
   text-align: left;
   font-family: inherit;
   transition: all 0.15s ease;
 }
 
 .upp-status-opt:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(102, 126, 234, 0.1);
   color: #fff;
 }
 
 .upp-status-opt.current {
-  color: #4ade80;
+  color: #667eea;
   font-weight: 500;
 }
 
@@ -428,9 +471,16 @@
   text-align: center;
 }
 
-.upp-empty-icon {
+.upp-empty-icon-bg {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(102, 126, 234, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
   color: #4ade80;
-  margin-bottom: 1rem;
 }
 
 .upp-empty-title {
@@ -451,27 +501,27 @@
 .upp-browse-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
+  gap: 7px;
+  padding: 10px 24px;
   border: none;
-  background: #4ade80;
-  color: #0a0a0a;
+  background: #667eea;
+  color: #fff;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
-  border-radius: 6px;
-  transition: opacity 0.2s ease;
+  border-radius: 10px;
+  transition: background 0.2s ease;
 }
 
 .upp-browse-btn:hover {
-  opacity: 0.85;
+  background: #764ba2;
 }
 
 /* ─── Skeleton ──────────────────────────── */
 .upp-skeleton-list {
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
+  border-radius: 14px;
   overflow: hidden;
 }
 
@@ -489,7 +539,7 @@
 .upp-skeleton-thumb {
   width: 40px;
   height: 56px;
-  border-radius: 4px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.06);
   animation: upp-shimmer 1.5s infinite;
   flex-shrink: 0;
@@ -501,7 +551,7 @@
 
 .upp-skeleton-line {
   height: 10px;
-  border-radius: 4px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.06);
   margin-bottom: 6px;
 }
@@ -533,8 +583,8 @@
 
 .upp-modal {
   background: #141414;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  border: 1px solid rgba(102, 126, 234, 0.15);
+  border-radius: 16px;
   width: 100%;
   max-width: 420px;
   overflow: hidden;
@@ -555,9 +605,9 @@
 }
 
 .upp-modal-close {
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   border: none;
   background: rgba(255, 255, 255, 0.06);
   color: #888;
@@ -570,7 +620,7 @@
 
 .upp-modal-close:hover {
   color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(102, 126, 234, 0.2);
 }
 
 .upp-modal-body {
@@ -587,11 +637,11 @@
 }
 
 .upp-edit-avatar-preview {
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
   overflow: hidden;
-  border: 2px solid #4ade80;
+  border: 2px solid #667eea;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -606,9 +656,9 @@
 }
 
 .upp-edit-avatar-preview span {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 600;
-  color: #4ade80;
+  color: #667eea;
 }
 
 .upp-edit-btns {
@@ -630,24 +680,24 @@
 }
 
 .upp-input {
-  padding: 9px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 14px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
   background: rgba(255, 255, 255, 0.04);
   color: #fff;
   font-size: 14px;
   outline: none;
   font-family: inherit;
-  border-radius: 6px;
+  border-radius: 12px;
   transition: border-color 0.2s ease;
 }
 
 .upp-input:focus {
-  border-color: #4ade80;
+  border-color: #667eea;
 }
 
 .upp-textarea {
-  padding: 9px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 14px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
   background: rgba(255, 255, 255, 0.04);
   color: #fff;
   font-size: 13px;
@@ -655,12 +705,12 @@
   font-family: inherit;
   resize: vertical;
   min-height: 60px;
-  border-radius: 6px;
+  border-radius: 12px;
   transition: border-color 0.2s ease;
 }
 
 .upp-textarea:focus {
-  border-color: #4ade80;
+  border-color: #667eea;
 }
 
 .upp-modal-foot {
@@ -682,7 +732,7 @@
   font-weight: 400;
   cursor: pointer;
   font-family: inherit;
-  border-radius: 6px;
+  border-radius: 10px;
   transition: all 0.2s ease;
 }
 
@@ -696,19 +746,19 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.2);
   background: none;
   color: #888;
   font-size: 12px;
   font-weight: 400;
   cursor: pointer;
   font-family: inherit;
-  border-radius: 6px;
+  border-radius: 10px;
   transition: all 0.2s ease;
 }
 
 .upp-btn-secondary:hover {
-  border-color: #4ade80;
+  border-color: #667eea;
   color: #fff;
 }
 
@@ -716,20 +766,20 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 9px 20px;
+  padding: 10px 22px;
   border: none;
-  background: #4ade80;
-  color: #0a0a0a;
+  background: #667eea;
+  color: #fff;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
-  border-radius: 6px;
-  transition: opacity 0.2s ease;
+  border-radius: 10px;
+  transition: background 0.2s ease;
 }
 
 .upp-btn-primary:hover {
-  opacity: 0.85;
+  background: #764ba2;
 }
 
 /* ════════════════════════════════════════════
@@ -744,23 +794,23 @@
     gap: 2rem;
   }
 
-  .upp-user-card {
-    align-items: center;
-  }
-
-  .upp-joined {
+  .upp-actions {
     justify-content: center;
   }
 
   .upp-stats {
-    gap: 2rem;
+    gap: 2.5rem;
   }
 }
 
 @media (max-width: 599px) {
   .upp-top-inner {
-    padding: 1.25rem 1rem;
+    padding: 1.25rem 1rem 0.5rem;
     gap: 1.5rem;
+  }
+
+  .upp-actions {
+    padding: 0.5rem 1rem 0.75rem;
   }
 
   .upp-avatar {
@@ -787,7 +837,12 @@
   .upp-watchlist-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: 0.75rem;
+  }
+
+  .upp-watchlist-header-right {
+    width: 100%;
+    flex-wrap: wrap;
   }
 
   .upp-search-input {
@@ -795,7 +850,7 @@
   }
 
   .upp-search-box {
-    width: 100%;
+    flex: 1;
   }
 
   .upp-tabs {
@@ -809,12 +864,22 @@
   }
 
   .upp-tab {
-    font-size: 12px;
-    padding: 6px 12px;
+    font-size: 13px;
+    padding: 8px 12px;
   }
 
   .upp-empty {
     padding: 3rem 1rem;
+  }
+
+  .upp-empty-icon-bg {
+    width: 80px;
+    height: 80px;
+  }
+
+  .upp-empty-icon-bg svg {
+    width: 48px;
+    height: 48px;
   }
 
   .upp-list-row {
