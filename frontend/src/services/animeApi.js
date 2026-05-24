@@ -38,7 +38,7 @@ const titleVariants = (title) => {
   ].filter((s, i, a) => s && s.length > 2 && a.indexOf(s) === i);
 };
 
-const CF_WORKER = process.env.REACT_APP_CF_PROXY_URL || "";
+const CF_WORKER = process.env.REACT_APP_CF_PROXY_URL || "https://anime-proxy.mohamedlimam80000.workers.dev/?url=";
 const FALLBACK_PROXIES = (process.env.REACT_APP_FALLBACK_PROXIES || "").split(",").filter(Boolean);
 const BACKEND_PROXY = `${API_BASE}/scrape/fetch?url=`;
 
@@ -125,31 +125,29 @@ const SOURCES = process.env.REACT_APP_STREAM_SOURCES
 
 async function searchReanimeSource(source, searchName, anilistId) {
   const { base, name } = source;
+  const idNum = anilistId ? parseInt(anilistId) : null;
 
-  if (anilistId) {
-    try {
-      const url = `${base}/api/search?q=${encodeURIComponent(searchName)}`;
-      const data = await fetchJsonViaProxy(url);
-      if (data && Array.isArray(data.results) && data.results.length > 0) {
-        const idNum = parseInt(anilistId);
-        for (const item of data.results) {
-          const coverUrl = item.cover_image?.extra_large || item.cover_image?.large || item.cover_image?.medium || "";
-          const extractedId = extractAnilistId(coverUrl);
-          if (extractedId === idNum) {
-            const title = item.title?.english || item.title?.romaji || item.title?.user_preferred || "";
-            return [{
-              slug: item.anime_id,
-              title: title || searchName,
-              anilistId: idNum,
-              _score: 999,
-              source: name,
-              sourceBase: base,
-            }];
-          }
-        }
-      }
-    } catch {}
-  }
+  const mapResults = (results, query) => {
+    let idMatch = null;
+    const scored = results.map(item => {
+      const coverUrl = item.cover_image?.extra_large || item.cover_image?.large || item.cover_image?.medium || "";
+      const extractedId = extractAnilistId(coverUrl);
+      const title = item.title?.english || item.title?.romaji || item.title?.user_preferred || "";
+      const score = scoreRelevance(title, query);
+      const entry = {
+        slug: item.anime_id,
+        title: title || searchName,
+        anilistId: extractedId || idNum || null,
+        _score: score,
+        source: name,
+        sourceBase: base,
+      };
+      if (idNum && extractedId === idNum) idMatch = { ...entry, _score: 999 };
+      return entry;
+    });
+    if (idMatch) return [idMatch];
+    return scored.sort((a, b) => b._score - a._score);
+  };
 
   const allVariants = titleVariants(searchName);
   for (const q of allVariants) {
@@ -157,25 +155,8 @@ async function searchReanimeSource(source, searchName, anilistId) {
       const url = `${base}/api/search?q=${encodeURIComponent(q)}`;
       const data = await fetchJsonViaProxy(url);
       if (!data || !Array.isArray(data.results) || data.results.length === 0) continue;
-
-      const matched = data.results.map(item => {
-        const coverUrl = item.cover_image?.extra_large || item.cover_image?.large || item.cover_image?.medium || "";
-        const extractedId = extractAnilistId(coverUrl);
-        const title = item.title?.english || item.title?.romaji || item.title?.user_preferred || "";
-        const score = scoreRelevance(title, q);
-        return {
-          slug: item.anime_id,
-          title: title || searchName,
-          anilistId: extractedId || parseInt(anilistId) || null,
-          _score: score,
-          source: name,
-          sourceBase: base,
-        };
-      });
-
-      if (matched.length > 0) {
-        return matched.sort((a, b) => b._score - a._score);
-      }
+      const matched = mapResults(data.results, q);
+      if (matched.length > 0) return matched;
     } catch {}
   }
   return [];
