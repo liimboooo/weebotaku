@@ -172,6 +172,11 @@ const UserSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
+UserSchema.index({ 'progression.xp': -1 });
+UserSchema.index({ 'progression.longestStreak': -1 });
+UserSchema.index({ role: 1 });
+UserSchema.index({ createdAt: -1 });
+
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);

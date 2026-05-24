@@ -50,8 +50,9 @@ const ReviewSchema = new mongoose.Schema({
   }],
 }, { timestamps: true });
 
-// Prevent duplicate reviews
 ReviewSchema.index({ user: 1, animeId: 1 }, { unique: true, sparse: true });
 ReviewSchema.index({ user: 1, mangaId: 1 }, { unique: true, sparse: true });
+ReviewSchema.index({ animeId: 1, createdAt: -1 });
+ReviewSchema.index({ mangaId: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Review', ReviewSchema);

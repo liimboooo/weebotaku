@@ -1,13 +1,22 @@
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
+const xss = require('xss');
 const ChatRoom = require('./models/ChatRoom');
 const Message = require('./models/Message');
 const User = require('./models/User');
 
 function initSocket(httpServer) {
+  const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+
   const io = new Server(httpServer, {
-    cors: { origin: true, credentials: true },
+    cors: {
+      origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+      credentials: true,
+    },
     pingTimeout: 60000,
+    maxHttpBufferSize: 1e6,
   });
 
   io.use((socket, next) => {
@@ -65,7 +74,8 @@ function initSocket(httpServer) {
     });
 
     socket.on('send_message', async (data) => {
-      const { roomId, body, type, mediaUrl } = data;
+      const { roomId, type, mediaUrl } = data;
+      const body = typeof data.body === 'string' ? xss(data.body.trim()) : '';
       if (!body || !roomId) return;
 
       const room = await ChatRoom.findById(roomId);

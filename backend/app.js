@@ -1,41 +1,73 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const hpp = require('hpp');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
 
 app.set('trust proxy', 1);
 
-// ─── Middleware ───────────────────────────────────────────
-const rawOrigins = process.env.CORS_ORIGIN
+// ─── Security Headers ───────────────────────────────────
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
+app.use(hpp());
+
+// ─── CORS ────────────────────────────────────────────────
+const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean)
   : [];
 
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400,
 }));
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+// ─── Body Parsing ────────────────────────────────────────
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
-// Rate limiting
-if (process.env.NODE_ENV === 'production') {
-  const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 200,
-    message: { success: false, message: 'Too many requests, please try again later' },
-  });
-  app.use('/api/', limiter);
+// ─── XSS Sanitization ───────────────────────────────────
+app.use(require('./middleware/sanitize'));
 
-  const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 20,
-    message: { success: false, message: 'Too many auth attempts, please try again later' },
-  });
-  app.use('/api/auth/login', authLimiter);
-  app.use('/api/auth/register', authLimiter);
-}
+// ─── Rate Limiting ───────────────────────────────────────
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: process.env.NODE_ENV === 'production' ? 200 : 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please try again later' },
+});
+app.use('/api/', globalLimiter);
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many auth attempts, please try again later' },
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
+
+const messageLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  message: { success: false, message: 'Message rate limit reached' },
+});
+app.use('/api/chat/rooms/:id/messages', messageLimiter);
 
 // ─── Routes ──────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
@@ -64,6 +96,7 @@ app.get('/api/health', (req, res) => {
     success: true,
     message: 'AnimeWch API is running',
     timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV,
   });
 });
 
@@ -74,7 +107,10 @@ app.use((req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  console.error('Server error:', err);
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({ success: false, message: 'CORS not allowed' });
+  }
+  console.error('Server error:', err.stack || err);
   res.status(500).json({ success: false, message: 'Internal server error' });
 });
 
