@@ -298,3 +298,188 @@ exports.getUserByUsername = async (req, res) => {
 exports.logout = async (req, res) => {
   res.json({ success: true, message: 'Logged out' });
 };
+
+// ─── Settings ────────────────────────────────────────────
+
+// @route   GET /api/auth/settings
+exports.getSettings = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('settings');
+    res.json({ success: true, settings: user.settings });
+  } catch (error) {
+    console.error('GetSettings error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   PUT /api/auth/settings
+exports.updateSettings = async (req, res) => {
+  try {
+    const allowed = [
+      'darkMode','fontSize','accentColor','autoNext','skipIntro','skipOutro',
+      'showSubtitles','disableAds','showComments','hideNsfw','showMatureWarnings',
+      'showEpisodeProgress','showRatingsCards','emailNotifs','newEpisodes',
+      'communityActivity','friendsActivity','systemUpdates','weeklyRecs',
+      'pushNotifs','newEpisodeAlerts','dms','commentReplies','friendRequests',
+      'achievements','newsletterSub','animeRecs','newFeatures','notifFreq',
+      'dndMode','dndFrom','dndTo','publicProfile','showWatchlistPublic',
+      'allowMessaging','showActivityStatus','showLastActive','defaultDubbed',
+      'contentRating','defaultListView','playbackSpeed',
+      'autoSyncEpisode','autoSyncInterval','autoSyncStartup','autoSyncShutdown',
+    ];
+    const update = {};
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) update[`settings.${key}`] = req.body[key];
+    }
+    const user = await User.findByIdAndUpdate(req.user.id, update, { new: true }).select('settings');
+    res.json({ success: true, settings: user.settings });
+  } catch (error) {
+    console.error('UpdateSettings error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   PUT /api/auth/change-password
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Please provide current and new password' });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 8 characters' });
+    }
+
+    const user = await User.findById(req.user.id).select('+password');
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Current password is incorrect' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('ChangePassword error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   DELETE /api/auth/account
+exports.deleteAccount = async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.user.id);
+    res.json({ success: true, message: 'Account deleted' });
+  } catch (error) {
+    console.error('DeleteAccount error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/2fa/toggle
+exports.toggle2FA = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('settings');
+    user.settings.twoFactorEnabled = !user.settings.twoFactorEnabled;
+    await user.save();
+    res.json({ success: true, enabled: user.settings.twoFactorEnabled });
+  } catch (error) {
+    console.error('Toggle2FA error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// ─── MAL / AniList Sync ──────────────────────────────────
+
+// @route   POST /api/auth/sync/mal/connect
+exports.connectMAL = async (req, res) => {
+  try {
+    const { username } = req.body;
+    if (!username) {
+      return res.status(400).json({ success: false, message: 'MAL username required' });
+    }
+    const user = await User.findById(req.user.id).select('settings');
+    user.settings.malConnected = true;
+    user.settings.malUsername = username;
+    await user.save();
+    res.json({ success: true, connected: true, username });
+  } catch (error) {
+    console.error('ConnectMAL error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/sync/mal/disconnect
+exports.disconnectMAL = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('settings');
+    user.settings.malConnected = false;
+    user.settings.malUsername = '';
+    await user.save();
+    res.json({ success: true, connected: false });
+  } catch (error) {
+    console.error('DisconnectMAL error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/sync/mal/sync
+exports.syncMAL = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('settings');
+    if (!user.settings.malConnected) {
+      return res.status(400).json({ success: false, message: 'MAL not connected' });
+    }
+    res.json({ success: true, lastSync: new Date().toISOString(), service: 'mal' });
+  } catch (error) {
+    console.error('SyncMAL error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/sync/anilist/connect
+exports.connectAniList = async (req, res) => {
+  try {
+    const { username } = req.body;
+    if (!username) {
+      return res.status(400).json({ success: false, message: 'AniList username required' });
+    }
+    const user = await User.findById(req.user.id).select('settings');
+    user.settings.aniConnected = true;
+    user.settings.aniUsername = username;
+    await user.save();
+    res.json({ success: true, connected: true, username });
+  } catch (error) {
+    console.error('ConnectAniList error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/sync/anilist/disconnect
+exports.disconnectAniList = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('settings');
+    user.settings.aniConnected = false;
+    user.settings.aniUsername = '';
+    await user.save();
+    res.json({ success: true, connected: false });
+  } catch (error) {
+    console.error('DisconnectAniList error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/sync/anilist/sync
+exports.syncAniList = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('settings');
+    if (!user.settings.aniConnected) {
+      return res.status(400).json({ success: false, message: 'AniList not connected' });
+    }
+    res.json({ success: true, lastSync: new Date().toISOString(), service: 'anilist' });
+  } catch (error) {
+    console.error('SyncAniList error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};

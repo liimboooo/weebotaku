@@ -1,3 +1,5 @@
+import api from "./api";
+
 const SETTINGS_KEY = "animewch_settings";
 const SYNC_KEY = "animewch_sync";
 
@@ -22,7 +24,14 @@ const DEFAULTS = {
 };
 
 const settingsService = {
-  load() {
+  async load() {
+    try {
+      const data = await api.get("/auth/settings");
+      if (data?.success && data?.settings) {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(data.settings));
+        return { ...DEFAULTS, ...data.settings };
+      }
+    } catch {}
     try {
       const raw = localStorage.getItem(SETTINGS_KEY);
       if (raw) {
@@ -33,8 +42,24 @@ const settingsService = {
     return { ...DEFAULTS };
   },
 
-  save(settings) {
+  async save(settings) {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    try {
+      await api.put("/auth/settings", settings);
+    } catch (e) {
+      console.warn("settingsService: failed to sync settings to server", e);
+    }
+  },
+
+  async fetchFromServer() {
+    try {
+      const data = await api.get("/auth/settings");
+      if (data?.success && data?.settings) {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(data.settings));
+        return { ...DEFAULTS, ...data.settings };
+      }
+    } catch {}
+    return null;
   },
 
   loadSync() {
@@ -42,7 +67,7 @@ const settingsService = {
       const raw = localStorage.getItem(SYNC_KEY);
       if (raw) return JSON.parse(raw);
     } catch {}
-    return { malLastSync: null, aniLastSync: null, malData: null, aniData: null };
+    return { malLastSync: null, aniLastSync: null };
   },
 
   saveSync(syncData) {
@@ -83,68 +108,71 @@ const settingsService = {
   },
 
   async syncWithMAL() {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const sync = settingsService.loadSync();
-        sync.malLastSync = new Date().toLocaleTimeString();
-        sync.malData = {
-          anime: ["Attack on Titan", "Jujutsu Kaisen", "One Piece"],
-          lastUpdated: Date.now(),
-        };
-        settingsService.saveSync(sync);
-        resolve({ success: true, lastSync: sync.malLastSync });
-      }, 2000);
-    });
+    const data = await api.post("/auth/sync/mal/sync");
+    const sync = this.loadSync();
+    sync.malLastSync = data.lastSync || new Date().toISOString();
+    this.saveSync(sync);
+    return { success: true, lastSync: sync.malLastSync };
   },
 
   async syncWithAniList() {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const sync = settingsService.loadSync();
-        sync.aniLastSync = new Date().toLocaleTimeString();
-        sync.aniData = {
-          anime: ["Chainsaw Man", "Demon Slayer", "Solo Leveling"],
-          lastUpdated: Date.now(),
-        };
-        settingsService.saveSync(sync);
-        resolve({ success: true, lastSync: sync.aniLastSync });
-      }, 2000);
-    });
+    const data = await api.post("/auth/sync/anilist/sync");
+    const sync = this.loadSync();
+    sync.aniLastSync = data.lastSync || new Date().toISOString();
+    this.saveSync(sync);
+    return { success: true, lastSync: sync.aniLastSync };
+  },
+
+  async connectMAL(username) {
+    const data = await api.post("/auth/sync/mal/connect", { username });
+    return data;
+  },
+
+  async disconnectMAL() {
+    const data = await api.post("/auth/sync/mal/disconnect");
+    return data;
+  },
+
+  async connectAniList(username) {
+    const data = await api.post("/auth/sync/anilist/connect", { username });
+    return data;
+  },
+
+  async disconnectAniList() {
+    const data = await api.post("/auth/sync/anilist/disconnect");
+    return data;
   },
 
   async changePassword(currentPassword, newPassword) {
-    const validation = settingsService.validatePassword(newPassword);
+    const validation = this.validatePassword(newPassword);
     if (!validation.valid) {
       return { success: false, errors: validation.errors };
     }
-    return new Promise(resolve => {
-      setTimeout(() => {
-        localStorage.setItem("animewch_password_hash", btoa(newPassword));
-        resolve({ success: true });
-      }, 800);
-    });
+    try {
+      const data = await api.put("/auth/change-password", {
+        currentPassword,
+        newPassword,
+      });
+      return { success: true, message: data.message };
+    } catch (e) {
+      return { success: false, errors: [e.message] };
+    }
   },
 
   async deleteAccount() {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const keys = Object.keys(localStorage);
-        keys.forEach(k => {
-          if (k.startsWith("animewch_") || k === "token" || k === "user" || k === "isLoggedIn") {
-            localStorage.removeItem(k);
-          }
-        });
-        resolve({ success: true });
-      }, 1500);
+    await api.delete("/auth/account");
+    const keys = Object.keys(localStorage);
+    keys.forEach(k => {
+      if (k.startsWith("animewch_") || k === "token" || k === "user" || k === "isLoggedIn") {
+        localStorage.removeItem(k);
+      }
     });
+    return { success: true };
   },
 
-  toggle2FA(enabled) {
-    localStorage.setItem("animewch_2fa", enabled ? "true" : "false");
-  },
-
-  get2FAStatus() {
-    return localStorage.getItem("animewch_2fa") === "true";
+  async toggle2FA(enabled) {
+    const data = await api.post("/auth/2fa/toggle");
+    return data;
   },
 };
 

@@ -8,7 +8,7 @@ import {
   User, Settings, Bell, Shield, Link2,
   Eye, EyeOff, LogOut, Sun, Moon, Monitor,
   CheckCircle, X, Trash2,
-  AlertTriangle, QrCode, Copy,
+  AlertTriangle,
   ChevronLeft, RefreshCw, ArrowRight, Mail,
 } from "lucide-react";
 import "./SettingsPage.css";
@@ -69,6 +69,7 @@ export default function SettingsPage() {
   const [page, setPage] = useState("home");
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
+  const [loading, setLoading] = useState(true);
 
   const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
@@ -76,8 +77,24 @@ export default function SettingsPage() {
     toastTimer.current = setTimeout(() => setToast(null), 3000);
   }, []);
 
-  const [settings, setSettings] = useState(() => settingsService.load());
+  const [settings, setSettings] = useState(() => {
+    try {
+      const raw = localStorage.getItem("animewch_settings");
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return {};
+  });
+  const [settingsReady, setSettingsReady] = useState(false);
   const syncInit = useRef(settingsService.loadSync());
+
+  useEffect(() => {
+    (async () => {
+      const s = await settingsService.load();
+      setSettings(s);
+      setSettingsReady(true);
+      setLoading(false);
+    })();
+  }, []);
 
   const [syncStates, setSyncStates] = useState({
     malSyncing: false, aniSyncing: false,
@@ -88,18 +105,15 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState(() => settingsService.loadUserProfile() || {
     username: currentUser?.username || "formula09",
     displayName: currentUser?.username || "formula09",
-    email: "user@example.com",
-    bio: "",
+    email: currentUser?.email || "user@example.com",
+    bio: currentUser?.bio || "",
     website: "",
     emailVerified: true,
   });
 
-  const [show2FA, setShow2FA] = useState(() => settingsService.get2FAStatus());
-  const [showBackupCodes, setShowBackupCodes] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [showPassword, setShowPassword] = useState({ current: false, newPass: false, confirm: false });
-  const [blockedSearch, setBlockedSearch] = useState("");
   const [pwFields, setPwFields] = useState({ current: "", newPass: "", confirm: "" });
   const [pwStrength, setPwStrength] = useState({ label: "", color: "", width: "0%" });
   const [pwErrors, setPwErrors] = useState([]);
@@ -109,9 +123,10 @@ export default function SettingsPage() {
   const isFirstRender = useRef(true);
 
   useEffect(() => {
+    if (!settingsReady) return;
     if (isFirstRender.current) { isFirstRender.current = false; return; }
     settingsService.save(settings);
-  }, [settings]);
+  }, [settings, settingsReady]);
 
   const avatar = currentUser?.avatar || "";
   const initial = (profile.username || "U").charAt(0).toUpperCase();
@@ -155,16 +170,38 @@ export default function SettingsPage() {
     }
   };
 
-  const connectService = (service) => {
-    setTog(`${service}Connected`, true);
-    showToast(`${service === "mal" ? "MAL" : "AniList"} connected!`);
-    handleSync(service);
+  const connectService = async (service) => {
+    const name = service === "mal" ? "MAL" : "AniList";
+    const username = window.prompt(`Enter your ${name} username:`);
+    if (!username || !username.trim()) return;
+    try {
+      if (service === "mal") {
+        await settingsService.connectMAL(username.trim());
+      } else {
+        await settingsService.connectAniList(username.trim());
+      }
+      setTog(`${service}Connected`, true);
+      showToast(`${name} connected as ${username.trim()}!`);
+      handleSync(service);
+    } catch {
+      showToast(`Failed to connect to ${name}.`, "error");
+    }
   };
 
-  const disconnectService = (service) => {
-    setTog(`${service}Connected`, false);
-    setSyncStates(prev => ({ ...prev, [`${service}LastSync`]: null }));
-    showToast(`${service === "mal" ? "MAL" : "AniList"} disconnected.`, "info");
+  const disconnectService = async (service) => {
+    const name = service === "mal" ? "MAL" : "AniList";
+    try {
+      if (service === "mal") {
+        await settingsService.disconnectMAL();
+      } else {
+        await settingsService.disconnectAniList();
+      }
+      setTog(`${service}Connected`, false);
+      setSyncStates(prev => ({ ...prev, [`${service}LastSync`]: null }));
+      showToast(`${name} disconnected.`, "info");
+    } catch {
+      showToast(`Failed to disconnect ${name}.`, "error");
+    }
   };
 
   const handlePwChange = (field, val) => {
@@ -192,12 +229,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handle2FAToggle = () => {
-    const next = !show2FA;
-    setShow2FA(next);
-    settingsService.toggle2FA(next);
-    showToast(next ? "2FA enabled" : "2FA disabled");
-  };
 
   const handleDeleteAccount = async () => {
     setDeleting(true);
@@ -210,8 +241,8 @@ export default function SettingsPage() {
     }, 1500);
   };
 
-  const handleSavePreferences = () => {
-    settingsService.save(settings);
+  const handleSavePreferences = async () => {
+    await settingsService.save(settings);
     showToast("Preferences saved!");
   };
 
@@ -569,65 +600,11 @@ export default function SettingsPage() {
     <motion.div key="privacy" className="st-page" variants={pageVariants} initial="initial" animate="animate" exit="exit">
       <h1 className="st-page-title">Privacy & Security</h1>
 
-      {renderSectionHeader("Two-Factor Authentication")}
-      <div className="st-card-2fa">
-        <div className="st-2fa-header">
-          <div className="st-2fa-info">
-            <span className="st-2fa-status-label">Status</span>
-            <span className={`st-badge ${show2FA ? "st-badge--green" : "st-badge--red"}`}>
-              {show2FA ? "Enabled" : "Not Enabled"}
-            </span>
-            <p className="st-2fa-desc">Add extra security to your account</p>
-          </div>
-          <button className={`st-btn ${show2FA ? "st-btn--danger" : "st-btn--green"}`} onClick={handle2FAToggle}>
-            {show2FA ? "Disable 2FA" : "Enable 2FA"}
-          </button>
-        </div>
-        {show2FA && (
-          <div className="st-2fa-setup">
-            <div className="st-2fa-qr"><QrCode size={180} /></div>
-            <p className="st-2fa-instruction">Scan with authenticator app (Google Authenticator, Authy, etc.)</p>
-            <div className="st-2fa-key-box">
-              <code className="st-2fa-key">JBSWY3DPEHPK3PXP</code>
-              <button className="st-icon-btn" onClick={() => { navigator.clipboard.writeText("JBSWY3DPEHPK3PXP"); showToast("Key copied!"); }}><Copy size={16} /></button>
-            </div>
-            <div className="st-2fa-backup">
-              <button className="st-btn st-btn--dark" onClick={() => setShowBackupCodes(!showBackupCodes)}>
-                {showBackupCodes ? "Hide Backup Codes" : "Show Backup Codes"}
-              </button>
-              {showBackupCodes && (
-                <div className="st-backup-grid">
-                  {["ABCD-1234-EFGH", "IJKL-5678-MNOP", "QRST-9012-UVWX", "YZAB-3456-CDEF"].map(c => (
-                    <code key={c} className="st-backup-code">{c}</code>
-                  ))}
-                  <div className="st-backup-actions">
-                    <button className="st-btn st-btn--dark st-btn--sm" onClick={() => { const codes = ["ABCD-1234-EFGH", "IJKL-5678-MNOP", "QRST-9012-UVWX", "YZAB-3456-CDEF"].join("\n"); navigator.clipboard.writeText(codes); showToast("Backup codes copied!"); }}>Copy All</button>
-                    <button className="st-btn st-btn--dark st-btn--sm" onClick={() => { const blob = new Blob(["Backup Codes:\n\nABCD-1234-EFGH\nIJKL-5678-MNOP\nQRST-9012-UVWX\nYZAB-3456-CDEF"], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "backup-codes.txt"; a.click(); }}>Download</button>
-                  </div>
-                  <p className="st-backup-warn">Save these codes in a safe place</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
       <div className="st-divider" />
       {renderSectionHeader("Privacy")}
       {renderToggle("publicProfile", "Public profile", "Others can view your profile")}
       {renderToggle("showWatchlistPublic", "Show watchlist publicly", "Your anime list is visible to everyone")}
       {renderToggle("showActivityStatus", "Show activity status", "Others see when you're watching")}
-      <div className="st-field">
-        <label className="st-field-label">Allow messaging from</label>
-        <div className="st-radio-group">
-          {["anyone", "friends", "nobody"].map(opt => (
-            <button key={opt} className={`st-radio ${settings.allowMessaging === opt ? "active" : ""}`}
-              onClick={() => setTog("allowMessaging", opt)}>
-              {opt === "anyone" ? "Anyone" : opt === "friends" ? "Friends only" : "Nobody"}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <div className="st-divider" />
       {renderSectionHeader("Password")}
@@ -675,11 +652,6 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
-
-      <div className="st-divider" />
-      {renderSectionHeader("Blocked Users")}
-      <input className="st-input st-input--search" placeholder="Search blocked users..." value={blockedSearch} onChange={e => setBlockedSearch(e.target.value)} />
-      <div className="st-blocked-empty">No blocked users</div>
     </motion.div>
   );
 
@@ -698,8 +670,6 @@ export default function SettingsPage() {
             </span>
             {syncStates.malLastSync && <span className="st-sync-last">Last synced: {syncStates.malLastSync}</span>}
             <div className="st-sync-features">
-              <span>Import watchlist</span>
-              <span>Export watchlist</span>
               <span>Auto-sync support</span>
             </div>
           </div>
@@ -807,6 +777,15 @@ export default function SettingsPage() {
   return (
     <AnimatedPage>
       <div className="st">
+        {loading && (
+          <div className="st-loading">
+            <div className="st-loading-spinner" />
+            <span>Loading settings...</span>
+          </div>
+        )}
+
+        {!loading && (
+          <>
         {toast && (
           <div className={`st-toast st-toast--${toast.type}`}>
             <span>{toast.message}</span>
@@ -829,46 +808,9 @@ export default function SettingsPage() {
             </div>
           )}
         </div>
-      </div>
-
-      <AnimatePresence>
-        {showDeleteModal && (
-          <motion.div className="st-modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowDeleteModal(false)}>
-            <motion.div className="st-modal" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={e => e.stopPropagation()}>
-              <div className="st-modal-head">
-                <h3>Delete Account</h3>
-                <button className="st-modal-close" onClick={() => setShowDeleteModal(false)} disabled={deleting}><X size={16} /></button>
-              </div>
-              <div className="st-modal-body">
-                <div className="st-modal-icon"><AlertTriangle size={40} /></div>
-                <p className="st-modal-desc">This action cannot be undone. Your account will be permanently deleted after a 30-day cancellation period.</p>
-                <div className="st-field">
-                  <select className="st-input">
-                    <option value="">Select a reason (optional)</option>
-                    <option>Not using the service enough</option>
-                    <option>Too expensive</option>
-                    <option>Privacy concerns</option>
-                    <option>Found an alternative</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-                <div className="st-field">
-                  <label className="st-check-label">
-                    <input type="checkbox" checked={deleteConfirm} onChange={e => setDeleteConfirm(e.target.checked)} disabled={deleting} />
-                    <span>I understand this cannot be undone</span>
-                  </label>
-                </div>
-              </div>
-              <div className="st-modal-foot">
-                <button className="st-btn st-btn--dark" onClick={() => setShowDeleteModal(false)} disabled={deleting}>Cancel</button>
-                <button className="st-btn st-btn--danger" onClick={handleDeleteAccount} disabled={!deleteConfirm || deleting}>
-                  {deleting ? "Deleting..." : "Confirm Deletion"}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+          </>
         )}
-      </AnimatePresence>
+      </div>
     </AnimatedPage>
   );
 }

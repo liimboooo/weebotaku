@@ -4,7 +4,7 @@
 
 .st {
   min-height: calc(100vh - 60px);
-  background: #0a0a0a;
+  background: #040408;
   color: #fff;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
 }
@@ -66,9 +66,8 @@
 }
 
 .st-section-divider {
-  height: 0.5px;
-  background: #667eea;
-  opacity: 0.3;
+  height: 1px;
+  background: linear-gradient(90deg, #667eea 0%, rgba(102,126,234,0.1) 100%);
   width: 100%;
 }
 
@@ -93,8 +92,8 @@
   gap: 1rem;
   padding: 1.5rem;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: #0f1629;
+  border: 1px solid rgba(102,126,234,0.08);
+  background: linear-gradient(135deg, #07080f, #090b18);
   cursor: pointer;
   text-align: left;
   font-family: inherit;
@@ -109,13 +108,14 @@
   inset: 0;
   border-radius: 12px;
   opacity: 0;
-  transition: opacity 0.3s ease;
-  background: linear-gradient(135deg, rgba(102,126,234,0.03), transparent);
+  transition: opacity 0.4s ease;
+  background: linear-gradient(135deg, rgba(102,126,234,0.06), transparent);
 }
 
 .st-dash-card:hover {
   border-color: #667eea;
-  box-shadow: 0 8px 40px rgba(102,126,234,0.1);
+  box-shadow: 0 8px 48px rgba(102,126,234,0.15), 0 0 0 1px rgba(102,126,234,0.05);
+  transform: translateY(-2px);
 }
 
 .st-dash-card:hover::before {
@@ -123,13 +123,13 @@
 }
 
 .st-dash-card--highlight {
-  border-color: rgba(74,222,128,0.25);
-  background: linear-gradient(135deg, #0f1a12, #0f1629);
+  border-color: rgba(74,222,128,0.15);
+  background: linear-gradient(135deg, #080d10, #090b18);
 }
 
 .st-dash-card--highlight:hover {
   border-color: #4ade80;
-  box-shadow: 0 8px 40px rgba(74,222,128,0.12);
+  box-shadow: 0 8px 48px rgba(74,222,128,0.12);
 }
 
 .st-dash-card-icon {
@@ -246,9 +246,8 @@
 }
 
 .st-detail-section-divider {
-  height: 0.5px;
-  background: #667eea;
-  opacity: 0.3;
+  height: 1px;
+  background: linear-gradient(90deg, #667eea 0%, rgba(102,126,234,0.1) 100%);
   width: 100%;
   margin-top: 0.75rem;
 }
@@ -264,13 +263,11 @@
 .st-profile-card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  background: #1a1a2e;
-  border: 2px solid #667eea;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #0b0c1a, #0e0f20);
+  border: 1px solid rgba(102,126,234,0.2);
   border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
 }
 
 .st-profile-left {
@@ -353,8 +350,8 @@
 .st-input {
   padding: 0.7rem 0.9rem;
   border-radius: 8px;
-  border: 1px solid #667eea;
-  background: #0f1629;
+  border: 1px solid rgba(102,126,234,0.2);
+  background: #090b14;
   color: #fff;
   font-size: 14px;
   font-family: inherit;
@@ -364,7 +361,7 @@
 
 .st-input:focus {
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+  box-shadow: 0 0 0 3px rgba(102,126,234,0.15), 0 0 12px rgba(102,126,234,0.05);
 }
 
 .st-input::placeholder { color: #555; }
@@ -386,8 +383,8 @@
 .st-textarea {
   padding: 0.7rem 0.9rem;
   border-radius: 8px;
-  border: 1px solid #667eea;
-  background: #0f1629;
+  border: 1px solid rgba(102,126,234,0.2);
+  background: #090b14;
   color: #fff;
   font-size: 14px;
   font-family: inherit;
@@ -399,7 +396,7 @@
 
 .st-textarea:focus {
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+  box-shadow: 0 0 0 3px rgba(102,126,234,0.15), 0 0 12px rgba(102,126,234,0.05);
 }
 
 .st-char-count {
@@ -450,8 +447,8 @@
 
 .st-divider {
   height: 1px;
-  background: rgba(255,255,255,0.06);
-  margin: 1.5rem 0;
+  background: linear-gradient(90deg, rgba(102,126,234,0.15) 0%, rgba(102,126,234,0.03) 100%);
+  margin: 0.5rem 0;
 }
 
 /* ─── Buttons ─── */
@@ -588,9 +585,12 @@
 /* ─── Sub-toggles ─── */
 
 .st-sub-toggles {
-  padding-left: 1.5rem;
-  border-left: 2px solid rgba(102,126,234,0.2);
-  margin-bottom: 0.5rem;
+  margin: 0.5rem 0 0.5rem 1.5rem;
+  padding-left: 1rem;
+  border-left: 2px solid rgba(102,126,234,0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 /* ─── Radio Group ─── */
@@ -705,14 +705,17 @@
 /* ─── Danger Card ─── */
 
 .st-danger-card {
-  background: rgba(255,107,107,0.06);
-  border: 2px solid #ff6b6b;
+  background: rgba(255,107,107,0.08);
+  border: 1px solid rgba(255,107,107,0.3);
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.st-danger-card:hover { border-color: #ff6b6b; }
+.st-danger-card:hover {
+  border-color: #ff6b6b;
+  box-shadow: 0 4px 24px rgba(255,107,107,0.08);
+}
 
 .st-danger-inner {
   display: flex;
@@ -762,8 +765,8 @@
 .st-pw-toggle:hover { color: #aaa; }
 
 .st-pw-card {
-  background: #0f1629;
-  border: 1px solid #667eea;
+  background: linear-gradient(135deg, #090b18, #0c0e1e);
+  border: 1px solid rgba(102,126,234,0.15);
   border-radius: 12px;
   padding: 1.5rem;
 }
@@ -793,153 +796,6 @@
 
 /* ─── Blocked Users ─── */
 
-.st-blocked-empty {
-  padding: 1.5rem;
-  text-align: center;
-  color: #555;
-  font-size: 13px;
-  border: 1px dashed rgba(255,255,255,0.06);
-  border-radius: 8px;
-  margin-top: 0.5rem;
-}
-
-/* ─── 2FA ─── */
-
-.st-card-2fa {
-  background: #1a1a2e;
-  border: 1px solid #667eea;
-  border-radius: 12px;
-  padding: 1.5rem;
-}
-
-.st-2fa-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.st-2fa-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.st-2fa-status-label {
-  font-size: 13px;
-  color: #888;
-}
-
-.st-2fa-desc {
-  font-size: 12px;
-  color: #666;
-  margin: 0;
-}
-
-.st-2fa-setup {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255,255,255,0.06);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.st-2fa-qr {
-  width: 200px;
-  height: 200px;
-  background: #fff;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  color: #000;
-}
-
-.st-2fa-instruction {
-  font-size: 13px;
-  color: #888;
-  text-align: center;
-  margin: 0;
-}
-
-.st-2fa-key-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.st-2fa-key {
-  font-size: 14px;
-  padding: 8px 14px;
-  background: rgba(255,255,255,0.04);
-  border-radius: 8px;
-  border: 1px solid rgba(102,126,234,0.2);
-  color: #c4b5fd;
-  letter-spacing: 2px;
-}
-
-.st-icon-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.04);
-  color: #888;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: all 0.2s ease;
-}
-
-.st-icon-btn:hover {
-  background: rgba(255,255,255,0.08);
-  color: #fff;
-}
-
-.st-2fa-backup {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-
-.st-backup-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  width: 100%;
-  max-width: 380px;
-}
-
-.st-backup-code {
-  font-size: 12px;
-  padding: 8px 10px;
-  background: rgba(255,255,255,0.04);
-  border-radius: 6px;
-  border: 1px solid rgba(102,126,234,0.1);
-  color: #888;
-  text-align: center;
-  letter-spacing: 1px;
-  font-family: monospace;
-}
-
-.st-backup-actions {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  grid-column: 1 / -1;
-}
-
-.st-backup-warn {
-  font-size: 11px;
-  color: #fbbf24;
-  text-align: center;
-  margin: 0;
-  grid-column: 1 / -1;
-}
-
 /* ─── Password Errors ─── */
 
 .st-pw-errors {
@@ -959,6 +815,32 @@
 .st-pw-error::before {
   content: "•";
   font-weight: 700;
+}
+
+/* ─── Loading ─── */
+
+.st-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 60vh;
+  color: #888;
+  font-size: 14px;
+}
+
+.st-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(102,126,234,0.15);
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: st-spin 0.8s linear infinite;
+}
+
+@keyframes st-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ─── Toast ─── */
@@ -1002,13 +884,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.5rem;
-  background: #1a1a2e;
-  border: 1px solid #667eea;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #0b0c1a, #0e0f20);
+  border: 1px solid rgba(102,126,234,0.15);
   border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.st-sync-card:hover {
+  border-color: rgba(102,126,234,0.3);
+  box-shadow: 0 4px 24px rgba(102,126,234,0.1);
 }
 
 .st-sync-card:hover {
@@ -1089,13 +975,13 @@
 /* ─── Info Card ─── */
 
 .st-info-card {
-  background: rgba(102,126,234,0.06);
-  border: 1px solid rgba(102,126,234,0.2);
+  background: rgba(102,126,234,0.04);
+  border: 1px solid rgba(102,126,234,0.12);
   border-radius: 12px;
-  padding: 1.25rem 1.5rem;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .st-info-card p {
@@ -1129,8 +1015,8 @@
   gap: 8px;
   padding: 1.5rem;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: linear-gradient(135deg, #12121a, #0f0f15);
+  border: 1px solid rgba(102,126,234,0.08);
+  background: linear-gradient(135deg, #0a0b18, #0c0e1a);
   text-align: center;
 }
 
@@ -1167,12 +1053,12 @@
 }
 
 .st-modal {
-  background: #1a1a2e;
-  border: 1px solid rgba(102,126,234,0.25);
+  background: #0a0b18;
+  border: 1px solid rgba(102,126,234,0.2);
   border-radius: 16px;
   width: 100%;
   max-width: 480px;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(102,126,234,0.05);
   overflow: hidden;
 }
 
@@ -1181,7 +1067,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(102,126,234,0.08);
 }
 
 .st-modal-head h3 {
@@ -1244,7 +1130,7 @@
   gap: 0.75rem;
   justify-content: flex-end;
   padding: 1rem 1.5rem;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid rgba(102,126,234,0.08);
 }
 
 /* ─── Animations ─── */
@@ -1275,11 +1161,9 @@
   .st-sync-card { flex-direction: column; align-items: flex-start; }
   .st-sync-card-right { width: 100%; }
   .st-sync-actions { flex-direction: row; }
-  .st-2fa-header { flex-direction: column; align-items: flex-start; }
 }
 
 @media (max-width: 480px) {
   .st-dnd-row { flex-direction: column; }
   .st-theme-group { flex-wrap: wrap; }
-  .st-backup-grid { grid-template-columns: 1fr; }
 }
