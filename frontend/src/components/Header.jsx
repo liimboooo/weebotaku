@@ -314,6 +314,9 @@ export default function Header() {
         <div className="header-actions">
 
           {authService.isLoggedIn() ? (<>
+          <button className="icon-button" onClick={() => navigateTo('/settings')} title="Settings">
+            <Settings size={16} />
+          </button>
           <div className="notif-dropdown-container" ref={notifRef}>
             <button className={`icon-button${notifCount > 0 ? " badge" : ""}`} data-badge={notifCount > 0 ? notifCount : undefined} onClick={() => setNotifOpen(v => !v)} title="Notifications">
               <Bell size={16} />
