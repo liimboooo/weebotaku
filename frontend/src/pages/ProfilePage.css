@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════
    ProfilePage — Purple Theme · Rounded Everywhere
-   Background: #0a0a0a  |  Accent: #667eea
+   Background: #0a0a0a  |  Accent: #7c3aed
    ════════════════════════════════════════════ */
 
 .upp {
@@ -49,7 +49,7 @@
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.06);
-  border: 3px solid #667eea;
+  border: 3px solid #7c3aed;
   transition: border-color 0.2s ease;
 }
 
@@ -62,7 +62,7 @@
 .upp-avatar-initial {
   font-size: 38px;
   font-weight: 700;
-  color: #667eea;
+  color: #7c3aed;
 }
 
 .upp-username {
@@ -109,7 +109,7 @@
   gap: 5px;
   padding: 7px 14px;
   border: none;
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(124, 58, 237, 0.1);
   color: #888;
   font-size: 12px;
   font-weight: 500;
@@ -120,7 +120,7 @@
 }
 
 .upp-action-btn:hover {
-  background: rgba(102, 126, 234, 0.2);
+  background: rgba(124, 58, 237, 0.2);
   color: #fff;
 }
 
@@ -130,7 +130,7 @@
 }
 
 .upp-action-btn--follow {
-  color: #667eea;
+  color: #7c3aed;
 }
 
 /* ─── Stats (Right) ─────────────────────── */
@@ -218,15 +218,15 @@
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: #667eea;
+  color: #7c3aed;
   pointer-events: none;
 }
 
 .upp-search-input {
   padding: 8px 14px 8px 36px;
   width: 200px;
-  border: 1px solid #667eea;
-  background: #1a1a2e;
+  border: 1px solid #7c3aed;
+  background: #111111;
   color: #fff;
   font-size: 13px;
   outline: none;
@@ -240,8 +240,8 @@
 }
 
 .upp-search-input:focus {
-  border-color: #764ba2;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+  border-color: #6d28d9;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
 }
 
 /* ─── Tabs ──────────────────────────────── */
@@ -272,11 +272,11 @@
 
 .upp-tab:hover {
   color: #bbb;
-  background: rgba(102, 126, 234, 0.08);
+  background: rgba(124, 58, 237, 0.08);
 }
 
 .upp-tab.active {
-  background: #667eea;
+  background: #7c3aed;
   color: #fff;
   font-weight: 500;
 }
@@ -323,7 +323,7 @@
 }
 
 .upp-list-row:hover {
-  background: rgba(102, 126, 234, 0.04);
+  background: rgba(124, 58, 237, 0.04);
 }
 
 .upp-list-img {
@@ -372,7 +372,7 @@
 }
 
 .upp-list-status--watching  { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
-.upp-list-status--planning  { color: #667eea; background: rgba(102, 126, 234, 0.1); }
+.upp-list-status--planning  { color: #7c3aed; background: rgba(124, 58, 237, 0.1); }
 .upp-list-status--completed { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
 .upp-list-status--paused    { color: #fbbf24; background: rgba(251, 191, 36, 0.1); }
 .upp-list-status--dropped   { color: #f87171; background: rgba(248, 113, 113, 0.1); }
@@ -412,7 +412,7 @@
 
 .upp-list-action:hover {
   color: #fff;
-  background: rgba(102, 126, 234, 0.12);
+  background: rgba(124, 58, 237, 0.12);
 }
 
 .upp-list-action--delete:hover {
@@ -425,8 +425,8 @@
   position: absolute;
   right: 0;
   top: 100%;
-  background: #1a1a2e;
-  border: 1px solid rgba(102, 126, 234, 0.2);
+  background: #111111;
+  border: 1px solid rgba(124, 58, 237, 0.2);
   border-radius: 12px;
   padding: 4px;
   display: flex;
@@ -452,12 +452,12 @@
 }
 
 .upp-status-opt:hover {
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(124, 58, 237, 0.1);
   color: #fff;
 }
 
 .upp-status-opt.current {
-  color: #667eea;
+  color: #7c3aed;
   font-weight: 500;
 }
 
@@ -475,7 +475,7 @@
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(124, 58, 237, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -504,7 +504,7 @@
   gap: 7px;
   padding: 10px 24px;
   border: none;
-  background: #667eea;
+  background: #7c3aed;
   color: #fff;
   font-size: 14px;
   font-weight: 500;
@@ -515,7 +515,7 @@
 }
 
 .upp-browse-btn:hover {
-  background: #764ba2;
+  background: #6d28d9;
 }
 
 /* ─── Skeleton ──────────────────────────── */
@@ -584,7 +584,7 @@
 
 .upp-modal {
   background: #141414;
-  border: 1px solid rgba(102, 126, 234, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.15);
   border-radius: 16px;
   width: 100%;
   max-width: 420px;
@@ -621,7 +621,7 @@
 
 .upp-modal-close:hover {
   color: #fff;
-  background: rgba(102, 126, 234, 0.2);
+  background: rgba(124, 58, 237, 0.2);
 }
 
 .upp-modal-body {
@@ -642,7 +642,7 @@
   height: 64px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid #667eea;
+  border: 2px solid #7c3aed;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -659,7 +659,7 @@
 .upp-edit-avatar-preview span {
   font-size: 24px;
   font-weight: 600;
-  color: #667eea;
+  color: #7c3aed;
 }
 
 .upp-edit-btns {
@@ -682,7 +682,7 @@
 
 .upp-input {
   padding: 10px 14px;
-  border: 1px solid rgba(102, 126, 234, 0.2);
+  border: 1px solid rgba(124, 58, 237, 0.2);
   background: rgba(255, 255, 255, 0.04);
   color: #fff;
   font-size: 14px;
@@ -693,12 +693,12 @@
 }
 
 .upp-input:focus {
-  border-color: #667eea;
+  border-color: #7c3aed;
 }
 
 .upp-textarea {
   padding: 10px 14px;
-  border: 1px solid rgba(102, 126, 234, 0.2);
+  border: 1px solid rgba(124, 58, 237, 0.2);
   background: rgba(255, 255, 255, 0.04);
   color: #fff;
   font-size: 13px;
@@ -711,7 +711,7 @@
 }
 
 .upp-textarea:focus {
-  border-color: #667eea;
+  border-color: #7c3aed;
 }
 
 .upp-modal-foot {
@@ -747,7 +747,7 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  border: 1px solid rgba(102, 126, 234, 0.2);
+  border: 1px solid rgba(124, 58, 237, 0.2);
   background: none;
   color: #888;
   font-size: 12px;
@@ -759,7 +759,7 @@
 }
 
 .upp-btn-secondary:hover {
-  border-color: #667eea;
+  border-color: #7c3aed;
   color: #fff;
 }
 
@@ -769,7 +769,7 @@
   gap: 6px;
   padding: 10px 22px;
   border: none;
-  background: #667eea;
+  background: #7c3aed;
   color: #fff;
   font-size: 13px;
   font-weight: 500;
@@ -780,7 +780,7 @@
 }
 
 .upp-btn-primary:hover {
-  background: #764ba2;
+  background: #6d28d9;
 }
 
 /* ════════════════════════════════════════════
