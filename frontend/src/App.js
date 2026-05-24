@@ -16,6 +16,7 @@ import AnimeInfo from "./pages/AnimeInfo";
 import SearchPage from "./pages/SearchPage";
 import WatchlistPage from "./pages/WatchlistPage";
 import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
 import HistoryPage from "./pages/HistoryPage";
 
 import { AnimatePresence } from "framer-motion";
@@ -105,7 +106,7 @@ function AppLayout() {
           <Route path="/arena/tier-lists" element={<RouteShell><TierLists /></RouteShell>} />
           <Route path="/arena/tier-lists/:id" element={<RouteShell><TierListView /></RouteShell>} />
           <Route path="/tierlist/:id" element={<RouteShell><TierListView /></RouteShell>} />
-          <Route path="/settings" element={<RouteShell><GenericRoutePage {...routePageMap.settings} /></RouteShell>} />
+          <Route path="/settings" element={<RouteShell><SettingsPage /></RouteShell>} />
           <Route path="/help" element={<RouteShell><GenericRoutePage {...routePageMap.help} /></RouteShell>} />
           <Route path="/system/rules" element={<RouteShell><Rules /></RouteShell>} />
           <Route path="/report" element={<RouteShell><Report /></RouteShell>} />
