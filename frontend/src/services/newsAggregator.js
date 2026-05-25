@@ -1,8 +1,6 @@
 import { fetchAnimeNews } from "./animeNewsApi";
 
 const YOUTUBE_EMBED = process.env.REACT_APP_YOUTUBE_EMBED_BASE || "https://www.youtube.com/embed/";
-const CF_WORKER = "https://anime-proxy.mohamedlimam80000.workers.dev/?url=";
-const FALLBACK_PROXIES = (process.env.REACT_APP_FALLBACK_PROXIES || "").split(",").filter(Boolean);
 
 const cache = new Map();
 const CACHE_TTL = 3 * 60 * 1000;
@@ -15,8 +13,6 @@ function getCached(key) {
 }
 function setCache(key, data) { cache.set(key, { data, time: Date.now() }); }
 
-function stripHtml(h) { if (!h) return ""; return h.replace(/<[^>]*>/g, "").replace(/&[^;]+;/g, " ").trim(); }
-
 function formatTimeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -28,95 +24,70 @@ function formatTimeAgo(dateStr) {
   return `${days}d ago`;
 }
 
-async function fetchText(url) {
-  const attempts = [
-    () => fetch(CF_WORKER + encodeURIComponent(url)),
-    ...FALLBACK_PROXIES.map(p => () => fetch(p + encodeURIComponent(url))),
-    () => fetch(url),
-  ];
-  for (const attempt of attempts) {
-    try {
-      const res = await attempt();
-      if (!res.ok) continue;
-      return await res.text();
-    } catch {}
-  }
-  return null;
-}
-
-async function fetchYouTubeRSS() {
-  const items = [];
-  const channels = [
-    { id: "UC8RGjYSCGptBmCb17MnJv6w", name: "Crunchyroll" },
-    { id: "UC7W2ZxqXXd-5GRdCxfpRxKw", name: "Aniplex" },
-    { id: "UCVYQVRl5YpFjYrBZUe2y6QQ", name: "Muse Asia" },
-  ];
-  for (const channel of channels) {
-    try {
-      const text = await fetchText(`https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`);
-      if (!text) continue;
-      const xml = new DOMParser().parseFromString(text, "text/xml");
-      const entries = xml.querySelectorAll("entry");
-      for (let i = 0; i < Math.min(3, entries.length); i++) {
-        const entry = entries[i];
-        const videoId = entry.querySelector("videoId")?.textContent || "";
-        const title = entry.querySelector("title")?.textContent || "";
-        const pubDate = entry.querySelector("published")?.textContent || new Date().toISOString();
-        if (!videoId) continue;
-        items.push({
-          id: `yt-${videoId}`,
-          type: "trailer",
-          source: "youtube",
-          sourceLabel: channel.name,
-          title,
-          description: "",
-          image: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-          videoId,
-          embedUrl: `${YOUTUBE_EMBED}${videoId}`,
-          url: `https://youtube.com/watch?v=${videoId}`,
-          date: pubDate,
-        });
-      }
-    } catch {}
-  }
-  return items;
-}
-
 export async function fetchAggregatedNews() {
   const cached = getCached("aggregated");
   if (cached) return cached;
 
   const anilist = await fetchAnimeNews().catch(() => null);
 
-  const youtubeRes = await fetchYouTubeRSS().catch(() => []);
-  const youtube = Array.isArray(youtubeRes) ? youtubeRes : [];
-
-  const allNews = [...(anilist?.allNews || []), ...youtube];
+  const trailers = buildTrailers(anilist);
+  const allNews = [...(anilist?.allNews || []), ...trailers];
   allNews.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const result = {
     allNews,
-    youtube,
-    featured: buildFeatured(anilist, youtube),
+    trailers,
+    featured: buildFeatured(anilist, trailers),
     trending: anilist?.animeTrending || [],
     airing: anilist?.animeAiring || [],
     popular: anilist?.animePopular || [],
-    rails: buildRails(anilist, youtube),
+    rails: buildRails(anilist, trailers),
   };
 
   setCache("aggregated", result);
   return result;
 }
 
-function buildFeatured(anilist, youtube) {
+function buildTrailers(anilist) {
+  const items = [];
+  const seen = new Set();
+  const sources = [
+    ...(anilist?.animeTrending || []),
+    ...(anilist?.animeAiring || []),
+    ...(anilist?.animePopular || []),
+  ];
+  for (const a of sources) {
+    if (!a.trailer || seen.has(a.trailer)) continue;
+    seen.add(a.trailer);
+    items.push({
+      id: `yt-${a.trailer}`,
+      type: "trailer",
+      source: "youtube",
+      sourceLabel: a.studio || "YouTube",
+      title: `${a.title} — Trailer`,
+      description: a.synopsis?.slice(0, 200) || "",
+      image: a.image,
+      videoId: a.trailer,
+      embedUrl: `${YOUTUBE_EMBED}${a.trailer}`,
+      url: `https://youtube.com/watch?v=${a.trailer}`,
+      date: new Date().toISOString(),
+      animeId: a.id,
+      genres: a.genres,
+      score: a.score,
+    });
+  }
+  return items;
+}
+
+function buildFeatured(anilist, trailers) {
   const items = [];
   if (anilist?.animeTrending?.length) {
     for (const a of anilist.animeTrending.slice(0, 4)) {
       items.push({ kind: "anime", ...a });
     }
   }
-  if (youtube?.length) {
-    for (const v of youtube.slice(0, 2)) {
+  if (trailers?.length) {
+    for (const v of trailers.slice(0, 2)) {
       items.push({ kind: "trailer", ...v });
     }
   }
@@ -129,11 +100,11 @@ function buildFeatured(anilist, youtube) {
   return items.slice(0, 5);
 }
 
-function buildRails(anilist, youtube) {
+function buildRails(anilist, trailers) {
   const rails = [];
 
-  if (youtube?.length) {
-    rails.push({ id: "trailers", icon: "🎬", label: "Latest Trailers", items: youtube.slice(0, 10) });
+  if (trailers?.length) {
+    rails.push({ id: "trailers", icon: "🎬", label: "Latest Trailers", items: trailers.slice(0, 10) });
   }
 
   if (anilist?.animeTrending?.length) {

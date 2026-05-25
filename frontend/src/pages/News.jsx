@@ -254,7 +254,7 @@ export default function News() {
                 </h2>
                 <div className="news-feed-controls">
                   <div className="news-feed-tabs">
-                    {[{ key: "all", label: "All" }, { key: "new_episode", label: "Episodes" }, { key: "trailer", label: "Trailers" }, { key: "article", label: "News" }].map(tab => (
+                    {[{ key: "all", label: "All" }, { key: "new_episode", label: "Episodes" }, { key: "trailer", label: "Trailers" }].map(tab => (
                       <button
                         key={tab.key}
                         className={`feed-tab ${feedFilter === tab.key ? "active" : ""}`}

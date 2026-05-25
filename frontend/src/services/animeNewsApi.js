@@ -10,10 +10,10 @@ function getSeasonInfo() {
 }
 
 const ANIME_QUERY = (nextSeason, nextYear) => `{
-  trending: Page(page:1,perPage:10){media(sort:TRENDING_DESC,type:ANIME){id title{romaji english} coverImage{large} format episodes season seasonYear status meanScore trending genres description startDate{year month day} studios(isMain:true){nodes{name}} nextAiringEpisode{episode airingAt}}}
-  popular: Page(page:1,perPage:8){media(sort:POPULARITY_DESC,type:ANIME){id title{romaji english} coverImage{large} format meanScore trending genres}}
+  trending: Page(page:1,perPage:10){media(sort:TRENDING_DESC,type:ANIME){id title{romaji english} coverImage{large} format episodes season seasonYear status meanScore trending genres description startDate{year month day} studios(isMain:true){nodes{name}} nextAiringEpisode{episode airingAt} trailer{id site}}}
+  popular: Page(page:1,perPage:8){media(sort:POPULARITY_DESC,type:ANIME){id title{romaji english} coverImage{large} format meanScore trending genres trailer{id site}}}
   upcoming: Page(page:1,perPage:8){media(season:${nextSeason},seasonYear:${nextYear},type:ANIME,sort:POPULARITY_DESC){id title{romaji english} coverImage{large} format meanScore genres startDate{year month day}}}
-  airing: Page(page:1,perPage:10){media(status:RELEASING,type:ANIME,sort:POPULARITY_DESC){id title{romaji english} coverImage{large} format episodes meanScore trending genres nextAiringEpisode{episode airingAt}}}
+  airing: Page(page:1,perPage:10){media(status:RELEASING,type:ANIME,sort:POPULARITY_DESC){id title{romaji english} coverImage{large} format episodes meanScore trending genres nextAiringEpisode{episode airingAt} trailer{id site}}}
 }`;
 
 const MANGA_QUERY = `{
@@ -40,6 +40,7 @@ function mapAnime(a) {
     studio: a.studios?.nodes?.[0]?.name || null, season: a.season ? `${a.season} ${a.seasonYear}` : null,
     status: a.status, mediaType: "anime",
     nextEpisode: a.nextAiringEpisode ? {ep:a.nextAiringEpisode.episode,at:a.nextAiringEpisode.airingAt} : null,
+    trailer: a.trailer?.site === "youtube" ? a.trailer.id : null,
   };
 }
 
