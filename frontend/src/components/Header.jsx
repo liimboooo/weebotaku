@@ -351,14 +351,13 @@ export default function Header() {
               aria-expanded={profileOpen} aria-haspopup="true">
               <span className="profile-avatar-shell">
                 {profileImage ? (
-                  <img src={profileImage} alt={username} className="profile-avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }} />
+                  <img src={profileImage} alt={username} className="profile-avatar" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
                 ) : (
                   <span className="profile-avatar">{username.charAt(0).toUpperCase()}</span>
                 )}
               </span>
               <span className="profile-copy">
                 <span className="profile-username">{username}</span>
-                <span className="profile-status-line">{statusMessage}</span>
               </span>
             </button>
             {profileOpen && (
@@ -369,7 +368,7 @@ export default function Header() {
                   <div className="profile-mini-summary">
                     <span className="profile-avatar-shell profile-avatar-shell--compact">
                       {profileImage ? (
-                        <img src={profileImage} alt={username} className="profile-avatar--compact" style={{ width: '100%', height: '100%', borderRadius: '50%', cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }} />
+                        <img src={profileImage} alt={username} className="profile-avatar--compact" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
                       ) : (
                         <span className="profile-avatar--compact">{username.charAt(0).toUpperCase()}</span>
                       )}
@@ -390,22 +389,6 @@ export default function Header() {
                     <span className="profile-stat-value">{episodesWatched}</span>
                     <span className="profile-stat-label">Episodes</span>
                   </div>
-                </div>
-                <div className="profile-status-edit">
-                  {isEditingStatus ? (
-                    <div className="profile-status-input-group">
-                      <input ref={statusInputRef} type="text" value={statusMessage}
-                        onChange={(e) => setStatusMessage(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') { saveStatusMessage(statusMessage); clearTimeout(statusSaveTimeoutRef.current); statusSaveTimeoutRef.current = setTimeout(() => setIsEditingStatus(false), 1500); }
-                          if (e.key === 'Escape') { setIsEditingStatus(false); setStatusMessage(localStorage.getItem('userStatusMessage') || ''); }
-                        }}
-                        className="profile-status-input" placeholder="Update your status..." />
-                      <button className="profile-status-button" onClick={() => { saveStatusMessage(statusMessage); clearTimeout(statusSaveTimeoutRef.current); statusSaveTimeoutRef.current = setTimeout(() => setIsEditingStatus(false), 1500); }}>Save</button>
-                    </div>
-                  ) : (
-                    <button className="profile-status-button" onClick={() => setIsEditingStatus(true)}><PenLine size={12} /> Edit Status</button>
-                  )}
                 </div>
                 <div className="profile-actions-grid">
                   <button className="profile-action-card" onClick={() => navigateTo('/profile')}><Settings size={16} /> <span>Profile</span></button>
