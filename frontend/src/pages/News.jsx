@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp, Play, Tv, Newspaper, X, BarChart3, Calendar, ExternalLink, Clock, Heart, MessageCircle } from "lucide-react";
+import { TrendingUp, Play, Tv, Newspaper, X, BarChart3, Calendar, ExternalLink, Clock } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
 import Loader from "../components/Loader";
@@ -328,10 +328,6 @@ export default function News() {
                               <div className="feed-card-tags">
                                 {item.genres?.slice(0, 2).map(g => <span key={g} className="feed-card-tag">{g}</span>)}
                                 {item.trending && <span className="feed-card-tag feed-card-tag-trend">#{item.trending}</span>}
-                              </div>
-                              <div className="feed-card-actions">
-                                <span className="feed-card-action"><Heart size={12} /></span>
-                                <span className="feed-card-action"><MessageCircle size={12} /></span>
                               </div>
                             </div>
                           </motion.article>

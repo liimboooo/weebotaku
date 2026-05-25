@@ -845,35 +845,6 @@
 }
 .feed-card-tag-trend { color: #fbbf24; background: rgba(245,158,11,0.08); }
 
-.feed-card-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 4px;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.feed-card:hover .feed-card-actions {
-  opacity: 1;
-  transform: translateY(0);
-}
-.feed-card-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.7rem;
-  color: #555;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: rgba(255,255,255,0.03);
-  transition: all 0.2s;
-  cursor: pointer;
-}
-.feed-card-action:hover {
-  color: #c4b5fd;
-  background: rgba(124,58,237,0.1);
-}
-
 .feed-sentinel { height: 40px; }
 .news-feed-loading { padding: 40px 0; display: flex; justify-content: center; }
 .news-feed-empty {
