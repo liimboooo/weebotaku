@@ -693,42 +693,8 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="st-divider" />
-      {renderSectionHeader("Newsletter")}
-      {renderToggle("newsletterSub", "Subscribe to newsletter", "Weekly recommendations and updates")}
-      {settings.newsletterSub && (
-        <div className="st-sub-toggles">
-          {renderToggle("animeRecs", "Anime recommendations", "Personalized anime suggestions")}
-          {renderToggle("newFeatures", "New features announcement", "Updates about new platform features")}
-          <div className="st-field">
-            <label className="st-field-label">Frequency</label>
-            <div className="st-radio-group">
-              {["Weekly", "Bi-weekly", "Monthly", "Never"].map(f => (
-                <button key={f} className={`st-radio ${settings.notifFreq === f ? "active" : ""}`}
-                  onClick={() => setTog("notifFreq", f)}>
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="st-divider" />
-      {renderSectionHeader("Do Not Disturb")}
-      {renderToggle("dndMode", "Enable DND mode", "No notifications during this time")}
-      {settings.dndMode && (
-        <div className="st-dnd-row">
-          <div className="st-field">
-            <label className="st-field-label">From</label>
-            <input className="st-input" type="time" value={settings.dndFrom} onChange={e => setTog("dndFrom", e.target.value)} />
-          </div>
-          <div className="st-field">
-            <label className="st-field-label">To</label>
-            <input className="st-input" type="time" value={settings.dndTo} onChange={e => setTog("dndTo", e.target.value)} />
-          </div>
-        </div>
-      )}
+      {renderToggle("animeRecs", "Anime recommendations", "Personalized anime suggestions")}
+      {renderToggle("newFeatures", "New features announcement", "Updates about new platform features")}
     </motion.div>
   );
 
