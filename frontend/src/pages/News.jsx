@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp, Play, Tv, Newspaper, X, BarChart3, Calendar, ExternalLink, Clock } from "lucide-react";
+import { TrendingUp, Play, Tv, Newspaper, X, BarChart3, Calendar, ExternalLink, Clock, Heart, MessageCircle } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
 import Loader from "../components/Loader";
@@ -220,7 +220,7 @@ export default function News() {
                       <motion.div
                         key={item.id}
                         className="news-rail-card"
-                        whileHover={{ y: -4 }}
+                        whileHover={{ y: -6 }}
                         onClick={() => {
                           if (item.kind === "trailer" || item.source === "youtube") setTrailerModal(item);
                           else if (item.id?.startsWith("rss-") && item.url) window.open(item.url, "_blank");
@@ -229,13 +229,26 @@ export default function News() {
                       >
                         <div className="news-rail-card-img">
                           <img src={item.image || item.coverImage?.large || ""} alt={item.title || item.name || ""} loading="lazy" />
-                          {item.kind === "trailer" && <div className="news-rail-play"><Play size={18} /></div>}
+                          <div className="rail-card-img-gradient" />
+                          {item.kind === "trailer" && (
+                            <div className="news-rail-play">
+                              <div className="news-rail-play-ring"><Play size={18} /></div>
+                            </div>
+                          )}
                           <div className="rail-card-img-badge">
-                            {item.kind === "trailer" ? "TRAILER" : item.score || ""}
+                            {item.kind === "trailer" ? "TRAILER" : item.kind === "new_episode" ? "EPISODE" : "NEW"}
                           </div>
+                          {item.score && (
+                            <div className="rail-card-score">
+                              ★ {item.score}
+                            </div>
+                          )}
                         </div>
                         <div className="news-rail-card-body">
                           <h4>{item.title || item.name || ""}</h4>
+                          {item.genres?.length > 0 && (
+                            <div className="rail-card-sub">{item.genres.slice(0, 2).join(" · ")}</div>
+                          )}
                         </div>
                       </motion.div>
                     ))}
@@ -297,9 +310,9 @@ export default function News() {
                           <motion.article
                             key={item.id}
                             className={`feed-card feed-card-${cardType}`}
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 24 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: Math.min(i * 0.025, 0.35), duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                            transition={{ delay: Math.min(i * 0.03, 0.35), duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                             onClick={() => {
                               if (item.embedUrl) setTrailerModal(item);
                               else if (item.url?.startsWith("http")) window.open(item.url, "_blank");
@@ -314,7 +327,7 @@ export default function News() {
                                 {item.embedUrl && (
                                   <div className="feed-card-play">
                                     <div className="feed-card-play-ring" />
-                                    <Play size={22} className="feed-card-play-icon" />
+                                    <Play size={24} className="feed-card-play-icon" />
                                   </div>
                                 )}
                               </div>
@@ -324,26 +337,26 @@ export default function News() {
                                 {cardType === "article" && <><Newspaper size={10} /> News</>}
                                 {cardType === "trending" && <><TrendingUp size={10} /> Trending</>}
                               </div>
-                              {item.score && cardType === "trending" && (
+                              {item.score && (
                                 <div className="feed-card-score">
-                                  <Star size={11} /> {item.score}
+                                  ★ {item.score}
                                 </div>
                               )}
                             </div>
                             <div className="feed-card-body">
-                              <div className="feed-card-meta">
+                              <div className="feed-card-header">
                                 <span className="feed-card-source">{item.sourceLabel || "AniList"}</span>
                                 <span className="feed-card-dot">·</span>
                                 <span className="feed-card-time">{formatTimestamp(item.date)}</span>
                               </div>
                               <h3 className="feed-card-title">{item.title || item.name || ""}</h3>
-                              {item.description && cardType !== "trailer" && (
-                                <p className="feed-card-desc">{item.description.slice(0, 150)}</p>
-                              )}
                               <div className="feed-card-tags">
                                 {item.genres?.slice(0, 2).map(g => <span key={g} className="feed-card-tag">{g}</span>)}
-                                {item.score && cardType !== "trending" && <span className="feed-card-tag feed-card-tag-score"><Star size={9} /> {item.score}</span>}
-                                {item.trending && cardType !== "trending" && <span className="feed-card-tag">#{item.trending}</span>}
+                                {item.trending && <span className="feed-card-tag feed-card-tag-trend">#{item.trending}</span>}
+                              </div>
+                              <div className="feed-card-actions">
+                                <span className="feed-card-action"><Heart size={12} /></span>
+                                <span className="feed-card-action"><MessageCircle size={12} /></span>
                               </div>
                             </div>
                           </motion.article>
@@ -373,11 +386,12 @@ export default function News() {
                           <div key={item.id} className="sidebar-entry" onClick={() => navigate(`/anime/${item.id}/info`)}>
                             <div className="sidebar-entry-img">
                               <img src={item.image || item.coverImage?.large || ""} alt="" loading="lazy" />
+                              {item.score && <span className="sidebar-entry-img-badge">{item.score}</span>}
                             </div>
                             <div className="sidebar-entry-info">
                               <span className="sidebar-entry-title">{item.title || item.name || ""}</span>
                               <span className="sidebar-entry-sub">
-                                {item.score && <>Score {item.score}</>}
+                                {item.genres?.[0] && <>{item.genres[0]}</>}
                                 {item.trending && <> · #{item.trending}</>}
                                 {item.nextEpisode?.ep && <> · Ep {item.nextEpisode.ep}</>}
                               </span>
