@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { removeFromWatchlist, updateListStatus } from "../services/storage";
 import authService from "../services/authService";
 import friendService from "../services/friendService";
-import { getFriendStatusCache } from "../services/socket";
 import AnimatedPage from "../components/AnimatedPage";
 import {
   Bookmark, Eye, Clock, CheckCircle, Pause, XCircle,
@@ -103,18 +102,12 @@ export default function ProfilePage() {
             setAvatar(u.avatar || ""); setAvatarPreview(u.avatar || "");
             const uid = u.id || u._id;
             setRemoteUserId(uid);
-            const cached = getFriendStatusCache()[uid];
-            if (cached) {
-              setFriendStatus(cached.status);
-              setFriendshipId(cached.friendshipId);
-            } else {
-              friendService.getFriendshipStatus(uid).then(r => {
-                if (r?.data) {
-                  setFriendStatus(r.data.status);
-                  setFriendshipId(r.data.friendshipId || null);
-                }
-              }).catch(() => {});
-            }
+            friendService.getFriendshipStatus(uid).then(r => {
+              if (r?.data) {
+                setFriendStatus(r.data.status);
+                setFriendshipId(r.data.friendshipId || null);
+              }
+            }).catch(() => {});
             if (u.watchlist) {
               setWatchlist(u.watchlist.map(item => ({
                 id: item.animeId, name: item.name, img: item.img,
@@ -150,18 +143,40 @@ export default function ProfilePage() {
   }, [profileUsername]);
 
   useEffect(() => {
-    const handler = (e) => {
+    if (!isRemoteProfile || !remoteUserId) return;
+
+    const recheck = () => {
+      friendService.getFriendshipStatus(remoteUserId).then(r => {
+        if (r?.data) {
+          setFriendStatus(r.data.status);
+          setFriendshipId(r.data.friendshipId || null);
+        }
+      }).catch(() => {});
+    };
+
+    const onNotif = (e) => {
+      const n = e.detail;
+      if (!n?.type || !n?.fromUser) return;
+      if ((n.type === 'friend_accepted' || n.type === 'friend_request') && String(n.fromUser) === String(remoteUserId)) {
+        recheck();
+      }
+    };
+
+    const onFStatus = (e) => {
       const data = e.detail;
-      if (!data?.userId) return;
-      if (remoteUserId && String(data.userId) === String(remoteUserId)) {
+      if (data?.userId && String(data.userId) === String(remoteUserId)) {
         setFriendStatus(data.status);
         setFriendshipId(data.friendshipId);
       }
     };
 
-    window.addEventListener('friend-status-changed', handler);
-    return () => window.removeEventListener('friend-status-changed', handler);
-  }, [remoteUserId]);
+    window.addEventListener('server-notification', onNotif);
+    window.addEventListener('friend-status-changed', onFStatus);
+    return () => {
+      window.removeEventListener('server-notification', onNotif);
+      window.removeEventListener('friend-status-changed', onFStatus);
+    };
+  }, [remoteUserId, isRemoteProfile]);
 
   const handleRemove = (animeId, e) => {
     e.stopPropagation();
