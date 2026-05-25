@@ -38,7 +38,7 @@ function setCache(key, data, ttl = CACHE_TTL) {
 
 const ANILIST = process.env.REACT_APP_ANILIST_API_URL || "https://graphql.anilist.co";
 
-const ANIME_FIELDS = `id idMal title { romaji english } coverImage { large extraLarge } bannerImage averageScore episodes genres description status season seasonYear studios(isMain:true) { nodes { name } } trailer { site id } format nextAiringEpisode { episode airingAt timeUntilAiring }`;
+const ANIME_FIELDS = `id idMal title { romaji english } coverImage { large extraLarge } bannerImage averageScore popularity episodes genres description status season seasonYear studios(isMain:true) { nodes { name } } trailer { site id } format nextAiringEpisode { episode airingAt timeUntilAiring }`;
 
 export async function gql(query, variables = {}, retries = 2) {
   const key = `gql:${query.replace(/\s+/g, " ").slice(0, 80)}:${JSON.stringify(variables)}`;
