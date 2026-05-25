@@ -565,7 +565,6 @@
 }
 .feed-card:hover::before { opacity: 1; }
 .feed-card-trailer .feed-card-media { border-right: 2px solid rgba(239,68,68,0.2); }
-.feed-card-rss .feed-card-media { border-right: 2px solid rgba(34,211,238,0.2); }
 
 .feed-card-media {
   position: relative;

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, MessageCircle, Play, TrendingUp, Calendar, X, Clock, BarChart3, Tv, Newspaper, Globe } from "lucide-react";
+import { ExternalLink, MessageCircle, Play, TrendingUp, Calendar, X, Clock, BarChart3, Tv, Newspaper } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
 import Loader from "../components/Loader";
@@ -291,7 +291,7 @@ export default function News() {
                     {visibleFeed.map((item, i) => (
                       <motion.article
                         key={item.id}
-                        className={`feed-card ${item.source === "youtube" ? "feed-card-trailer" : ""} ${item.source === "rss" ? "feed-card-rss" : ""}`}
+                        className={`feed-card ${item.source === "youtube" ? "feed-card-trailer" : ""}`}
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: Math.min(i * 0.02, 0.3), duration: 0.3 }}
@@ -313,7 +313,7 @@ export default function News() {
                             {item.source === "youtube" || item.embedUrl ? <Play size={14} /> :
                              item.type === "new_episode" ? <Tv size={14} /> :
                              item.type === "article" ? <Newspaper size={14} /> :
-                             item.type === "announcement" ? <Calendar size={14} /> : <Globe size={14} />}
+                             item.type === "announcement" ? <Calendar size={14} /> : <Newspaper size={14} />}
                           </div>
                         </div>
                         <div className="feed-card-body">
@@ -388,7 +388,6 @@ export default function News() {
 
 function SourceBadge({ source, label, type }) {
   if (source === "youtube") return <span className="source-badge source-badge-yt"><Play size={12} /> {label || "YouTube"}</span>;
-  if (source === "rss") return <span className="source-badge source-badge-rss"><Globe size={12} /> {label || "RSS"}</span>;
   if (type === "new_episode") return <span className="source-badge source-badge-ep"><Tv size={12} /> New Episode</span>;
   if (type === "trending") return <span className="source-badge source-badge-trend"><TrendingUp size={12} /> Trending</span>;
   if (type === "announcement") return <span className="source-badge source-badge-ann"><Calendar size={12} /> Announcement</span>;
