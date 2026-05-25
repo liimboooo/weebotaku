@@ -278,7 +278,6 @@ export async function syncFromBackend() {
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(u));
     localStorage.setItem(STORAGE_KEYS.USERNAME, u.username);
     if (u.avatar) localStorage.setItem(STORAGE_KEYS.USER_AVATAR, u.avatar);
-    if (u.banner) localStorage.setItem(STORAGE_KEYS.USER_BANNER, u.banner);
     if (u.memberSince) localStorage.setItem(STORAGE_KEYS.MEMBER_SINCE, String(u.memberSince));
     if (u.socialLinks) localStorage.setItem(STORAGE_KEYS.SOCIAL_LINKS, JSON.stringify(u.socialLinks));
 

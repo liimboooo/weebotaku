@@ -185,7 +185,7 @@ exports.getMe = async (req, res) => {
 // @route   PUT /api/auth/updateprofile
 exports.updateProfile = async (req, res) => {
   try {
-    const { username, bio, avatar, banner, socialLinks } = req.body;
+    const { username, bio, avatar, socialLinks } = req.body;
     const updateFields = {};
 
     if (username !== undefined) {
@@ -199,7 +199,6 @@ exports.updateProfile = async (req, res) => {
     }
     if (bio !== undefined) updateFields.bio = bio;
     if (avatar !== undefined) updateFields.avatar = avatar;
-    if (banner !== undefined) updateFields.banner = banner;
     if (socialLinks !== undefined) updateFields.socialLinks = socialLinks;
 
     const user = await User.findByIdAndUpdate(req.user.id, updateFields, {

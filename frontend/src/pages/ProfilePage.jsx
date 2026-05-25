@@ -7,8 +7,8 @@ import authService from "../services/authService";
 import AnimatedPage from "../components/AnimatedPage";
 import {
   Bookmark, Eye, Clock, CheckCircle, Pause, XCircle,
-  Settings, Share2, UserPlus, X, Plus, Star, Edit3, Trash2,
-  Calendar, LogOut, ImagePlus, Search,
+  Share2, UserPlus, Plus, Star, Edit3, Trash2,
+  Calendar, LogOut, Search,
   Heart, Film, BookOpen, Globe, MessageCircle,
 } from "lucide-react";
 import "./ProfilePage.css";
@@ -42,10 +42,7 @@ export default function ProfilePage() {
   const [username, setUsername] = useState("Anime Fan");
   const [avatar, setAvatar] = useState("");
   const [avatarPreview, setAvatarPreview] = useState("");
-  const [banner, setBanner] = useState("");
-  const [bannerPreview, setBannerPreview] = useState("");
 
-  const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [watchlist, setWatchlist] = useState([]);
   const [rated, setRated] = useState({});
@@ -68,7 +65,6 @@ export default function ProfilePage() {
         const u = res.user;
         setUsername(u.username || "Anime Fan");
         if (u.avatar) { setAvatar(u.avatar); setAvatarPreview(u.avatar); }
-        if (u.banner) { setBanner(u.banner); setBannerPreview(u.banner); }
         if (u.watchlist) {
           setWatchlist(u.watchlist.map(item => ({
             id: item.animeId, name: item.name, img: item.img,
@@ -128,7 +124,6 @@ export default function ProfilePage() {
             const u = res.user;
             setUsername(u.username);
             setAvatar(u.avatar || ""); setAvatarPreview(u.avatar || "");
-            if (u.banner) { setBanner(u.banner); setBannerPreview(u.banner); }
             if (u.watchlist) {
               setWatchlist(u.watchlist.map(item => ({
                 id: item.animeId, name: item.name, img: item.img,
@@ -169,30 +164,6 @@ export default function ProfilePage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileUsername]);
-
-  const saveProfile = async () => {
-    try {
-      await authService.updateProfile({ username, avatar, banner });
-    } catch {}
-    window.dispatchEvent(new Event("profile-avatar-updated"));
-    setEditing(false);
-  };
-
-  const handleAvatarUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => { const r = String(reader.result || ""); setAvatar(r); setAvatarPreview(r); };
-    reader.readAsDataURL(file);
-  };
-
-  const handleBannerUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => { const r = String(reader.result || ""); setBanner(r); setBannerPreview(r); };
-    reader.readAsDataURL(file);
-  };
 
   const handleRemove = (animeId, e) => {
     e.stopPropagation();
@@ -325,11 +296,6 @@ export default function ProfilePage() {
 
             {/* Stats row */}
             <div className="upp-actions">
-              {isOwnProfile && (
-                <button className="upp-action-btn" onClick={() => setEditing(true)}>
-                  <Settings size={14} /> Edit Profile
-                </button>
-              )}
               <button className="upp-action-btn" onClick={() => { if (navigator.share) navigator.share({ title: username, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
                 <Share2 size={14} /> Share
               </button>
@@ -532,72 +498,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </AnimatedPage>
-
-      {/* ── EDIT MODAL ── */}
-      <AnimatePresence>
-        {editing && (
-          <motion.div
-            className="upp-modal-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setEditing(false)}
-          >
-            <motion.div
-              className="upp-modal"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="upp-modal-head">
-                <h3>Edit Profile</h3>
-                <button className="upp-modal-close" onClick={() => setEditing(false)} aria-label="Close">
-                  <X size={16} />
-                </button>
-              </div>
-              <div className="upp-modal-body">
-                <div className="upp-edit-avatar">
-                  <div className="upp-edit-avatar-preview">
-                    {userAvatar ? <img src={userAvatar} alt={username} /> : <span>{userInitial}</span>}
-                  </div>
-                  <div className="upp-edit-btns">
-                    <label className="upp-btn-secondary">
-                      Choose Avatar
-                      <input type="file" accept="image/*" hidden onChange={handleAvatarUpload} />
-                    </label>
-                    {avatar && (
-                      <button className="upp-btn-ghost" onClick={() => { setAvatar(""); setAvatarPreview(""); }}>
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className="upp-field">
-                  <label>Banner</label>
-                  <label className="upp-btn-secondary" style={{ width: "fit-content" }}>
-                    <ImagePlus size={13} /> {banner ? "Change" : "Upload"}
-                    <input type="file" accept="image/*" hidden onChange={handleBannerUpload} />
-                  </label>
-                </div>
-                <div className="upp-field">
-                  <label htmlFor="upp-edit-username">Username</label>
-                  <input
-                    id="upp-edit-username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="upp-input"
-                  />
-                </div>
-              </div>
-              <div className="upp-modal-foot">
-                <button className="upp-btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
-                <button className="upp-btn-primary" onClick={saveProfile}>Save</button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 }

@@ -73,7 +73,6 @@ export const STORAGE_KEYS = {
   USERNAME: "username",
   IS_LOGGED_IN: "isLoggedIn",
   USER_AVATAR: "userAvatar",
-  USER_BANNER: "userBanner",
   MEMBER_SINCE: "memberSince",
   SOCIAL_LINKS: "socialLinks",
   WATCHLIST: "watchlist",
