@@ -182,7 +182,11 @@ export default function News() {
               {data.rails.map(rail => (
                 <div key={rail.id} className="news-rail">
                   <div className="news-rail-header">
-                    <span className="news-rail-icon">{rail.icon}</span>
+                    <span className="news-rail-icon">
+                      {rail.id === "trailers" && <Play size={16} />}
+                      {rail.id === "trending" && <TrendingUp size={16} />}
+                      {rail.id === "airing" && <Tv size={16} />}
+                    </span>
                     <h3 className="news-rail-title">{rail.label}</h3>
                   </div>
                   <div className="news-rail-scroll">

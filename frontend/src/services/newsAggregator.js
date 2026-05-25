@@ -151,13 +151,13 @@ function buildFeatured(trailers, trending, airing) {
 function buildRails(trailers, trending, airing) {
   const rails = [];
   if (trailers?.length) {
-    rails.push({ id: "trailers", icon: "🎬", label: "Latest Trailers", items: trailers.slice(0, 10) });
+    rails.push({ id: "trailers", icon: "", label: "Latest Trailers", items: trailers.slice(0, 10) });
   }
   if (trending?.length) {
-    rails.push({ id: "trending", icon: "🔥", label: "Trending Now", items: trending.slice(0, 10).map(a => ({ ...a, kind: "anime" })) });
+    rails.push({ id: "trending", icon: "", label: "Trending Now", items: trending.slice(0, 10).map(a => ({ ...a, kind: "anime" })) });
   }
   if (airing?.length) {
-    rails.push({ id: "airing", icon: "📺", label: "Currently Airing", items: airing.slice(0, 10).map(a => ({ ...a, kind: "anime" })) });
+    rails.push({ id: "airing", icon: "", label: "Currently Airing", items: airing.slice(0, 10).map(a => ({ ...a, kind: "anime" })) });
   }
   return rails;
 }
