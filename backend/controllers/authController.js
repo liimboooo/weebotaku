@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Notification = require('../models/Notification');
+const { emitNotification } = require('./notifyHelper');
 const { OAuth2Client } = require('google-auth-library');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../emailService');
 
@@ -389,7 +390,7 @@ exports.sendRecommendation = async (req, res) => {
     if (target.recommendations.length > 30) target.recommendations = target.recommendations.slice(0, 30);
     await target.save();
 
-    await Notification.create({
+    const notif = await Notification.create({
       user: target._id,
       type: 'recommendation',
       title: `${req.user.username} recommended ${animeName || 'an anime'} to you`,
@@ -397,6 +398,7 @@ exports.sendRecommendation = async (req, res) => {
       link: `/anime/${animeId}/info`,
       fromUser: req.user.id,
     });
+    emitNotification(target._id, notif);
 
     res.json({ success: true, message: 'Recommendation sent' });
   } catch (error) {

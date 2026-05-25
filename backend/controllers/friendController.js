@@ -1,6 +1,7 @@
 const Friendship = require('../models/Friendship');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
+const { emitNotification } = require('./notifyHelper');
 
 exports.sendRequest = async (req, res) => {
   try {
@@ -27,7 +28,7 @@ exports.sendRequest = async (req, res) => {
     });
 
     const recipientUser = await User.findById(userId).select('username');
-    await Notification.create({
+    const notif = await Notification.create({
       user: userId,
       type: 'friend_request',
       title: `${req.user.username} sent you a friend request`,
@@ -35,6 +36,7 @@ exports.sendRequest = async (req, res) => {
       link: '/friends',
       fromUser: req.user.id,
     });
+    emitNotification(userId, notif);
 
     res.status(201).json({ success: true, data: friendship });
   } catch (err) {
@@ -58,7 +60,7 @@ exports.acceptRequest = async (req, res) => {
     friendship.status = 'accepted';
     await friendship.save();
 
-    await Notification.create({
+    const notif = await Notification.create({
       user: friendship.requester,
       type: 'friend_accepted',
       title: `${req.user.username} accepted your friend request`,
@@ -66,6 +68,7 @@ exports.acceptRequest = async (req, res) => {
       link: '/friends',
       fromUser: req.user.id,
     });
+    emitNotification(friendship.requester, notif);
 
     res.json({ success: true, data: friendship });
   } catch (err) {

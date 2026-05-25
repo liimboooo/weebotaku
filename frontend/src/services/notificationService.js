@@ -150,6 +150,17 @@ export function stopPolling() {
   if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
 }
 
+export function handleSocketNotification(data) {
+  if (!data?._id) return;
+  const exists = serverNotifs.some(n => n._id === data._id);
+  if (exists) return;
+  serverNotifs.unshift(data);
+  seenServerIds.add(data._id);
+  window.dispatchEvent(new CustomEvent("notification-added", {
+    detail: { message: data.title, type: "info" },
+  }));
+}
+
 export function getNotifications(settings) {
   const all = getAllMerged();
   if (!settings) return all;

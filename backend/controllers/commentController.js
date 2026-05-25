@@ -1,5 +1,6 @@
 const Comment = require('../models/Comment');
 const Notification = require('../models/Notification');
+const { emitNotification } = require('./notifyHelper');
 
 exports.getComments = async (req, res) => {
   try {
@@ -89,7 +90,7 @@ exports.likeComment = async (req, res) => {
     await comment.save();
 
     if (!wasLiked && comment.user.toString() !== req.user.id) {
-      await Notification.create({
+      const notif = await Notification.create({
         user: comment.user,
         type: 'comment_like',
         title: `${req.user.username} liked your comment`,
@@ -97,6 +98,7 @@ exports.likeComment = async (req, res) => {
         link: `/anime/${comment.animeId}/info`,
         fromUser: req.user.id,
       });
+      emitNotification(comment.user, notif);
     }
 
     res.json({ success: true, likes: comment.likes.length, dislikes: comment.dislikes.length, liked: likeIdx === -1 });
@@ -154,7 +156,7 @@ exports.replyToComment = async (req, res) => {
     await comment.populate('replies.user', 'username avatar role');
 
     if (comment.user.toString() !== req.user.id) {
-      await Notification.create({
+      const notif = await Notification.create({
         user: comment.user,
         type: 'comment_reply',
         title: `${req.user.username} replied to your comment`,
@@ -162,6 +164,7 @@ exports.replyToComment = async (req, res) => {
         link: `/anime/${comment.animeId}/info`,
         fromUser: req.user.id,
       });
+      emitNotification(comment.user, notif);
     }
 
     res.status(201).json({ success: true, data: comment });

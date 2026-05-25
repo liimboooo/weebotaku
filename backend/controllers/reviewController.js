@@ -1,5 +1,6 @@
 const Review = require('../models/Review');
 const Notification = require('../models/Notification');
+const { emitNotification } = require('./notifyHelper');
 
 // @route   POST /api/reviews
 // @access  Private
@@ -188,7 +189,7 @@ exports.likeReview = async (req, res) => {
     await review.save();
 
     if (!wasLiked && review.user.toString() !== req.user.id) {
-      await Notification.create({
+      const notif = await Notification.create({
         user: review.user,
         type: 'review_like',
         title: `${req.user.username} liked your review`,
@@ -196,6 +197,7 @@ exports.likeReview = async (req, res) => {
         link: review.animeId ? `/anime/${review.animeId}/info` : `/manga/${review.mangaId}/info`,
         fromUser: req.user.id,
       });
+      emitNotification(review.user, notif);
     }
 
     res.json({ success: true, data: review, liked: idx === -1 });

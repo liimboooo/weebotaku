@@ -25,7 +25,8 @@ import {
 } from 'lucide-react';
 import authService from '../services/authService';
 import { loadWatchHistory } from '../services/storage';
-import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications, fetchServerNotifications, seedBroadcastNotifications, startPolling, stopPolling } from '../services/notificationService';
+import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications, fetchServerNotifications, seedBroadcastNotifications, startPolling, stopPolling, handleSocketNotification } from '../services/notificationService';
+import { connectSocket, disconnectSocket } from '../services/socket';
 import { fetchAggregatedNews } from '../services/newsAggregator';
 import FastSearch from './FastSearch';
 import './Header.css';
@@ -144,7 +145,21 @@ export default function Header() {
       setUnreadCount(getUnreadCount(s));
     });
     startPolling(30000);
-    return () => stopPolling();
+    connectSocket();
+
+    const onServerNotif = (e) => {
+      handleSocketNotification(e.detail);
+      let s;
+      try { s = JSON.parse(localStorage.getItem('animewch_settings')); } catch {}
+      setNotifications(getNotifications(s));
+      setUnreadCount(getUnreadCount(s));
+    };
+    window.addEventListener('server-notification', onServerNotif);
+    return () => {
+      stopPolling();
+      disconnectSocket();
+      window.removeEventListener('server-notification', onServerNotif);
+    };
   }, []);
 
   useEffect(() => {
