@@ -1,9 +1,23 @@
 import { fetchAnimeNews } from "./animeNewsApi";
+import { addNotification } from "./notificationService";
 
 const YOUTUBE_EMBED = process.env.REACT_APP_YOUTUBE_EMBED_BASE || "https://www.youtube.com/embed/";
 
 const cache = new Map();
 const CACHE_TTL = 3 * 60 * 1000;
+const NOTIFIED_KEY = "animewch_notified_news";
+
+function getNotified() {
+  try { return JSON.parse(localStorage.getItem(NOTIFIED_KEY)) || {}; } catch { return {}; }
+}
+function markNotified(id) {
+  const map = getNotified();
+  map[id] = Date.now();
+  try { localStorage.setItem(NOTIFIED_KEY, JSON.stringify(map)); } catch {}
+}
+function wasNotified(id) {
+  return !!getNotified()[id];
+}
 
 function getCached(key) {
   const entry = cache.get(key);
@@ -44,8 +58,28 @@ export async function fetchAggregatedNews() {
     rails: buildRails(anilist, trailers),
   };
 
+  queueNotifications(result);
+
   setCache("aggregated", result);
   return result;
+}
+
+function queueNotifications(result) {
+  for (const v of result.trailers || []) {
+    if (wasNotified(v.id)) continue;
+    markNotified(v.id);
+    addNotification({ title: v.title || "New Trailer", body: v.description?.slice(0, 100) || "", type: "trailer", link: `/anime/${v.animeId}/info` });
+  }
+  for (const a of (result.trending || []).slice(0, 3)) {
+    if (wasNotified(`trending-${a.id}`)) continue;
+    markNotified(`trending-${a.id}`);
+    addNotification({ title: `${a.title} is Trending`, body: `Score: ${a.score || "N/A"}${a.genres?.length ? " · " + a.genres.slice(0, 2).join(", ") : ""}`, type: "trending", link: `/anime/${a.id}/info` });
+  }
+  for (const a of (result.airing || []).slice(0, 3)) {
+    if (wasNotified(`airing-${a.id}`)) continue;
+    markNotified(`airing-${a.id}`);
+    addNotification({ title: `${a.title} — New Episode`, body: `${a.nextEpisode?.ep ? "Ep " + a.nextEpisode.ep : "Now Airing"}${a.score ? " · " + a.score + "★" : ""}`, type: "episode", link: `/anime/${a.id}/info` });
+  }
 }
 
 function buildTrailers(anilist) {
