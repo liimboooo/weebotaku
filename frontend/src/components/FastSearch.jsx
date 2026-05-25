@@ -301,7 +301,6 @@ export default function FastSearch() {
                             </div>
                             <div className="fs-result-info">
                               <span className="fs-result-title">{u.username}</span>
-                              <span className="fs-result-meta">{u.bio || 'Member'}</span>
                             </div>
                             <ArrowRight size={14} className="fs-result-arrow" />
                           </button>

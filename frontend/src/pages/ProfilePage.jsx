@@ -227,7 +227,6 @@ export default function ProfilePage() {
 
   const userAvatar = avatarPreview || avatar;
   const userInitial = username.charAt(0).toUpperCase();
-  const handle = `@${(currentUser?.username || username).replace(/\s+/g, "")}`;
 
   return (
     <>
@@ -247,7 +246,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <h1 className="upp-username">{username}</h1>
-                <span className="upp-handle">{handle}</span>
 
                 {/* Social Links */}
                 {Object.entries(socialLinks).filter(([, v]) => v).length > 0 && (
