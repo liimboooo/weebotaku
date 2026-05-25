@@ -103,23 +103,23 @@ function buildNewsFeed(anime, manga) {
   for (const m of anime.airing.media) {
     const a = mapAnime(m);
     const ep = m.nextAiringEpisode;
-    items.push({id:`airing-${m.id}`,type:"new_episode",mediaType:"anime",title:`${a.title} — New Episode`,description:ep ? `Episode ${ep.episode} airing ${fmtTime(ep.airingAt)}` : "Currently airing",image:a.image,animeId:m.id,animeTitle:a.title,date:ep ? new Date(ep.airingAt*1000).toISOString() : new Date().toISOString(),score:a.score,genres:a.genres});
+    items.push({id:`airing-${m.id}`,type:"new_episode",mediaType:"anime",title:`${a.title} — New Episode`,description:ep ? `Episode ${ep.episode} airing ${fmtTime(ep.airingAt)}` : "Currently airing",image:a.image,bannerImage:a.bannerImage,animeId:m.id,animeTitle:a.title,date:ep ? new Date(ep.airingAt*1000).toISOString() : new Date().toISOString(),score:a.score,genres:a.genres});
   }
 
   for (const m of anime.trending.media) {
     const a = mapAnime(m);
-    items.push({id:`trending-${m.id}`,type:"trending",mediaType:"anime",title:`${a.title} is Trending`,description: `Trending #${a.trending} \u2022 ${a.genres.slice(0,3).join(", ")}`,image:a.image,animeId:m.id,animeTitle:a.title,date:new Date().toISOString(),score:a.score,genres:a.genres});
+    items.push({id:`trending-${m.id}`,type:"trending",mediaType:"anime",title:`${a.title} is Trending`,description: `Trending #${a.trending} \u2022 ${a.genres.slice(0,3).join(", ")}`,image:a.image,bannerImage:a.bannerImage,animeId:m.id,animeTitle:a.title,date:new Date().toISOString(),score:a.score,genres:a.genres});
   }
 
   for (const m of anime.upcoming.media) {
     const a = mapAnime(m);
     const d = m.startDate ? `${m.startDate.year}-${String(m.startDate.month).padStart(2,"0")}-${String(m.startDate.day).padStart(2,"0")}` : "TBA";
-    items.push({id:`upcoming-${m.id}`,type:"announcement",mediaType:"anime",title:`Coming Soon: ${a.title}`,description:`${d} \u2022 ${a.format} \u2022 ${a.genres.slice(0,3).join(", ")}`,image:a.image,animeId:m.id,animeTitle:a.title,date:d,score:a.score,genres:a.genres});
+    items.push({id:`upcoming-${m.id}`,type:"announcement",mediaType:"anime",title:`Coming Soon: ${a.title}`,description:`${d} \u2022 ${a.format} \u2022 ${a.genres.slice(0,3).join(", ")}`,image:a.image,bannerImage:a.bannerImage,animeId:m.id,animeTitle:a.title,date:d,score:a.score,genres:a.genres});
   }
 
   for (const m of anime.popular.media) {
     const a = mapAnime(m);
-    items.push({id:`popular-${m.id}`,type:"popular",mediaType:"anime",title:`Popular Pick: ${a.title}`,description:`Rating: ${a.score}/10 \u2022 ${a.genres.slice(0,3).join(", ")}`,image:a.image,animeId:m.id,animeTitle:a.title,date:new Date().toISOString(),score:a.score,genres:a.genres});
+    items.push({id:`popular-${m.id}`,type:"popular",mediaType:"anime",title:`Popular Pick: ${a.title}`,description:`Rating: ${a.score}/10 \u2022 ${a.genres.slice(0,3).join(", ")}`,image:a.image,bannerImage:a.bannerImage,animeId:m.id,animeTitle:a.title,date:new Date().toISOString(),score:a.score,genres:a.genres});
   }
 
   for (const m of manga.publishing.media) {
