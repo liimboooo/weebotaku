@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, Play, Tv, Newspaper, X, BarChart3, Calendar, ExternalLink, Clock, Heart, MessageCircle } from "lucide-react";
@@ -384,7 +385,7 @@ export default function News() {
       </div>
       </AnimatedPage>
 
-      {trailerModal && (
+      {trailerModal && createPortal(
         <motion.div
           className="news-trailer-overlay"
           initial={{ opacity: 0 }}
@@ -406,7 +407,8 @@ export default function News() {
               allowFullScreen
             />
           </motion.div>
-        </motion.div>
+        </motion.div>,
+        document.body
       )}
     </>
   );
