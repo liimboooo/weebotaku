@@ -10,10 +10,10 @@ function getSeasonInfo() {
 }
 
 const ANIME_QUERY = (nextSeason, nextYear) => `{
-  trending: Page(page:1,perPage:10){media(sort:TRENDING_DESC,type:ANIME){id title{romaji english} coverImage{large} format episodes season seasonYear status meanScore trending genres description startDate{year month day} studios(isMain:true){nodes{name}} nextAiringEpisode{episode airingAt} trailer{id site}}}
-  popular: Page(page:1,perPage:8){media(sort:POPULARITY_DESC,type:ANIME){id title{romaji english} coverImage{large} format meanScore trending genres trailer{id site}}}
-  upcoming: Page(page:1,perPage:8){media(season:${nextSeason},seasonYear:${nextYear},type:ANIME,sort:POPULARITY_DESC){id title{romaji english} coverImage{large} format meanScore genres startDate{year month day}}}
-  airing: Page(page:1,perPage:10){media(status:RELEASING,type:ANIME,sort:POPULARITY_DESC){id title{romaji english} coverImage{large} format episodes meanScore trending genres nextAiringEpisode{episode airingAt} trailer{id site}}}
+  trending: Page(page:1,perPage:10){media(sort:TRENDING_DESC,type:ANIME){id title{romaji english} coverImage{large extraLarge} bannerImage format episodes season seasonYear status meanScore trending genres description startDate{year month day} studios(isMain:true){nodes{name}} nextAiringEpisode{episode airingAt} trailer{id site}}}
+  popular: Page(page:1,perPage:8){media(sort:POPULARITY_DESC,type:ANIME){id title{romaji english} coverImage{large extraLarge} bannerImage format meanScore trending genres trailer{id site}}}
+  upcoming: Page(page:1,perPage:8){media(season:${nextSeason},seasonYear:${nextYear},type:ANIME,sort:POPULARITY_DESC){id title{romaji english} coverImage{large extraLarge} bannerImage format meanScore genres startDate{year month day}}}
+  airing: Page(page:1,perPage:10){media(status:RELEASING,type:ANIME,sort:POPULARITY_DESC){id title{romaji english} coverImage{large extraLarge} bannerImage format episodes meanScore trending genres nextAiringEpisode{episode airingAt} trailer{id site}}}
 }`;
 
 const MANGA_QUERY = `{
@@ -34,6 +34,7 @@ function stripHtml(h) { if (!h) return ""; return h.replace(/<[^>]*>/g,"").repla
 function mapAnime(a) {
   return {
     id: a.id, title: pickTitle(a.title), image: a.coverImage?.large || "",
+    bannerImage: a.bannerImage || a.coverImage?.extraLarge || a.coverImage?.large || "",
     format: a.format || "TV", episodes: a.episodes,
     score: a.meanScore ? (a.meanScore/10).toFixed(1) : null, trending: a.trending || 0,
     genres: a.genres || [], synopsis: stripHtml(a.description).slice(0,250),

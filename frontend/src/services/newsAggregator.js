@@ -120,6 +120,7 @@ function buildTrailers(anilist, usedIds) {
       title: `${a.title} — Trailer`,
       description: a.synopsis?.slice(0, 200) || "",
       image: a.image,
+      bannerImage: a.bannerImage,
       videoId: a.trailer,
       embedUrl: `${YOUTUBE_EMBED}${a.trailer}`,
       url: `https://youtube.com/watch?v=${a.trailer}`,

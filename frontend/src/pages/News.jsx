@@ -131,7 +131,7 @@ export default function News() {
                 >
                   <div
                     className="news-hero-bg"
-                    style={{ backgroundImage: `url(${hero.image || hero.coverImage?.large || ""})` }}
+                    style={{ backgroundImage: `url(${hero.bannerImage || hero.coverImage?.extraLarge || hero.image || ""})` }}
                   />
                   <div className="news-hero-gradient" />
                   <div className="news-hero-content">
