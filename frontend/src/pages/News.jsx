@@ -119,65 +119,80 @@ export default function News() {
           )}
 
           {!loading && !error && featured.length > 0 && (
-            <section className="news-hero">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={heroIndex}
-                  className="news-hero-card"
-                  initial={{ opacity: 0, scale: 1.05 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <div
-                    className="news-hero-bg"
-                    style={{ backgroundImage: `url(${hero.bannerImage || hero.coverImage?.extraLarge || hero.image || ""})` }}
-                  />
-                  <div className="news-hero-gradient" />
-                  <div className="news-hero-content">
-                    <div className="news-hero-badges">
-                      {hero.kind === "trailer" && <span className="hero-badge hero-badge-trailer"><Play size={12} /> Trailer</span>}
-                      {hero.kind === "airing" && <span className="hero-badge hero-badge-airing"><Tv size={12} /> Airing</span>}
-                      {(hero.kind === "trending" || hero.kind === "anime") && <span className="hero-badge hero-badge-trending"><TrendingUp size={12} /> Trending</span>}
-                      {hero.sourceLabel && <span className="hero-badge hero-badge-source">{hero.sourceLabel}</span>}
-                    </div>
-                    <h2 className="news-hero-title">{hero.title || hero.name || ""}</h2>
-                    <p className="news-hero-desc">
-                      {hero.description || hero.synopsis || ""}
-                    </p>
-                    <div className="news-hero-meta">
-                      {hero.score && <span><Star size={14} /> {hero.score}</span>}
-                      {hero.trending && <span><TrendingUp size={14} /> #{hero.trending}</span>}
-                      {hero.date && <span><Clock size={14} /> {formatTimestamp(hero.date)}</span>}
-                    </div>
-                    <div className="news-hero-actions">
-                      {hero.kind === "trailer" && hero.embedUrl && (
-                        <button className="hero-action-btn hero-action-play" onClick={() => setTrailerModal(hero)}>
-                          <Play size={16} /> Watch Trailer
-                        </button>
-                      )}
-                      {(hero.kind === "trending" || hero.kind === "airing" || hero.kind === "anime") && (
-                        <button className="hero-action-btn hero-action-info" onClick={() => navigate(`/anime/${hero.id}/info`)}>
-                          View Details
-                        </button>
-                      )}
-                      {hero.url && (
-                        <a href={hero.url} target="_blank" rel="noopener noreferrer" className="hero-action-btn hero-action-link">
-                          <ExternalLink size={14} /> Open
-                        </a>
-                      )}
-                    </div>
+            <section className="news-magazine">
+              <div className="magazine-grid">
+                <div className="magazine-main">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={heroIndex}
+                      className="magazine-main-card"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <div
+                        className="magazine-main-bg"
+                        style={{ backgroundImage: `url(${hero.bannerImage || hero.coverImage?.extraLarge || hero.image || ""})` }}
+                      />
+                      <div className="magazine-main-gradient" />
+                      <div className="magazine-main-content">
+                        <div className="magazine-main-meta">
+                          <span className="magazine-main-date">
+                            {hero.date ? new Date(hero.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : ""}
+                          </span>
+                          <span className="magazine-main-category">
+                            {hero.kind === "trailer" && "Trailer"}
+                            {hero.kind === "airing" && "Currently Airing"}
+                            {hero.kind === "trending" && "Trending"}
+                          </span>
+                        </div>
+                        <h2 className="magazine-main-title">{hero.title || hero.name || ""}</h2>
+                        <p className="magazine-main-desc">{hero.description || hero.synopsis || ""}</p>
+                        <div className="magazine-main-actions">
+                          {hero.kind === "trailer" && hero.embedUrl && (
+                            <button className="magazine-action-btn magazine-action-play" onClick={() => setTrailerModal(hero)}>
+                              <Play size={16} /> Watch Trailer
+                            </button>
+                          )}
+                          {(hero.kind === "trending" || hero.kind === "airing" || hero.kind === "anime") && (
+                            <button className="magazine-action-btn magazine-action-info" onClick={() => navigate(`/anime/${hero.id}/info`)}>
+                              View Details
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+                  <div className="magazine-dots">
+                    {featured.map((_, i) => (
+                      <button key={i} className={`magazine-dot ${i === heroIndex ? "active" : ""}`} onClick={() => setHeroIndex(i)} />
+                    ))}
                   </div>
-                </motion.div>
-              </AnimatePresence>
-              <div className="news-hero-dots">
-                {featured.map((_, i) => (
-                  <button
-                    key={i}
-                    className={`hero-dot ${i === heroIndex ? "active" : ""}`}
-                    onClick={() => setHeroIndex(i)}
-                  />
-                ))}
+                </div>
+
+                <div className="magazine-stack">
+                  {sortedFeed.filter(item => item.id !== hero?.id).slice(0, 3).map(item => (
+                    <div
+                      key={item.id}
+                      className="magazine-stack-item"
+                      onClick={() => {
+                        if (item.embedUrl) setTrailerModal(item);
+                        else if (item.animeId) navigate(`/anime/${item.animeId}/info`);
+                      }}
+                    >
+                      <div className="magazine-stack-text">
+                        <span className="magazine-stack-tag">
+                          {item.type === "trailer" ? "Trailer" : item.type === "new_episode" ? "Episode" : "News"}
+                        </span>
+                        <h4 className="magazine-stack-title">{item.title || item.name || ""}</h4>
+                      </div>
+                      <div className="magazine-stack-img">
+                        <img src={item.image || item.coverImage?.large || ""} alt="" loading="lazy" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </section>
           )}
