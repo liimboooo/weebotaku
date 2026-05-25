@@ -149,22 +149,35 @@ const cardSlideUp = {
 };
 
 function StatsBar() {
-  const stats = useMemo(() => {
-    const wl = loadWatchlist();
-    const history = loadWatchHistory();
-    const ratings = Object.keys(loadRatings()).length;
-    const level = getCurrentLevel();
-    const streak = getStreak();
-    const items = [
-      { icon: Bookmark, label: "Watchlist", value: wl.length, cls: "bookmark" },
-      { icon: Eye, label: "Episodes Watched", value: history.length, cls: "eye" },
-      { icon: Star, label: "Anime Rated", value: ratings, cls: "trophy" },
-      { icon: Zap, label: "Level", value: level, cls: "level" },
-    ];
-    if (streak.current > 0) {
-      items.push({ icon: TrendingUp, label: "Day Streak", value: streak.current, cls: "streak" });
+  const [stats, setStats] = useState([]);
+
+  useEffect(() => {
+    function compute() {
+      const wl = loadWatchlist();
+      const history = loadWatchHistory();
+      const ratings = Object.keys(loadRatings()).length;
+      const level = getCurrentLevel();
+      const streak = getStreak();
+      const items = [
+        { icon: Bookmark, label: "Watchlist", value: wl.length, cls: "bookmark" },
+        { icon: Eye, label: "Episodes Watched", value: history.length, cls: "eye" },
+        { icon: Star, label: "Anime Rated", value: ratings, cls: "trophy" },
+        { icon: Zap, label: "Level", value: level, cls: "level" },
+      ];
+      if (streak.current > 0) {
+        items.push({ icon: TrendingUp, label: "Day Streak", value: streak.current, cls: "streak" });
+      }
+      setStats(items);
     }
-    return items;
+    compute();
+    window.addEventListener("storage", compute);
+    window.addEventListener("profile-data-changed", compute);
+    window.addEventListener("watchlist-updated", compute);
+    return () => {
+      window.removeEventListener("storage", compute);
+      window.removeEventListener("profile-data-changed", compute);
+      window.removeEventListener("watchlist-updated", compute);
+    };
   }, []);
 
   return (
