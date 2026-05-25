@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { removeFromWatchlist, updateListStatus } from "../services/storage";
 import authService from "../services/authService";
 import friendService from "../services/friendService";
+import { setPolledRemoteUserId } from "../services/socket";
 import AnimatedPage from "../components/AnimatedPage";
 import {
   Bookmark, Eye, Clock, CheckCircle, Pause, XCircle,
@@ -102,6 +103,7 @@ export default function ProfilePage() {
             setAvatar(u.avatar || ""); setAvatarPreview(u.avatar || "");
             const uid = u.id || u._id;
             setRemoteUserId(uid);
+            setPolledRemoteUserId(uid);
             friendService.getFriendshipStatus(uid).then(r => {
               if (r?.data) {
                 setFriendStatus(r.data.status);

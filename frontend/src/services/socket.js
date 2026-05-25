@@ -19,6 +19,11 @@ export function getFriendStatusCache() {
 // ─── Polling fallback (used on Vercel where WS doesn't work) ───
 
 let lastNotifSeen = new Set();
+let polledRemoteUserId = null;
+
+export function setPolledRemoteUserId(uid) {
+  polledRemoteUserId = uid;
+}
 
 async function pollNotifications() {
   try {
@@ -36,19 +41,13 @@ async function pollNotifications() {
 }
 
 async function pollFriendStatus() {
+  if (!polledRemoteUserId) return;
   try {
-    const path = window.location.pathname;
-    const match = path.match(/^\/profile\/(.+)/);
-    if (!match) return;
-    const res = await api.get(`/auth/user/${match[1]}`);
-    if (res?.success && res?.user) {
-      const uid = res.user.id || res.user._id;
-      const fs = await api.get(`/friends/status/${uid}`);
-      if (fs?.data) {
-        window.dispatchEvent(new CustomEvent('friend-status-changed', {
-          detail: { userId: uid, status: fs.data.status, friendshipId: fs.data.friendshipId },
-        }));
-      }
+    const fs = await api.get(`/friends/status/${polledRemoteUserId}`);
+    if (fs?.data) {
+      window.dispatchEvent(new CustomEvent('friend-status-changed', {
+        detail: { userId: polledRemoteUserId, status: fs.data.status, friendshipId: fs.data.friendshipId },
+      }));
     }
   } catch {}
 }
