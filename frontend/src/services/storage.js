@@ -184,13 +184,13 @@ export function removeFromWatchHistory(timestamp) {
   return updated;
 }
 
-export function addToWatchHistory(animeId, episode, animeName, animeImg) {
+export function addToWatchHistory(animeId, episode, animeName, animeImg, position = 0) {
   let history = loadWatchHistory();
   const existingIdx = history.findIndex(h => h.animeId === animeId && h.episode === episode);
   if (existingIdx !== -1) {
     history.splice(existingIdx, 1);
   }
-  history.unshift({ animeId, episode, timestamp: Date.now(), animeName: animeName || "", animeImg: animeImg || "" });
+  history.unshift({ animeId, episode, position, timestamp: Date.now(), animeName: animeName || "", animeImg: animeImg || "" });
   if (history.length > 100) history.length = 100;
   localStorage.setItem(STORAGE_KEYS.WATCH_HISTORY, JSON.stringify(history));
 
@@ -198,6 +198,7 @@ export function addToWatchHistory(animeId, episode, animeName, animeImg) {
     api.post(`/anime/${animeId}/history`, {
       animeId,
       episodeWatched: episode,
+      position,
       animeName,
       animeImg,
     }).catch(() => {});
@@ -320,6 +321,7 @@ export async function syncFromBackend() {
       const mapped = u.watchHistory.map(item => ({
         animeId: item.animeId,
         episode: item.episode,
+        position: item.position || 0,
         timestamp: new Date(item.timestamp).getTime(),
         animeName: item.animeName || "",
         animeImg: item.animeImg || "",

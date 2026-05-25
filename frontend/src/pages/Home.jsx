@@ -204,17 +204,26 @@ function SpotlightQuote({ quote, onRefresh, loading }) {
   );
 }
 
-function formatTimeAgo(ts) {
-  const diff = Date.now() - (typeof ts === 'string' ? new Date(ts).getTime() : ts);
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(ts).toLocaleDateString();
-}
+  const DEFAULT_EP_DURATION = 1440;
+
+  function formatPosition(sec) {
+    if (!sec || sec <= 0) return null;
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  }
+
+  function formatTimeAgo(ts) {
+    const diff = Date.now() - (typeof ts === 'string' ? new Date(ts).getTime() : ts);
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d ago`;
+    return new Date(ts).toLocaleDateString();
+  }
 
 function ContinueWatchingRow() {
   const navigate = useNavigate();
@@ -231,6 +240,7 @@ function ContinueWatchingRow() {
             return {
               animeId: item.animeId,
               episode: item.episode,
+              position: item.position || 0,
               timestamp: item.timestamp,
               id: data.id,
               name: data.name,
@@ -282,10 +292,18 @@ function ContinueWatchingRow() {
             <div className="cw-card-body">
               <h3 className="cw-card-title">{item.name}</h3>
               <div className="cw-card-bar">
-                <div className="cw-card-fill" style={{ width: `${Math.min(100, ((item.episode || 1) / (item.episodes || item.episode || 1)) * 100)}%` }} />
+                {item.position > 0 ? (
+                  <div className="cw-card-fill" style={{ width: `${Math.min(100, (item.position / DEFAULT_EP_DURATION) * 100)}%` }} />
+                ) : (
+                  <div className="cw-card-fill" style={{ width: `${Math.min(100, ((item.episode || 1) / (item.episodes || item.episode || 1)) * 100)}%` }} />
+                )}
               </div>
               <div className="cw-card-footer">
-                <span className="cw-card-progress">{item.episode || 0}/{item.episodes || '?'} eps</span>
+                {item.position > 0 ? (
+                  <span className="cw-card-progress">{formatPosition(item.position)} / 24m</span>
+                ) : (
+                  <span className="cw-card-progress">Ep {item.episode || 0}/{item.episodes || '?'}</span>
+                )}
                 {item.timestamp && <span className="cw-card-time">{formatTimeAgo(item.timestamp)}</span>}
               </div>
             </div>

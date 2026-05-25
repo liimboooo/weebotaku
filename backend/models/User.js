@@ -86,6 +86,7 @@ const UserSchema = new mongoose.Schema({
   watchHistory: [{
     animeId: { type: Number, required: true },
     episode: { type: Number, required: true },
+    position: { type: Number, default: 0 },
     animeName: String,
     animeImg: String,
     timestamp: { type: Date, default: Date.now },

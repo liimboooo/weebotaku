@@ -56,7 +56,7 @@ exports.removeFromWatchlist = async (req, res) => {
 exports.updateWatchHistory = async (req, res) => {
   try {
     const animeId = parseInt(req.params.id);
-    const { episodeWatched, animeName, animeImg } = req.body;
+    const { episodeWatched, animeName, animeImg, position } = req.body;
     const user = await User.findById(req.user.id);
 
     // Dedup: remove existing entry for same anime+episode, then add to front
@@ -69,6 +69,7 @@ exports.updateWatchHistory = async (req, res) => {
     user.watchHistory.unshift({
       animeId,
       episode: episodeWatched,
+      position: position || 0,
       animeName,
       animeImg,
       timestamp: new Date(),
