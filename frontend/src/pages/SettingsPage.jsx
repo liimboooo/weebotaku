@@ -680,6 +680,7 @@ export default function SettingsPage() {
       {renderToggle("pushNotifs", "Enable push notifications", "Receive browser push notifications")}
       {settings.pushNotifs && (
         <div className="st-sub-toggles">
+          {renderToggle("newsNotifications", "News notifications", "Trending anime, trailers, and new episodes")}
           {renderToggle("newEpisodeAlerts", "New episodes", "Instant alerts for new episodes")}
           {renderToggle("dms", "Direct messages", "Notifications for direct messages")}
           {renderToggle("commentReplies", "Comment replies", "When someone replies to your comment")}

@@ -64,6 +64,11 @@ export async function fetchAggregatedNews() {
     rails: buildRails(trailers, trending, airing),
   };
 
+  try {
+    const s = JSON.parse(localStorage.getItem("animewch_settings"));
+    if (s && s.newsNotifications === false) return result;
+  } catch {}
+
   queueNotifications(result);
 
   setCache("aggregated", result);
