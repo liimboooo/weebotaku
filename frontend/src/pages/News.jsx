@@ -23,11 +23,10 @@ export default function News() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [feedFilter, setFeedFilter] = useState("all");
   const [feedSort, setFeedSort] = useState("latest");
-  const [visibleCount, setVisibleCount] = useState(20);
+  const [visibleCount, setVisibleCount] = useState(8);
   const [feedSearch, setFeedSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
   const [trailerModal, setTrailerModal] = useState(null);
-  const feedEndRef = useRef(null);
   const heroTimerRef = useRef(null);
   const debouncedSearch = useDebounce(feedSearch, 300);
 
@@ -49,15 +48,6 @@ export default function News() {
     return () => clearInterval(heroTimerRef.current);
   }, [data?.featured?.length]);
 
-  useEffect(() => {
-    if (!feedEndRef.current) return;
-    const observer = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting) setVisibleCount(c => c + 20);
-    }, { rootMargin: "400px" });
-    observer.observe(feedEndRef.current);
-    return () => observer.disconnect();
-  }, []);
-
   const filteredFeed = (data?.allNews || []).filter(item => {
     if (feedFilter !== "all" && item.type !== feedFilter && item.source !== feedFilter) return false;
     const q = debouncedSearch.toLowerCase().trim();
@@ -73,7 +63,7 @@ export default function News() {
   const refresh = useCallback(() => {
     setLoading(true);
     setError(null);
-    setVisibleCount(20);
+    setVisibleCount(8);
     fetchAggregatedNews()
       .then(setData)
       .catch(e => setError(e.message))
@@ -261,7 +251,7 @@ export default function News() {
                       <button
                         key={tab.key}
                         className={`feed-tab ${feedFilter === tab.key ? "active" : ""}`}
-                        onClick={() => { setFeedFilter(tab.key); setVisibleCount(20); }}
+                        onClick={() => { setFeedFilter(tab.key); setVisibleCount(8); }}
                       >
                         {tab.label}
                       </button>
@@ -276,7 +266,7 @@ export default function News() {
                     type="text"
                     placeholder="Search feed..."
                     value={feedSearch}
-                    onChange={e => { setFeedSearch(e.target.value); setVisibleCount(20); }}
+                    onChange={e => { setFeedSearch(e.target.value); setVisibleCount(8); }}
                   />
                 </div>
               </div>
@@ -348,7 +338,13 @@ export default function News() {
                           </motion.article>
                       );
                     })}
-                    <div ref={feedEndRef} className="feed-sentinel" />
+                    {visibleFeed.length < sortedFeed.length && (
+                      <div className="news-load-more-wrap">
+                        <button className="news-load-more" onClick={() => setVisibleCount(p => p + 8)}>
+                          Load More ({sortedFeed.length - visibleFeed.length} remaining)
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>

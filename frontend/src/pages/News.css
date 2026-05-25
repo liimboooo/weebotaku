@@ -907,6 +907,29 @@
 }
 .feed-card-tag-trend { color: #fbbf24; background: rgba(245,158,11,0.08); }
 
+/* Load More */
+.news-load-more-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0 8px;
+}
+.news-load-more {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #ccc;
+  padding: 10px 28px;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.news-load-more:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border-color: rgba(255,255,255,0.25);
+}
+
 .feed-sentinel { height: 40px; }
 .news-feed-loading { padding: 40px 0; display: flex; justify-content: center; }
 .news-feed-empty {
