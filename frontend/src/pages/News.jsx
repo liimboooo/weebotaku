@@ -40,14 +40,6 @@ export default function News() {
     return () => { mounted = false; };
   }, []);
 
-  useEffect(() => {
-    if (sortedFeed.length < 2) return;
-    heroTimerRef.current = setInterval(() => {
-      setHeroIndex(prev => (prev + 1) % Math.min(sortedFeed.length, 5));
-    }, 6000);
-    return () => clearInterval(heroTimerRef.current);
-  }, [sortedFeed.length]);
-
   const filteredFeed = (data?.allNews || []).filter(item => {
     if (feedFilter !== "all" && item.type !== feedFilter && item.source !== feedFilter) return false;
     const q = debouncedSearch.toLowerCase().trim();
@@ -58,6 +50,15 @@ export default function News() {
     if (feedSort === "popular") return (b.score || b.trending || 0) - (a.score || a.trending || 0);
     return new Date(b.date) - new Date(a.date);
   });
+
+  useEffect(() => {
+    if (sortedFeed.length < 2) return;
+    heroTimerRef.current = setInterval(() => {
+      setHeroIndex(prev => (prev + 1) % Math.min(sortedFeed.length, 5));
+    }, 6000);
+    return () => clearInterval(heroTimerRef.current);
+  }, [sortedFeed.length]);
+
   const heroItems = sortedFeed.slice(0, 5);
   const gridItems = sortedFeed.slice(4, 4 + visibleCount);
 
