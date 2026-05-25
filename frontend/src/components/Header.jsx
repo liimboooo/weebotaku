@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import authService from '../services/authService';
 import { loadWatchHistory } from '../services/storage';
-import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications } from '../services/notificationService';
+import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications, fetchServerNotifications, seedBroadcastNotifications } from '../services/notificationService';
 import { fetchAggregatedNews } from '../services/newsAggregator';
 import FastSearch from './FastSearch';
 import './Header.css';
@@ -135,7 +135,14 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    seedBroadcastNotifications();
     fetchAggregatedNews().catch(() => {});
+    fetchServerNotifications().then(() => {
+      let s;
+      try { s = JSON.parse(localStorage.getItem('animewch_settings')); } catch {}
+      setNotifications(getNotifications(s));
+      setUnreadCount(getUnreadCount(s));
+    });
   }, []);
 
   const navigateTo = (path) => {
@@ -334,17 +341,17 @@ export default function Header() {
               <div className="notif-dropdown">
                 <div className="notif-dropdown-header">
                   <span>Notifications</span>
-                  <button className="notif-mark-all-btn" onClick={() => { let s; try { s = JSON.parse(localStorage.getItem('animewch_settings')); } catch {} markAllRead(); setNotifications(getNotifications(s)); setUnreadCount(getUnreadCount(s)); }}>
+                  <button className="notif-mark-all-btn" onClick={async () => { let s; try { s = JSON.parse(localStorage.getItem('animewch_settings')); } catch {} await markAllRead(); setNotifications(getNotifications(s)); setUnreadCount(getUnreadCount(s)); }}>
                     Mark all read
                   </button>
                 </div>
                 <div className="notif-dropdown-list">
                   {notifications.length === 0 && <div className="notif-dropdown-empty">No notifications yet</div>}
                   {notifications.map((n) => (
-                    <div key={n.id} className={`notif-item${n.read ? '' : ' unread'}`} onClick={() => {
+                    <div key={n.id} className={`notif-item${n.read ? '' : ' unread'}`} onClick={async () => {
                       let s;
                       try { s = JSON.parse(localStorage.getItem('animewch_settings')); } catch {}
-                      markRead(n.id);
+                      await markRead(n.id);
                       setNotifications(getNotifications(s));
                       setUnreadCount(getUnreadCount(s));
                       if (n.link) navigateTo(n.link);
@@ -360,7 +367,7 @@ export default function Header() {
                 </div>
                 {notifications.length > 0 && (
                   <div className="notif-dropdown-footer">
-                    <button className="notif-clear-btn" onClick={() => { clearNotifications(); setNotifications([]); setUnreadCount(0); }}>
+                    <button className="notif-clear-btn" onClick={async () => { await clearNotifications(); setNotifications([]); setUnreadCount(0); }}>
                       Clear all
                     </button>
                   </div>

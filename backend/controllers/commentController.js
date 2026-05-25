@@ -1,4 +1,5 @@
 const Comment = require('../models/Comment');
+const Notification = require('../models/Notification');
 
 exports.getComments = async (req, res) => {
   try {
@@ -84,7 +85,20 @@ exports.likeComment = async (req, res) => {
       comment.likes.push(userId);
     }
 
+    const wasLiked = likeIdx > -1;
     await comment.save();
+
+    if (!wasLiked && comment.user.toString() !== req.user.id) {
+      await Notification.create({
+        user: comment.user,
+        type: 'comment_like',
+        title: `${req.user.username} liked your comment`,
+        body: comment.content.slice(0, 100),
+        link: `/anime/${comment.animeId}/info`,
+        fromUser: req.user.id,
+      });
+    }
+
     res.json({ success: true, likes: comment.likes.length, dislikes: comment.dislikes.length, liked: likeIdx === -1 });
   } catch (error) {
     console.error('LikeComment error:', error);
@@ -138,6 +152,17 @@ exports.replyToComment = async (req, res) => {
 
     await comment.save();
     await comment.populate('replies.user', 'username avatar role');
+
+    if (comment.user.toString() !== req.user.id) {
+      await Notification.create({
+        user: comment.user,
+        type: 'comment_reply',
+        title: `${req.user.username} replied to your comment`,
+        body: content.trim().slice(0, 100),
+        link: `/anime/${comment.animeId}/info`,
+        fromUser: req.user.id,
+      });
+    }
 
     res.status(201).json({ success: true, data: comment });
   } catch (error) {

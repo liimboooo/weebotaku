@@ -1,4 +1,5 @@
 const Review = require('../models/Review');
+const Notification = require('../models/Notification');
 
 // @route   POST /api/reviews
 // @access  Private
@@ -177,13 +178,26 @@ exports.likeReview = async (req, res) => {
     }
 
     const idx = review.likes.indexOf(req.user.id);
-    if (idx > -1) {
+    const wasLiked = idx > -1;
+    if (wasLiked) {
       review.likes.splice(idx, 1);
     } else {
       review.likes.push(req.user.id);
     }
 
     await review.save();
+
+    if (!wasLiked && review.user.toString() !== req.user.id) {
+      await Notification.create({
+        user: review.user,
+        type: 'review_like',
+        title: `${req.user.username} liked your review`,
+        body: review.title || review.content?.slice(0, 100) || '',
+        link: review.animeId ? `/anime/${review.animeId}/info` : `/manga/${review.mangaId}/info`,
+        fromUser: req.user.id,
+      });
+    }
+
     res.json({ success: true, data: review, liked: idx === -1 });
   } catch (error) {
     console.error('LikeReview error:', error);

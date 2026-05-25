@@ -1,5 +1,6 @@
 const Friendship = require('../models/Friendship');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 exports.sendRequest = async (req, res) => {
   try {
@@ -25,6 +26,16 @@ exports.sendRequest = async (req, res) => {
       recipient: userId,
     });
 
+    const recipientUser = await User.findById(userId).select('username');
+    await Notification.create({
+      user: userId,
+      type: 'friend_request',
+      title: `${req.user.username} sent you a friend request`,
+      body: '',
+      link: '/friends',
+      fromUser: req.user.id,
+    });
+
     res.status(201).json({ success: true, data: friendship });
   } catch (err) {
     if (err.code === 11000) return res.status(400).json({ success: false, message: 'Request already exists' });
@@ -46,6 +57,15 @@ exports.acceptRequest = async (req, res) => {
 
     friendship.status = 'accepted';
     await friendship.save();
+
+    await Notification.create({
+      user: friendship.requester,
+      type: 'friend_accepted',
+      title: `${req.user.username} accepted your friend request`,
+      body: 'You are now friends!',
+      link: '/friends',
+      fromUser: req.user.id,
+    });
 
     res.json({ success: true, data: friendship });
   } catch (err) {

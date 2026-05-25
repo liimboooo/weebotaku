@@ -163,14 +163,11 @@ export default function SettingsPage() {
     ? new Date(currentUser.memberSince).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
     : "May 24, 2026";
 
-  const toggle = (id) => {
-    setSettings(prev => {
-      const next = { ...prev, [id]: !prev[id] };
-      if (id === "newsNotifications" && next.newsNotifications === false) {
-        clearNotifications();
-      }
-      return next;
-    });
+  const toggle = async (id) => {
+    setSettings(prev => ({ ...prev, [id]: !prev[id] }));
+    if (id === "newsNotifications" && settings.newsNotifications === true) {
+      await clearNotifications();
+    }
   };
   const setTog = (id, val) => setSettings(prev => ({ ...prev, [id]: val }));
 
