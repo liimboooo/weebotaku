@@ -93,16 +93,7 @@ export default function News() {
           <div className="news-header">
             <div>
               <h1 className="news-title">Anime News Hub</h1>
-              <p className="news-subtitle">Trending episodes, trailers, community discussions & industry news</p>
-            </div>
-            <div className="news-header-actions">
-              <button className={`news-sidebar-toggle ${sidebarOpen ? "active" : ""}`} onClick={() => setSidebarOpen(s => !s)}>
-                <BarChart3 size={16} />
-                <span>Sidebar</span>
-              </button>
-              <button className="news-refresh" onClick={refresh} disabled={loading}>
-                {loading ? "Loading..." : "Refresh"}
-              </button>
+              <p className="news-subtitle">Trending episodes, trailers & industry news</p>
             </div>
           </div>
 
