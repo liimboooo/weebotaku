@@ -138,7 +138,7 @@ export default function News() {
                     <div className="news-hero-badges">
                       {hero.kind === "trailer" && <span className="hero-badge hero-badge-trailer"><Play size={12} /> Trailer</span>}
                       {hero.kind === "airing" && <span className="hero-badge hero-badge-airing"><Tv size={12} /> Airing</span>}
-                      {hero.kind === "anime" && <span className="hero-badge hero-badge-trending"><TrendingUp size={12} /> Trending</span>}
+                      {(hero.kind === "trending" || hero.kind === "anime") && <span className="hero-badge hero-badge-trending"><TrendingUp size={12} /> Trending</span>}
                       {hero.sourceLabel && <span className="hero-badge hero-badge-source">{hero.sourceLabel}</span>}
                     </div>
                     <h2 className="news-hero-title">{hero.title || hero.name || ""}</h2>
@@ -156,7 +156,7 @@ export default function News() {
                           <Play size={16} /> Watch Trailer
                         </button>
                       )}
-                      {(hero.kind === "anime" || hero.kind === "airing") && (
+                      {(hero.kind === "trending" || hero.kind === "airing" || hero.kind === "anime") && (
                         <button className="hero-action-btn hero-action-info" onClick={() => navigate(`/anime/${hero.id}/info`)}>
                           View Details
                         </button>
