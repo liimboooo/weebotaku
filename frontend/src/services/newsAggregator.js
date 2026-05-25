@@ -1,6 +1,8 @@
 import { fetchAnimeNews } from "./animeNewsApi";
 
 const YOUTUBE_EMBED = process.env.REACT_APP_YOUTUBE_EMBED_BASE || "https://www.youtube.com/embed/";
+const CF_WORKER = "https://anime-proxy.mohamedlimam80000.workers.dev/?url=";
+const FALLBACK_PROXIES = (process.env.REACT_APP_FALLBACK_PROXIES || "").split(",").filter(Boolean);
 
 const cache = new Map();
 const CACHE_TTL = 3 * 60 * 1000;
@@ -26,6 +28,22 @@ function formatTimeAgo(dateStr) {
   return `${days}d ago`;
 }
 
+async function fetchText(url) {
+  const attempts = [
+    () => fetch(CF_WORKER + encodeURIComponent(url)),
+    ...FALLBACK_PROXIES.map(p => () => fetch(p + encodeURIComponent(url))),
+    () => fetch(url),
+  ];
+  for (const attempt of attempts) {
+    try {
+      const res = await attempt();
+      if (!res.ok) continue;
+      return await res.text();
+    } catch {}
+  }
+  return null;
+}
+
 async function fetchYouTubeRSS() {
   const items = [];
   const channels = [
@@ -35,9 +53,8 @@ async function fetchYouTubeRSS() {
   ];
   for (const channel of channels) {
     try {
-      const res = await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`, { signal: AbortSignal.timeout(5000) });
-      if (!res.ok) continue;
-      const text = await res.text();
+      const text = await fetchText(`https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`);
+      if (!text) continue;
       const xml = new DOMParser().parseFromString(text, "text/xml");
       const entries = xml.querySelectorAll("entry");
       for (let i = 0; i < Math.min(3, entries.length); i++) {
