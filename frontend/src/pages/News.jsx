@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Heart, MessageCircle, Play, TrendingUp, Calendar, ChevronLeft, ChevronRight, X, Clock, Eye, Share2, BarChart3, Users, Tv, Newspaper, Globe } from "lucide-react";
+import { ExternalLink, MessageCircle, Play, TrendingUp, Calendar, X, Clock, BarChart3, Tv, Newspaper, Globe } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
 import Loader from "../components/Loader";
@@ -223,7 +223,6 @@ export default function News() {
                         whileHover={{ y: -4 }}
                         onClick={() => {
                           if (item.kind === "trailer" || item.source === "youtube") setTrailerModal(item);
-                          else if (item.id?.startsWith("reddit-") && item.url) window.open(item.url, "_blank");
                           else if (item.id?.startsWith("rss-") && item.url) window.open(item.url, "_blank");
                           else if (item.kind === "anime" || item.animeId) navigate(`/anime/${item.animeId || item.id}/info`);
                         }}
@@ -253,7 +252,7 @@ export default function News() {
                 </h2>
                 <div className="news-feed-controls">
                   <div className="news-feed-tabs">
-                    {[{ key: "all", label: "All" }, { key: "new_episode", label: "Episodes" }, { key: "trailer", label: "Trailers" }, { key: "discussion", label: "Community" }, { key: "article", label: "News" }].map(tab => (
+                    {[{ key: "all", label: "All" }, { key: "new_episode", label: "Episodes" }, { key: "trailer", label: "Trailers" }, { key: "article", label: "News" }].map(tab => (
                       <button
                         key={tab.key}
                         className={`feed-tab ${feedFilter === tab.key ? "active" : ""}`}
@@ -290,7 +289,7 @@ export default function News() {
                     {visibleFeed.map((item, i) => (
                       <motion.article
                         key={item.id}
-                        className={`feed-card ${item.source === "youtube" ? "feed-card-trailer" : ""} ${item.source === "reddit" ? "feed-card-reddit" : ""} ${item.source === "rss" ? "feed-card-rss" : ""}`}
+                        className={`feed-card ${item.source === "youtube" ? "feed-card-trailer" : ""} ${item.source === "rss" ? "feed-card-rss" : ""}`}
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: Math.min(i * 0.02, 0.3), duration: 0.3 }}
@@ -376,7 +375,6 @@ export default function News() {
 
 function SourceBadge({ source, label, type }) {
   if (source === "youtube") return <span className="source-badge source-badge-yt"><Play size={12} /> {label || "YouTube"}</span>;
-  if (source === "reddit") return <span className="source-badge source-badge-reddit"><MessageCircle size={12} /> {label || "Reddit"}</span>;
   if (source === "rss") return <span className="source-badge source-badge-rss"><Globe size={12} /> {label || "RSS"}</span>;
   if (type === "new_episode") return <span className="source-badge source-badge-ep"><Tv size={12} /> New Episode</span>;
   if (type === "trending") return <span className="source-badge source-badge-trend"><TrendingUp size={12} /> Trending</span>;

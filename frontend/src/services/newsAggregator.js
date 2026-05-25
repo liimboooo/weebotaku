@@ -18,10 +18,7 @@ const RSS_FEEDS = [
   { url: "https://animecorner.me/feed/", source: "Anime Corner" },
 ];
 
-const REDDIT_SUBREDDITS = [
-  { name: "anime", label: "r/anime" },
-  { name: "manga", label: "r/manga" },
-];
+
 
 const cache = new Map();
 const CACHE_TTL = 3 * 60 * 1000;
@@ -40,7 +37,6 @@ function stripHtml(h) { if (!h) return ""; return h.replace(/<[^>]*>/g, "").repl
 async function fetchWithProxy(url, timeout = 8000) {
   const controllers = [];
   const attempts = [
-    ...(url.startsWith("https://www.reddit.com") ? [() => fetch(url, { headers: { "User-Agent": "AnimeWch/1.0" } })] : []),
     () => fetch(CF_WORKER + encodeURIComponent(url)),
     ...FALLBACK_PROXIES.map(p => () => fetch(p + encodeURIComponent(url))),
     () => fetch(url),
@@ -84,35 +80,6 @@ function formatTimeAgo(dateStr) {
   return `${days}d ago`;
 }
 
-async function fetchReddit() {
-  const items = [];
-  for (const sub of REDDIT_SUBREDDITS) {
-    try {
-      const json = await fetchJSON(`https://www.reddit.com/r/${sub.name}/hot.json?limit=15`);
-      for (const post of json.data.children.slice(0, 12)) {
-        const d = post.data;
-        items.push({
-          id: `reddit-${d.id}`,
-          type: d.url?.match(/\.(jpg|png|gif|mp4)/i) ? "media" : "discussion",
-          source: "reddit",
-          sourceLabel: sub.label,
-          title: d.title,
-          description: d.selftext ? stripHtml(d.selftext).slice(0, 300) : "",
-          image: d.thumbnail && d.thumbnail.startsWith("http") ? d.thumbnail : "",
-          url: `https://reddit.com${d.permalink}`,
-          date: new Date(d.created_utc * 1000).toISOString(),
-          score: d.score,
-          comments: d.num_comments,
-          author: d.author,
-          flair: d.link_flair_text || "",
-          upvoteRatio: d.upvote_ratio,
-        });
-      }
-    } catch {}
-  }
-  return items;
-}
-
 async function fetchYouTubeRSS() {
   const items = [];
   for (const channel of YOUTUBE_CHANNELS) {
@@ -124,7 +91,7 @@ async function fetchYouTubeRSS() {
         const videoId = entry.querySelector("videoId")?.textContent || "";
         const title = entry.querySelector("title")?.textContent || "";
         const desc = entry.querySelector("group description")?.textContent || entry.querySelector("media\\:description")?.textContent || "";
-        const thumbnail = entry.querySelector("media\\:thumbnail")?.getAttribute("url") || `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+        const thumbnail = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
         const pubDate = entry.querySelector("published")?.textContent || new Date().toISOString();
         items.push({
           id: `yt-${videoId}`,
@@ -181,24 +148,21 @@ export async function fetchAggregatedNews() {
   const cached = getCached("aggregated");
   if (cached) return cached;
 
-  const [anilistResult, redditItems, youtubeItems, rssItems] = await Promise.allSettled([
+  const [anilistResult, youtubeItems, rssItems] = await Promise.allSettled([
     fetchAnimeNews(),
-    fetchReddit(),
     fetchYouTubeRSS(),
     fetchRSS(),
   ]);
 
   const anilist = anilistResult.status === "fulfilled" ? anilistResult.value : null;
-  const reddit = redditItems.status === "fulfilled" ? redditItems.value : [];
   const youtube = youtubeItems.status === "fulfilled" ? youtubeItems.value : [];
   const rss = rssItems.status === "fulfilled" ? rssItems.value : [];
 
-  const allNews = [...(anilist?.allNews || []), ...reddit, ...youtube, ...rss];
+  const allNews = [...(anilist?.allNews || []), ...youtube, ...rss];
   allNews.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const result = {
     allNews,
-    reddit,
     youtube,
     rss,
     featured: buildFeatured(anilist, youtube),
@@ -206,7 +170,7 @@ export async function fetchAggregatedNews() {
     airing: anilist?.animeAiring || [],
     popular: anilist?.animePopular || [],
     seasonal: buildSeasonal(anilist),
-    rails: buildRails(allNews, youtube, reddit, anilist),
+    rails: buildRails(allNews, youtube, anilist),
   };
 
   setCache("aggregated", result);
@@ -221,16 +185,16 @@ function buildFeatured(anilist, youtube) {
     }
   }
   if (youtube?.length) {
-    for (const v of youtube.slice(0, 3)) {
+    for (const v of youtube.slice(0, 2)) {
       items.push({ kind: "trailer", ...v });
     }
   }
   if (anilist?.animeAiring?.length) {
-    for (const a of anilist.animeAiring.slice(0, 3)) {
+    for (const a of anilist.animeAiring.slice(0, 2)) {
       items.push({ kind: "airing", ...a, date: new Date().toISOString() });
     }
   }
-  return items.sort(() => Math.random() - 0.5).slice(0, 6);
+  return items.sort(() => Math.random() - 0.5).slice(0, 5);
 }
 
 function buildSeasonal(anilist) {
@@ -238,7 +202,7 @@ function buildSeasonal(anilist) {
   return anilist.animeUpcoming.slice(0, 10);
 }
 
-function buildRails(allNews, youtube, reddit, anilist) {
+function buildRails(allNews, youtube, anilist) {
   const rails = [];
 
   if (youtube?.length) {
@@ -252,11 +216,6 @@ function buildRails(allNews, youtube, reddit, anilist) {
   const articles = allNews.filter(n => n.source === "rss");
   if (articles.length) {
     rails.push({ id: "industry", icon: "📰", label: "Industry News", items: articles.slice(0, 10) });
-  }
-
-  const discussions = reddit.filter(n => n.type === "discussion");
-  if (discussions.length) {
-    rails.push({ id: "community", icon: "💬", label: "Community Posts", items: discussions.slice(0, 10) });
   }
 
   if (anilist?.animeAiring?.length) {
