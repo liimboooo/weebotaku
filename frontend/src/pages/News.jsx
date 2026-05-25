@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, MessageCircle, Play, TrendingUp, Calendar, X, Clock, BarChart3, Tv, Newspaper } from "lucide-react";
+import { TrendingUp, Play, Tv, Newspaper, X, BarChart3, Calendar, ExternalLink, Clock } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
 import Loader from "../components/Loader";
@@ -83,7 +83,7 @@ export default function News() {
   const hero = featured[heroIndex] || null;
 
   const SIDEBAR_SECTIONS = [
-    { id: "airing", icon: Tv, label: "Airing Now", items: data?.airing?.slice(0, 5) || [] },
+    { id: "airing", icon: Tv, label: "Airing", items: data?.airing?.slice(0, 5) || [] },
     { id: "trending-side", icon: TrendingUp, label: "Trending", items: data?.trending?.slice(0, 5) || [] },
     { id: "popular-side", icon: BarChart3, label: "Popular", items: data?.popular?.slice(0, 5) || [] },
   ];
@@ -288,53 +288,67 @@ export default function News() {
                   </div>
                 ) : (
                   <>
-                    {visibleFeed.map((item, i) => (
-                      <motion.article
-                        key={item.id}
-                        className={`feed-card ${item.source === "youtube" ? "feed-card-trailer" : ""}`}
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: Math.min(i * 0.02, 0.3), duration: 0.3 }}
-                        onClick={() => {
-                          if (item.embedUrl) setTrailerModal(item);
-                          else if (item.url?.startsWith("http")) window.open(item.url, "_blank");
-                          else if (item.animeId) navigate(`/anime/${item.animeId}/info`);
-                        }}
-                      >
-                        <div className="feed-card-media">
-                          {item.image && (
-                            <div className="feed-card-img">
-                              <img src={item.image} alt="" loading="lazy" />
-                              {item.embedUrl && <div className="feed-card-play"><Play size={18} /></div>}
-                              <div className="feed-card-img-gradient" />
+                    {visibleFeed.map((item, i) => {
+                        const cardType = item.source === "youtube" ? "trailer" :
+                          item.type === "new_episode" ? "episode" :
+                          item.type === "trending" || item.type === "popular" ? "trending" :
+                          "article";
+                        return (
+                          <motion.article
+                            key={item.id}
+                            className={`feed-card feed-card-${cardType}`}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: Math.min(i * 0.025, 0.35), duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                            onClick={() => {
+                              if (item.embedUrl) setTrailerModal(item);
+                              else if (item.url?.startsWith("http")) window.open(item.url, "_blank");
+                              else if (item.animeId) navigate(`/anime/${item.animeId}/info`);
+                            }}
+                          >
+                            <div className="feed-card-glow" />
+                            <div className="feed-card-media">
+                              <div className="feed-card-img">
+                                <img src={item.image || item.coverImage?.large || ""} alt="" loading="lazy" />
+                                <div className="feed-card-img-gradient" />
+                                {item.embedUrl && (
+                                  <div className="feed-card-play">
+                                    <div className="feed-card-play-ring" />
+                                    <Play size={22} className="feed-card-play-icon" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="feed-card-badge">
+                                {cardType === "trailer" && <><Play size={10} /> Trailer</>}
+                                {cardType === "episode" && <><Tv size={10} /> Episode</>}
+                                {cardType === "article" && <><Newspaper size={10} /> News</>}
+                                {cardType === "trending" && <><TrendingUp size={10} /> Trending</>}
+                              </div>
+                              {item.score && cardType === "trending" && (
+                                <div className="feed-card-score">
+                                  <Star size={11} /> {item.score}
+                                </div>
+                              )}
                             </div>
-                          )}
-                          <div className="feed-card-type-icon">
-                            {item.source === "youtube" || item.embedUrl ? <Play size={14} /> :
-                             item.type === "new_episode" ? <Tv size={14} /> :
-                             item.type === "article" ? <Newspaper size={14} /> :
-                             item.type === "announcement" ? <Calendar size={14} /> : <Newspaper size={14} />}
-                          </div>
-                        </div>
-                        <div className="feed-card-body">
-                          <div className="feed-card-header">
-                            <SourceBadge source={item.source} label={item.sourceLabel} type={item.type} />
-                            <span className="feed-card-time">{formatTimestamp(item.date)}</span>
-                          </div>
-                          <h3 className="feed-card-title">{item.title || item.name || ""}</h3>
-                          {item.description && <p className="feed-card-desc">{item.description.slice(0, 200)}</p>}
-                          <div className="feed-card-footer">
-                            <div className="feed-card-stats">
-                              {item.score && <span className="feed-card-stat"><Star size={11} /> {item.score}</span>}
-                              {item.trending && <span className="feed-card-stat"><TrendingUp size={11} /> #{item.trending}</span>}
+                            <div className="feed-card-body">
+                              <div className="feed-card-meta">
+                                <span className="feed-card-source">{item.sourceLabel || "AniList"}</span>
+                                <span className="feed-card-dot">·</span>
+                                <span className="feed-card-time">{formatTimestamp(item.date)}</span>
+                              </div>
+                              <h3 className="feed-card-title">{item.title || item.name || ""}</h3>
+                              {item.description && cardType !== "trailer" && (
+                                <p className="feed-card-desc">{item.description.slice(0, 150)}</p>
+                              )}
+                              <div className="feed-card-tags">
+                                {item.genres?.slice(0, 2).map(g => <span key={g} className="feed-card-tag">{g}</span>)}
+                                {item.score && cardType !== "trending" && <span className="feed-card-tag feed-card-tag-score"><Star size={9} /> {item.score}</span>}
+                                {item.trending && cardType !== "trending" && <span className="feed-card-tag">#{item.trending}</span>}
+                              </div>
                             </div>
-                            <div className="feed-card-meta">
-                              {item.author && <span className="feed-card-author">{item.author}</span>}
-                            </div>
-                          </div>
-                        </div>
-                      </motion.article>
-                    ))}
+                          </motion.article>
+                      );
+                    })}
                     <div ref={feedEndRef} className="feed-sentinel" />
                   </>
                 )}
@@ -343,40 +357,38 @@ export default function News() {
 
             <aside className={`news-sidebar ${sidebarOpen ? "open" : ""}`}>
               <div className="news-sidebar-inner">
-                <div className="news-sidebar-header">
-                  <h3><BarChart3 size={16} /> Discover</h3>
-                  <button className="news-sidebar-close" onClick={() => setSidebarOpen(false)}><X size={16} /></button>
+                <div className="news-sidebar-top">
+                  <h3 className="news-sidebar-title">Discover</h3>
+                  <button className="news-sidebar-close" onClick={() => setSidebarOpen(false)}><X size={14} /></button>
                 </div>
-                {SIDEBAR_SECTIONS.map(section => (
-                  <div key={section.id} className="sidebar-section">
-                    <div className="sidebar-section-header">
-                      <section.icon size={14} />
-                      <span>{section.label}</span>
-                    </div>
-                    <div className="sidebar-section-list">
-                      {section.items.map(item => (
-                        <div
-                          key={item.id}
-                          className="sidebar-item"
-                          onClick={() => navigate(`/anime/${item.id}/info`)}
-                        >
-                          <div className="sidebar-item-img">
-                            <img src={item.image || item.coverImage?.large || ""} alt={item.title || item.name || ""} loading="lazy" />
+                <div className="news-sidebar-sections">
+                  {SIDEBAR_SECTIONS.map(section => (
+                    <div key={section.id} className="sidebar-group">
+                      <div className="sidebar-group-header">
+                        <section.icon size={12} />
+                        <span>{section.label}</span>
+                      </div>
+                      <div className="sidebar-group-list">
+                        {section.items.map(item => (
+                          <div key={item.id} className="sidebar-entry" onClick={() => navigate(`/anime/${item.id}/info`)}>
+                            <div className="sidebar-entry-img">
+                              <img src={item.image || item.coverImage?.large || ""} alt="" loading="lazy" />
+                            </div>
+                            <div className="sidebar-entry-info">
+                              <span className="sidebar-entry-title">{item.title || item.name || ""}</span>
+                              <span className="sidebar-entry-sub">
+                                {item.score && <>Score {item.score}</>}
+                                {item.trending && <> · #{item.trending}</>}
+                                {item.nextEpisode?.ep && <> · Ep {item.nextEpisode.ep}</>}
+                              </span>
+                            </div>
                           </div>
-                          <div className="sidebar-item-body">
-                            <span className="sidebar-item-title">{item.title || item.name || ""}</span>
-                            <span className="sidebar-item-meta">
-                              {item.score && <>Score: {item.score}</>}
-                              {item.trending && <> • #{item.trending} trending</>}
-                              {item.nextEpisode?.ep && <> • Ep {item.nextEpisode.ep}</>}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                      {section.items.length === 0 && <span className="sidebar-empty">No data</span>}
+                        ))}
+                        {section.items.length === 0 && <span className="sidebar-group-empty">—</span>}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </aside>
           </div>
@@ -384,15 +396,6 @@ export default function News() {
       </div>
     </AnimatedPage>
   );
-}
-
-function SourceBadge({ source, label, type }) {
-  if (source === "youtube") return <span className="source-badge source-badge-yt"><Play size={12} /> {label || "YouTube"}</span>;
-  if (type === "new_episode") return <span className="source-badge source-badge-ep"><Tv size={12} /> New Episode</span>;
-  if (type === "trending") return <span className="source-badge source-badge-trend"><TrendingUp size={12} /> Trending</span>;
-  if (type === "announcement") return <span className="source-badge source-badge-ann"><Calendar size={12} /> Announcement</span>;
-  if (type === "popular") return <span className="source-badge source-badge-pop"><BarChart3 size={12} /> Popular</span>;
-  return <span className="source-badge source-badge-default">{type || "News"}</span>;
 }
 
 function Star(props) {
