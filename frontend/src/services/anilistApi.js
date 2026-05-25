@@ -1,7 +1,7 @@
 ﻿import { statusLabel, STATUS_MAP, FORMAT_MAP, LS_CACHE_PREFIX } from "../utils/constants";
 
-const CACHE_TTL = 10 * 60 * 1000;
-const DETAIL_CACHE_TTL = 30 * 60 * 1000;
+const CACHE_TTL = 2 * 60 * 1000;
+const DETAIL_CACHE_TTL = 10 * 60 * 1000;
 const CACHE_MAX = 100;
 const cache = new Map();
 const LS_PREFIX = LS_CACHE_PREFIX;
@@ -58,7 +58,7 @@ export async function gql(query, variables = {}, retries = 2) {
       }
       const j = await r.json();
       if (j.errors) throw new Error(j.errors[0]?.message || "AniList error");
-      setCache(key, j.data, DETAIL_CACHE_TTL);
+      setCache(key, j.data);
       return j.data;
     } catch (e) {
       if (attempt < retries) { await new Promise(res => setTimeout(res, 1000)); continue; }
@@ -145,7 +145,7 @@ export async function fetchTopAnime(page = 1, filter = "") {
 export async function fetchSeasonalAnime(year, season) {
   const y = year || new Date().getFullYear();
   const s = (season || getCurrentSeason()).toUpperCase();
-  const q = `query($yr:Int,$seas:MediaSeason){Page(page:1,perPage:25){pageInfo{hasNextPage}media(season:$seas,seasonYear:$yr,type:ANIME,sort:POPULARITY_DESC){${ANIME_FIELDS}}}}`;
+  const q = `query($yr:Int,$seas:MediaSeason){Page(page:1,perPage:25){pageInfo{hasNextPage}media(season:$seas,seasonYear:$yr,type:ANIME,sort:SCORE_DESC){${ANIME_FIELDS}}}}`;
   const data = await gql(q, { yr: y, seas: s });
   return { data: (data?.Page?.media || []).map(mapAnime), pagination: { hasNextPage: data?.Page?.pageInfo?.hasNextPage || false, currentPage: 1 } };
 }

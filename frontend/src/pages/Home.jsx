@@ -65,16 +65,24 @@ function useAnimeData() {
           setSpotlight(queue[0]);
         }
 
+        const usedIds = new Set();
+
         if (highRated.status === "fulfilled") {
-          setTopTen(highRated.value.data.slice(0, 10));
+          const list = highRated.value.data.slice(0, 10);
+          list.forEach(a => usedIds.add(a.id));
+          setTopTen(list);
         }
 
         if (trending.status === "fulfilled") {
-          setTrendingList(trending.value.data.slice(0, 15));
+          const list = trending.value.data.filter(a => !usedIds.has(a.id)).slice(0, 15);
+          list.forEach(a => usedIds.add(a.id));
+          setTrendingList(list);
         }
 
         if (seasonal.status === "fulfilled") {
-          setSeasonPicks(seasonal.value.data.slice(0, 20));
+          const list = seasonal.value.data.filter(a => !usedIds.has(a.id)).slice(0, 20);
+          list.forEach(a => usedIds.add(a.id));
+          setSeasonPicks(list);
         }
 
         if (genres.status === "fulfilled") {
@@ -82,11 +90,14 @@ function useAnimeData() {
         }
 
         if (upcoming.status === "fulfilled") {
-          setUpcomingList(upcoming.value.data.slice(0, 12));
+          const list = upcoming.value.data.filter(a => !usedIds.has(a.id)).slice(0, 12);
+          list.forEach(a => usedIds.add(a.id));
+          setUpcomingList(list);
         }
 
         if (popular.status === "fulfilled") {
-          setPopularList(popular.value.data.slice(0, 20));
+          const list = popular.value.data.filter(a => !usedIds.has(a.id)).slice(0, 20);
+          setPopularList(list);
         }
       } catch {}
       setLoading(false);
@@ -108,12 +119,13 @@ function useAnimeData() {
 
   const refreshTrending = useCallback(async () => {
     try {
-      const r = await fetchTopAnime(1, "");
+      const r = await fetchTopAnime(1, "trending");
       if (r.data.length) {
-        setTrendingList(r.data.slice(10, 25));
+        const used = new Set(topTen.map(a => a.id));
+        setTrendingList(r.data.filter(a => !used.has(a.id)).slice(0, 15));
       }
     } catch {}
-  }, []);
+  }, [topTen]);
 
   return { spotlight, topTen, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending };
 }
