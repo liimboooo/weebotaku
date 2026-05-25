@@ -271,6 +271,7 @@ UserSchema.methods.toFullProfile = function () {
 };
 
 UserSchema.methods.toRemoteProfile = function () {
+  const showWatchlist = this.settings?.showWatchlistPublic !== false;
   return {
     id: this._id,
     username: this.username,
@@ -283,15 +284,15 @@ UserSchema.methods.toRemoteProfile = function () {
     memberSince: this.memberSince,
     role: this.role,
     createdAt: this.createdAt,
-    watchlistCount: this.watchlist.length,
+    watchlistCount: showWatchlist ? this.watchlist.length : 0,
     readlistCount: this.readlist.length,
-    historyCount: this.watchHistory.length,
-    ratingsCount: this.ratings ? this.ratings.size : 0,
-    likedCount: this.likedAnime.length,
-    watchlist: this.watchlist,
-    likedAnime: this.likedAnime,
-    ratings: this.ratings ? Object.fromEntries(this.ratings) : {},
-    watchHistory: this.watchHistory.slice(0, 20),
+    historyCount: showWatchlist ? this.watchHistory.length : 0,
+    ratingsCount: showWatchlist ? (this.ratings ? this.ratings.size : 0) : 0,
+    likedCount: showWatchlist ? this.likedAnime.length : 0,
+    watchlist: showWatchlist ? this.watchlist : [],
+    likedAnime: showWatchlist ? this.likedAnime : [],
+    ratings: showWatchlist ? (this.ratings ? Object.fromEntries(this.ratings) : {}) : {},
+    watchHistory: showWatchlist ? this.watchHistory.slice(0, 20) : [],
     favorites: this.favorites || [],
     activities: (this.activities || []).slice(0, 30),
     collections: (this.collections || []).filter(c => c.isPublic),
