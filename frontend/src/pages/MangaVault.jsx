@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLoading } from "../components/LoadingProvider";
@@ -488,8 +489,7 @@ export default function MangaVault() {
         </main>
 
 
-        <AnimatePresence>
-          {preview && (
+        {preview && createPortal(
             <div className="mv-modal-overlay" onClick={() => { setPreview(null); setReaderError(""); }}>
               <motion.div
                 className="mv-modal"
@@ -549,9 +549,9 @@ export default function MangaVault() {
                   </div>
                 </div>
               </motion.div>
-            </div>
+            </div>,
+            document.body
           )}
-        </AnimatePresence>
 
         {readerOpen && (
           <MangaReader

@@ -1,5 +1,6 @@
 ﻿import { STORAGE_KEYS } from '../../utils/constants';
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart,
@@ -622,8 +623,7 @@ export default function AMVsEdits() {
         </div>
 
         {/* Player Modal */}
-        <AnimatePresence>
-          {selectedEdit && (
+          {selectedEdit && createPortal(
             <motion.div
               className="pin-overlay"
               initial={{ opacity: 0 }}
@@ -838,9 +838,9 @@ export default function AMVsEdits() {
                   </div>
                 </div>
               </motion.div>
-            </motion.div>
+            </motion.div>,
+            document.body
           )}
-        </AnimatePresence>
 
         {/* Creator Bar */}
         {selectedEdit && creatorEdits.length > 0 && (
@@ -871,8 +871,7 @@ export default function AMVsEdits() {
         )}
 
         {/* Upload Modal */}
-        <AnimatePresence>
-          {isUploadOpen && (
+          {isUploadOpen && createPortal(
             <motion.div
               className="modal-overlay"
               initial={{ opacity: 0 }}
@@ -1043,9 +1042,9 @@ export default function AMVsEdits() {
                   )}
                 </form>
               </motion.div>
-            </motion.div>
+            </motion.div>,
+            document.body
           )}
-        </AnimatePresence>
 
       </>
       )}

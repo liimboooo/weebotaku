@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Globe,
@@ -423,8 +424,7 @@ export default function WatchTogetherCreative() {
           )}
         </main>
 
-        <AnimatePresence>
-          {isConfigOpen && (
+          {isConfigOpen && createPortal(
             <div className="config-overlay">
               <motion.div
                 className="config-modal"
@@ -493,9 +493,9 @@ export default function WatchTogetherCreative() {
                   </button>
                 </div>
               </motion.div>
-            </div>
+            </div>,
+            document.body
           )}
-        </AnimatePresence>
       </div>
     </AnimatedPage>
   );

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import authService from "../services/authService";
@@ -908,7 +909,7 @@ export default function SettingsPage() {
 
         {!loading && (
           <>
-        {showDeleteModal && (
+        {showDeleteModal && createPortal(
           <div className="st-modal-overlay" onClick={() => setShowDeleteModal(false)}>
             <div className="st-modal" onClick={e => e.stopPropagation()}>
               <div className="st-modal-head">
@@ -930,7 +931,8 @@ export default function SettingsPage() {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {toast && (

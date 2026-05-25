@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, pointerWithin } from '@dnd-kit/core';
 import { Save, LogIn, Search, X, Loader, Sparkles, Download } from 'lucide-react';
@@ -530,8 +531,7 @@ export default function TierLists() {
         </DndContext>
         )}
 
-        <AnimatePresence>
-          {confirmReset && (
+          {confirmReset && createPortal(
             <motion.div className="tl-confirm-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setConfirmReset(false)}>
               <motion.div className="tl-confirm-modal" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} onClick={e => e.stopPropagation()}>
                 <h3>Reset Tier List?</h3>
@@ -541,9 +541,9 @@ export default function TierLists() {
                   <button className="tl-confirm-delete" onClick={handleReset}>Reset</button>
                 </div>
               </motion.div>
-            </motion.div>
+            </motion.div>,
+            document.body
           )}
-        </AnimatePresence>
       </div>
     </AnimatedPage>
   );
