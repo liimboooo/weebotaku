@@ -63,10 +63,6 @@ function storeUserData(user) {
   if (user.mangaProgress) {
     localStorage.setItem(STORAGE_KEYS.MANGA_PROGRESS, JSON.stringify(user.mangaProgress));
   }
-
-  if (user.progression) {
-    localStorage.setItem(STORAGE_KEYS.USER_PROGRESSION, JSON.stringify(user.progression));
-  }
 }
 
 class AuthService {
@@ -160,10 +156,6 @@ class AuthService {
     return response;
   }
 
-  async syncProgression(progression) {
-    return api.post('/auth/sync-progression', progression);
-  }
-
   async logout() {
     try {
       await api.get('/auth/logout');
@@ -174,7 +166,6 @@ class AuthService {
       STORAGE_KEYS.MEMBER_SINCE, STORAGE_KEYS.SOCIAL_LINKS,
       STORAGE_KEYS.WATCHLIST, STORAGE_KEYS.MANGA_READ_LIST, STORAGE_KEYS.WATCH_HISTORY,
       STORAGE_KEYS.USER_RATINGS, STORAGE_KEYS.LIKED_ANIME, STORAGE_KEYS.MANGA_PROGRESS,
-      STORAGE_KEYS.USER_PROGRESSION,
     ];
     keysToRemove.forEach(k => localStorage.removeItem(k));
   }

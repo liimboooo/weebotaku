@@ -36,29 +36,6 @@
 .toast-error { border-left: 3px solid #7c3aed; }
 .toast-info { border-left: 3px solid #7c3aed; }
 
-.toast-xp {
-  border-left: 3px solid #8b5cf6;
-  min-width: auto;
-  padding: 10px 14px;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 14px;
-  color: #8b5cf6;
-  animation: toast-in 0.3s var(--ease-out), xp-pulse 0.4s ease-out 0.3s;
-}
-.toast-xp svg { color: #8b5cf6; }
-.toast-xp-label {
-  font-size: 11px;
-  font-weight: 500;
-  color: rgba(255,255,255,0.5);
-}
-
-@keyframes xp-pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.04); }
-  100% { transform: scale(1); }
-}
-
 .toast-close {
   margin-left: auto;
   background: none;

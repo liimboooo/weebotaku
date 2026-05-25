@@ -2,13 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import leaderboardService from "../../services/leaderboardService";
 import {
-  Trophy, Flame, BookOpen, Star, Zap, Crown, Medal,
+  Trophy, BookOpen, Star, Crown, Medal,
 } from "lucide-react";
 import "./LeaderboardPage.css";
 
 const BOARDS = [
-  { key: "xp", label: "XP", icon: Zap, field: "xp" },
-  { key: "streak", label: "Streaks", icon: Flame, field: "longestStreak" },
   { key: "watchlist", label: "Watchlist", icon: BookOpen, field: "count" },
   { key: "reviews", label: "Reviews", icon: Star, field: "count" },
 ];
@@ -17,7 +15,7 @@ const RANK_COLORS = ["#fbbf24", "#94a3b8", "#cd7f32"];
 
 export default function LeaderboardPage() {
   const navigate = useNavigate();
-  const [board, setBoard] = useState("xp");
+  const [board, setBoard] = useState("watchlist");
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 

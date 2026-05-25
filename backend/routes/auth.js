@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   register, login, googleLogin, getMe, getUserByUsername,
-  searchUsers, updateProfile, syncProgression,
+  searchUsers, updateProfile,
   updateMangaProgress, updateListStatus, logout,
   getSettings, updateSettings, changePassword, deleteAccount,
   setup2FA, verifySetup2FA, disable2FA, verifyLogin2FA, get2FAStatus,
@@ -23,7 +23,6 @@ router.get('/me', protect, getMe);
 router.get('/by-username/:username', getUserByUsername);
 router.get('/search', searchUsers);
 router.put('/updateprofile', protect, updateProfile);
-router.post('/sync-progression', protect, syncProgression);
 router.put('/manga-progress', protect, updateMangaProgress);
 router.put('/list-status', protect, updateListStatus);
 router.get('/logout', protect, logout);

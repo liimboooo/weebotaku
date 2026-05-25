@@ -1,6 +1,5 @@
 ﻿import api from './api';
 import { STORAGE_KEYS } from '../utils/constants';
-import { awardWatchEpisode, awardRateAnime, awardLikeAnime, awardWatchlistAdd, awardDailyBonus } from './progression';
 
 function isLoggedIn() {
   return !!localStorage.getItem(STORAGE_KEYS.TOKEN);
@@ -53,9 +52,6 @@ export function addToWatchlist(item) {
       listStatus: entry.listStatus,
     }).catch(() => {});
   }
-
-  awardWatchlistAdd();
-  awardDailyBonus();
 
   return next;
 }
@@ -204,9 +200,6 @@ export function addToWatchHistory(animeId, episode, animeName, animeImg, positio
     }).catch(() => {});
   }
 
-  awardWatchEpisode();
-  awardDailyBonus();
-
   window.dispatchEvent(new CustomEvent(STORAGE_KEYS.PROFILE_DATA_CHANGED));
 }
 
@@ -226,9 +219,6 @@ export function rateAnime(animeId, rating) {
   if (isLoggedIn()) {
     api.post(`/anime/${animeId}/rate`, { rating }).catch(() => {});
   }
-
-  awardRateAnime();
-  awardDailyBonus();
 
   window.dispatchEvent(new CustomEvent(STORAGE_KEYS.PROFILE_DATA_CHANGED));
 }
@@ -254,9 +244,6 @@ export function toggleLikeAnime(animeId) {
   if (isLoggedIn()) {
     api.post(`/anime/${animeId}/like`).catch(() => {});
   }
-
-  awardLikeAnime();
-  awardDailyBonus();
 
   window.dispatchEvent(new CustomEvent(STORAGE_KEYS.PROFILE_DATA_CHANGED));
 
@@ -340,11 +327,6 @@ export async function syncFromBackend() {
     // Manga progress
     if (u.mangaProgress && Object.keys(u.mangaProgress).length > 0) {
       localStorage.setItem(STORAGE_KEYS.MANGA_PROGRESS, JSON.stringify(u.mangaProgress));
-    }
-
-    // Progression
-    if (u.progression) {
-      localStorage.setItem(STORAGE_KEYS.USER_PROGRESSION, JSON.stringify(u.progression));
     }
 
     window.dispatchEvent(new CustomEvent(STORAGE_KEYS.PROFILE_DATA_CHANGED));

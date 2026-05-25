@@ -217,30 +217,6 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// @route   POST /api/auth/sync-progression
-exports.syncProgression = async (req, res) => {
-  try {
-    const { xp, currentStreak, longestStreak, lastActiveDate, lastDailyBonus } = req.body;
-    const user = await User.findById(req.user.id);
-
-    const serverXP = user.progression?.xp || 0;
-    const clientXP = xp || 0;
-
-    user.progression = {
-      xp: Math.max(serverXP, clientXP),
-      currentStreak: Math.max(user.progression?.currentStreak || 0, currentStreak || 0),
-      longestStreak: Math.max(user.progression?.longestStreak || 0, longestStreak || 0),
-      lastActiveDate: lastActiveDate || user.progression?.lastActiveDate || '',
-      lastDailyBonus: lastDailyBonus || user.progression?.lastDailyBonus || '',
-    };
-
-    await user.save();
-    res.json({ success: true, progression: user.progression });
-  } catch (error) {
-    console.error('SyncProgression error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
 
 // @route   PUT /api/auth/manga-progress
 exports.updateMangaProgress = async (req, res) => {
@@ -294,13 +270,12 @@ exports.searchUsers = async (req, res) => {
     }
     const users = await User.find({ username: { $regex: q.trim(), $options: 'i' } })
       .limit(8)
-      .select('username avatar bio progression memberSince');
+      .select('username avatar bio memberSince');
     res.json({ success: true, users: users.map(u => ({
       id: u._id,
       username: u.username,
       avatar: u.avatar,
       bio: u.bio,
-      level: Math.floor(Math.sqrt((u.progression?.xp || 0) / 100)) + 1,
     })) });
   } catch (error) {
     console.error('SearchUsers error:', error);

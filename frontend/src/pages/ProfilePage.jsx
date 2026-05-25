@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getAnimeById } from "../data/animeData";
 import { removeFromWatchlist, updateListStatus } from "../services/storage";
 import authService from "../services/authService";
+import friendService from "../services/friendService";
 import AnimatedPage from "../components/AnimatedPage";
 import {
   Bookmark, Eye, Clock, CheckCircle, Pause, XCircle,
@@ -55,6 +56,8 @@ export default function ProfilePage() {
   const [favorites, setFavorites] = useState([]);
   const [socialLinks, setSocialLinks] = useState({});
   const [userResults, setUserResults] = useState([]);
+  const [remoteUserId, setRemoteUserId] = useState(null);
+  const [friendStatus, setFriendStatus] = useState("none");
 
   const loadProfileData = useCallback(async () => {
     if (isRemoteProfile) return;
@@ -124,6 +127,11 @@ export default function ProfilePage() {
             const u = res.user;
             setUsername(u.username);
             setAvatar(u.avatar || ""); setAvatarPreview(u.avatar || "");
+            const uid = u.id || u._id;
+            setRemoteUserId(uid);
+            friendService.getFriendshipStatus(uid).then(r => {
+              if (r?.data?.status) setFriendStatus(r.data.status);
+            }).catch(() => {});
             if (u.watchlist) {
               setWatchlist(u.watchlist.map(item => ({
                 id: item.animeId, name: item.name, img: item.img,
@@ -297,9 +305,21 @@ export default function ProfilePage() {
               <button className="upp-action-btn" onClick={() => { if (navigator.share) navigator.share({ title: username, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
                 <Share2 size={14} /> Share
               </button>
-              {isRemoteProfile && (
-                <button className="upp-action-btn upp-action-btn--follow">
-                  <UserPlus size={14} /> Follow
+              {isRemoteProfile && remoteUserId && (
+                <button
+                  className="upp-action-btn upp-action-btn--follow"
+                  onClick={async () => {
+                    if (friendStatus === "none") {
+                      await friendService.sendRequest(remoteUserId);
+                      setFriendStatus("pending");
+                    } else if (friendStatus === "accepted") {
+                      await friendService.removeFriend(remoteUserId);
+                      setFriendStatus("none");
+                    }
+                  }}
+                >
+                  <UserPlus size={14} />
+                  {friendStatus === "none" ? "Follow" : friendStatus === "pending" ? "Pending" : "Friends"}
                 </button>
               )}
               {isOwnProfile && (
