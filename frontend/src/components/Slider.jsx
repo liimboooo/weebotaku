@@ -66,7 +66,7 @@ function SliderCard({ item, onClick }) {
             <Bookmark size={12} fill={inWishlist ? "currentColor" : "none"} />
           </button>
         </div>
-        <p className="slider-card-desc">{item.synopsis || ""}</p>
+        <p className="slider-card-desc" dangerouslySetInnerHTML={{ __html: item.synopsis || '' }} />
         <div className="slider-card-foot">
           <span className="slider-card-rating"><Star size={10} fill="currentColor" /> {item.rating?.toFixed(1)}</span>
           <span className="slider-card-ch"><Play size={10} /> {item.episodes} eps</span>
