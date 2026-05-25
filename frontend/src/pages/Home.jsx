@@ -234,7 +234,12 @@ function ContinueWatchingRow() {
 
   useEffect(() => {
     const stored = loadWatchHistory();
-    const recent = stored.slice(0, 6);
+    const seen = new Set();
+    const recent = stored.filter(item => {
+      if (seen.has(item.animeId)) return false;
+      seen.add(item.animeId);
+      return true;
+    }).slice(0, 6);
     Promise.allSettled(
       recent.map(async item => {
         try {
