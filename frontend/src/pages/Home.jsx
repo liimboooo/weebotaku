@@ -49,13 +49,14 @@ function useAnimeData() {
   useEffect(() => {
     async function load() {
       try {
-        const [topAir, topAll, seasonal, genres, upcoming, popular] = await Promise.allSettled([
+        const [topAir, highRated, seasonal, genres, upcoming, popular, trending] = await Promise.allSettled([
           fetchTopAnime(1, "airing"),
           fetchTopAnime(1, ""),
           fetchSeasonalAnime(),
           fetchAnimeGenres(),
           fetchTopAnime(1, "upcoming"),
           fetchTopAnime(1, "bypopularity"),
+          fetchTopAnime(1, "trending"),
         ]);
 
         if (topAir.status === "fulfilled" && topAir.value.data.length > 0) {
@@ -64,9 +65,12 @@ function useAnimeData() {
           setSpotlight(queue[0]);
         }
 
-        if (topAll.status === "fulfilled") {
-          setTopTen(topAll.value.data.slice(0, 10));
-          setTrendingList(topAll.value.data.slice(10, 25));
+        if (highRated.status === "fulfilled") {
+          setTopTen(highRated.value.data.slice(0, 10));
+        }
+
+        if (trending.status === "fulfilled") {
+          setTrendingList(trending.value.data.slice(0, 15));
         }
 
         if (seasonal.status === "fulfilled") {

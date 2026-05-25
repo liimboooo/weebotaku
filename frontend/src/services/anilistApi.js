@@ -133,8 +133,11 @@ export async function fetchSearchAnime(query, page = 1, options = {}) {
 }
 
 export async function fetchTopAnime(page = 1, filter = "") {
-  const sort = filter === "bypopularity" ? "POPULARITY_DESC" : "TRENDING_DESC";
-  const q = `query($page:Int){Page(page:$page,perPage:25){pageInfo{hasNextPage currentPage}media(sort:${sort},type:ANIME){${ANIME_FIELDS}}}}`;
+  const sort = filter === "bypopularity" ? "POPULARITY_DESC"
+    : filter === "airing" || filter === "upcoming" || filter === "trending" ? "TRENDING_DESC"
+    : "SCORE_DESC";
+  const statusFilter = filter === "upcoming" ? ",status:NOT_YET_RELEASED" : "";
+  const q = `query($page:Int){Page(page:$page,perPage:25){pageInfo{hasNextPage currentPage}media(sort:${sort},type:ANIME${statusFilter}){${ANIME_FIELDS}}}}`;
   const data = await gql(q, { page: Math.min(page, 50) });
   return { data: (data?.Page?.media || []).map(mapAnime), pagination: { hasNextPage: data?.Page?.pageInfo?.hasNextPage || false, currentPage: page } };
 }
