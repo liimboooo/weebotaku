@@ -57,6 +57,7 @@ export default function ProfilePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [favorites, setFavorites] = useState([]);
   const [socialLinks, setSocialLinks] = useState({});
+  const [userResults, setUserResults] = useState([]);
 
   const loadProfileData = useCallback(async () => {
     if (isRemoteProfile) return;
@@ -231,14 +232,29 @@ export default function ProfilePage() {
     Dropped: watchlist.filter(w => w.listStatus === "Dropped").length,
   }), [watchlist]);
 
+  const isUserSearch = searchQuery.startsWith("@");
+
   const filteredAnime = useMemo(() => {
+    if (isUserSearch) return [];
     let list = activeTab === "all" ? watchlist : watchlist.filter(w => w.listStatus === activeTab);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(w => w.name?.toLowerCase().includes(q));
     }
     return list;
-  }, [watchlist, activeTab, searchQuery]);
+  }, [watchlist, activeTab, searchQuery, isUserSearch]);
+
+  useEffect(() => {
+    if (!isUserSearch) { setUserResults([]); return; }
+    const q = searchQuery.slice(1).trim();
+    if (!q) { setUserResults([]); return; }
+    let cancelled = false;
+    (async () => {
+      const users = await authService.searchUsers(q);
+      if (!cancelled) setUserResults(users);
+    })();
+    return () => { cancelled = true; };
+  }, [searchQuery, isUserSearch]);
 
   const userAvatar = avatarPreview || avatar;
   const userInitial = username.charAt(0).toUpperCase();
@@ -340,15 +356,15 @@ export default function ProfilePage() {
                 <h2 className="upp-watchlist-title">Watchlist</h2>
                 <div className="upp-watchlist-header-right">
                   <span className="upp-watchlist-count">{filteredAnime.length} anime</span>
-                  <div className="upp-search-box">
-                    <Search size={14} />
-                    <input
-                      className="upp-search-input"
-                      placeholder="Search..."
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                    />
-                  </div>
+                    <div className="upp-search-box">
+                      <Search size={14} />
+                      <input
+                        className="upp-search-input"
+                        placeholder={isUserSearch ? "Search users..." : "Search anime or @user..."}
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                      />
+                    </div>
                 </div>
               </div>
 
@@ -368,7 +384,43 @@ export default function ProfilePage() {
                 ))}
               </div>
 
-              {loading ? (
+              {isUserSearch ? (
+                userResults.length > 0 ? (
+                  <div className="upp-list">
+                    {userResults.map((u, i) => (
+                      <button
+                        key={u.id || u._id || i}
+                        className="upp-list-row"
+                        onClick={() => navigate(`/profile/${u.username}`)}
+                      >
+                        <div className="upp-list-img">
+                          {u.avatar ? (
+                            <img src={u.avatar} alt={u.username} style={{ borderRadius: "50%" }} />
+                          ) : (
+                            <div className="upp-list-img-placeholder" style={{ borderRadius: "50%", background: "#333", display: "flex", alignItems: "center", justifyContent: "center", color: "#999", fontSize: 18 }}>
+                              {u.username?.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="upp-list-info">
+                          <h4 className="upp-list-title">{u.username}</h4>
+                          <span className="upp-list-meta">@{u.username}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="upp-empty">
+                    <div className="upp-empty-icon-bg">
+                      <Search size={60} />
+                    </div>
+                    <h3 className="upp-empty-title">No Users Found</h3>
+                    <p className="upp-empty-msg">
+                      {searchQuery.length > 1 ? `No users matching "${searchQuery.slice(1)}".` : "Type a username to search."}
+                    </p>
+                  </div>
+                )
+              ) : loading ? (
                 <div className="upp-skeleton-list">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <div className="upp-skeleton-row" key={i}>
