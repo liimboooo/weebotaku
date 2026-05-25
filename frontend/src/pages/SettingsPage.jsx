@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import authService from "../services/authService";
 import settingsService from "../services/settingsService";
+import { clearNotifications } from "../services/notificationService";
 import AnimatedPage from "../components/AnimatedPage";
 import SyncCard from "../components/SyncCard";
 import {
@@ -162,7 +163,15 @@ export default function SettingsPage() {
     ? new Date(currentUser.memberSince).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
     : "May 24, 2026";
 
-  const toggle = (id) => setSettings(prev => ({ ...prev, [id]: !prev[id] }));
+  const toggle = (id) => {
+    setSettings(prev => {
+      const next = { ...prev, [id]: !prev[id] };
+      if (id === "newsNotifications" && next.newsNotifications === false) {
+        clearNotifications();
+      }
+      return next;
+    });
+  };
   const setTog = (id, val) => setSettings(prev => ({ ...prev, [id]: val }));
 
   const updateProfile = (key, val) => {

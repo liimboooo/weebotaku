@@ -40,7 +40,13 @@ function formatTimeAgo(dateStr) {
 
 export async function fetchAggregatedNews() {
   const cached = getCached("aggregated");
-  if (cached) return cached;
+  if (cached) {
+    try {
+      const s = JSON.parse(localStorage.getItem("animewch_settings"));
+      if (!s || s.newsNotifications !== false) queueNotifications(cached);
+    } catch { queueNotifications(cached); }
+    return cached;
+  }
 
   const anilist = await fetchAnimeNews().catch(() => null);
 
@@ -66,10 +72,8 @@ export async function fetchAggregatedNews() {
 
   try {
     const s = JSON.parse(localStorage.getItem("animewch_settings"));
-    if (s && s.newsNotifications === false) return result;
-  } catch {}
-
-  queueNotifications(result);
+    if (!s || s.newsNotifications !== false) queueNotifications(result);
+  } catch { queueNotifications(result); }
 
   setCache("aggregated", result);
   return result;
