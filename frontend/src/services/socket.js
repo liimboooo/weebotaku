@@ -18,7 +18,8 @@ export function connectSocket() {
   const token = localStorage.getItem('token');
   if (!token) return null;
 
-  socket = io(`${SOCKET_URL}/api/socket`, {
+  socket = io(SOCKET_URL, {
+    path: '/api/socket',
     auth: { token },
     transports: ['websocket', 'polling'],
     reconnection: true,

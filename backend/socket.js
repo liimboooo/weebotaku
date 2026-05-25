@@ -10,6 +10,7 @@ function initIO(httpServer) {
   if (io) return io;
 
   io = new Server(httpServer, {
+    path: '/api/socket',
     cors: {
       origin: true,
       credentials: true,
