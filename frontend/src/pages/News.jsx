@@ -25,7 +25,7 @@ export default function News() {
   const [feedSort, setFeedSort] = useState("latest");
   const [visibleCount, setVisibleCount] = useState(20);
   const [feedSearch, setFeedSearch] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
   const [trailerModal, setTrailerModal] = useState(null);
   const feedEndRef = useRef(null);
   const heroTimerRef = useRef(null);

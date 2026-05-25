@@ -860,10 +860,21 @@
 .news-sidebar {
   width: 270px;
   flex-shrink: 0;
-  position: sticky;
-  top: 90px;
-  align-self: flex-start;
-  overflow: visible;
+}
+@media (min-width: 1025px) {
+  .news-sidebar {
+    position: sticky;
+    top: 90px;
+    align-self: flex-start;
+    max-height: calc(100vh - 110px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(124,58,237,0.15) transparent;
+  }
+  .news-sidebar::-webkit-scrollbar { width: 3px; }
+  .news-sidebar::-webkit-scrollbar-track { background: transparent; }
+  .news-sidebar::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.15); border-radius: 3px; }
+  .news-sidebar:not(.open) { display: none; }
 }
 .news-sidebar-inner {
   background: rgba(255,255,255,0.012);
