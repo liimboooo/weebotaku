@@ -1,6 +1,14 @@
 const Comment = require('../models/Comment');
 const Notification = require('../models/Notification');
 const { emitNotification } = require('./notifyHelper');
+const { getIO } = require('../socket');
+
+function broadcastToAnime(animeId, event, data) {
+  try {
+    const io = getIO();
+    if (io) io.to(`anime:${animeId}`).emit(event, data);
+  } catch {}
+}
 
 exports.getComments = async (req, res) => {
   try {
@@ -60,6 +68,11 @@ exports.createComment = async (req, res) => {
 
     await comment.populate('user', 'username avatar role');
 
+    broadcastToAnime(comment.animeId, 'new-comment', {
+      action: 'created',
+      comment,
+    });
+
     res.status(201).json({ success: true, data: comment });
   } catch (error) {
     console.error('CreateComment error:', error);
@@ -95,7 +108,7 @@ exports.likeComment = async (req, res) => {
         type: 'comment_like',
         title: `${req.user.username} liked your comment`,
         body: comment.content.slice(0, 100),
-        link: `/anime/${comment.animeId}/info`,
+        link: `/anime/${comment.animeId}?comment=${comment._id}`,
         fromUser: req.user.id,
       });
       emitNotification(comment.user, notif);
@@ -161,11 +174,16 @@ exports.replyToComment = async (req, res) => {
         type: 'comment_reply',
         title: `${req.user.username} replied to your comment`,
         body: content.trim().slice(0, 100),
-        link: `/anime/${comment.animeId}/info`,
+        link: `/anime/${comment.animeId}?comment=${comment._id}`,
         fromUser: req.user.id,
       });
       emitNotification(comment.user, notif);
     }
+
+    broadcastToAnime(comment.animeId, 'new-comment', {
+      action: 'replied',
+      comment,
+    });
 
     res.status(201).json({ success: true, data: comment });
   } catch (error) {

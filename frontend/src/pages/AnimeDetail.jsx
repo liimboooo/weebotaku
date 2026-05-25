@@ -10,6 +10,7 @@ import { fetchAnimeRecommendations } from "../services/anilistApi";
 import { loadWatchHistory, addToWatchHistory } from "../services/storage";
 import commentService from "../services/commentService";
 import authService from "../services/authService";
+import { getSocket, joinAnimeRoom, leaveAnimeRoom } from "../services/socket";
 import Comments from "../components/Comments";
 import "./Feeds/AnimeWatch.css";
 
@@ -103,6 +104,43 @@ export default function AnimeDetail() {
       .catch(() => {})
       .finally(() => setCommentsLoading(false));
   }, [id, selectedEp, mapComment]);
+
+  useEffect(() => {
+    if (commentsLoading || comments.length === 0) return;
+    const commentId = searchParams.get('comment');
+    if (!commentId) return;
+    const el = document.getElementById(`comment-${commentId}`);
+    if (el) {
+      setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+    }
+  }, [commentsLoading, comments.length, searchParams]);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket?.connected) return;
+
+    joinAnimeRoom(id);
+
+    const handler = (data) => {
+      if (!data?.comment) return;
+      if (data.action === 'created') {
+        const mapped = mapComment(data.comment);
+        setComments(prev => {
+          if (prev.some(c => c.id === mapped.id)) return prev;
+          return [mapped, ...prev];
+        });
+      } else if (data.action === 'replied') {
+        const mapped = mapComment(data.comment);
+        setComments(prev => prev.map(c => c.id === mapped.id ? mapped : c));
+      }
+    };
+
+    socket.on('new-comment', handler);
+    return () => {
+      leaveAnimeRoom(id);
+      socket.off('new-comment', handler);
+    };
+  }, [id, mapComment]);
 
   const handleAddComment = useCallback(async (text) => {
     const res = await commentService.createComment(parseInt(id), text, { episode: selectedEp });

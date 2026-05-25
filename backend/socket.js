@@ -35,6 +35,15 @@ function initIO(httpServer) {
     if (socket.userId) {
       socket.join(`user:${socket.userId}`);
     }
+
+    socket.on('join-anime', (animeId) => {
+      if (animeId) socket.join(`anime:${animeId}`);
+    });
+
+    socket.on('leave-anime', (animeId) => {
+      if (animeId) socket.leave(`anime:${animeId}`);
+    });
+
     socket.on('disconnect', () => {});
   });
 

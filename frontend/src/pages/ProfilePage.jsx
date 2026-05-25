@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { getAnimeById } from "../data/animeData";
 import { removeFromWatchlist, updateListStatus } from "../services/storage";
 import authService from "../services/authService";
 import friendService from "../services/friendService";
+import { getFriendStatusCache } from "../services/socket";
 import AnimatedPage from "../components/AnimatedPage";
 import {
   Bookmark, Eye, Clock, CheckCircle, Pause, XCircle,
   Share2, UserPlus, Plus, Star, Edit3, Trash2,
-  Calendar, LogOut, Search,
+  Calendar, LogOut, Search, Settings,
   Heart, Film, BookOpen, Globe, MessageCircle,
 } from "lucide-react";
 import "./ProfilePage.css";
@@ -47,8 +47,6 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("all");
   const [watchlist, setWatchlist] = useState([]);
   const [rated, setRated] = useState({});
-  const [history, setHistory] = useState([]);
-  const [loadedAnime, setLoadedAnime] = useState({});
   const [showStatusMenu, setShowStatusMenu] = useState(null);
   const [joinDate, setJoinDate] = useState("");
   const [loading, setLoading] = useState(true);
@@ -58,6 +56,7 @@ export default function ProfilePage() {
   const [userResults, setUserResults] = useState([]);
   const [remoteUserId, setRemoteUserId] = useState(null);
   const [friendStatus, setFriendStatus] = useState("none");
+  const [friendshipId, setFriendshipId] = useState(null);
 
   const loadProfileData = useCallback(async () => {
     if (isRemoteProfile) return;
@@ -79,13 +78,6 @@ export default function ProfilePage() {
         if (u.ratings) setRated(u.ratings);
         if (u.favorites) setFavorites(u.favorites);
         if (u.socialLinks) setSocialLinks(u.socialLinks || {});
-        if (u.watchHistory) {
-          setHistory(u.watchHistory.slice(0, 8).map(h => ({
-            animeId: h.animeId, episode: h.episode,
-            timestamp: new Date(h.timestamp).getTime(),
-            animeName: h.animeName || "", animeImg: h.animeImg || "",
-          })));
-        }
         if (u.memberSince || u.createdAt) {
           const d = new Date(u.memberSince || u.createdAt);
           if (!isNaN(d.getTime())) {
@@ -98,24 +90,6 @@ export default function ProfilePage() {
     setLoading(false);
   }, [isRemoteProfile]);
 
-  useEffect(() => {
-    const ids = new Set();
-    watchlist.forEach(item => ids.add(item.id));
-    Object.keys(rated).forEach(id => ids.add(parseInt(id)));
-    history.forEach(h => ids.add(h.animeId));
-    favorites.forEach(f => ids.add(f.animeId));
-    const idsArr = [...ids].filter(Boolean);
-    if (idsArr.length === 0) return;
-    let cancelled = false;
-    (async () => {
-      const results = await Promise.all(idsArr.map(id => getAnimeById(id)));
-      if (cancelled) return;
-      const map = {};
-      idsArr.forEach((id, i) => { if (results[i]) map[id] = results[i]; });
-      setLoadedAnime(prev => ({ ...prev, ...map }));
-    })();
-    return () => { cancelled = true; };
-  }, [watchlist, rated, history, favorites]);
 
   useEffect(() => {
     if (isRemoteProfile) {
@@ -129,9 +103,18 @@ export default function ProfilePage() {
             setAvatar(u.avatar || ""); setAvatarPreview(u.avatar || "");
             const uid = u.id || u._id;
             setRemoteUserId(uid);
-            friendService.getFriendshipStatus(uid).then(r => {
-              if (r?.data?.status) setFriendStatus(r.data.status);
-            }).catch(() => {});
+            const cached = getFriendStatusCache()[uid];
+            if (cached) {
+              setFriendStatus(cached.status);
+              setFriendshipId(cached.friendshipId);
+            } else {
+              friendService.getFriendshipStatus(uid).then(r => {
+                if (r?.data) {
+                  setFriendStatus(r.data.status);
+                  setFriendshipId(r.data.friendshipId || null);
+                }
+              }).catch(() => {});
+            }
             if (u.watchlist) {
               setWatchlist(u.watchlist.map(item => ({
                 id: item.animeId, name: item.name, img: item.img,
@@ -143,13 +126,6 @@ export default function ProfilePage() {
             if (u.ratings) setRated(u.ratings);
             if (u.favorites) setFavorites(u.favorites);
             if (u.socialLinks) setSocialLinks(u.socialLinks || {});
-            if (u.watchHistory) {
-              setHistory(u.watchHistory.slice(0, 8).map(h => ({
-                animeId: h.animeId, episode: h.episode,
-                timestamp: new Date(h.timestamp).getTime(),
-                animeName: h.animeName || "", animeImg: h.animeImg || "",
-              })));
-            }
             if (u.createdAt) {
               const d = new Date(u.createdAt);
               const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -172,6 +148,20 @@ export default function ProfilePage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileUsername]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      const data = e.detail;
+      if (!data?.userId) return;
+      if (remoteUserId && String(data.userId) === String(remoteUserId)) {
+        setFriendStatus(data.status);
+        setFriendshipId(data.friendshipId);
+      }
+    };
+
+    window.addEventListener('friend-status-changed', handler);
+    return () => window.removeEventListener('friend-status-changed', handler);
+  }, [remoteUserId]);
 
   const handleRemove = (animeId, e) => {
     e.stopPropagation();
@@ -306,20 +296,36 @@ export default function ProfilePage() {
                 <Share2 size={14} /> Share
               </button>
               {isRemoteProfile && remoteUserId && (
-                <button
-                  className="upp-action-btn upp-action-btn--follow"
-                  onClick={async () => {
-                    if (friendStatus === "none") {
-                      await friendService.sendRequest(remoteUserId);
-                      setFriendStatus("pending");
-                    } else if (friendStatus === "accepted") {
-                      await friendService.removeFriend(remoteUserId);
-                      setFriendStatus("none");
-                    }
-                  }}
-                >
-                  <UserPlus size={14} />
-                  {friendStatus === "none" ? "Follow" : friendStatus === "pending" ? "Pending" : "Friends"}
+                friendStatus === "pending" && friendshipId ? (
+                  <div className="upp-follow-actions">
+                    <button className="upp-action-btn upp-action-btn--accept" onClick={async () => { await friendService.acceptRequest(friendshipId); setFriendStatus("accepted"); }}>
+                      Accept
+                    </button>
+                    <button className="upp-action-btn upp-action-btn--reject" onClick={async () => { await friendService.rejectRequest(friendshipId); setFriendStatus("none"); setFriendshipId(null); }}>
+                      Reject
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="upp-action-btn upp-action-btn--follow"
+                    onClick={async () => {
+                      if (friendStatus === "none") {
+                        await friendService.sendRequest(remoteUserId);
+                        setFriendStatus("pending");
+                      } else if (friendStatus === "accepted") {
+                        await friendService.removeFriend(remoteUserId);
+                        setFriendStatus("none");
+                      }
+                    }}
+                  >
+                    <UserPlus size={14} />
+                    {friendStatus === "none" ? "Follow" : friendStatus === "pending" ? "Requested" : "Friends"}
+                  </button>
+                )
+              )}
+              {isOwnProfile && (
+                <button className="upp-action-btn" onClick={() => navigate("/settings")}>
+                  <Settings size={14} /> Settings
                 </button>
               )}
               {isOwnProfile && (

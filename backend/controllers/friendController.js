@@ -2,6 +2,20 @@ const Friendship = require('../models/Friendship');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const { emitNotification } = require('./notifyHelper');
+const { getIO } = require('../socket');
+
+function emitFriendStatus(targetUserId, peerUserId, status, friendshipId) {
+  try {
+    const io = getIO();
+    if (io) {
+      io.to(`user:${targetUserId}`).emit('friend-status', {
+        userId: peerUserId,
+        status,
+        friendshipId: friendshipId || null,
+      });
+    }
+  } catch {}
+}
 
 exports.sendRequest = async (req, res) => {
   try {
@@ -37,6 +51,7 @@ exports.sendRequest = async (req, res) => {
       fromUser: req.user.id,
     });
     emitNotification(userId, notif);
+    emitFriendStatus(userId, req.user.id, 'pending', friendship._id);
 
     res.status(201).json({ success: true, data: friendship });
   } catch (err) {
@@ -69,6 +84,7 @@ exports.acceptRequest = async (req, res) => {
       fromUser: req.user.id,
     });
     emitNotification(friendship.requester, notif);
+    emitFriendStatus(friendship.requester, req.user.id, 'accepted', friendship._id);
 
     res.json({ success: true, data: friendship });
   } catch (err) {
@@ -84,6 +100,9 @@ exports.rejectRequest = async (req, res) => {
     if (friendship.recipient.toString() !== req.user.id && friendship.requester.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
+
+    const otherId = friendship.requester.toString() === req.user.id ? friendship.recipient.toString() : friendship.requester.toString();
+    emitFriendStatus(otherId, req.user.id, 'none', null);
 
     await friendship.deleteOne();
     res.json({ success: true, message: 'Request removed' });
@@ -104,6 +123,8 @@ exports.removeFriend = async (req, res) => {
     });
 
     if (!friendship) return res.status(404).json({ success: false, message: 'Not friends' });
+
+    emitFriendStatus(req.params.userId, req.user.id, 'none', null);
 
     await friendship.deleteOne();
     res.json({ success: true, message: 'Friend removed' });

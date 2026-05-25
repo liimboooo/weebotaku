@@ -376,7 +376,7 @@ function CommentItem({ comment, isOPCheck, isVerifiedCheck, onLike, onDislike, o
           onCancel={() => setShowDeleteConfirm(false)}
         />
       )}
-      <div className={`awc-item ${depth > 0 ? "awc-reply" : ""}`}>
+      <div className={`awc-item ${depth > 0 ? "awc-reply" : ""}`} id={`comment-${comment.id}`}>
         {depth === 0 && (
           <div className="awc-item-gutter">
             <CommentAvatar name={comment.user} avatar={comment.avatar} size={40} />
