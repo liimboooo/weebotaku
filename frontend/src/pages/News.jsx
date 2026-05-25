@@ -302,7 +302,7 @@ export default function News() {
                   <button className="news-sidebar-close" onClick={() => setSidebarOpen(false)}><X size={14} /></button>
                 </div>
                 <div className="news-sidebar-sections">
-                  {SIDEBAR_SECTIONS.map(section => (
+                  {SIDEBAR_SECTIONS.filter(s => s.items.length > 0).map(section => (
                     <div key={section.id} className="sidebar-group">
                       <div className="sidebar-group-header">
                         <section.icon size={12} />
@@ -325,7 +325,6 @@ export default function News() {
                             </div>
                           </div>
                         ))}
-                        {section.items.length === 0 && <span className="sidebar-group-empty">—</span>}
                       </div>
                     </div>
                   ))}

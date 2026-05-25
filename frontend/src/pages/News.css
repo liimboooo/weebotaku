@@ -643,7 +643,7 @@
   .news-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (min-width: 1025px) {
-  .news-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .news-grid { grid-template-columns: 1fr 1fr 1fr; }
 }
 
 .news-grid-card {
@@ -776,6 +776,7 @@
   color: #eee;
   margin: 0;
   line-height: 1.3;
+  min-height: 2.6em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
