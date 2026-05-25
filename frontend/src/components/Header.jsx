@@ -26,6 +26,7 @@ import {
 import authService from '../services/authService';
 import { loadWatchHistory } from '../services/storage';
 import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications } from '../services/notificationService';
+import { fetchAggregatedNews } from '../services/newsAggregator';
 import FastSearch from './FastSearch';
 import './Header.css';
 
@@ -116,6 +117,10 @@ export default function Header() {
       window.removeEventListener('user-status-updated', syncStatus);
       window.removeEventListener('notification-added', refreshNotifs);
     };
+  }, []);
+
+  useEffect(() => {
+    fetchAggregatedNews().catch(() => {});
   }, []);
 
   const navigateTo = (path) => {
