@@ -204,15 +204,6 @@ function SpotlightQuote({ quote, onRefresh, loading }) {
   );
 }
 
-  const DEFAULT_EP_DURATION = 1440;
-
-  function formatPosition(sec) {
-    if (!sec || sec <= 0) return null;
-    const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60);
-    return s > 0 ? `${m}m ${s}s` : `${m}m`;
-  }
-
   function formatTimeAgo(ts) {
     const diff = Date.now() - (typeof ts === 'string' ? new Date(ts).getTime() : ts);
     const mins = Math.floor(diff / 60000);
@@ -291,19 +282,8 @@ function ContinueWatchingRow() {
             </div>
             <div className="cw-card-body">
               <h3 className="cw-card-title">{item.name}</h3>
-              <div className="cw-card-bar">
-                {item.position > 0 ? (
-                  <div className="cw-card-fill" style={{ width: `${Math.min(100, (item.position / DEFAULT_EP_DURATION) * 100)}%` }} />
-                ) : (
-                  <div className="cw-card-fill" style={{ width: `${Math.min(100, ((item.episode || 1) / (item.episodes || item.episode || 1)) * 100)}%` }} />
-                )}
-              </div>
               <div className="cw-card-footer">
-                {item.position > 0 ? (
-                  <span className="cw-card-progress">{formatPosition(item.position)} / 24m</span>
-                ) : (
-                  <span className="cw-card-progress">Ep {item.episode || 0}/{item.episodes || '?'}</span>
-                )}
+                <span className="cw-card-progress">Ep {item.episode || 0}</span>
                 {item.timestamp && <span className="cw-card-time">{formatTimeAgo(item.timestamp)}</span>}
               </div>
             </div>
