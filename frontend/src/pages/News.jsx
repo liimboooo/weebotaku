@@ -89,37 +89,11 @@ export default function News() {
   ];
 
   return (
-    <AnimatedPage>
-      <div className="news-page">
-        <Background />
-
-        {trailerModal && (
-          <motion.div
-            className="news-trailer-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setTrailerModal(null)}
-          >
-            <motion.div
-              className="news-trailer-modal"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              onClick={e => e.stopPropagation()}
-            >
-              <button className="news-trailer-close" onClick={() => setTrailerModal(null)}><X size={20} /></button>
-              <iframe
-                src={trailerModal.embedUrl}
-                title={trailerModal.title}
-                frameBorder="0"
-                allow="autoplay; encrypted-media"
-                allowFullScreen
-              />
-            </motion.div>
-          </motion.div>
-        )}
-
-        <div className="news-container">
+    <>
+      <AnimatedPage>
+        <div className="news-page">
+          <Background />
+          <div className="news-container">
           <div className="news-header">
             <div>
               <h1 className="news-title">Anime News Hub</h1>
@@ -408,7 +382,33 @@ export default function News() {
           </div>
         </div>
       </div>
-    </AnimatedPage>
+      </AnimatedPage>
+
+      {trailerModal && (
+        <motion.div
+          className="news-trailer-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setTrailerModal(null)}
+        >
+          <motion.div
+            className="news-trailer-modal"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button className="news-trailer-close" onClick={() => setTrailerModal(null)}><X size={20} /></button>
+            <iframe
+              src={trailerModal.embedUrl}
+              title={trailerModal.title}
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+            />
+          </motion.div>
+        </motion.div>
+      )}
+    </>
   );
 }
 

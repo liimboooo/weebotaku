@@ -271,18 +271,16 @@
   position: relative;
   width: 90%;
   max-width: 800px;
-  max-height: 85vh;
-  aspect-ratio: 16/9;
+  height: min(50.625vw, 85vh, 450px);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 0 80px rgba(124,58,237,0.3);
+  background: #000;
 }
 .news-trailer-modal iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
+  border: 0;
 }
 .news-trailer-close {
   position: absolute;
