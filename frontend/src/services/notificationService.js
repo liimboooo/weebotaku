@@ -15,12 +15,33 @@ function saveLocal(list) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
 
-export function getNotifications() {
-  return getLocalAll().sort((a, b) => b.time - a.time);
+const NOTIF_TYPE_SETTING_MAP = {
+  trailer: 'newsNotifications',
+  trending: 'newsNotifications',
+  episode: ['newsNotifications', 'newEpisodeAlerts'],
+};
+
+function isNotifTypeEnabled(n, settings) {
+  if (!settings) return true;
+  const keys = NOTIF_TYPE_SETTING_MAP[n.type];
+  if (keys) {
+    if (settings.pushNotifs === false) return false;
+    const arr = Array.isArray(keys) ? keys : [keys];
+    if (arr.some(k => settings[k] === false)) return false;
+  }
+  return true;
 }
 
-export function getUnreadCount() {
-  return getLocalAll().filter(n => !n.read).length;
+export function getNotifications(settings) {
+  const all = getLocalAll().sort((a, b) => b.time - a.time);
+  if (!settings) return all;
+  return all.filter(n => isNotifTypeEnabled(n, settings));
+}
+
+export function getUnreadCount(settings) {
+  const all = getLocalAll();
+  if (!settings) return all.filter(n => !n.read).length;
+  return all.filter(n => !n.read && isNotifTypeEnabled(n, settings)).length;
 }
 
 export function addNotification({ title, body, type = "info", link = null }) {

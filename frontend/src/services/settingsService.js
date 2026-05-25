@@ -44,6 +44,7 @@ const settingsService = {
 
   async save(settings) {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    window.dispatchEvent(new Event('settings-changed'));
     try {
       await api.put("/auth/settings", settings);
     } catch (e) {

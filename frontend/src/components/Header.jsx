@@ -54,8 +54,16 @@ export default function Header() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [notifications, setNotifications] = useState(() => getNotifications());
-  const [unreadCount, setUnreadCount] = useState(() => getUnreadCount());
+  const [notifications, setNotifications] = useState(() => {
+    let s;
+    try { s = JSON.parse(localStorage.getItem('animewch_settings')); } catch {}
+    return getNotifications(s);
+  });
+  const [unreadCount, setUnreadCount] = useState(() => {
+    let s;
+    try { s = JSON.parse(localStorage.getItem('animewch_settings')); } catch {}
+    return getUnreadCount(s);
+  });
 
   const notifRef = useRef(null);
   const feedsRef = useRef(null);
@@ -102,13 +110,19 @@ export default function Header() {
     const syncAvatar = () => setProfileImage(localStorage.getItem('userAvatar') || '');
     const syncStatus = () => setStatusMessage(localStorage.getItem('userStatusMessage') || '');
     const syncOnline = () => setIsOnline(navigator.onLine);
-    const refreshNotifs = () => { setNotifications(getNotifications()); setUnreadCount(getUnreadCount()); };
+    const refreshNotifs = () => {
+      let s;
+      try { s = JSON.parse(localStorage.getItem('animewch_settings')); } catch {}
+      setNotifications(getNotifications(s));
+      setUnreadCount(getUnreadCount(s));
+    };
     window.addEventListener('storage', syncAvatar);
     window.addEventListener('profile-avatar-updated', syncAvatar);
     window.addEventListener('online', syncOnline);
     window.addEventListener('offline', syncOnline);
     window.addEventListener('user-status-updated', syncStatus);
     window.addEventListener('notification-added', refreshNotifs);
+    window.addEventListener('settings-changed', refreshNotifs);
     return () => {
       window.removeEventListener('storage', syncAvatar);
       window.removeEventListener('profile-avatar-updated', syncAvatar);
@@ -116,6 +130,7 @@ export default function Header() {
       window.removeEventListener('offline', syncOnline);
       window.removeEventListener('user-status-updated', syncStatus);
       window.removeEventListener('notification-added', refreshNotifs);
+      window.removeEventListener('settings-changed', refreshNotifs);
     };
   }, []);
 
@@ -319,7 +334,7 @@ export default function Header() {
               <div className="notif-dropdown">
                 <div className="notif-dropdown-header">
                   <span>Notifications</span>
-                  <button className="notif-mark-all-btn" onClick={() => { markAllRead(); setNotifications(getNotifications()); setUnreadCount(getUnreadCount()); }}>
+                  <button className="notif-mark-all-btn" onClick={() => { let s; try { s = JSON.parse(localStorage.getItem('animewch_settings')); } catch {} markAllRead(); setNotifications(getNotifications(s)); setUnreadCount(getUnreadCount(s)); }}>
                     Mark all read
                   </button>
                 </div>
@@ -327,9 +342,11 @@ export default function Header() {
                   {notifications.length === 0 && <div className="notif-dropdown-empty">No notifications yet</div>}
                   {notifications.map((n) => (
                     <div key={n.id} className={`notif-item${n.read ? '' : ' unread'}`} onClick={() => {
+                      let s;
+                      try { s = JSON.parse(localStorage.getItem('animewch_settings')); } catch {}
                       markRead(n.id);
-                      setNotifications(getNotifications());
-                      setUnreadCount(getUnreadCount());
+                      setNotifications(getNotifications(s));
+                      setUnreadCount(getUnreadCount(s));
                       if (n.link) navigateTo(n.link);
                     }}>
                       <span className="notif-item-dot" />
