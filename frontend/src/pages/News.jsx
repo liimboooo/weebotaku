@@ -1,263 +1,394 @@
-import React, { useEffect, useState } from "react";
-import AnimatedPage from "../components/AnimatedPage";
-import Loader from "../components/Loader";
-import Background from "../components/Background";
-import { fetchAnimeNews } from "../services/animeNewsApi";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { ExternalLink, Heart, MessageCircle, Play, TrendingUp, Calendar, ChevronLeft, ChevronRight, X, Clock, Eye, Share2, BarChart3, Users, Tv, Newspaper, Globe } from "lucide-react";
+import AnimatedPage from "../components/AnimatedPage";
+import Background from "../components/Background";
+import Loader from "../components/Loader";
+import { fetchAggregatedNews, formatTimestamp } from "../services/newsAggregator";
 import "./News.css";
 
-const TYPE_CONFIG = {
-  new_episode: { label: "New Episode", className: "tag-airing" },
-  trending: { label: "Trending", className: "tag-trending" },
-  announcement: { label: "Announcement", className: "tag-announce" },
-  popular: { label: "Popular", className: "tag-popular" },
-  new_chapter: { label: "New Chapter", className: "tag-chapter" },
-  manga_trending: { label: "Manga Trending", className: "tag-manga-trend" },
-  manga_announcement: { label: "New Manga", className: "tag-manga-announce" },
-  manga_popular: { label: "Popular Manga", className: "tag-manga-pop" },
-};
-
-const MEDIA_TABS = {
-  all: [
-    { key: "all", label: "All News" },
-    { key: "new_episode", label: "New Episodes" },
-    { key: "new_chapter", label: "New Chapters" },
-    { key: "trending", label: "Trending" },
-    { key: "announcement", label: "Announcements" },
-    { key: "popular", label: "Popular" },
-  ],
-  anime: [
-    { key: "all", label: "All Anime" },
-    { key: "new_episode", label: "New Episodes" },
-    { key: "trending", label: "Trending" },
-    { key: "announcement", label: "Announcements" },
-    { key: "popular", label: "Popular" },
-  ],
-  manga: [
-    { key: "all", label: "All Manga" },
-    { key: "new_chapter", label: "New Chapters" },
-    { key: "manga_trending", label: "Trending" },
-    { key: "manga_announcement", label: "New Manga" },
-    { key: "manga_popular", label: "Popular" },
-  ],
-};
+function useDebounce(value, delay) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => { const t = setTimeout(() => setDebounced(value), delay); return () => clearTimeout(t); }, [value, delay]);
+  return debounced;
+}
 
 export default function News() {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [mediaFilter, setMediaFilter] = useState("all");
-  const [activeTab, setActiveTab] = useState("all");
-  const [visibleCount, setVisibleCount] = useState(24);
-  const [newsSearch, setNewsSearch] = useState("");
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [feedFilter, setFeedFilter] = useState("all");
+  const [feedSort, setFeedSort] = useState("latest");
+  const [visibleCount, setVisibleCount] = useState(20);
+  const [feedSearch, setFeedSearch] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [trailerModal, setTrailerModal] = useState(null);
+  const feedEndRef = useRef(null);
+  const heroTimerRef = useRef(null);
+  const debouncedSearch = useDebounce(feedSearch, 300);
 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    fetchAnimeNews()
-      .then((res) => { if (mounted) setData(res); })
-      .catch((err) => { if (mounted) setError(err.message); })
+    fetchAggregatedNews()
+      .then(res => { if (mounted) setData(res); })
+      .catch(err => { if (mounted) setError(err.message); })
       .finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
   }, []);
 
-  const tabs = MEDIA_TABS[mediaFilter] || MEDIA_TABS.all;
-  const validTab = tabs.find(t => t.key === activeTab) ? activeTab : "all";
+  useEffect(() => {
+    if (!data?.featured?.length) return;
+    heroTimerRef.current = setInterval(() => {
+      setHeroIndex(prev => (prev + 1) % data.featured.length);
+    }, 6000);
+    return () => clearInterval(heroTimerRef.current);
+  }, [data?.featured?.length]);
 
-  const filteredNews = (data?.allNews || []).filter((item) => {
-    if (mediaFilter !== "all" && item.mediaType !== mediaFilter) return false;
-    if (validTab !== "all" && item.type !== validTab) return false;
-    if (newsSearch.trim() && !item.title.toLowerCase().includes(newsSearch.toLowerCase())) return false;
+  useEffect(() => {
+    if (!feedEndRef.current) return;
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) setVisibleCount(c => c + 20);
+    }, { rootMargin: "400px" });
+    observer.observe(feedEndRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const filteredFeed = (data?.allNews || []).filter(item => {
+    if (feedFilter !== "all" && item.type !== feedFilter && item.source !== feedFilter) return false;
+    const q = debouncedSearch.toLowerCase().trim();
+    if (q && !item.title?.toLowerCase().includes(q) && !item.description?.toLowerCase().includes(q)) return false;
     return true;
   });
-  const visibleNews = filteredNews.slice(0, visibleCount);
+  const sortedFeed = [...filteredFeed].sort((a, b) => {
+    if (feedSort === "popular") return (b.score || b.trending || 0) - (a.score || a.trending || 0);
+    return new Date(b.date) - new Date(a.date);
+  });
+  const visibleFeed = sortedFeed.slice(0, visibleCount);
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05 },
-    },
-  };
-
-  const itemAnim = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
-  };
-
-  const animeFeatured = data?.animeAiring?.slice(0, 3) || [];
-  const mangaFeatured = data?.mangaPublishing?.slice(0, 3) || [];
-  const showFeatured = mediaFilter !== "manga" && animeFeatured.length > 0;
-  const showMangaFeatured = mediaFilter !== "anime" && mangaFeatured.length > 0;
-
-  const handleCardClick = (item) => {
-    if (item.mediaType === "manga") {
-      navigate(`/browse/manga`);
-    } else if (item.animeId) {
-      navigate(`/anime/${item.animeId}/info`);
-    } else {
-      navigate(`/browse/anime`);
-    }
-  };
-
-  const refresh = () => {
+  const refresh = useCallback(() => {
     setLoading(true);
     setError(null);
-    fetchAnimeNews()
+    setVisibleCount(20);
+    fetchAggregatedNews()
       .then(setData)
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
-  };
+  }, []);
+
+  const featured = data?.featured || [];
+  const hero = featured[heroIndex] || null;
+
+  const SIDEBAR_SECTIONS = [
+    { id: "airing", icon: Tv, label: "Airing Now", items: data?.airing?.slice(0, 5) || [] },
+    { id: "trending-side", icon: TrendingUp, label: "Trending", items: data?.trending?.slice(0, 5) || [] },
+    { id: "popular-side", icon: BarChart3, label: "Popular", items: data?.popular?.slice(0, 5) || [] },
+  ];
 
   return (
     <AnimatedPage>
       <div className="news-page">
         <Background />
+
+        {trailerModal && (
+          <motion.div
+            className="news-trailer-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setTrailerModal(null)}
+          >
+            <motion.div
+              className="news-trailer-modal"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <button className="news-trailer-close" onClick={() => setTrailerModal(null)}><X size={20} /></button>
+              <iframe
+                src={trailerModal.embedUrl}
+                title={trailerModal.title}
+                frameBorder="0"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+              />
+            </motion.div>
+          </motion.div>
+        )}
+
         <div className="news-container">
           <div className="news-header">
             <div>
-              <h1 className="news-title">Anime & Manga News</h1>
-              <p className="news-subtitle">Trending, new episodes, chapters & announcements</p>
+              <h1 className="news-title">Anime News Hub</h1>
+              <p className="news-subtitle">Trending episodes, trailers, community discussions & industry news</p>
             </div>
-            <button className="news-refresh" onClick={refresh} disabled={loading}>
-              {loading ? "Loading..." : "Refresh"}
-            </button>
+            <div className="news-header-actions">
+              <button className={`news-sidebar-toggle ${sidebarOpen ? "active" : ""}`} onClick={() => setSidebarOpen(s => !s)}>
+                <BarChart3 size={16} />
+                <span>Sidebar</span>
+              </button>
+              <button className="news-refresh" onClick={refresh} disabled={loading}>
+                {loading ? "Loading..." : "Refresh"}
+              </button>
+            </div>
           </div>
 
-          {error && <div className="news-error">{error} <button className="news-retry-btn" onClick={refresh}>Retry</button></div>}
-
-          <div className="news-controls">
-            <div className="media-toggle">
-              <button className={`media-btn ${mediaFilter === "all" ? "active" : ""}`} onClick={() => { setMediaFilter("all"); setActiveTab("all"); }}>All</button>
-              <button className={`media-btn ${mediaFilter === "anime" ? "active" : ""}`} onClick={() => { setMediaFilter("anime"); setActiveTab("all"); }}>Anime</button>
-              <button className={`media-btn ${mediaFilter === "manga" ? "active" : ""}`} onClick={() => { setMediaFilter("manga"); setActiveTab("all"); }}>Manga</button>
+          {error && (
+            <div className="news-error">
+              <span>{error}</span>
+              <button className="news-retry-btn" onClick={refresh}>Retry</button>
             </div>
-            <input className="news-search" type="text" placeholder="Search news..." value={newsSearch} onChange={e => { setNewsSearch(e.target.value); setVisibleCount(24); }} />
-          </div>
-
-          {!loading && showFeatured && (
-            <section className="news-featured">
-              <h2 className="section-title">Currently Airing</h2>
-              <div className="featured-grid">
-                {animeFeatured.map((anime, i) => (
-                  <motion.div
-                    key={anime.id}
-                    className="featured-card"
-                    onClick={() => navigate(`/anime/${anime.id}/info`)}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.12, duration: 0.5 }}
-                  >
-                    <div className="featured-backdrop" style={{ backgroundImage: `url(${anime.image})` }} />
-                    <div className="featured-overlay" />
-                    <div className="featured-content">
-                      <span className="featured-badge">Airing</span>
-                      <h3 className="featured-title">{anime.title}</h3>
-                      <div className="featured-meta">
-                        {anime.score && <span>Score: {anime.score}</span>}
-                        {anime.nextEpisode && <span>Ep {anime.nextEpisode.ep} soon</span>}
-                      </div>
-                      <p className="featured-genres">{anime.genres?.slice(0, 3).join(" / ")}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </section>
           )}
 
-          {!loading && showMangaFeatured && (
-            <section className="news-featured">
-              <h2 className="section-title">Publishing Manga</h2>
-              <div className="featured-grid">
-                {mangaFeatured.map((manga, i) => (
-                  <motion.div
-                    key={manga.id}
-                    className="featured-card"
-                    onClick={() => navigate("/browse/manga")}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.12, duration: 0.5 }}
-                  >
-                    <div className="featured-backdrop" style={{ backgroundImage: `url(${manga.image})` }} />
-                    <div className="featured-overlay" />
-                    <div className="featured-content">
-                      <span className="featured-badge featured-badge-manga">Publishing</span>
-                      <h3 className="featured-title">{manga.title}</h3>
-                      <div className="featured-meta">
-                        {manga.score && <span>Score: {manga.score}</span>}
-                        {manga.chapters && <span>{manga.chapters} chapters</span>}
-                      </div>
-                      <p className="featured-genres">{manga.genres?.slice(0, 3).join(" / ")}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          <section className="news-section">
-            <div className="news-tabs">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  className={`news-tab ${validTab === tab.key ? "active" : ""}`}
-                  onClick={() => setActiveTab(tab.key)}
+          {!loading && !error && featured.length > 0 && (
+            <section className="news-hero">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={heroIndex}
+                  className="news-hero-card"
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
                 >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+                  <div
+                    className="news-hero-bg"
+                    style={{ backgroundImage: `url(${hero.image || hero.coverImage?.large || ""})` }}
+                  />
+                  <div className="news-hero-gradient" />
+                  <div className="news-hero-content">
+                    <div className="news-hero-badges">
+                      {hero.kind === "trailer" && <span className="hero-badge hero-badge-trailer"><Play size={12} /> Trailer</span>}
+                      {hero.kind === "airing" && <span className="hero-badge hero-badge-airing"><Tv size={12} /> Airing</span>}
+                      {hero.kind === "anime" && <span className="hero-badge hero-badge-trending"><TrendingUp size={12} /> Trending</span>}
+                      {hero.sourceLabel && <span className="hero-badge hero-badge-source">{hero.sourceLabel}</span>}
+                    </div>
+                    <h2 className="news-hero-title">{hero.title || hero.name || ""}</h2>
+                    <p className="news-hero-desc">
+                      {hero.description || hero.synopsis || ""}
+                    </p>
+                    <div className="news-hero-meta">
+                      {hero.score && <span><Star size={14} /> {hero.score}</span>}
+                      {hero.trending && <span><TrendingUp size={14} /> #{hero.trending}</span>}
+                      {hero.date && <span><Clock size={14} /> {formatTimestamp(hero.date)}</span>}
+                    </div>
+                    <div className="news-hero-actions">
+                      {hero.kind === "trailer" && hero.embedUrl && (
+                        <button className="hero-action-btn hero-action-play" onClick={() => setTrailerModal(hero)}>
+                          <Play size={16} /> Watch Trailer
+                        </button>
+                      )}
+                      {(hero.kind === "anime" || hero.kind === "airing") && (
+                        <button className="hero-action-btn hero-action-info" onClick={() => navigate(`/anime/${hero.id}/info`)}>
+                          View Details
+                        </button>
+                      )}
+                      {hero.url && (
+                        <a href={hero.url} target="_blank" rel="noopener noreferrer" className="hero-action-btn hero-action-link">
+                          <ExternalLink size={14} /> Open
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+              <div className="news-hero-dots">
+                {featured.map((_, i) => (
+                  <button
+                    key={i}
+                    className={`hero-dot ${i === heroIndex ? "active" : ""}`}
+                    onClick={() => setHeroIndex(i)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
 
-            <div className="news-tab-content">
-              {loading ? (
-                <Loader text="Loading news..." />
-              ) : (
-                <motion.div className="news-feed" variants={container} initial="hidden" animate="show">
-                  {visibleNews.map((item) => {
-                    const config = TYPE_CONFIG[item.type] || { label: item.type, className: "" };
-                    return (
+          {!loading && data?.rails?.length > 0 && (
+            <section className="news-rails">
+              {data.rails.map(rail => (
+                <div key={rail.id} className="news-rail">
+                  <div className="news-rail-header">
+                    <span className="news-rail-icon">{rail.icon}</span>
+                    <h3 className="news-rail-title">{rail.label}</h3>
+                  </div>
+                  <div className="news-rail-scroll">
+                    {rail.items.map(item => (
+                      <motion.div
+                        key={item.id}
+                        className="news-rail-card"
+                        whileHover={{ y: -4 }}
+                        onClick={() => {
+                          if (item.kind === "trailer" || item.source === "youtube") setTrailerModal(item);
+                          else if (item.id?.startsWith("reddit-") && item.url) window.open(item.url, "_blank");
+                          else if (item.id?.startsWith("rss-") && item.url) window.open(item.url, "_blank");
+                          else if (item.kind === "anime" || item.animeId) navigate(`/anime/${item.animeId || item.id}/info`);
+                        }}
+                      >
+                        <div className="news-rail-card-img">
+                          <img src={item.image || item.coverImage?.large || ""} alt={item.title || item.name || ""} loading="lazy" />
+                          {item.kind === "trailer" && <div className="news-rail-play"><Play size={20} /></div>}
+                        </div>
+                        <div className="news-rail-card-body">
+                          <h4>{item.title || item.name || ""}</h4>
+                          {item.score && <span className="rail-score">{item.score}</span>}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </section>
+          )}
+
+          <div className="news-main-layout">
+            <div className="news-feed-section">
+              <div className="news-feed-header">
+                <h2 className="news-feed-title">
+                  {feedFilter === "all" ? "All News" : feedFilter}
+                  <span className="news-feed-count">{sortedFeed.length}</span>
+                </h2>
+                <div className="news-feed-controls">
+                  <div className="news-feed-tabs">
+                    {[{ key: "all", label: "All" }, { key: "new_episode", label: "Episodes" }, { key: "trailer", label: "Trailers" }, { key: "discussion", label: "Community" }, { key: "article", label: "News" }].map(tab => (
+                      <button
+                        key={tab.key}
+                        className={`feed-tab ${feedFilter === tab.key ? "active" : ""}`}
+                        onClick={() => { setFeedFilter(tab.key); setVisibleCount(20); }}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="news-feed-sort">
+                    <button className={`feed-sort-btn ${feedSort === "latest" ? "active" : ""}`} onClick={() => setFeedSort("latest")}>Latest</button>
+                    <button className={`feed-sort-btn ${feedSort === "popular" ? "active" : ""}`} onClick={() => setFeedSort("popular")}>Popular</button>
+                  </div>
+                  <input
+                    className="news-feed-search"
+                    type="text"
+                    placeholder="Search feed..."
+                    value={feedSearch}
+                    onChange={e => { setFeedSearch(e.target.value); setVisibleCount(20); }}
+                  />
+                </div>
+              </div>
+
+              <div className="news-feed">
+                {loading ? (
+                  <div className="news-feed-loading"><Loader text="Loading news feed..." /></div>
+                ) : visibleFeed.length === 0 ? (
+                  <div className="news-feed-empty">
+                    <Newspaper size={40} />
+                    <p>No news found</p>
+                  </div>
+                ) : (
+                  <>
+                    {visibleFeed.map((item, i) => (
                       <motion.article
                         key={item.id}
-                        className={`news-card ${item.mediaType === "manga" ? "news-card-manga" : ""}`}
-                        onClick={() => handleCardClick(item)}
-                        variants={itemAnim}
-                        whileHover={{ scale: 1.01 }}
+                        className={`feed-card ${item.source === "youtube" ? "feed-card-trailer" : ""} ${item.source === "reddit" ? "feed-card-reddit" : ""} ${item.source === "rss" ? "feed-card-rss" : ""}`}
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: Math.min(i * 0.02, 0.3), duration: 0.3 }}
+                        onClick={() => {
+                          if (item.embedUrl) setTrailerModal(item);
+                          else if (item.url?.startsWith("http")) window.open(item.url, "_blank");
+                          else if (item.animeId) navigate(`/anime/${item.animeId}/info`);
+                        }}
                       >
-                        <div className="news-card-img">
-                          <img src={item.image} alt={item.animeTitle} loading="lazy" />
-                          {item.mediaType === "manga" && <span className="news-media-badge">MANGA</span>}
-                        </div>
-                        <div className="news-card-body">
-                          <div className="news-card-header">
-                            <span className={`news-tag ${config.className}`}>{config.label}</span>
-                            {item.score && <span className="news-score">{item.score}</span>}
+                        {item.image && (
+                          <div className="feed-card-img">
+                            <img src={item.image} alt="" loading="lazy" />
+                            {item.embedUrl && <div className="feed-card-play"><Play size={18} /></div>}
                           </div>
-                          <h3 className="news-card-title">{item.title}</h3>
-                          <p className="news-card-desc">{item.description}</p>
-                          <div className="news-card-footer">
-                            {item.genres?.slice(0, 3).map((g) => (
-                              <span key={g} className="news-genre">{g}</span>
-                            ))}
+                        )}
+                        <div className="feed-card-body">
+                          <div className="feed-card-header">
+                            <SourceBadge source={item.source} label={item.sourceLabel} type={item.type} />
+                            <span className="feed-card-time">{formatTimestamp(item.date)}</span>
+                          </div>
+                          <h3 className="feed-card-title">{item.title || item.name || ""}</h3>
+                          {item.description && <p className="feed-card-desc">{item.description.slice(0, 200)}</p>}
+                          <div className="feed-card-footer">
+                            {item.score && <span className="feed-card-stat"><Star size={12} /> {item.score}</span>}
+                            {item.trending && <span className="feed-card-stat"><TrendingUp size={12} /> #{item.trending}</span>}
+                            {item.comments != null && <span className="feed-card-stat"><MessageCircle size={12} /> {item.comments}</span>}
+                            {item.author && <span className="feed-card-author">by {item.author}</span>}
+                            <span className="feed-card-source-label">{item.sourceLabel || item.source}</span>
                           </div>
                         </div>
                       </motion.article>
-                    );
-                  })}
-                  {visibleNews.length > 0 && visibleNews.length < filteredNews.length && (
-                    <motion.div className="news-load-more" variants={itemAnim}>
-                      <button className="news-load-more-btn" onClick={() => setVisibleCount(c => c + 24)}>
-                        Load More ({filteredNews.length - visibleNews.length} remaining)
-                      </button>
-                    </motion.div>
-                  )}
-                </motion.div>
-              )}
+                    ))}
+                    <div ref={feedEndRef} className="feed-sentinel" />
+                  </>
+                )}
+              </div>
             </div>
-          </section>
+
+            <aside className={`news-sidebar ${sidebarOpen ? "open" : ""}`}>
+              <div className="news-sidebar-inner">
+                <div className="news-sidebar-header">
+                  <h3><BarChart3 size={16} /> Discover</h3>
+                  <button className="news-sidebar-close" onClick={() => setSidebarOpen(false)}><X size={16} /></button>
+                </div>
+                {SIDEBAR_SECTIONS.map(section => (
+                  <div key={section.id} className="sidebar-section">
+                    <div className="sidebar-section-header">
+                      <section.icon size={14} />
+                      <span>{section.label}</span>
+                    </div>
+                    <div className="sidebar-section-list">
+                      {section.items.map(item => (
+                        <div
+                          key={item.id}
+                          className="sidebar-item"
+                          onClick={() => navigate(`/anime/${item.id}/info`)}
+                        >
+                          <div className="sidebar-item-img">
+                            <img src={item.image || item.coverImage?.large || ""} alt={item.title || item.name || ""} loading="lazy" />
+                          </div>
+                          <div className="sidebar-item-body">
+                            <span className="sidebar-item-title">{item.title || item.name || ""}</span>
+                            <span className="sidebar-item-meta">
+                              {item.score && <>Score: {item.score}</>}
+                              {item.trending && <> • #{item.trending} trending</>}
+                              {item.nextEpisode?.ep && <> • Ep {item.nextEpisode.ep}</>}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                      {section.items.length === 0 && <span className="sidebar-empty">No data</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </aside>
+          </div>
         </div>
       </div>
     </AnimatedPage>
+  );
+}
+
+function SourceBadge({ source, label, type }) {
+  if (source === "youtube") return <span className="source-badge source-badge-yt"><Play size={12} /> {label || "YouTube"}</span>;
+  if (source === "reddit") return <span className="source-badge source-badge-reddit"><MessageCircle size={12} /> {label || "Reddit"}</span>;
+  if (source === "rss") return <span className="source-badge source-badge-rss"><Globe size={12} /> {label || "RSS"}</span>;
+  if (type === "new_episode") return <span className="source-badge source-badge-ep"><Tv size={12} /> New Episode</span>;
+  if (type === "trending") return <span className="source-badge source-badge-trend"><TrendingUp size={12} /> Trending</span>;
+  if (type === "announcement") return <span className="source-badge source-badge-ann"><Calendar size={12} /> Announcement</span>;
+  if (type === "popular") return <span className="source-badge source-badge-pop"><BarChart3 size={12} /> Popular</span>;
+  return <span className="source-badge source-badge-default">{type || "News"}</span>;
+}
+
+function Star(props) {
+  return (
+    <svg width={props.size || 14} height={props.size || 14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill={props.fill || "#ffd700"} stroke="#ffd700" />
+    </svg>
   );
 }
