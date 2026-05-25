@@ -5,7 +5,6 @@ const STORAGE_KEY = STORAGE_KEYS.NOTIFICATIONS;
 const BROADCAST_KEY = 'animewch_broadcast_seen';
 let counter = Date.now();
 let serverNotifs = [];
-let serverUnreadCount = 0;
 
 const BROADCAST_NOTIFS = [
   {
@@ -119,14 +118,36 @@ export function seedBroadcastNotifications() {
   } catch {}
 }
 
+let seenServerIds = new Set();
+let pollTimer = null;
+
 export async function fetchServerNotifications() {
   try {
     const res = await api.get('/notifications');
     if (res?.success && Array.isArray(res.data)) {
+      const prevIds = seenServerIds;
       serverNotifs = res.data;
-      serverUnreadCount = res.unreadCount || 0;
+
+      seenServerIds = new Set(serverNotifs.map(n => n._id));
+
+      for (const n of serverNotifs) {
+        if (!n.read && !prevIds.has(n._id)) {
+          window.dispatchEvent(new CustomEvent("notification-added", {
+            detail: { message: n.title, type: "info" },
+          }));
+        }
+      }
     }
   } catch {}
+}
+
+export function startPolling(interval = 30000) {
+  stopPolling();
+  pollTimer = setInterval(fetchServerNotifications, interval);
+}
+
+export function stopPolling() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
 }
 
 export function getNotifications(settings) {

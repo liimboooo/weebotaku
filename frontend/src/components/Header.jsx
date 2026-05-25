@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import authService from '../services/authService';
 import { loadWatchHistory } from '../services/storage';
-import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications, fetchServerNotifications, seedBroadcastNotifications } from '../services/notificationService';
+import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications, fetchServerNotifications, seedBroadcastNotifications, startPolling, stopPolling } from '../services/notificationService';
 import { fetchAggregatedNews } from '../services/newsAggregator';
 import FastSearch from './FastSearch';
 import './Header.css';
@@ -143,7 +143,13 @@ export default function Header() {
       setNotifications(getNotifications(s));
       setUnreadCount(getUnreadCount(s));
     });
+    startPolling(30000);
+    return () => stopPolling();
   }, []);
+
+  useEffect(() => {
+    document.title = unreadCount > 0 ? `(${unreadCount}) AnimeWch` : 'AnimeWch';
+  }, [unreadCount]);
 
   const navigateTo = (path) => {
     navigate(path);
