@@ -509,7 +509,7 @@ const heroItem = {
   },
 };
 
-function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onNavigate }) {
+function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onWatch, onDetails }) {
   const [imgLoaded, setImgLoaded] = useState(false);
 
   if (!spotlight) return null;
@@ -559,10 +559,10 @@ function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onNavig
           <span>{spotlight.status}</span>
         </motion.div>
         <motion.div variants={heroItem} className="home-hero-actions">
-          <button className="hero-btn-primary" onClick={onNavigate}>
+          <button className="hero-btn-primary" onClick={onWatch}>
             <Play size={16} fill="currentColor" /> Watch Now
           </button>
-          <button className="hero-btn-secondary" onClick={onNavigate}>
+          <button className="hero-btn-secondary" onClick={onDetails}>
             <Plus size={16} /> Details
           </button>
         </motion.div>
@@ -638,7 +638,8 @@ export default function Home() {
         quote={quote}
         onQuoteRefresh={refreshQuote}
         quoteLoading={quoteLoading}
-        onNavigate={() => spotlight && navigate(`/anime/${spotlight.id}/info`)}
+        onWatch={() => spotlight && navigate(`/anime/${spotlight.id}?ep=1`)}
+        onDetails={() => spotlight && navigate(`/anime/${spotlight.id}/info`)}
       />
 
       <div className="home-container">
