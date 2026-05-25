@@ -512,7 +512,7 @@ exports.updateSettings = async (req, res) => {
       'showSubtitles','disableAds','showComments','hideNsfw','showMatureWarnings',
       'showEpisodeProgress','showRatingsCards','emailNotifs','newEpisodes',
       'communityActivity','friendsActivity','systemUpdates','weeklyRecs',
-      'pushNotifs','newEpisodeAlerts','dms','commentReplies','friendRequests',
+      'pushNotifs','newsNotifications','newEpisodeAlerts','dms','commentReplies','friendRequests',
       'achievements','newsletterSub','animeRecs','newFeatures','notifFreq',
       'dndMode','dndFrom','dndTo','publicProfile','showWatchlistPublic',
       'allowMessaging','showActivityStatus','showLastActive','defaultDubbed',

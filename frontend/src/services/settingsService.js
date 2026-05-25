@@ -10,7 +10,7 @@ const DEFAULTS = {
   showEpisodeProgress: true, showRatingsCards: true,
   emailNotifs: true, newEpisodes: true, communityActivity: false,
   friendsActivity: false, systemUpdates: true, weeklyRecs: true,
-  pushNotifs: true, newEpisodeAlerts: true, dms: false,
+  pushNotifs: true, newsNotifications: true, newEpisodeAlerts: true, dms: false,
   commentReplies: true, friendRequests: true, achievements: true,
   newsletterSub: false, animeRecs: false, newFeatures: false,
   notifFreq: "Weekly",

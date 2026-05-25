@@ -163,6 +163,7 @@ const UserSchema = new mongoose.Schema({
     systemUpdates: { type: Boolean, default: true },
     weeklyRecs: { type: Boolean, default: true },
     pushNotifs: { type: Boolean, default: true },
+    newsNotifications: { type: Boolean, default: true },
     newEpisodeAlerts: { type: Boolean, default: true },
     dms: { type: Boolean, default: false },
     commentReplies: { type: Boolean, default: true },
