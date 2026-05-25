@@ -7,7 +7,7 @@ import {
 import { getAnimeById } from "../data/animeData";
 import { findStreamingSource, getEpisodes, getStreamUrls, getEpisodePage } from "../services/animeApi";
 import { fetchAnimeRecommendations } from "../services/anilistApi";
-import { loadWatchHistory } from "../services/storage";
+import { loadWatchHistory, addToWatchHistory } from "../services/storage";
 import commentService from "../services/commentService";
 import authService from "../services/authService";
 import Comments from "../components/Comments";
@@ -238,6 +238,7 @@ export default function AnimeDetail() {
 
   useEffect(() => {
     if (!episode) return;
+    addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img);
     (async () => {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {

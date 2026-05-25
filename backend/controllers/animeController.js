@@ -59,7 +59,13 @@ exports.updateWatchHistory = async (req, res) => {
     const { episodeWatched, animeName, animeImg } = req.body;
     const user = await User.findById(req.user.id);
 
-    // Add to the front of history
+    // Dedup: remove existing entry for same anime+episode, then add to front
+    const existingIdx = user.watchHistory.findIndex(
+      h => h.animeId === animeId && h.episode === episodeWatched
+    );
+    if (existingIdx !== -1) {
+      user.watchHistory.splice(existingIdx, 1);
+    }
     user.watchHistory.unshift({
       animeId,
       episode: episodeWatched,

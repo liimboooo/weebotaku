@@ -200,6 +200,18 @@ function SpotlightQuote({ quote, onRefresh, loading }) {
   );
 }
 
+function formatTimeAgo(ts) {
+  const diff = Date.now() - (typeof ts === 'string' ? new Date(ts).getTime() : ts);
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(ts).toLocaleDateString();
+}
+
 function ContinueWatchingRow() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
@@ -249,36 +261,33 @@ function ContinueWatchingRow() {
   return (
     <section className="home-section">
       <SectionHeader icon={Clock} title="Continue Watching" subtitle="Pick up where you left off" />
-      <motion.div
-        className="upcoming-grid"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-40px" }}
-      >
+      <div className="cw-scroll">
         {items.map((item) => (
           <motion.div
             key={`${item.animeId}-${item.episode}`}
-            className="upcoming-card"
+            className="cw-card"
             onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode}`)}
-            variants={cardSlideUp}
-            whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            whileHover={{ y: -4, transition: { type: "spring", stiffness: 300 } }}
           >
-            <div className="upcoming-card-img">
+            <div className="cw-card-img">
               <img src={item.img} alt={item.name} loading="lazy" />
-              <div className="upcoming-card-badge">
-                <Star size={10} fill="#ffd700" color="#ffd700" /> {item.rating?.toFixed(1)}
-              </div>
+              <div className="cw-card-ep">EP {item.episode}</div>
             </div>
-            <div className="upcoming-card-body">
-              <h3>{item.name}</h3>
-              <div className="upcoming-card-meta">
-                <span className="upcoming-card-type">{item.episode ? `Ep ${item.episode}` : "Continue"}</span>
+            <div className="cw-card-body">
+              <h3 className="cw-card-title">{item.name}</h3>
+              <div className="cw-card-bar">
+                <div className="cw-card-fill" style={{ width: `${Math.min(100, ((item.episode || 1) / (item.episodes || item.episode || 1)) * 100)}%` }} />
+              </div>
+              <div className="cw-card-footer">
+                <span className="cw-card-progress">{item.episode || 0}/{item.episodes || '?'} eps</span>
+                {item.timestamp && <span className="cw-card-time">{formatTimeAgo(item.timestamp)}</span>}
               </div>
             </div>
           </motion.div>
         ))}
-      </motion.div>
+      </div>
     </section>
   );
 }

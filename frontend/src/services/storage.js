@@ -185,7 +185,11 @@ export function removeFromWatchHistory(timestamp) {
 }
 
 export function addToWatchHistory(animeId, episode, animeName, animeImg) {
-  const history = loadWatchHistory();
+  let history = loadWatchHistory();
+  const existingIdx = history.findIndex(h => h.animeId === animeId && h.episode === episode);
+  if (existingIdx !== -1) {
+    history.splice(existingIdx, 1);
+  }
   history.unshift({ animeId, episode, timestamp: Date.now(), animeName: animeName || "", animeImg: animeImg || "" });
   if (history.length > 100) history.length = 100;
   localStorage.setItem(STORAGE_KEYS.WATCH_HISTORY, JSON.stringify(history));

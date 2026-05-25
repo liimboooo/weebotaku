@@ -9,6 +9,7 @@ import {
 import { motion } from "framer-motion";
 import { getEpisodes, getStreamUrls, getEpisodePage } from "../../services/animeApi";
 import { fetchAnimeRecommendations } from "../../services/anilistApi";
+import { addToWatchHistory } from "../../services/storage";
 import Comments from "../../components/Comments";
 import commentService from "../../services/commentService";
 import "./AnimeWatch.css";
@@ -195,6 +196,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
 
   useEffect(() => {
     if (!episode) return;
+    addToWatchHistory(anime.anilistId, episode.episode, animeName, '');
     const cached = streamCache[episode.url];
     if (cached) {
       setError(""); setStreamLoading(false); setStreamUrl(""); setServers(cached); setServerIndex(0);
