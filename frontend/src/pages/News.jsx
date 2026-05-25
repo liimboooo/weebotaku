@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, Play, Tv, Newspaper, X, BarChart3 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
@@ -26,6 +26,8 @@ export default function News() {
   const [feedSearch, setFeedSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
   const [trailerModal, setTrailerModal] = useState(null);
+  const [heroIndex, setHeroIndex] = useState(0);
+  const heroTimerRef = useRef(null);
   const debouncedSearch = useDebounce(feedSearch, 300);
 
   useEffect(() => {
@@ -38,6 +40,14 @@ export default function News() {
     return () => { mounted = false; };
   }, []);
 
+  useEffect(() => {
+    if (sortedFeed.length < 2) return;
+    heroTimerRef.current = setInterval(() => {
+      setHeroIndex(prev => (prev + 1) % Math.min(sortedFeed.length, 5));
+    }, 6000);
+    return () => clearInterval(heroTimerRef.current);
+  }, [sortedFeed.length]);
+
   const filteredFeed = (data?.allNews || []).filter(item => {
     if (feedFilter !== "all" && item.type !== feedFilter && item.source !== feedFilter) return false;
     const q = debouncedSearch.toLowerCase().trim();
@@ -48,6 +58,7 @@ export default function News() {
     if (feedSort === "popular") return (b.score || b.trending || 0) - (a.score || a.trending || 0);
     return new Date(b.date) - new Date(a.date);
   });
+  const heroItems = sortedFeed.slice(0, 5);
   const gridItems = sortedFeed.slice(4, 4 + visibleCount);
 
   const handleItemClick = useCallback((item) => {
@@ -59,6 +70,7 @@ export default function News() {
     setLoading(true);
     setError(null);
     setVisibleCount(8);
+    setHeroIndex(0);
     fetchAggregatedNews()
       .then(setData)
       .catch(e => setError(e.message))
@@ -104,41 +116,58 @@ export default function News() {
             <section className="news-magazine">
               <div className="magazine-grid">
                 <div className="magazine-main">
-                  <div className="magazine-main-card" onClick={() => handleItemClick(sortedFeed[0])}>
-                    <div
-                      className="magazine-main-bg"
-                      style={{ backgroundImage: `url(${sortedFeed[0].bannerImage || sortedFeed[0].coverImage?.extraLarge || sortedFeed[0].image || ""})` }}
-                    />
-                    <div className="magazine-main-gradient" />
-                    <div className="magazine-main-content">
-                      <div className="magazine-main-meta">
-                        <span className="magazine-main-date">
-                          {sortedFeed[0].date ? new Date(sortedFeed[0].date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : ""}
-                        </span>
-                        <span className="magazine-main-category">
-                          {sortedFeed[0].type === "trailer" ? "Trailer" : sortedFeed[0].type === "new_episode" ? "New Episode" : "Trending"}
-                        </span>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={heroItems[heroIndex]?.id || heroIndex}
+                      className="magazine-main-card"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                      onClick={() => handleItemClick(heroItems[heroIndex])}
+                    >
+                      <div
+                        className="magazine-main-bg"
+                        style={{ backgroundImage: `url(${heroItems[heroIndex]?.bannerImage || heroItems[heroIndex]?.coverImage?.extraLarge || heroItems[heroIndex]?.image || ""})` }}
+                      />
+                      <div className="magazine-main-gradient" />
+                      <div className="magazine-main-content">
+                        <div className="magazine-main-meta">
+                          <span className="magazine-main-date">
+                            {heroItems[heroIndex]?.date ? new Date(heroItems[heroIndex].date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : ""}
+                          </span>
+                          <span className="magazine-main-category">
+                            {heroItems[heroIndex]?.type === "trailer" ? "Trailer" : heroItems[heroIndex]?.type === "new_episode" ? "New Episode" : "Trending"}
+                          </span>
+                        </div>
+                        <h2 className="magazine-main-title">{heroItems[heroIndex]?.title || heroItems[heroIndex]?.name || ""}</h2>
+                        <p className="magazine-main-desc">{heroItems[heroIndex]?.description || heroItems[heroIndex]?.synopsis || ""}</p>
+                        <div className="magazine-main-actions">
+                          {heroItems[heroIndex]?.embedUrl && (
+                            <button className="magazine-action-btn magazine-action-play" onClick={e => { e.stopPropagation(); setTrailerModal(heroItems[heroIndex]); }}>
+                              <Play size={16} /> Watch Trailer
+                            </button>
+                          )}
+                          {heroItems[heroIndex]?.animeId && (
+                            <button className="magazine-action-btn magazine-action-info" onClick={e => { e.stopPropagation(); navigate(`/anime/${heroItems[heroIndex].animeId}/info`); }}>
+                              View Details
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <h2 className="magazine-main-title">{sortedFeed[0].title || sortedFeed[0].name || ""}</h2>
-                      <p className="magazine-main-desc">{sortedFeed[0].description || sortedFeed[0].synopsis || ""}</p>
-                      <div className="magazine-main-actions">
-                        {sortedFeed[0].embedUrl && (
-                          <button className="magazine-action-btn magazine-action-play" onClick={e => { e.stopPropagation(); setTrailerModal(sortedFeed[0]); }}>
-                            <Play size={16} /> Watch Trailer
-                          </button>
-                        )}
-                        {sortedFeed[0].animeId && (
-                          <button className="magazine-action-btn magazine-action-info" onClick={e => { e.stopPropagation(); navigate(`/anime/${sortedFeed[0].animeId}/info`); }}>
-                            View Details
-                          </button>
-                        )}
-                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+                  {heroItems.length > 1 && (
+                    <div className="magazine-dots">
+                      {heroItems.map((_, i) => (
+                        <button key={i} className={`magazine-dot ${i === heroIndex ? "active" : ""}`} onClick={() => setHeroIndex(i)} />
+                      ))}
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 <div className="magazine-stack">
-                  {sortedFeed.slice(1, 4).map(item => (
+                  {sortedFeed.filter(item => item.id !== heroItems[heroIndex]?.id).slice(0, 3).map(item => (
                     <div key={item.id} className="magazine-stack-item" onClick={() => handleItemClick(item)}>
                       <div className="magazine-stack-text">
                         <span className="magazine-stack-tag">
@@ -220,22 +249,22 @@ export default function News() {
                       <button
                         key={tab.key}
                         className={`feed-tab ${feedFilter === tab.key ? "active" : ""}`}
-                        onClick={() => { setFeedFilter(tab.key); setVisibleCount(8); }}
+                        onClick={() => { setFeedFilter(tab.key); setVisibleCount(8); setHeroIndex(0); }}
                       >
                         {tab.label}
                       </button>
                     ))}
                   </div>
                   <div className="news-feed-sort">
-                    <button className={`feed-sort-btn ${feedSort === "latest" ? "active" : ""}`} onClick={() => setFeedSort("latest")}>Latest</button>
-                    <button className={`feed-sort-btn ${feedSort === "popular" ? "active" : ""}`} onClick={() => setFeedSort("popular")}>Popular</button>
+                    <button className={`feed-sort-btn ${feedSort === "latest" ? "active" : ""}`} onClick={() => { setFeedSort("latest"); setHeroIndex(0); }}>Latest</button>
+                    <button className={`feed-sort-btn ${feedSort === "popular" ? "active" : ""}`} onClick={() => { setFeedSort("popular"); setHeroIndex(0); }}>Popular</button>
                   </div>
                   <input
                     className="news-feed-search"
                     type="text"
                     placeholder="Search feed..."
                     value={feedSearch}
-                    onChange={e => { setFeedSearch(e.target.value); setVisibleCount(8); }}
+                    onChange={e => { setFeedSearch(e.target.value); setVisibleCount(8); setHeroIndex(0); }}
                   />
                 </div>
               </div>
