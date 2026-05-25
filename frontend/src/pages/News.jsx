@@ -229,11 +229,13 @@ export default function News() {
                       >
                         <div className="news-rail-card-img">
                           <img src={item.image || item.coverImage?.large || ""} alt={item.title || item.name || ""} loading="lazy" />
-                          {item.kind === "trailer" && <div className="news-rail-play"><Play size={20} /></div>}
+                          {item.kind === "trailer" && <div className="news-rail-play"><Play size={18} /></div>}
+                          <div className="rail-card-img-badge">
+                            {item.kind === "trailer" ? "TRAILER" : item.score || ""}
+                          </div>
                         </div>
                         <div className="news-rail-card-body">
                           <h4>{item.title || item.name || ""}</h4>
-                          {item.score && <span className="rail-score">{item.score}</span>}
                         </div>
                       </motion.div>
                     ))}
@@ -299,12 +301,21 @@ export default function News() {
                           else if (item.animeId) navigate(`/anime/${item.animeId}/info`);
                         }}
                       >
-                        {item.image && (
-                          <div className="feed-card-img">
-                            <img src={item.image} alt="" loading="lazy" />
-                            {item.embedUrl && <div className="feed-card-play"><Play size={18} /></div>}
+                        <div className="feed-card-media">
+                          {item.image && (
+                            <div className="feed-card-img">
+                              <img src={item.image} alt="" loading="lazy" />
+                              {item.embedUrl && <div className="feed-card-play"><Play size={18} /></div>}
+                              <div className="feed-card-img-gradient" />
+                            </div>
+                          )}
+                          <div className="feed-card-type-icon">
+                            {item.source === "youtube" || item.embedUrl ? <Play size={14} /> :
+                             item.type === "new_episode" ? <Tv size={14} /> :
+                             item.type === "article" ? <Newspaper size={14} /> :
+                             item.type === "announcement" ? <Calendar size={14} /> : <Globe size={14} />}
                           </div>
-                        )}
+                        </div>
                         <div className="feed-card-body">
                           <div className="feed-card-header">
                             <SourceBadge source={item.source} label={item.sourceLabel} type={item.type} />
@@ -313,11 +324,13 @@ export default function News() {
                           <h3 className="feed-card-title">{item.title || item.name || ""}</h3>
                           {item.description && <p className="feed-card-desc">{item.description.slice(0, 200)}</p>}
                           <div className="feed-card-footer">
-                            {item.score && <span className="feed-card-stat"><Star size={12} /> {item.score}</span>}
-                            {item.trending && <span className="feed-card-stat"><TrendingUp size={12} /> #{item.trending}</span>}
-                            {item.comments != null && <span className="feed-card-stat"><MessageCircle size={12} /> {item.comments}</span>}
-                            {item.author && <span className="feed-card-author">by {item.author}</span>}
-                            <span className="feed-card-source-label">{item.sourceLabel || item.source}</span>
+                            <div className="feed-card-stats">
+                              {item.score && <span className="feed-card-stat"><Star size={11} /> {item.score}</span>}
+                              {item.trending && <span className="feed-card-stat"><TrendingUp size={11} /> #{item.trending}</span>}
+                            </div>
+                            <div className="feed-card-meta">
+                              {item.author && <span className="feed-card-author">{item.author}</span>}
+                            </div>
                           </div>
                         </div>
                       </motion.article>
