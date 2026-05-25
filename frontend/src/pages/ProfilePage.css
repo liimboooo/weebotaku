@@ -518,16 +518,6 @@
   background: #6d28d9;
 }
 
-.upp-status-msg {
-  font-size: 13px;
-  color: #aaa;
-  font-style: italic;
-  margin-top: 2px;
-  max-width: 280px;
-  text-align: center;
-  line-height: 1.3;
-}
-
 /* ─── Social Links ─────────────────────── */
 .upp-social-row {
   display: flex;

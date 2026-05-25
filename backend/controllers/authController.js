@@ -185,7 +185,7 @@ exports.getMe = async (req, res) => {
 // @route   PUT /api/auth/updateprofile
 exports.updateProfile = async (req, res) => {
   try {
-    const { username, bio, avatar, banner, statusMessage, socialLinks } = req.body;
+    const { username, bio, avatar, banner, socialLinks } = req.body;
     const updateFields = {};
 
     if (username !== undefined) {
@@ -200,7 +200,6 @@ exports.updateProfile = async (req, res) => {
     if (bio !== undefined) updateFields.bio = bio;
     if (avatar !== undefined) updateFields.avatar = avatar;
     if (banner !== undefined) updateFields.banner = banner;
-    if (statusMessage !== undefined) updateFields.statusMessage = statusMessage;
     if (socialLinks !== undefined) updateFields.socialLinks = socialLinks;
 
     const user = await User.findByIdAndUpdate(req.user.id, updateFields, {
@@ -296,12 +295,11 @@ exports.searchUsers = async (req, res) => {
     }
     const users = await User.find({ username: { $regex: q.trim(), $options: 'i' } })
       .limit(8)
-      .select('username avatar statusMessage bio progression memberSince');
+      .select('username avatar bio progression memberSince');
     res.json({ success: true, users: users.map(u => ({
       id: u._id,
       username: u.username,
       avatar: u.avatar,
-      statusMessage: u.statusMessage,
       bio: u.bio,
       level: Math.floor(Math.sqrt((u.progression?.xp || 0) / 100)) + 1,
     })) });

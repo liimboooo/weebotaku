@@ -49,8 +49,6 @@ export default function Header() {
   const isArenaActive = path.startsWith('/arena/') || path.startsWith('/rankings/');
   const isMoreActive = ['/settings', '/help', '/system/rules', '/report'].some(p => path.startsWith(p));
   const [profileImage, setProfileImage] = useState(() => localStorage.getItem('userAvatar') || '');
-  const [statusMessage, setStatusMessage] = useState(() => localStorage.getItem('userStatusMessage') || '');
-  const [isEditingStatus, setIsEditingStatus] = useState(false);
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -72,8 +70,6 @@ export default function Header() {
   const arenaRef = useRef(null);
   const profileRef = useRef(null);
   const moreDropdownRef = useRef(null);
-  const statusInputRef = useRef(null);
-  const statusSaveTimeoutRef = useRef(null);
 
   const username = localStorage.getItem('username') || 'Guest';
   const episodesWatched = loadWatchHistory().length;
@@ -109,7 +105,6 @@ export default function Header() {
 
   useEffect(() => {
     const syncAvatar = () => setProfileImage(localStorage.getItem('userAvatar') || '');
-    const syncStatus = () => setStatusMessage(localStorage.getItem('userStatusMessage') || '');
     const syncOnline = () => setIsOnline(navigator.onLine);
     const refreshNotifs = () => {
       let s;
@@ -121,15 +116,9 @@ export default function Header() {
     window.addEventListener('profile-avatar-updated', syncAvatar);
     window.addEventListener('online', syncOnline);
     window.addEventListener('offline', syncOnline);
-    window.addEventListener('user-status-updated', syncStatus);
     window.addEventListener('notification-added', refreshNotifs);
     window.addEventListener('settings-changed', refreshNotifs);
     return () => {
-      window.removeEventListener('storage', syncAvatar);
-      window.removeEventListener('profile-avatar-updated', syncAvatar);
-      window.removeEventListener('online', syncOnline);
-      window.removeEventListener('offline', syncOnline);
-      window.removeEventListener('user-status-updated', syncStatus);
       window.removeEventListener('notification-added', refreshNotifs);
       window.removeEventListener('settings-changed', refreshNotifs);
     };
@@ -175,23 +164,6 @@ export default function Header() {
     setProfileOpen(false);
     setMoreDropdownOpen(false);
     setNotifOpen(false);
-  };
-
-  useEffect(() => {
-    if (profileOpen && isEditingStatus && statusInputRef.current) {
-      statusInputRef.current.focus();
-      statusInputRef.current.select();
-    }
-  }, [profileOpen, isEditingStatus]);
-
-  useEffect(() => () => clearTimeout(statusSaveTimeoutRef.current), []);
-
-  const saveStatusMessage = (nextStatus) => {
-    const value = nextStatus.trim() || '';
-    localStorage.setItem('userStatusMessage', value);
-    window.dispatchEvent(new Event('user-status-updated'));
-    setStatusMessage(value);
-    setIsEditingStatus(false);
   };
 
   return (

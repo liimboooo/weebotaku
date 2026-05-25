@@ -36,7 +36,7 @@ function FriendCard({ user, onRemove, onNavigate }) {
         )}
         <div>
           <span className="fr-username">{user.username}</span>
-          <span className="fr-bio">{user.statusMessage || user.bio || ""}</span>
+          <span className="fr-bio">{user.bio || ""}</span>
         </div>
       </div>
       <button className="fr-remove-btn" onClick={() => onRemove(user._id)} title="Remove friend">

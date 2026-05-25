@@ -121,8 +121,8 @@ exports.getFriends = async (req, res) => {
       $or: [{ requester: userId }, { recipient: userId }],
       status: 'accepted',
     })
-      .populate('requester', 'username avatar bio statusMessage')
-      .populate('recipient', 'username avatar bio statusMessage')
+      .populate('requester', 'username avatar bio')
+      .populate('recipient', 'username avatar bio')
       .sort({ updatedAt: -1 });
 
     const friends = friendships.map(f => {

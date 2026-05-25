@@ -8,7 +8,6 @@ function storeUserData(user) {
   localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
   if (user.avatar) localStorage.setItem(STORAGE_KEYS.USER_AVATAR, user.avatar);
   if (user.banner) localStorage.setItem(STORAGE_KEYS.USER_BANNER, user.banner);
-  if (user.statusMessage) localStorage.setItem(STORAGE_KEYS.USER_STATUS_MESSAGE, user.statusMessage);
   if (user.memberSince) localStorage.setItem(STORAGE_KEYS.MEMBER_SINCE, String(user.memberSince));
   if (user.socialLinks) localStorage.setItem(STORAGE_KEYS.SOCIAL_LINKS, JSON.stringify(user.socialLinks));
 
@@ -158,7 +157,6 @@ class AuthService {
     if (response.success && response.user) {
       storeUserData(response.user);
       window.dispatchEvent(new Event('profile-avatar-updated'));
-      window.dispatchEvent(new Event('user-status-updated'));
     }
     return response;
   }
@@ -173,7 +171,7 @@ class AuthService {
     } catch {}
     const keysToRemove = [
       STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER, STORAGE_KEYS.USERNAME, STORAGE_KEYS.IS_LOGGED_IN,
-      STORAGE_KEYS.USER_AVATAR, STORAGE_KEYS.USER_BANNER, STORAGE_KEYS.USER_STATUS_MESSAGE,
+      STORAGE_KEYS.USER_AVATAR, STORAGE_KEYS.USER_BANNER,
       STORAGE_KEYS.MEMBER_SINCE, STORAGE_KEYS.SOCIAL_LINKS,
       STORAGE_KEYS.WATCHLIST, STORAGE_KEYS.MANGA_READ_LIST, STORAGE_KEYS.WATCH_HISTORY,
       STORAGE_KEYS.USER_RATINGS, STORAGE_KEYS.LIKED_ANIME, STORAGE_KEYS.MANGA_PROGRESS,

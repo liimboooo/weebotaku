@@ -44,7 +44,7 @@ export default function ProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState("");
   const [banner, setBanner] = useState("");
   const [bannerPreview, setBannerPreview] = useState("");
-  const [statusMsg, setStatusMsg] = useState("");
+
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [watchlist, setWatchlist] = useState([]);
@@ -69,9 +69,6 @@ export default function ProfilePage() {
         setUsername(u.username || "Anime Fan");
         if (u.avatar) { setAvatar(u.avatar); setAvatarPreview(u.avatar); }
         if (u.banner) { setBanner(u.banner); setBannerPreview(u.banner); }
-        if (u.statusMessage) setStatusMsg(u.statusMessage);
-        if (u.favorites) setFavorites(u.favorites);
-        if (u.socialLinks) setSocialLinks(u.socialLinks || {});
         if (u.watchlist) {
           setWatchlist(u.watchlist.map(item => ({
             id: item.animeId, name: item.name, img: item.img,
@@ -81,6 +78,8 @@ export default function ProfilePage() {
           })));
         }
         if (u.ratings) setRated(u.ratings);
+        if (u.favorites) setFavorites(u.favorites);
+        if (u.socialLinks) setSocialLinks(u.socialLinks || {});
         if (u.watchHistory) {
           setHistory(u.watchHistory.slice(0, 8).map(h => ({
             animeId: h.animeId, episode: h.episode,
@@ -130,7 +129,6 @@ export default function ProfilePage() {
             setUsername(u.username);
             setAvatar(u.avatar || ""); setAvatarPreview(u.avatar || "");
             if (u.banner) { setBanner(u.banner); setBannerPreview(u.banner); }
-            if (u.statusMessage) setStatusMsg(u.statusMessage);
             if (u.watchlist) {
               setWatchlist(u.watchlist.map(item => ({
                 id: item.animeId, name: item.name, img: item.img,
@@ -174,7 +172,7 @@ export default function ProfilePage() {
 
   const saveProfile = async () => {
     try {
-      await authService.updateProfile({ username, avatar, banner, statusMessage: statusMsg });
+      await authService.updateProfile({ username, avatar, banner });
     } catch {}
     window.dispatchEvent(new Event("profile-avatar-updated"));
     setEditing(false);
@@ -307,7 +305,6 @@ export default function ProfilePage() {
                 <span className="upp-joined">
                   <Calendar size={13} /> Joined {joinDate}
                 </span>
-                {statusMsg && <span className="upp-status-msg">{statusMsg}</span>}
               </div>
 
               <div className="upp-stats">
@@ -590,17 +587,6 @@ export default function ProfilePage() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="upp-input"
-                  />
-                </div>
-                <div className="upp-field">
-                  <label htmlFor="upp-edit-bio">Status</label>
-                  <textarea
-                    id="upp-edit-bio"
-                    value={statusMsg}
-                    onChange={(e) => setStatusMsg(e.target.value)}
-                    className="upp-textarea"
-                    placeholder="What are you watching?"
-                    maxLength={200}
                   />
                 </div>
               </div>
