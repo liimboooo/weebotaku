@@ -1,6 +1,6 @@
 ﻿const REANIME_BASE = process.env.REACT_APP_REANIME_BASE_URL || "https://reanime.to";
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
-const FETCH_TIMEOUT = 6000;
+const FETCH_TIMEOUT = 5000;
 
 function cleanTitle(title) {
   return title.replace(/\s*\([^)]*\)/g, "").replace(/[^\w\s-]/g, "").trim();
@@ -43,6 +43,8 @@ const FALLBACK_PROXIES = (process.env.REACT_APP_FALLBACK_PROXIES || "").split(",
 const BACKEND_PROXY = `${API_BASE}/scrape/fetch?url=`;
 
 const ssCache = new Map();
+const failCache = new Map();
+
 async function fetchWithTimeout(url, timeout = FETCH_TIMEOUT) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
@@ -63,9 +65,9 @@ function extractServers(data) {
   return null;
 }
 
-async function tryFetch(url) {
+async function tryFetch(url, signal) {
   try {
-    const res = await fetchWithTimeout(url);
+    const res = await fetch(url, { signal, mode: "cors" });
     if (!res.ok) return null;
     const text = await res.text();
     const parsed = JSON.parse(text);
@@ -83,14 +85,21 @@ async function fetchJsonViaProxy(url) {
   const cached = ssCache.get(url);
   if (cached && Date.now() - cached.time < 300000) return cached.data;
 
-  const attempts = [
-    () => tryFetch(url),
-    () => tryFetch(`${CF_WORKER}${encodeURIComponent(url)}`),
-    ...FALLBACK_PROXIES.map(p => () => tryFetch(`${p}${encodeURIComponent(url)}`)),
+  const failed = failCache.get(url);
+  if (failed && Date.now() - failed.time < 30000) return null;
+
+  const proxyUrls = [
+    url,
+    `${CF_WORKER}${encodeURIComponent(url)}`,
+    ...FALLBACK_PROXIES.map(p => `${p}${encodeURIComponent(url)}`),
   ];
 
-  for (const attempt of attempts) {
-    const data = await attempt();
+  const fetched = await Promise.allSettled(
+    proxyUrls.map(target => tryFetch(target))
+  );
+
+  for (const r of fetched) {
+    const data = r.status === 'fulfilled' ? r.value : null;
     if (data && data.success !== false) {
       ssCache.set(url, { data, time: Date.now() });
       if (ssCache.size > 50) {
@@ -99,6 +108,12 @@ async function fetchJsonViaProxy(url) {
       }
       return data;
     }
+  }
+
+  failCache.set(url, { time: Date.now() });
+  if (failCache.size > 100) {
+    const oldest = failCache.keys().next().value;
+    failCache.delete(oldest);
   }
   return null;
 }
