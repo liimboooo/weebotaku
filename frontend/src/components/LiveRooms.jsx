@@ -80,7 +80,9 @@ export default function LiveRooms({ rooms: externalRooms, onJoin, loading: exter
                     <span className="live-fallback-avatar-more">+3</span>
                   </div>
                 </div>
-                <span className="live-room-badge">{room.privacy === 'public' ? 'LIVE' : 'PRIVATE'}</span>
+                <span className="live-room-badge">
+                  {room.privacy === 'public' ? 'LIVE' : room.privacy === 'followers' ? 'FOLLOWERS' : 'PRIVATE'}
+                </span>
               </div>
               <div className="live-room-info">
                 <h4>{room.name}</h4>

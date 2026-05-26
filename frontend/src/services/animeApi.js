@@ -18,7 +18,7 @@ function stripSeasonSuffixes(title) {
 const titleVariants = (title) => {
   const base = stripSeasonSuffixes(title);
   const clean = cleanTitle(base || title);
-  const words = title.split(/[\s\-â€“â€”]+/).filter(w => w.length > 3);
+  const words = title.split(/[\s\-\u2013\u2014]+/).filter(w => w.length > 3);
   const uniqueWords = [...new Set(words.map(w => w.toLowerCase()))];
   const keywordSets = [];
   if (uniqueWords.length >= 2) keywordSets.push(uniqueWords.slice(0, 2).join(" "));
@@ -245,9 +245,7 @@ export async function findStreamingSource(animeName, anilistId) {
         anilistId: id,
       };
     }
-    console.warn("[stream] No results for:", animeName, "id:", anilistId);
-  } catch (e) {
-    console.error("[stream] findStreamingSource error:", e);
+  } catch {
   }
   return null;
 }

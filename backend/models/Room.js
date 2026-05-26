@@ -82,5 +82,7 @@ const RoomSchema = new mongoose.Schema({
 
 RoomSchema.index({ isLive: 1, createdAt: -1 });
 RoomSchema.index({ participants: 1 });
+RoomSchema.index({ host: 1 });
+RoomSchema.index({ livekitRoom: 1 });
 
 module.exports = mongoose.model('Room', RoomSchema);

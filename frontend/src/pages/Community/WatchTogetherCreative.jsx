@@ -109,7 +109,7 @@ export default function WatchTogetherCreative() {
   const [liveKitError, setLiveKitError] = useState('');
 
   const [chatMessages, setChatMessages] = useState([]);
-  const [draftMessage, setDraftComms] = useState("");
+  const [draftMessage, setDraftMessage] = useState("");
   const messagesEndRef = useRef(null);
   const liveRoomRef = useRef(null);
 
@@ -131,6 +131,8 @@ export default function WatchTogetherCreative() {
     }
   }, [chatMessages]);
 
+  const isMountedRef = useRef(true);
+  useEffect(() => { isMountedRef.current = true; return () => { isMountedRef.current = false; }; }, []);
   const dbRoomIdRef = useRef(null);
   const chatPollRef = useRef(null);
   const lastMsgTsRef = useRef(null);
@@ -157,13 +159,15 @@ export default function WatchTogetherCreative() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
         const res = await roomService.getRooms();
-        if (res.success) setRooms(res.data);
+        if (!cancelled && res.success) setRooms(res.data);
       } catch { /* use fallback */ }
-    setRoomsLoading(false);
-  })();
+      if (!cancelled) setRoomsLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   // fetch friends activity
@@ -233,7 +237,7 @@ export default function WatchTogetherCreative() {
           id: Date.now() + Math.random(),
           name: data.name || 'Anonymous',
           avatar: (data.name || 'A').charAt(0).toUpperCase(),
-          text: data.text,
+          text: (data.text || '').slice(0, 500),
         }]);
       }
     } catch { /* ignore bad data */ }
@@ -353,11 +357,16 @@ export default function WatchTogetherCreative() {
       addNotification({ title: "Stream Error", body: "Couldn't load this episode. Try another.", type: "error" });
       return;
     }
+    if (dbRoomId) {
+      try {
+        await roomService.updateEpisode(dbRoomId, epNum, url);
+      } catch {
+        addNotification({ title: "Sync Error", body: "Episode change failed. Try again.", type: "error" });
+        return;
+      }
+    }
     setCurrentEpisode(epNum);
     setCurrentSourceUrl(url);
-    if (dbRoomId) {
-      roomService.updateEpisode(dbRoomId, epNum, url).catch(() => {});
-    }
   }, [resolveStreamUrl, totalEpisodes, dbRoomId]);
 
   const toggleInvite = (friendId) => {
@@ -493,19 +502,18 @@ export default function WatchTogetherCreative() {
         addNotification({ title: "Can't Join", body: "Failed to join room", type: "error" });
         return;
       }
-      connectToLiveKit(roomId);
+      const historyRes = await roomService.getMessages(roomId);
+      if (historyRes.success && historyRes.data.length > 0) {
+        const history = historyRes.data.map(m => ({
+          id: m.ts + Math.random(),
+          name: m.username,
+          avatar: (m.username || 'A').charAt(0).toUpperCase(),
+          text: m.text,
+        }));
+        setChatMessages(prev => [...history, ...prev]);
+      }
 
-      roomService.getMessages(roomId).then(res => {
-        if (res.success && res.data.length > 0) {
-          const history = res.data.map(m => ({
-            id: m.ts + Math.random(),
-            name: m.username,
-            avatar: (m.username || 'A').charAt(0).toUpperCase(),
-            text: m.text,
-          }));
-          setChatMessages(prev => [...history, ...prev]);
-        }
-      }).catch(() => {});
+      connectToLiveKit(roomId);
     }
   }, [isLoggedIn, connectToLiveKit, currentUser?.id]);
 
@@ -592,7 +600,7 @@ export default function WatchTogetherCreative() {
       roomService.sendMessage(dbRoomId, text).catch(() => {});
     }
 
-    setDraftComms("");
+    setDraftMessage("");
   };
 
   const handleShareLink = async () => {
@@ -769,7 +777,7 @@ export default function WatchTogetherCreative() {
                     <input
                       placeholder={!isLoggedIn ? "Login to chat..." : liveKitConnected ? "Send encrypted signal..." : "Send message..."}
                       value={draftMessage}
-                      onChange={(e) => setDraftComms(e.target.value)}
+                      onChange={(e) => setDraftMessage(e.target.value)}
                       maxLength={500}
                       disabled={!isLoggedIn}
                     />
@@ -944,6 +952,7 @@ export default function WatchTogetherCreative() {
                         value={setupVideoUrl}
                         onChange={(e) => setSetupVideoUrl(e.target.value)}
                         placeholder="https://youtube.com/watch?v=..."
+                        maxLength={2000}
                       />
                     </div>
                   ) : (
@@ -984,7 +993,16 @@ export default function WatchTogetherCreative() {
 
                       {pickedAnime && (
                         <div className="field">
-                          <label>Episode</label>
+                          <div className="field-label-row">
+                            <label>Episode</label>
+                            <button
+                              type="button"
+                              className="clear-anime-btn"
+                              onClick={() => { setPickedAnime(null); setStreamSource(null); setSourceResolving(false); setAnimeResults([]); setAnimeSearch(""); }}
+                            >
+                              <X size={12} /> Change
+                            </button>
+                          </div>
                           <div className="episode-picker">
                             <div className="episode-picker-info">
                               <div className="episode-picker-img">

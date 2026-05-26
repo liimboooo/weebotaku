@@ -115,17 +115,13 @@ exports.joinRoom = async (req, res) => {
       if (!isFriend) return res.status(403).json({ success: false, message: 'This room is private' });
     }
 
-    const updated = await Room.findByIdAndUpdate(
-      req.params.id,
-      {
-        $addToSet: { participants: req.user.id },
-      },
-      { new: true }
-    ).populate('host', 'username avatar');
-
     await Room.findByIdAndUpdate(req.params.id, {
-      $set: { participantCount: updated.participants.length },
+      $addToSet: { participants: req.user.id },
+      $inc: { participantCount: 1 },
     });
+
+    const updated = await Room.findById(req.params.id)
+      .populate('host', 'username avatar');
 
     res.json({ success: true, data: updated });
   } catch (error) {
@@ -207,6 +203,10 @@ exports.getFriendsActivity = async (req, res) => {
         participantCount: room.participantCount,
         privacy: room.privacy,
         sourceUrl: room.sourceUrl,
+        sourceType: room.sourceType,
+        currentEpisode: room.currentEpisode,
+        totalEpisodes: room.totalEpisodes,
+        animeId: room.animeId,
         bitrate: room.bitrate,
         friends: friends.map(f => ({ _id: f._id, username: f.username, avatar: f.avatar })),
       };
@@ -308,10 +308,11 @@ exports.getToken = async (req, res) => {
       name: req.user.username,
     });
 
+    const isHost = room.host.toString() === req.user.id;
     at.addGrant({
       room: room.livekitRoom,
       roomJoin: true,
-      canPublish: true,
+      canPublish: isHost,
       canSubscribe: true,
     });
 
@@ -366,7 +367,11 @@ exports.endRoom = async (req, res) => {
 // @access  Private (host only)
 exports.updateEpisode = async (req, res) => {
   try {
-    const { episode, sourceUrl } = req.body;
+    const episode = parseInt(req.body.episode, 10);
+    if (!Number.isInteger(episode) || episode < 1) {
+      return res.status(400).json({ success: false, message: 'Invalid episode number' });
+    }
+    const { sourceUrl } = req.body;
     const room = await Room.findById(req.params.id);
     if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
     if (!room.isLive) return res.status(400).json({ success: false, message: 'Room ended' });
@@ -402,9 +407,9 @@ exports.sendMessage = async (req, res) => {
       text: text.trim().slice(0, 500),
       ts: new Date(),
     };
-    room.messages.push(msg);
-    if (room.messages.length > 200) room.messages = room.messages.slice(-200);
-    await room.save();
+    await Room.findByIdAndUpdate(req.params.id, {
+      $push: { messages: { $each: [msg], $slice: -200 } },
+    });
 
     res.status(201).json({ success: true, data: msg });
   } catch (error) {
@@ -423,6 +428,8 @@ exports.getMessages = async (req, res) => {
     const after = req.query.after ? new Date(req.query.after) : null;
     let msgs = room.messages || [];
     if (after) msgs = msgs.filter(m => new Date(m.ts) > after);
+    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+    msgs = msgs.slice(-limit);
 
     res.json({ success: true, data: msgs });
   } catch (error) {
