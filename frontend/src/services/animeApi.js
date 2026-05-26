@@ -20,21 +20,12 @@ const titleVariants = (title) => {
   const clean = cleanTitle(base || title);
   const words = title.split(/[\s\-\u2013\u2014]+/).filter(w => w.length > 3);
   const uniqueWords = [...new Set(words.map(w => w.toLowerCase()))];
-  const keywordSets = [];
-  if (uniqueWords.length >= 2) keywordSets.push(uniqueWords.slice(0, 2).join(" "));
-  if (uniqueWords.length >= 3) keywordSets.push(uniqueWords.slice(0, 3).join(" "));
-  if (uniqueWords.length >= 4) keywordSets.push(uniqueWords.slice(-2).join(" "));
 
   return [
     title,
     base !== title ? base : null,
     clean,
-    title.split(":")[0].trim(),
-    title.split("(")[0].trim(),
-    title.split("Season")[0].trim(),
-    title.replace(/\s+Part\s+\d+$/i, "").trim(),
-    title.replace(/'/g, ""),
-    ...keywordSets,
+    uniqueWords.length >= 2 ? uniqueWords.slice(0, 2).join(" ") : null,
   ].filter((s, i, a) => s && s.length > 2 && a.indexOf(s) === i);
 };
 
@@ -44,6 +35,16 @@ const BACKEND_PROXY = `${API_BASE}/scrape/fetch?url=`;
 
 const ssCache = new Map();
 const failCache = new Map();
+
+async function raceToFirst(promises) {
+  let settled = false;
+  return new Promise((resolve) => {
+    for (const p of promises) {
+      p.then(val => { if (!settled && val) { settled = true; resolve(val); } }).catch(() => {});
+    }
+    Promise.allSettled(promises).then(() => { if (!settled) resolve(null); });
+  });
+}
 
 async function fetchWithTimeout(url, timeout = FETCH_TIMEOUT) {
   const controller = new AbortController();
@@ -147,7 +148,13 @@ const SOURCES = process.env.REACT_APP_STREAM_SOURCES
       },
     };
 
+const searchCache = new Map();
+
 async function searchReanimeSource(source, searchName, anilistId) {
+  const cacheKey = `${searchName}::${anilistId}`;
+  const cached = searchCache.get(cacheKey);
+  if (cached && Date.now() - cached.time < 300000) return cached.data;
+
   const { base, name } = source;
   const idNum = anilistId ? parseInt(anilistId) : null;
 
@@ -174,16 +181,25 @@ async function searchReanimeSource(source, searchName, anilistId) {
   };
 
   const allVariants = titleVariants(searchName);
-  for (const q of allVariants) {
-    try {
-      const url = `${base}/api/search?q=${encodeURIComponent(q)}`;
-      const data = await fetchJsonViaProxy(url);
-      if (!data) continue;
-      const results = data.results || data.data || (Array.isArray(data) ? data : null);
-      if (!Array.isArray(results) || results.length === 0) continue;
-      const matched = mapResults(results, q);
-      if (matched.length > 0) return matched;
-    } catch {}
+  const variantUrls = allVariants.map(q => `${base}/api/search?q=${encodeURIComponent(q)}`);
+
+  const match = await raceToFirst(allVariants.map((q, i) =>
+    fetchJsonViaProxy(variantUrls[i]).then(data => {
+      if (!data) return null;
+      const items = data.results || data.data || (Array.isArray(data) ? data : null);
+      if (!Array.isArray(items) || items.length === 0) return null;
+      const matched = mapResults(items, q);
+      return matched.length > 0 ? matched : null;
+    })
+  ));
+
+  if (match) {
+    searchCache.set(cacheKey, { data: match, time: Date.now() });
+    if (searchCache.size > 50) {
+      const oldest = searchCache.keys().next().value;
+      searchCache.delete(oldest);
+    }
+    return match;
   }
   return [];
 }
