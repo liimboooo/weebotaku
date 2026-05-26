@@ -33,6 +33,10 @@ const RoomSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  participants: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
   participantCount: {
     type: Number,
     default: 0,

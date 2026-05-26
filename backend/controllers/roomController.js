@@ -1,4 +1,5 @@
 const Room = require('../models/Room');
+const Friendship = require('../models/Friendship');
 const Notification = require('../models/Notification');
 const { AccessToken } = require('livekit-server-sdk');
 const { emitNotification } = require('./notifyHelper');
@@ -7,7 +8,7 @@ const { emitNotification } = require('./notifyHelper');
 // @access  Private
 exports.createRoom = async (req, res) => {
   try {
-    const { name, sourceUrl, targetAnime, privacy, bitrate, inviteUserId } = req.body;
+    const { name, sourceUrl, targetAnime, privacy, bitrate, inviteUserIds } = req.body;
 
     const livekitRoom = `room_${Date.now()}`;
 
@@ -18,22 +19,56 @@ exports.createRoom = async (req, res) => {
       targetAnime: targetAnime || '',
       privacy: privacy || 'public',
       bitrate: bitrate || 6000,
+      participants: [req.user.id],
+      participantCount: 1,
       livekitRoom,
     });
 
     await room.populate('host', 'username avatar');
 
-    if (inviteUserId && inviteUserId !== req.user.id) {
+    const directInviteIds = new Set();
+    if (Array.isArray(inviteUserIds)) {
+      inviteUserIds.forEach(id => { if (id !== req.user.id) directInviteIds.add(id); });
+    }
+    // legacy single-invite support
+    if (req.body.inviteUserId && req.body.inviteUserId !== req.user.id) {
+      directInviteIds.add(req.body.inviteUserId);
+    }
+
+    for (const uid of directInviteIds) {
       const notif = await Notification.create({
-        user: inviteUserId,
+        user: uid,
         type: 'room_invite',
         title: `${req.user.username} invited you to watch together`,
         body: `Join "${room.name}"`,
         link: `/watch-together?room=${room._id}`,
         fromUser: req.user.id,
       });
-      emitNotification(inviteUserId, notif);
+      emitNotification(uid, notif);
     }
+
+    // broadcast to all other friends
+    const friendships = await Friendship.find({
+      $or: [{ requester: req.user.id }, { recipient: req.user.id }],
+      status: 'accepted',
+    });
+
+    const broadcastPromises = friendships.map(async (f) => {
+      const friendId = f.requester.toString() === req.user.id
+        ? f.recipient.toString()
+        : f.requester.toString();
+      if (directInviteIds.has(friendId)) return;
+      const notif = await Notification.create({
+        user: friendId,
+        type: 'room_activity',
+        title: `${req.user.username} started watching`,
+        body: room.targetAnime || room.name,
+        link: `/watch-together?room=${room._id}`,
+        fromUser: req.user.id,
+      });
+      emitNotification(friendId, notif);
+    });
+    await Promise.all(broadcastPromises);
 
     res.status(201).json({ success: true, data: room });
   } catch (error) {
@@ -42,10 +77,118 @@ exports.createRoom = async (req, res) => {
   }
 };
 
+// @route   POST /api/rooms/:id/join
+// @access  Private
+exports.joinRoom = async (req, res) => {
+  try {
+    const room = await Room.findById(req.params.id);
+    if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
+    if (!room.isLive) return res.status(400).json({ success: false, message: 'Room ended' });
+
+    const uid = req.user.id;
+    if (!room.participants.some(p => p.toString() === uid)) {
+      room.participants.push(uid);
+    }
+    room.participantCount = room.participants.length;
+    await room.save();
+    await room.populate('host', 'username avatar');
+
+    res.json({ success: true, data: room });
+  } catch (error) {
+    console.error('JoinRoom error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/rooms/:id/leave
+// @access  Private
+exports.leaveRoom = async (req, res) => {
+  try {
+    const room = await Room.findById(req.params.id);
+    if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
+
+    room.participants = room.participants.filter(p => p.toString() !== req.user.id);
+    room.participantCount = room.participants.length;
+    await room.save();
+
+    res.json({ success: true, message: 'Left room' });
+  } catch (error) {
+    console.error('LeaveRoom error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   GET /api/rooms/friends-activity
+// @access  Private
+exports.getFriendsActivity = async (req, res) => {
+  try {
+    const friendships = await Friendship.find({
+      $or: [{ requester: req.user.id }, { recipient: req.user.id }],
+      status: 'accepted',
+    });
+
+    const friendIds = friendships.map(f =>
+      f.requester.toString() === req.user.id ? f.recipient : f.requester
+    );
+
+    const activeRooms = await Room.find({
+      isLive: true,
+      participants: { $in: friendIds },
+    })
+      .populate('host', 'username avatar')
+      .populate('participants', 'username avatar')
+      .sort({ createdAt: -1 });
+
+    const friendsInRooms = new Set();
+    const roomsWithFriends = activeRooms.map(room => {
+      const friends = room.participants.filter(p =>
+        friendIds.some(fid => fid.toString() === p._id.toString())
+      );
+      friends.forEach(f => friendsInRooms.add(f._id.toString()));
+      return {
+        _id: room._id,
+        name: room.name,
+        targetAnime: room.targetAnime,
+        host: room.host,
+        participantCount: room.participantCount,
+        privacy: room.privacy,
+        sourceUrl: room.sourceUrl,
+        bitrate: room.bitrate,
+        friends: friends.map(f => ({ _id: f._id, username: f.username, avatar: f.avatar })),
+      };
+    });
+
+    const User = require('../models/User');
+    const allFriends = await User.find(
+      { _id: { $in: friendIds } },
+      'username avatar'
+    ).lean();
+
+    const friendsNotInRooms = allFriends.filter(f => !friendsInRooms.has(f._id.toString()));
+
+    res.json({
+      success: true,
+      data: {
+        watching: roomsWithFriends,
+        available: friendsNotInRooms,
+      },
+    });
+  } catch (error) {
+    console.error('GetFriendsActivity error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // @route   GET /api/rooms
 // @access  Public
 exports.getRooms = async (req, res) => {
   try {
+    const staleThreshold = new Date(Date.now() - 6 * 60 * 60 * 1000);
+    await Room.updateMany(
+      { isLive: true, createdAt: { $lt: staleThreshold } },
+      { isLive: false }
+    );
+
     const rooms = await Room.find({ isLive: true })
       .populate('host', 'username avatar')
       .sort({ createdAt: -1 })
@@ -134,6 +277,8 @@ exports.endRoom = async (req, res) => {
     }
 
     room.isLive = false;
+    room.participants = [];
+    room.participantCount = 0;
     await room.save();
 
     res.json({ success: true, message: 'Room ended' });

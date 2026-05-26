@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
 import {
   Globe,
@@ -9,9 +9,11 @@ import {
   Send,
   Share2,
   Users,
+  UserPlus,
   X,
   Zap,
   Wifi,
+  Check,
 } from "lucide-react";
 import { Room, RoomEvent } from "livekit-client";
 import AnimatedPage from "../../components/AnimatedPage";
@@ -91,11 +93,30 @@ export default function WatchTogetherCreative() {
   const liveRoomRef = useRef(null);
   const chatListenersAttached = useRef(false);
 
+  // friends activity
+  const [friendsWatching, setFriendsWatching] = useState([]);
+  const [friendsAvailable, setFriendsAvailable] = useState([]);
+  const [selectedInvites, setSelectedInvites] = useState(new Set());
+
   const currentSource = getEmbedSource(currentSourceUrl);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
+
+  useEffect(() => {
+    const cleanup = () => {
+      if (liveRoomRef.current) {
+        liveRoomRef.current.disconnect();
+        liveRoomRef.current = null;
+      }
+    };
+    window.addEventListener('beforeunload', cleanup);
+    return () => {
+      window.removeEventListener('beforeunload', cleanup);
+      cleanup();
+    };
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -110,6 +131,23 @@ export default function WatchTogetherCreative() {
       if (titles.length) setAnimeOptions([...titles.slice(0, 15), "Other Broadcast"]);
     }).catch(() => {});
   }, []);
+
+  // fetch friends activity
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const load = async () => {
+      try {
+        const res = await roomService.getFriendsActivity();
+        if (res.success) {
+          setFriendsWatching(res.data.watching || []);
+          setFriendsAvailable(res.data.available || []);
+        }
+      } catch {}
+    };
+    load();
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn]);
 
   const handleDataReceived = useCallback((payload) => {
     try {
@@ -197,6 +235,15 @@ export default function WatchTogetherCreative() {
     }
   };
 
+  const toggleInvite = (friendId) => {
+    setSelectedInvites(prev => {
+      const next = new Set(prev);
+      if (next.has(friendId)) next.delete(friendId);
+      else next.add(friendId);
+      return next;
+    });
+  };
+
   const handleStartTransmission = async () => {
     const nextSource = setupVideoUrl.trim();
     const priv = privacyMode.toLowerCase();
@@ -208,12 +255,14 @@ export default function WatchTogetherCreative() {
         targetAnime: selectedAnime,
         privacy: priv,
         bitrate,
+        inviteUserIds: [...selectedInvites],
       });
       if (res.success) {
         setDbRoomId(res.data._id);
         if (nextSource) setCurrentSourceUrl(nextSource);
         setIsLive(true);
         setIsConfigOpen(false);
+        setSelectedInvites(new Set());
         setRooms(prev => [res.data, ...prev.filter(r => r._id !== res.data._id)]);
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -228,7 +277,7 @@ export default function WatchTogetherCreative() {
     }
   };
 
-  const handleJoinRoom = async (room) => {
+  const handleJoinRoom = useCallback(async (room) => {
     const roomId = room._id;
     setRoomName(room.name || 'Zenith Broadcast');
     setCurrentSourceUrl(room.sourceUrl || '');
@@ -248,9 +297,11 @@ export default function WatchTogetherCreative() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (isLoggedIn) {
+      roomService.joinRoom(roomId).catch(() => {});
       connectToLiveKit(roomId);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]);
 
   const handleStopTransmission = async () => {
     if (liveRoomRef.current) {
@@ -259,7 +310,8 @@ export default function WatchTogetherCreative() {
     }
     setLiveKitConnected(false);
     if (dbRoomId) {
-      try { await roomService.endRoom(dbRoomId); } catch { /* ignore */ }
+      try { await roomService.leaveRoom(dbRoomId); } catch {}
+      try { await roomService.endRoom(dbRoomId); } catch {}
       setRooms(prev => prev.filter(r => r._id !== dbRoomId));
       setDbRoomId(null);
     }
@@ -285,9 +337,12 @@ export default function WatchTogetherCreative() {
   };
 
   const handleShareLink = async () => {
-    const shareUrl = currentSourceUrl || window.location.href;
+    const shareUrl = dbRoomId
+      ? `${window.location.origin}/watch-together?room=${dbRoomId}`
+      : window.location.href;
     try { await navigator.clipboard.writeText(shareUrl); }
     catch { window.prompt("Copy link", shareUrl); }
+    addNotification({ title: "Link Copied", body: "Room link copied to clipboard.", type: "info" });
   };
 
   const handleRefreshRooms = async () => {
@@ -306,11 +361,17 @@ export default function WatchTogetherCreative() {
       try {
         const res = await roomService.getRoomById(roomId);
         if (res.success && res.data) {
+          if (!res.data.isLive) {
+            addNotification({ title: "Room Ended", body: "This room is no longer active.", type: "info" });
+            return;
+          }
           handleJoinRoom(res.data);
         }
       } catch {}
     })();
-  }, [searchParams, isLoggedIn, isLive]);
+  }, [searchParams, isLoggedIn, isLive, handleJoinRoom]);
+
+  const hasFriendsData = friendsWatching.length > 0 || friendsAvailable.length > 0;
 
   return (
     <AnimatedPage>
@@ -430,6 +491,93 @@ export default function WatchTogetherCreative() {
             </div>
           )}
 
+          {/* ── Friends Activity Strip ── */}
+          {!isLive && isLoggedIn && hasFriendsData && (
+            <motion.section
+              className="friends-activity-section"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="section-title">
+                <h2><Users size={18} className="section-title-icon" /> Friends Activity</h2>
+                <p>See what your friends are up to</p>
+              </div>
+
+              {friendsWatching.length > 0 && (
+                <div className="friends-watching-block">
+                  <span className="friends-block-label">Watching Now</span>
+                  <div className="friends-watching-grid">
+                    {friendsWatching.map((room) => (
+                      <motion.div
+                        key={room._id}
+                        className="friend-room-card"
+                        whileHover={{ y: -4 }}
+                      >
+                        <div className="friend-room-top">
+                          <span className="friend-room-live-dot" />
+                          <span className="friend-room-name">{room.name}</span>
+                          <span className="friend-room-count">
+                            <Users size={12} /> {room.participantCount}
+                          </span>
+                        </div>
+                        {room.targetAnime && (
+                          <span className="friend-room-anime">{room.targetAnime}</span>
+                        )}
+                        <div className="friend-room-avatars">
+                          {room.friends.map((f) => (
+                            <div key={f._id} className="friend-room-avatar" title={f.username}>
+                              {f.avatar
+                                ? <img src={f.avatar} alt={f.username} />
+                                : <span>{f.username.charAt(0).toUpperCase()}</span>
+                              }
+                            </div>
+                          ))}
+                          {room.friends.length === 1 && (
+                            <span className="friend-room-who">{room.friends[0].username} is watching</span>
+                          )}
+                          {room.friends.length > 1 && (
+                            <span className="friend-room-who">{room.friends.length} friends watching</span>
+                          )}
+                        </div>
+                        <button
+                          className="friend-room-join-btn"
+                          onClick={() => handleJoinRoom(room)}
+                        >
+                          <Play size={14} fill="currentColor" /> Join Room
+                        </button>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {friendsAvailable.length > 0 && (
+                <div className="friends-available-block">
+                  <span className="friends-block-label">Friends</span>
+                  <div className="friends-available-strip">
+                    {friendsAvailable.slice(0, 12).map((f) => (
+                      <div key={f._id} className="friend-chip" title={f.username}>
+                        <div className="friend-chip-avatar">
+                          {f.avatar
+                            ? <img src={f.avatar} alt={f.username} />
+                            : <span>{f.username.charAt(0).toUpperCase()}</span>
+                          }
+                        </div>
+                        <span className="friend-chip-name">{f.username}</span>
+                      </div>
+                    ))}
+                    {friendsAvailable.length > 12 && (
+                      <div className="friend-chip friend-chip-more">
+                        +{friendsAvailable.length - 12}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </motion.section>
+          )}
+
           {!isLive && (
             <LiveRooms
               rooms={rooms}
@@ -500,6 +648,43 @@ export default function WatchTogetherCreative() {
                       onChange={(e) => setBitrate(parseInt(e.target.value))}
                     />
                   </div>
+
+                  {/* ── Invite Friends Picker ── */}
+                  {friendsAvailable.length > 0 && (
+                    <div className="field invite-friends-field">
+                      <label>
+                        <UserPlus size={12} /> Invite Friends
+                        {selectedInvites.size > 0 && (
+                          <span className="invite-count">{selectedInvites.size} selected</span>
+                        )}
+                      </label>
+                      <div className="invite-friend-list">
+                        {friendsAvailable.map((f) => {
+                          const selected = selectedInvites.has(f._id);
+                          return (
+                            <button
+                              key={f._id}
+                              type="button"
+                              className={`invite-friend-item${selected ? ' selected' : ''}`}
+                              onClick={() => toggleInvite(f._id)}
+                            >
+                              <div className="invite-friend-avatar">
+                                {f.avatar
+                                  ? <img src={f.avatar} alt={f.username} />
+                                  : <span>{f.username.charAt(0).toUpperCase()}</span>
+                                }
+                              </div>
+                              <span className="invite-friend-name">{f.username}</span>
+                              <span className="invite-friend-check">
+                                {selected && <Check size={14} />}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <span className="field-hint">All friends will be notified. Selected friends get a direct invite.</span>
+                    </div>
+                  )}
                 </div>
                 <div className="modal-footer">
                   <button className="cancel-btn" onClick={() => setIsConfigOpen(false)}>Cancel</button>

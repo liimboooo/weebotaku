@@ -20,8 +20,23 @@ export async function getRoomToken(id) {
   return res.data;
 }
 
+export async function joinRoom(id) {
+  const res = await api.post(`/rooms/${id}/join`);
+  return res.data;
+}
+
+export async function leaveRoom(id) {
+  const res = await api.post(`/rooms/${id}/leave`);
+  return res.data;
+}
+
 export async function endRoom(id) {
   const res = await api.put(`/rooms/${id}/end`);
+  return res.data;
+}
+
+export async function getFriendsActivity() {
+  const res = await api.get('/rooms/friends-activity');
   return res.data;
 }
 

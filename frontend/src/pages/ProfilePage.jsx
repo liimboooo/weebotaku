@@ -394,7 +394,7 @@ export default function ProfilePage() {
                         });
                         if (res.success) {
                           setShowWatchModal(false);
-                          navigate('/watch-together');
+                          navigate(`/watch-together?room=${res.data._id}`);
                         }
                       } catch {}
                       setCreatingRoom(false);
