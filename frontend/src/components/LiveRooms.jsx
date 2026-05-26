@@ -6,7 +6,10 @@ import * as roomService from "../services/roomService";
 import "./LiveRooms.css";
 
 function timeAgo(dateStr) {
-  const diff = Date.now() - new Date(dateStr).getTime();
+  if (!dateStr) return "";
+  const ts = new Date(dateStr).getTime();
+  if (isNaN(ts)) return "";
+  const diff = Date.now() - ts;
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
@@ -84,7 +87,14 @@ export default function LiveRooms({ rooms: externalRooms, onJoin, loading: exter
                 {room.targetAnime && <span className="live-room-anime">{room.targetAnime}</span>}
                 <div className="live-room-meta">
                   <span><Eye size={12} /> {(room.participantCount || 0).toLocaleString()} watching</span>
-                  <span><User size={12} /> {room.host?.username || 'anonymous'}</span>
+                  <span>
+                    {room.host?.avatar ? (
+                      <img src={room.host.avatar} alt="" className="live-host-avatar" />
+                    ) : (
+                      <User size={12} />
+                    )}
+                    {' '}{room.host?.username || 'anonymous'}
+                  </span>
                   {room.createdAt && <span><Clock size={12} /> {timeAgo(room.createdAt)}</span>}
                 </div>
               </div>

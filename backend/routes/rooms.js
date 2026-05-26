@@ -13,7 +13,7 @@ const {
   getMessages,
   updateEpisode,
 } = require('../controllers/roomController');
-const { protect, optionalAuth } = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
 
 router.post('/', protect, createRoom);
 router.get('/', getRooms);

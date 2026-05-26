@@ -97,6 +97,7 @@ export default function WatchTogetherCreative() {
   const [episodeCount, setEpisodeCount] = useState(0);
   const [streamSource, setStreamSource] = useState(null);
   const [resolvingStream, setResolvingStream] = useState(false);
+  const pickGenRef = useRef(0);
   const [sourceResolving, setSourceResolving] = useState(false);
   const [currentEpisode, setCurrentEpisode] = useState(1);
   const [totalEpisodes, setTotalEpisodes] = useState(0);
@@ -108,7 +109,7 @@ export default function WatchTogetherCreative() {
   const [liveKitError, setLiveKitError] = useState('');
 
   const [chatMessages, setChatMessages] = useState([]);
-  const [draftComms, setDraftComms] = useState("");
+  const [draftMessage, setDraftComms] = useState("");
   const messagesEndRef = useRef(null);
   const liveRoomRef = useRef(null);
 
@@ -116,11 +117,18 @@ export default function WatchTogetherCreative() {
   const [friendsWatching, setFriendsWatching] = useState([]);
   const [friendsAvailable, setFriendsAvailable] = useState([]);
   const [selectedInvites, setSelectedInvites] = useState(new Set());
+  const [friendSearch, setFriendSearch] = useState("");
 
   const currentSource = getEmbedSource(currentSourceUrl);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = messagesEndRef.current?.parentElement;
+    if (!el) return;
+    const threshold = 60;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distFromBottom <= threshold) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
   }, [chatMessages]);
 
   const dbRoomIdRef = useRef(null);
@@ -297,6 +305,7 @@ export default function WatchTogetherCreative() {
   }, []);
 
   const handlePickAnime = useCallback(async (anime) => {
+    const gen = ++pickGenRef.current;
     setPickedAnime(anime);
     setSelectedAnime(anime.name);
     setRoomName(`${anime.name} Watch Party`);
@@ -307,14 +316,20 @@ export default function WatchTogetherCreative() {
     setStreamSource(null);
     setSourceResolving(true);
 
-    const src = await findStreamingSource(anime.name, anime.id);
-    setSourceResolving(false);
-    if (src) {
-      setStreamSource(src);
-      const eps = await getEpisodes(anime.name, src.slug, src.source, src.sourceBase, src.anilistId);
-      if (eps.length) setEpisodeCount(eps.length);
-    } else {
-      addNotification({ title: "Source Unavailable", body: `No stream source found for "${anime.name}". Try External Link mode instead.`, type: "warning" });
+    try {
+      const src = await findStreamingSource(anime.name, anime.id);
+      if (gen !== pickGenRef.current) return;
+      setSourceResolving(false);
+      if (src) {
+        setStreamSource(src);
+        const eps = await getEpisodes(anime.name, src.slug, src.source, src.sourceBase, src.anilistId);
+        if (gen !== pickGenRef.current) return;
+        if (eps.length) setEpisodeCount(eps.length);
+      } else {
+        addNotification({ title: "Source Unavailable", body: `No stream source found for "${anime.name}". Try External Link mode instead.`, type: "warning" });
+      }
+    } catch {
+      if (gen === pickGenRef.current) setSourceResolving(false);
     }
   }, []);
 
@@ -385,6 +400,10 @@ export default function WatchTogetherCreative() {
       epVal = pickedEpisode;
       totalEpVal = episodeCount || pickedAnime.episodes || 0;
     } else {
+      if (!setupVideoUrl.trim()) {
+        addNotification({ title: "URL Required", body: "Enter a broadcast URL or switch to Browse Anime mode.", type: "error" });
+        return;
+      }
       initialSourceUrl = setupVideoUrl.trim();
     }
 
@@ -415,11 +434,6 @@ export default function WatchTogetherCreative() {
         setParticipantCount(1);
         setRooms(prev => [res.data, ...prev.filter(r => r._id !== res.data._id)]);
         window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        if (sourceType === 'anime' && pickedAnime && !streamSource) {
-          const src = await findStreamingSource(pickedAnime.name, pickedAnime.id);
-          if (src) setStreamSource(src);
-        }
 
         if (isLoggedIn) {
           connectToLiveKit(res.data._id);
@@ -517,6 +531,7 @@ export default function WatchTogetherCreative() {
   };
 
   const handleEndStream = async () => {
+    if (!window.confirm("End stream for everyone?")) return;
     if (dbRoomId) {
       try { await roomService.leaveRoom(dbRoomId); } catch {}
       try { await roomService.endRoom(dbRoomId); } catch {}
@@ -548,8 +563,8 @@ export default function WatchTogetherCreative() {
 
   const handleCommsSubmit = (e) => {
     e.preventDefault();
-    if (!draftComms.trim() || !isLoggedIn) return;
-    const text = draftComms.trim();
+    if (!draftMessage.trim() || !isLoggedIn) return;
+    const text = draftMessage.trim();
 
     // always add locally immediately
     setChatMessages(prev => [...prev, {
@@ -688,7 +703,6 @@ export default function WatchTogetherCreative() {
                         </button>
                       </span>
                     )}
-                    <span className="bitrate-meta"><Zap size={14} color="#6d28d9" /> {bitrate} kbps</span>
                     {liveKitConnected && <span className="livekit-badge">LiveKit</span>}
                   </div>
                 </div>
@@ -754,12 +768,12 @@ export default function WatchTogetherCreative() {
                   <form className="chat-input" onSubmit={handleCommsSubmit}>
                     <input
                       placeholder={!isLoggedIn ? "Login to chat..." : liveKitConnected ? "Send encrypted signal..." : "Send message..."}
-                      value={draftComms}
+                      value={draftMessage}
                       onChange={(e) => setDraftComms(e.target.value)}
                       maxLength={500}
                       disabled={!isLoggedIn}
                     />
-                    <button type="submit" disabled={!isLoggedIn || !draftComms.trim()}><Send size={16} /></button>
+                    <button type="submit" disabled={!isLoggedIn || !draftMessage.trim()}><Send size={16} /></button>
                   </form>
                 </div>
               </div>
@@ -767,6 +781,25 @@ export default function WatchTogetherCreative() {
           )}
 
           {/* ── Friends Activity Strip ── */}
+          {!isLive && !isLoggedIn && (
+            <motion.section
+              className="login-banner-section"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="login-banner">
+                <Users size={20} />
+                <div className="login-banner-text">
+                  <strong>Login to start or join a room</strong>
+                  <p>See what your friends are watching and join the broadcast.</p>
+                </div>
+                <button className="login-banner-btn" onClick={() => window.location.href = '/login'}>
+                  Sign In
+                </button>
+              </div>
+            </motion.section>
+          )}
           {!isLive && isLoggedIn && hasFriendsData && (
             <motion.section
               className="friends-activity-section"
@@ -881,6 +914,7 @@ export default function WatchTogetherCreative() {
                       value={roomName}
                       onChange={(e) => setRoomName(e.target.value)}
                       placeholder="Zenith Watch Room"
+                      maxLength={100}
                     />
                   </div>
                   <div className="field">
@@ -1002,21 +1036,6 @@ export default function WatchTogetherCreative() {
                     </div>
                   </div>
 
-                  <div className="field">
-                    <div className="field-label-row">
-                      <label>Signal Strength (Bitrate)</label>
-                      <span className="bitrate-value">{bitrate} kbps</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="1000"
-                      max="12000"
-                      step="500"
-                      value={bitrate}
-                      onChange={(e) => setBitrate(parseInt(e.target.value))}
-                    />
-                  </div>
-
                   {/* ── Invite Friends Picker ── */}
                   {friendsAvailable.length > 0 && (
                     <div className="field invite-friends-field">
@@ -1026,8 +1045,19 @@ export default function WatchTogetherCreative() {
                           <span className="invite-count">{selectedInvites.size} selected</span>
                         )}
                       </label>
+                      <div className="invite-search-wrap">
+                        <Search size={13} className="invite-search-icon" />
+                        <input
+                          className="invite-search-input"
+                          value={friendSearch}
+                          onChange={(e) => setFriendSearch(e.target.value)}
+                          placeholder="Search friends..."
+                        />
+                      </div>
                       <div className="invite-friend-list">
-                        {friendsAvailable.map((f) => {
+                        {friendsAvailable
+                          .filter(f => f.username.toLowerCase().includes(friendSearch.toLowerCase()))
+                          .map((f) => {
                           const selected = selectedInvites.has(f._id);
                           return (
                             <button

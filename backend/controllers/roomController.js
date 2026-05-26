@@ -4,6 +4,8 @@ const Notification = require('../models/Notification');
 const { AccessToken } = require('livekit-server-sdk');
 const { emitNotification } = require('./notifyHelper');
 
+let lastCleanup = 0;
+
 function notifyRoomEnded(participantIds, hostUsername, roomName) {
   for (const uid of participantIds) {
     Notification.create({
@@ -102,7 +104,7 @@ exports.joinRoom = async (req, res) => {
     if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
     if (!room.isLive) return res.status(400).json({ success: false, message: 'Room ended' });
 
-    if (room.privacy === 'encrypted' && room.host.toString() !== req.user.id) {
+    if (room.privacy !== 'public' && room.host.toString() !== req.user.id) {
       const isFriend = await Friendship.exists({
         $or: [
           { requester: room.host, recipient: req.user.id },
@@ -115,12 +117,15 @@ exports.joinRoom = async (req, res) => {
 
     const updated = await Room.findByIdAndUpdate(
       req.params.id,
-      { $addToSet: { participants: req.user.id } },
+      {
+        $addToSet: { participants: req.user.id },
+      },
       { new: true }
     ).populate('host', 'username avatar');
 
-    updated.participantCount = updated.participants.length;
-    await updated.save();
+    await Room.findByIdAndUpdate(req.params.id, {
+      $set: { participantCount: updated.participants.length },
+    });
 
     res.json({ success: true, data: updated });
   } catch (error) {
@@ -155,10 +160,9 @@ exports.leaveRoom = async (req, res) => {
       return;
     }
 
-    await Room.findByIdAndUpdate(req.params.id, {
-      $pull: { participants: req.user.id },
-      $inc: { participantCount: -1 },
-    });
+    room.participants.pull(req.user.id);
+    room.participantCount = room.participants.length;
+    await room.save();
 
     res.json({ success: true, message: 'Left room' });
   } catch (error) {
@@ -182,6 +186,7 @@ exports.getFriendsActivity = async (req, res) => {
 
     const activeRooms = await Room.find({
       isLive: true,
+      privacy: 'public',
       participants: { $in: friendIds },
     })
       .populate('host', 'username avatar')
@@ -232,11 +237,15 @@ exports.getFriendsActivity = async (req, res) => {
 // @access  Public
 exports.getRooms = async (req, res) => {
   try {
-    const staleThreshold = new Date(Date.now() - 6 * 60 * 60 * 1000);
-    await Room.updateMany(
-      { isLive: true, createdAt: { $lt: staleThreshold } },
-      { isLive: false }
-    );
+    const now = Date.now();
+    if (now - lastCleanup > 5 * 60 * 1000) {
+      lastCleanup = now;
+      const staleThreshold = new Date(now - 6 * 60 * 60 * 1000);
+      await Room.updateMany(
+        { isLive: true, createdAt: { $lt: staleThreshold } },
+        { isLive: false }
+      );
+    }
 
     const rooms = await Room.find({ isLive: true, privacy: 'public' })
       .populate('host', 'username avatar')
@@ -365,11 +374,12 @@ exports.updateEpisode = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Only the host can change episodes' });
     }
 
-    room.currentEpisode = episode;
-    if (sourceUrl) room.sourceUrl = sourceUrl;
-    await room.save();
+    const update = { currentEpisode: episode };
+    if (sourceUrl) update.sourceUrl = sourceUrl;
 
-    res.json({ success: true, data: { currentEpisode: room.currentEpisode, sourceUrl: room.sourceUrl } });
+    const updated = await Room.findByIdAndUpdate(req.params.id, { $set: update }, { new: true });
+
+    res.json({ success: true, data: { currentEpisode: updated.currentEpisode, sourceUrl: updated.sourceUrl } });
   } catch (error) {
     console.error('UpdateEpisode error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
