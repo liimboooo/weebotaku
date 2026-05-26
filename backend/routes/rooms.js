@@ -6,12 +6,12 @@ const {
   getRoomById,
   getToken,
   endRoom,
-  updateParticipantCount,
   joinRoom,
   leaveRoom,
   getFriendsActivity,
   sendMessage,
   getMessages,
+  updateEpisode,
 } = require('../controllers/roomController');
 const { protect, optionalAuth } = require('../middleware/auth');
 
@@ -25,6 +25,6 @@ router.post('/:id/leave', protect, leaveRoom);
 router.post('/:id/chat', protect, sendMessage);
 router.get('/:id/chat', protect, getMessages);
 router.put('/:id/end', protect, endRoom);
-router.put('/:id/participants', updateParticipantCount);
+router.put('/:id/episode', protect, updateEpisode);
 
 module.exports = router;

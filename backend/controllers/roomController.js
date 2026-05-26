@@ -4,6 +4,17 @@ const Notification = require('../models/Notification');
 const { AccessToken } = require('livekit-server-sdk');
 const { emitNotification } = require('./notifyHelper');
 
+function notifyRoomEnded(participantIds, hostUsername, roomName) {
+  for (const uid of participantIds) {
+    Notification.create({
+      user: uid,
+      type: 'room_ended',
+      title: `${hostUsername} ended the room`,
+      body: `"${roomName}" has ended`,
+    }).then(notif => emitNotification(uid, notif)).catch(() => {});
+  }
+}
+
 // @route   POST /api/rooms
 // @access  Private
 exports.createRoom = async (req, res) => {
@@ -85,15 +96,27 @@ exports.joinRoom = async (req, res) => {
     if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
     if (!room.isLive) return res.status(400).json({ success: false, message: 'Room ended' });
 
-    const uid = req.user.id;
-    if (!room.participants.some(p => p.toString() === uid)) {
-      room.participants.push(uid);
+    if (room.privacy === 'encrypted' && room.host.toString() !== req.user.id) {
+      const isFriend = await Friendship.exists({
+        $or: [
+          { requester: room.host, recipient: req.user.id },
+          { requester: req.user.id, recipient: room.host },
+        ],
+        status: 'accepted',
+      });
+      if (!isFriend) return res.status(403).json({ success: false, message: 'This room is private' });
     }
-    room.participantCount = room.participants.length;
-    await room.save();
-    await room.populate('host', 'username avatar');
 
-    res.json({ success: true, data: room });
+    const updated = await Room.findByIdAndUpdate(
+      req.params.id,
+      { $addToSet: { participants: req.user.id } },
+      { new: true }
+    ).populate('host', 'username avatar');
+
+    updated.participantCount = updated.participants.length;
+    await updated.save();
+
+    res.json({ success: true, data: updated });
   } catch (error) {
     console.error('JoinRoom error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -107,9 +130,29 @@ exports.leaveRoom = async (req, res) => {
     const room = await Room.findById(req.params.id);
     if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
 
-    room.participants = room.participants.filter(p => p.toString() !== req.user.id);
-    room.participantCount = room.participants.length;
-    await room.save();
+    const isHostLeaving = room.host.toString() === req.user.id;
+
+    if (isHostLeaving) {
+      const participantIds = room.participants
+        .map(p => p.toString())
+        .filter(id => id !== req.user.id);
+
+      room.isLive = false;
+      room.participants = [];
+      room.participantCount = 0;
+      room.messages = [];
+      await room.save();
+
+      res.json({ success: true, message: 'Room ended (host left)' });
+
+      notifyRoomEnded(participantIds, req.user.username, room.name);
+      return;
+    }
+
+    await Room.findByIdAndUpdate(req.params.id, {
+      $pull: { participants: req.user.id },
+      $inc: { participantCount: -1 },
+    });
 
     res.json({ success: true, message: 'Left room' });
   } catch (error) {
@@ -189,7 +232,7 @@ exports.getRooms = async (req, res) => {
       { isLive: false }
     );
 
-    const rooms = await Room.find({ isLive: true })
+    const rooms = await Room.find({ isLive: true, privacy: 'public' })
       .populate('host', 'username avatar')
       .sort({ createdAt: -1 })
       .limit(20);
@@ -227,6 +270,15 @@ exports.getToken = async (req, res) => {
 
     if (!room) {
       return res.status(404).json({ success: false, message: 'Room not found' });
+    }
+
+    if (!room.isLive) {
+      return res.status(400).json({ success: false, message: 'Room ended' });
+    }
+
+    const isParticipant = room.participants.some(p => p.toString() === req.user.id);
+    if (!isParticipant) {
+      return res.status(403).json({ success: false, message: 'Join the room first' });
     }
 
     const apiKey = process.env.LIVEKIT_API_KEY;
@@ -276,14 +328,44 @@ exports.endRoom = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Only the host can end the room' });
     }
 
+    const participantIds = room.participants
+      .map(p => p.toString())
+      .filter(id => id !== req.user.id);
+
     room.isLive = false;
     room.participants = [];
     room.participantCount = 0;
+    room.messages = [];
     await room.save();
 
     res.json({ success: true, message: 'Room ended' });
+
+    notifyRoomEnded(participantIds, req.user.username, room.name);
   } catch (error) {
     console.error('EndRoom error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   PUT /api/rooms/:id/episode
+// @access  Private (host only)
+exports.updateEpisode = async (req, res) => {
+  try {
+    const { episode, sourceUrl } = req.body;
+    const room = await Room.findById(req.params.id);
+    if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
+    if (!room.isLive) return res.status(400).json({ success: false, message: 'Room ended' });
+    if (room.host.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Only the host can change episodes' });
+    }
+
+    room.currentEpisode = episode;
+    if (sourceUrl) room.sourceUrl = sourceUrl;
+    await room.save();
+
+    res.json({ success: true, data: { currentEpisode: room.currentEpisode, sourceUrl: room.sourceUrl } });
+  } catch (error) {
+    console.error('UpdateEpisode error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -333,24 +415,3 @@ exports.getMessages = async (req, res) => {
   }
 };
 
-// @route   PUT /api/rooms/:id/participants
-// @access  Public
-exports.updateParticipantCount = async (req, res) => {
-  try {
-    const { count } = req.body;
-    const room = await Room.findByIdAndUpdate(
-      req.params.id,
-      { participantCount: count },
-      { new: true }
-    );
-
-    if (!room) {
-      return res.status(404).json({ success: false, message: 'Room not found' });
-    }
-
-    res.json({ success: true, data: room });
-  } catch (error) {
-    console.error('UpdateParticipantCount error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};

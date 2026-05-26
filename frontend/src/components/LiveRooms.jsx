@@ -1,20 +1,40 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Eye, Users, Wifi, User } from "lucide-react";
+import { Eye, Users, Wifi, User, Clock } from "lucide-react";
+import * as roomService from "../services/roomService";
 import "./LiveRooms.css";
 
-const fallbackRooms = [];
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
 
-export default function LiveRooms({ rooms: externalRooms, onJoin, loading }) {
+export default function LiveRooms({ rooms: externalRooms, onJoin, loading: externalLoading }) {
   const navigate = useNavigate();
-  const rooms = externalRooms || fallbackRooms;
+  const [fetchedRooms, setFetchedRooms] = useState([]);
+  const [selfLoading, setSelfLoading] = useState(!externalRooms);
+
+  useEffect(() => {
+    if (externalRooms) return;
+    roomService.getRooms().then(res => {
+      if (res.success) setFetchedRooms(res.data);
+    }).catch(() => {}).finally(() => setSelfLoading(false));
+  }, [externalRooms]);
+
+  const rooms = externalRooms || fetchedRooms;
+  const loading = externalRooms ? externalLoading : selfLoading;
 
   const handleClick = (room) => {
     if (onJoin) {
       onJoin(room);
     } else {
-      navigate("/watch-together");
+      navigate(`/watch-together?room=${room._id}`);
     }
   };
 
@@ -61,9 +81,11 @@ export default function LiveRooms({ rooms: externalRooms, onJoin, loading }) {
               </div>
               <div className="live-room-info">
                 <h4>{room.name}</h4>
+                {room.targetAnime && <span className="live-room-anime">{room.targetAnime}</span>}
                 <div className="live-room-meta">
                   <span><Eye size={12} /> {(room.participantCount || 0).toLocaleString()} watching</span>
                   <span><User size={12} /> {room.host?.username || 'anonymous'}</span>
+                  {room.createdAt && <span><Clock size={12} /> {timeAgo(room.createdAt)}</span>}
                 </div>
               </div>
             </motion.div>

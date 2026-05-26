@@ -41,6 +41,7 @@ export async function getMessages(id, after) {
   return api.get(`/rooms/${id}/chat${q}`);
 }
 
-export async function updateParticipantCount(id, count) {
-  return api.put(`/rooms/${id}/participants`, { count }, { auth: false });
+export async function updateEpisode(id, episode, sourceUrl) {
+  return api.put(`/rooms/${id}/episode`, { episode, sourceUrl });
 }
+

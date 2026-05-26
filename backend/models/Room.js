@@ -16,6 +16,31 @@ const RoomSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  sourceType: {
+    type: String,
+    enum: ['anime', 'external'],
+    default: 'external',
+  },
+  animeId: {
+    type: Number,
+    default: null,
+  },
+  animeSlug: {
+    type: String,
+    default: '',
+  },
+  animeImage: {
+    type: String,
+    default: '',
+  },
+  currentEpisode: {
+    type: Number,
+    default: 1,
+  },
+  totalEpisodes: {
+    type: Number,
+    default: 0,
+  },
   targetAnime: {
     type: String,
     default: '',

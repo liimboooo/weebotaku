@@ -51,6 +51,7 @@ const NOTIF_TYPE_SETTING_MAP = {
   friend_online: 'friendsActivity',
   room_invite: 'friendsActivity',
   room_activity: 'friendsActivity',
+  room_ended: 'friendsActivity',
   system_update: 'systemUpdates',
   new_feature: 'newFeatures',
   recommendation: ['weeklyRecs', 'animeRecs'],

@@ -14,6 +14,11 @@ import {
   Zap,
   Wifi,
   Check,
+  Search,
+  SkipForward,
+  SkipBack,
+  Tv,
+  ExternalLink,
 } from "lucide-react";
 import { Room, RoomEvent } from "livekit-client";
 import AnimatedPage from "../../components/AnimatedPage";
@@ -21,7 +26,8 @@ import LiveRooms from "../../components/LiveRooms";
 import * as roomService from "../../services/roomService";
 import authService from "../../services/authService";
 import { addNotification } from "../../services/notificationService";
-import { fetchTopAnime } from "../../services/anilistApi";
+import { fetchTopAnime, fetchSearchAnime } from "../../services/anilistApi";
+import { findStreamingSource, getStreamUrls, getEpisodes } from "../../services/animeApi";
 import "./WatchTogetherCreative.css";
 
 function getEmbedSource(urlString) {
@@ -78,8 +84,22 @@ export default function WatchTogetherCreative() {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [participantCount, setParticipantCount] = useState(0);
   const [selectedAnime, setSelectedAnime] = useState("Jujutsu Kaisen");
-  const [privacyMode, setPrivacyMode] = useState("Public");
+  const [privacyMode, setPrivacyMode] = useState("public");
+  const [isHost, setIsHost] = useState(false);
   const [bitrate, setBitrate] = useState(6000);
+
+  // anime source mode
+  const [sourceType, setSourceType] = useState("anime");
+  const [animeSearch, setAnimeSearch] = useState("");
+  const [animeResults, setAnimeResults] = useState([]);
+  const [animeSearching, setAnimeSearching] = useState(false);
+  const [pickedAnime, setPickedAnime] = useState(null);
+  const [pickedEpisode, setPickedEpisode] = useState(1);
+  const [episodeCount, setEpisodeCount] = useState(0);
+  const [streamSource, setStreamSource] = useState(null);
+  const [resolvingStream, setResolvingStream] = useState(false);
+  const [currentEpisode, setCurrentEpisode] = useState(1);
+  const [totalEpisodes, setTotalEpisodes] = useState(0);
 
   const [rooms, setRooms] = useState([]);
   const [roomsLoading, setRoomsLoading] = useState(true);
@@ -91,7 +111,6 @@ export default function WatchTogetherCreative() {
   const [draftComms, setDraftComms] = useState("");
   const messagesEndRef = useRef(null);
   const liveRoomRef = useRef(null);
-  const chatListenersAttached = useRef(false);
 
   // friends activity
   const [friendsWatching, setFriendsWatching] = useState([]);
@@ -211,8 +230,6 @@ export default function WatchTogetherCreative() {
     if (liveRoomRef.current) {
       const count = liveRoomRef.current.participants.size + 1;
       setParticipantCount(count);
-      const rid = dbRoomIdRef.current;
-      if (rid) roomService.updateParticipantCount(rid, count).catch(() => {});
     }
   }, []);
 
@@ -251,14 +268,72 @@ export default function WatchTogetherCreative() {
       setLiveKitConnected(true);
       setLiveKitError('');
       stopChatPolling();
-      const rid = dbRoomIdRef.current;
-      if (rid) roomService.updateParticipantCount(rid, count).catch(() => {});
     } catch (err) {
       console.error('LiveKit connection failed:', err);
       setLiveKitError('LiveKit unavailable — using server chat.');
       startChatPolling(roomId);
     }
   }, [isLoggedIn, handleDataReceived, handleParticipantConnected, handleParticipantDisconnected, startChatPolling, stopChatPolling]);
+
+  // anime search with debounce
+  const searchTimeoutRef = useRef(null);
+  const handleAnimeSearch = useCallback((query) => {
+    setAnimeSearch(query);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    if (!query.trim()) { setAnimeResults([]); return; }
+    searchTimeoutRef.current = setTimeout(async () => {
+      setAnimeSearching(true);
+      try {
+        const res = await fetchSearchAnime(query.trim());
+        setAnimeResults((res.data || []).slice(0, 8));
+      } catch { setAnimeResults([]); }
+      setAnimeSearching(false);
+    }, 400);
+  }, []);
+
+  const handlePickAnime = useCallback(async (anime) => {
+    setPickedAnime(anime);
+    setSelectedAnime(anime.name);
+    setRoomName(`${anime.name} Watch Party`);
+    setAnimeSearch("");
+    setAnimeResults([]);
+    setEpisodeCount(anime.episodes || 0);
+    setPickedEpisode(1);
+
+    const src = await findStreamingSource(anime.name, anime.id);
+    if (src) {
+      setStreamSource(src);
+      const eps = await getEpisodes(anime.name, src.slug, src.source, src.sourceBase, src.anilistId);
+      if (eps.length) setEpisodeCount(eps.length);
+    }
+  }, []);
+
+  const resolveStreamUrl = useCallback(async (epNum) => {
+    if (!streamSource) return null;
+    setResolvingStream(true);
+    try {
+      const servers = await getStreamUrls(
+        String(epNum), streamSource.source, streamSource.anilistId, null, streamSource.slug
+      );
+      const sub = servers.find(s => s.type === 'sub') || servers[0];
+      return sub?.url || null;
+    } catch { return null; }
+    finally { setResolvingStream(false); }
+  }, [streamSource]);
+
+  const handleChangeEpisode = useCallback(async (epNum) => {
+    if (epNum < 1 || (totalEpisodes > 0 && epNum > totalEpisodes)) return;
+    const url = await resolveStreamUrl(epNum);
+    if (!url) {
+      addNotification({ title: "Stream Error", body: "Couldn't load this episode. Try another.", type: "error" });
+      return;
+    }
+    setCurrentEpisode(epNum);
+    setCurrentSourceUrl(url);
+    if (dbRoomId) {
+      roomService.updateEpisode(dbRoomId, epNum, url).catch(() => {});
+    }
+  }, [resolveStreamUrl, totalEpisodes, dbRoomId]);
 
   const toggleInvite = (friendId) => {
     setSelectedInvites(prev => {
@@ -270,26 +345,63 @@ export default function WatchTogetherCreative() {
   };
 
   const handleStartTransmission = async () => {
-    const nextSource = setupVideoUrl.trim();
-    const priv = privacyMode.toLowerCase();
+    let initialSourceUrl = '';
+    let animeIdVal = null;
+    let animeSlugVal = '';
+    let animeImageVal = '';
+    let epVal = 1;
+    let totalEpVal = 0;
+
+    if (sourceType === 'anime' && pickedAnime) {
+      setResolvingStream(true);
+      const url = await resolveStreamUrl(pickedEpisode);
+      setResolvingStream(false);
+      if (!url) {
+        addNotification({ title: "Stream Error", body: "Couldn't find a stream for this episode.", type: "error" });
+        return;
+      }
+      initialSourceUrl = url;
+      animeIdVal = pickedAnime.id;
+      animeSlugVal = streamSource?.slug || '';
+      animeImageVal = pickedAnime.img || '';
+      epVal = pickedEpisode;
+      totalEpVal = episodeCount || pickedAnime.episodes || 0;
+    } else {
+      initialSourceUrl = setupVideoUrl.trim();
+    }
 
     try {
       const res = await roomService.createRoom({
         name: roomName,
-        sourceUrl: nextSource,
+        sourceUrl: initialSourceUrl,
+        sourceType,
+        animeId: animeIdVal,
+        animeSlug: animeSlugVal,
+        animeImage: animeImageVal,
+        currentEpisode: epVal,
+        totalEpisodes: totalEpVal,
         targetAnime: selectedAnime,
-        privacy: priv,
+        privacy: privacyMode,
         bitrate,
         inviteUserIds: [...selectedInvites],
       });
       if (res.success) {
         setDbRoomId(res.data._id);
-        if (nextSource) setCurrentSourceUrl(nextSource);
+        setIsHost(true);
+        if (initialSourceUrl) setCurrentSourceUrl(initialSourceUrl);
+        setCurrentEpisode(epVal);
+        setTotalEpisodes(totalEpVal);
         setIsLive(true);
         setIsConfigOpen(false);
         setSelectedInvites(new Set());
+        setParticipantCount(1);
         setRooms(prev => [res.data, ...prev.filter(r => r._id !== res.data._id)]);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        if (sourceType === 'anime' && pickedAnime && !streamSource) {
+          const src = await findStreamingSource(pickedAnime.name, pickedAnime.id);
+          if (src) setStreamSource(src);
+        }
 
         if (isLoggedIn) {
           connectToLiveKit(res.data._id);
@@ -304,13 +416,26 @@ export default function WatchTogetherCreative() {
 
   const handleJoinRoom = useCallback(async (room) => {
     const roomId = room._id;
+    const hostId = room.host?._id || room.host;
     setRoomName(room.name || 'Zenith Broadcast');
     setCurrentSourceUrl(room.sourceUrl || '');
     setSelectedAnime(room.targetAnime || 'Other Broadcast');
-    setPrivacyMode(room.privacy === 'public' ? 'Public' : 'Private');
+    setPrivacyMode(room.privacy || 'public');
     setBitrate(room.bitrate || 6000);
     setDbRoomId(roomId);
+    setIsHost(currentUser?.id === hostId?.toString());
     setIsLive(true);
+    setParticipantCount(room.participantCount || 1);
+    setSourceType(room.sourceType || 'external');
+    setCurrentEpisode(room.currentEpisode || 1);
+    setTotalEpisodes(room.totalEpisodes || 0);
+
+    if (room.sourceType === 'anime' && room.animeId) {
+      findStreamingSource(room.targetAnime, room.animeId).then(src => {
+        if (src) setStreamSource(src);
+      }).catch(() => {});
+    }
+
     setChatMessages([
       {
         id: 1,
@@ -322,28 +447,79 @@ export default function WatchTogetherCreative() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (isLoggedIn) {
-      roomService.joinRoom(roomId).catch(() => {});
+      try {
+        const joinRes = await roomService.joinRoom(roomId);
+        if (!joinRes.success) {
+          setIsLive(false);
+          setDbRoomId(null);
+          addNotification({ title: "Can't Join", body: joinRes.message || "Room unavailable", type: "error" });
+          return;
+        }
+      } catch {
+        setIsLive(false);
+        setDbRoomId(null);
+        addNotification({ title: "Can't Join", body: "Failed to join room", type: "error" });
+        return;
+      }
       connectToLiveKit(roomId);
-    }
-  }, [isLoggedIn, connectToLiveKit]);
 
-  const handleStopTransmission = async () => {
+      roomService.getMessages(roomId).then(res => {
+        if (res.success && res.data.length > 0) {
+          const history = res.data.map(m => ({
+            id: m.ts + Math.random(),
+            name: m.username,
+            avatar: (m.username || 'A').charAt(0).toUpperCase(),
+            text: m.text,
+          }));
+          setChatMessages(prev => [...history, ...prev]);
+        }
+      }).catch(() => {});
+    }
+  }, [isLoggedIn, connectToLiveKit, currentUser?.id]);
+
+  const resetRoomState = useCallback(() => {
     if (liveRoomRef.current) {
       liveRoomRef.current.disconnect();
       liveRoomRef.current = null;
     }
     stopChatPolling();
     setLiveKitConnected(false);
+    setIsLive(false);
+    setIsHost(false);
+    setChatMessages([]);
+    setParticipantCount(0);
+    setDbRoomId(null);
+  }, [stopChatPolling]);
+
+  const handleLeaveRoom = async () => {
+    if (dbRoomId) {
+      try { await roomService.leaveRoom(dbRoomId); } catch {}
+    }
+    resetRoomState();
+  };
+
+  const handleEndStream = async () => {
     if (dbRoomId) {
       try { await roomService.leaveRoom(dbRoomId); } catch {}
       try { await roomService.endRoom(dbRoomId); } catch {}
       setRooms(prev => prev.filter(r => r._id !== dbRoomId));
-      setDbRoomId(null);
     }
-    setIsLive(false);
-    setChatMessages([]);
-    setParticipantCount(0);
+    resetRoomState();
   };
+
+  useEffect(() => {
+    if (!isLive || isHost || !dbRoomId) return;
+    const check = setInterval(async () => {
+      try {
+        const res = await roomService.getRoomById(dbRoomId);
+        if (!res.success || !res.data?.isLive) {
+          addNotification({ title: "Room Ended", body: "The host ended this room.", type: "info" });
+          resetRoomState();
+        }
+      } catch {}
+    }, 10000);
+    return () => clearInterval(check);
+  }, [isLive, isHost, dbRoomId, resetRoomState]);
 
   const handleCommsSubmit = (e) => {
     e.preventDefault();
@@ -468,7 +644,11 @@ export default function WatchTogetherCreative() {
                 </div>
                 <div className="stage-actions">
                   <button onClick={handleShareLink}><Share2 size={16} /> Share</button>
-                  <button className="exit-btn" onClick={handleStopTransmission}><X size={16} /> End Stream</button>
+                  {isHost ? (
+                    <button className="exit-btn" onClick={handleEndStream}><X size={16} /> End Stream</button>
+                  ) : (
+                    <button className="exit-btn exit-btn--leave" onClick={handleLeaveRoom}><X size={16} /> Leave Room</button>
+                  )}
                 </div>
               </div>
 
@@ -493,7 +673,7 @@ export default function WatchTogetherCreative() {
                   <div className="system-status">
                     <Link2 size={14} color="#10b981" />
                     <span>
-                      Secure {privacyMode} Uplink
+                      Secure {privacyMode === 'encrypted' ? 'Private' : privacyMode === 'followers' ? 'Followers' : 'Public'} Uplink
                       {liveKitConnected ? ' · Real-time Chat Active' : ' · Server Chat Active'}
                     </span>
                     {liveKitConnected && <span className="encryption-pill">E2E Encrypted</span>}
@@ -526,8 +706,10 @@ export default function WatchTogetherCreative() {
                       placeholder={!isLoggedIn ? "Login to chat..." : liveKitConnected ? "Send encrypted signal..." : "Send message..."}
                       value={draftComms}
                       onChange={(e) => setDraftComms(e.target.value)}
+                      maxLength={500}
+                      disabled={!isLoggedIn}
                     />
-                    <button type="submit"><Send size={16} /></button>
+                    <button type="submit" disabled={!isLoggedIn || !draftComms.trim()}><Send size={16} /></button>
                   </form>
                 </div>
               </div>
@@ -670,9 +852,9 @@ export default function WatchTogetherCreative() {
                     <div className="field">
                       <label>Privacy Level</label>
                       <select value={privacyMode} onChange={(e) => setPrivacyMode(e.target.value)}>
-                        <option>Public</option>
-                        <option>Encrypted (Private)</option>
-                        <option>Followers Only</option>
+                        <option value="public">Public</option>
+                        <option value="encrypted">Encrypted (Private)</option>
+                        <option value="followers">Followers Only</option>
                       </select>
                     </div>
                   </div>

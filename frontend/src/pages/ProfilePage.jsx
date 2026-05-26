@@ -5,6 +5,7 @@ import { removeFromWatchlist, updateListStatus } from "../services/storage";
 import authService from "../services/authService";
 import friendService from "../services/friendService";
 import * as roomService from "../services/roomService";
+import { addNotification } from "../services/notificationService";
 import { setPolledRemoteUserId } from "../services/socket";
 import AnimatedPage from "../components/AnimatedPage";
 import {
@@ -395,8 +396,12 @@ export default function ProfilePage() {
                         if (res.success) {
                           setShowWatchModal(false);
                           navigate(`/watch-together?room=${res.data._id}`);
+                        } else {
+                          addNotification({ title: "Room Error", body: res.message || "Failed to create room", type: "error" });
                         }
-                      } catch {}
+                      } catch {
+                        addNotification({ title: "Room Error", body: "Failed to create room. Try again.", type: "error" });
+                      }
                       setCreatingRoom(false);
                     }}
                   >

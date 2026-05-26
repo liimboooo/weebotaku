@@ -188,6 +188,17 @@
   color: #fff;
 }
 
+.stage-actions .exit-btn--leave {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+}
+
+.stage-actions .exit-btn--leave:hover {
+  background: #d97706;
+  color: #fff;
+}
+
 .stage-grid {
   display: grid;
   grid-template-columns: 1fr 380px;
@@ -351,11 +362,14 @@
 
 .config-modal {
   width: min(520px, 100%);
+  max-height: 90vh;
   background: #111;
   border: 1px solid rgba(139, 92, 246, 0.3);
   border-radius: 28px;
   overflow: hidden;
   box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-head {
@@ -383,6 +397,9 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .field {
@@ -934,6 +951,81 @@ input[type="range"]::-webkit-slider-thumb {
   }
   .friends-watching-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .watch-room-shell {
+    padding: 20px 12px;
+  }
+  .stage-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .stage-header h2 {
+    font-size: 1.5rem;
+  }
+  .stage-meta {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .stage-actions {
+    width: 100%;
+  }
+  .stage-actions button {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+  }
+  .chat-column {
+    min-height: 350px;
+  }
+  .chat-feed {
+    max-height: 300px;
+  }
+  .zenith-hero {
+    padding: 32px 16px;
+  }
+  .zenith-title-big {
+    font-size: 2.5rem;
+  }
+  .zenith-actions {
+    flex-direction: column;
+  }
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+  .friends-available-strip {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stage-header h2 {
+    font-size: 1.2rem;
+  }
+  .stage-meta {
+    font-size: 0.75rem;
+    gap: 8px;
+  }
+  .video-container {
+    border-radius: 16px;
+  }
+  .chat-column {
+    border-radius: 16px;
+    min-height: 300px;
+  }
+  .system-status {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .zenith-title-big {
+    font-size: 2rem;
+  }
+  .zenith-desc {
+    font-size: 0.85rem;
   }
 }
 

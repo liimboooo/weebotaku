@@ -89,10 +89,17 @@
 }
 
 .live-room-info h4 {
-  margin: 0 0 8px;
+  margin: 0 0 4px;
   font-size: 14px;
   color: var(--text-primary);
   font-weight: 700;
+}
+
+.live-room-anime {
+  font-size: 11px;
+  color: var(--accent-cyan);
+  font-weight: 600;
+  margin-bottom: 6px;
 }
 
 .live-room-info span {
