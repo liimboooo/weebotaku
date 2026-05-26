@@ -54,6 +54,15 @@ async function fetchWithTimeout(url, timeout = FETCH_TIMEOUT) {
   }
 }
 
+function extractServers(data) {
+  if (!data) return null;
+  if (Array.isArray(data.servers) && data.servers.length > 0) return data.servers;
+  if (data.data && Array.isArray(data.data.servers) && data.data.servers.length > 0) return data.data.servers;
+  if (data.result && Array.isArray(data.result)) return data.result;
+  if (Array.isArray(data)) return data;
+  return null;
+}
+
 async function tryFetch(url) {
   try {
     const res = await fetchWithTimeout(url);
@@ -63,6 +72,7 @@ async function tryFetch(url) {
     if (parsed && parsed.success && typeof parsed.data === "string") {
       return JSON.parse(parsed.data);
     }
+    if (parsed && parsed.success === false) return null;
     return parsed;
   } catch {
     return null;
@@ -74,15 +84,14 @@ async function fetchJsonViaProxy(url) {
   if (cached && Date.now() - cached.time < 300000) return cached.data;
 
   const attempts = [
+    () => tryFetch(url),
     () => tryFetch(`${CF_WORKER}${encodeURIComponent(url)}`),
     ...FALLBACK_PROXIES.map(p => () => tryFetch(`${p}${encodeURIComponent(url)}`)),
-    () => tryFetch(url),
-    () => tryFetch(`${BACKEND_PROXY}${encodeURIComponent(url)}`),
   ];
 
   for (const attempt of attempts) {
     const data = await attempt();
-    if (data) {
+    if (data && data.success !== false) {
       ssCache.set(url, { data, time: Date.now() });
       if (ssCache.size > 50) {
         const oldest = ssCache.keys().next().value;
@@ -154,8 +163,10 @@ async function searchReanimeSource(source, searchName, anilistId) {
     try {
       const url = `${base}/api/search?q=${encodeURIComponent(q)}`;
       const data = await fetchJsonViaProxy(url);
-      if (!data || !Array.isArray(data.results) || data.results.length === 0) continue;
-      const matched = mapResults(data.results, q);
+      if (!data) continue;
+      const results = data.results || data.data || (Array.isArray(data) ? data : null);
+      if (!Array.isArray(results) || results.length === 0) continue;
+      const matched = mapResults(results, q);
       if (matched.length > 0) return matched;
     } catch {}
   }
@@ -166,35 +177,47 @@ async function getEpisodesReanime(slug) {
   try {
     const url = `${REANIME_BASE}/api/episodes/${slug}`;
     const data = await fetchJsonViaProxy(url);
-    if (!data || !Array.isArray(data.data)) return [];
+    if (!data) return [];
 
-    return data.data.map(ep => ({
-      episode: ep.episode_number,
-      title: ep.title || `Episode ${ep.episode_number}`,
-      url: String(ep.episode_number),
-      thumbnail: ep.thumbnail || null,
+    const eps = data.data || data.episodes || data.results || (Array.isArray(data) ? data : null);
+    if (!Array.isArray(eps) || eps.length === 0) return [];
+
+    return eps.map(ep => ({
+      episode: ep.episode_number || ep.number || ep.episode || 0,
+      title: ep.title || `Episode ${ep.episode_number || ep.number || ep.episode || '?'}`,
+      url: String(ep.episode_number || ep.number || ep.episode || 1),
+      thumbnail: ep.thumbnail || ep.image || null,
       duration: ep.duration || null,
-      aired: ep.aired || null,
-      airDate: ep.air_date || ep.aired || null,
-    })).sort((a, b) => a.episode - b.episode);
+      aired: ep.aired || ep.airDate || null,
+      airDate: ep.air_date || ep.aired || ep.airDate || null,
+    })).filter(ep => ep.episode > 0).sort((a, b) => a.episode - b.episode);
   } catch {
     return [];
   }
 }
 
 async function getStreamUrlsReanime(epNum, anilistId, fallbackId, slug) {
-  const tryIds = [...new Set([anilistId, fallbackId, slug].filter(Boolean))];
+  const rawIds = [anilistId, fallbackId, slug].filter(Boolean);
+  const tryIds = [];
+  for (const id of rawIds) {
+    tryIds.push(String(id));
+    const n = Number(id);
+    if (Number.isInteger(n) && n > 0) tryIds.push(String(n));
+  }
   if (tryIds.length === 0) return [];
-  for (const id of tryIds) {
+  for (const id of [...new Set(tryIds)]) {
     try {
       const url = `${REANIME_BASE}/api/flix/${id}/${epNum}`;
       const data = await fetchJsonViaProxy(url);
-      if (data && data.success && Array.isArray(data.servers) && data.servers.length > 0) {
-        return data.servers.map(s => ({
-          label: `${s.serverName} (${s.dataType})`,
-          url: s.dataLink,
-          type: s.dataType,
-        }));
+      const servers = extractServers(data);
+      if (servers) {
+        return servers.map(s => ({
+          label: `${s.serverName || s.name || ''} (${s.dataType || s.type || 'sub'})`,
+          url: s.dataLink || s.url || s.file || '',
+          type: s.dataType || s.type || 'sub',
+          referer: s.referer || s.referrer || s.source || null,
+          embed: s.embed || null,
+        })).filter(s => s.url);
       }
     } catch {}
   }
