@@ -76,7 +76,6 @@ export default function WatchTogetherCreative() {
   const isLoggedIn = authService.isLoggedIn();
   const [searchParams] = useSearchParams();
 
-  const [animeOptions, setAnimeOptions] = useState(["Jujutsu Kaisen", "One Piece", "Demon Slayer", "Attack on Titan", "Naruto", "Chainsaw Man", "Solo Leveling", "My Hero Academia", "Other Broadcast"]);
   const [roomName, setRoomName] = useState("Zenith Watch Room");
   const [setupVideoUrl, setSetupVideoUrl] = useState("");
   const [currentSourceUrl, setCurrentSourceUrl] = useState("");
@@ -154,15 +153,20 @@ export default function WatchTogetherCreative() {
         const res = await roomService.getRooms();
         if (res.success) setRooms(res.data);
       } catch { /* use fallback */ }
-      setRoomsLoading(false);
-    })();
-    fetchTopAnime(1, "bypopularity").then(r => {
-      const titles = r.data.map(a => a.name).filter(Boolean);
-      if (titles.length) setAnimeOptions([...titles.slice(0, 15), "Other Broadcast"]);
-    }).catch(() => {});
+    setRoomsLoading(false);
+  })();
   }, []);
 
   // fetch friends activity
+  // load trending suggestions when config modal opens
+  useEffect(() => {
+    if (isConfigOpen && sourceType === 'anime' && !pickedAnime && animeResults.length === 0) {
+      fetchTopAnime(1, "bypopularity").then(r => {
+        if (r.data?.length) setAnimeResults(r.data.slice(0, 6));
+      }).catch(() => {});
+    }
+  }, [isConfigOpen, sourceType, pickedAnime, animeResults.length]);
+
   useEffect(() => {
     if (!isLoggedIn) return;
     const load = async () => {
@@ -515,11 +519,18 @@ export default function WatchTogetherCreative() {
         if (!res.success || !res.data?.isLive) {
           addNotification({ title: "Room Ended", body: "The host ended this room.", type: "info" });
           resetRoomState();
+          return;
+        }
+        // sync episode changes for viewers
+        if (sourceType === 'anime' && res.data.currentEpisode && res.data.currentEpisode !== currentEpisode) {
+          setCurrentEpisode(res.data.currentEpisode);
+          if (res.data.sourceUrl) setCurrentSourceUrl(res.data.sourceUrl);
+          addNotification({ title: "Episode Changed", body: `Now playing Episode ${res.data.currentEpisode}`, type: "info" });
         }
       } catch {}
-    }, 10000);
+    }, 8000);
     return () => clearInterval(check);
-  }, [isLive, isHost, dbRoomId, resetRoomState]);
+  }, [isLive, isHost, dbRoomId, resetRoomState, sourceType, currentEpisode]);
 
   const handleCommsSubmit = (e) => {
     e.preventDefault();
@@ -638,6 +649,31 @@ export default function WatchTogetherCreative() {
                       {participantCount.toLocaleString()} {liveKitConnected ? 'connected' : 'viewing'}
                     </span>
                     <span><Globe size={14} /> {selectedAnime}</span>
+                    {sourceType === 'anime' && totalEpisodes > 0 && (
+                      <span className="episode-badge">
+                        <Tv size={12} /> Ep {currentEpisode}/{totalEpisodes}
+                      </span>
+                    )}
+                    {sourceType === 'anime' && isHost && totalEpisodes > 0 && (
+                      <span className="episode-nav">
+                        <button
+                          className="ep-nav-btn"
+                          disabled={currentEpisode <= 1}
+                          onClick={() => handleChangeEpisode(currentEpisode - 1)}
+                          title="Previous episode"
+                        >
+                          <SkipBack size={14} />
+                        </button>
+                        <button
+                          className="ep-nav-btn"
+                          disabled={currentEpisode >= totalEpisodes}
+                          onClick={() => handleChangeEpisode(currentEpisode + 1)}
+                          title="Next episode"
+                        >
+                          <SkipForward size={14} />
+                        </button>
+                      </span>
+                    )}
                     <span className="bitrate-meta"><Zap size={14} color="#6d28d9" /> {bitrate} kbps</span>
                     {liveKitConnected && <span className="livekit-badge">LiveKit</span>}
                   </div>
@@ -834,21 +870,110 @@ export default function WatchTogetherCreative() {
                     />
                   </div>
                   <div className="field">
-                    <label>Broadcast URL <span className="field-hint">(YouTube, Twitch, or Direct link)</span></label>
-                    <input
-                      value={setupVideoUrl}
-                      onChange={(e) => setSetupVideoUrl(e.target.value)}
-                      placeholder="https://youtube.com/watch?v=..."
-                    />
+                    <label>Source Type</label>
+                    <div className="type-toggle-group">
+                      <button
+                        type="button"
+                        className={sourceType === 'anime' ? 'active' : ''}
+                        onClick={() => setSourceType('anime')}
+                      >
+                        <Tv size={14} /> Browse Anime
+                      </button>
+                      <button
+                        type="button"
+                        className={sourceType === 'external' ? 'active' : ''}
+                        onClick={() => setSourceType('external')}
+                      >
+                        <ExternalLink size={14} /> External Link
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="field-row">
+                  {sourceType === 'external' ? (
                     <div className="field">
-                      <label>Target Anime</label>
-                      <select value={selectedAnime} onChange={(e) => setSelectedAnime(e.target.value)}>
-                        {animeOptions.map((a) => <option key={a}>{a}</option>)}
-                      </select>
+                      <label>Broadcast URL <span className="field-hint">(YouTube, Twitch, or Direct link)</span></label>
+                      <input
+                        value={setupVideoUrl}
+                        onChange={(e) => setSetupVideoUrl(e.target.value)}
+                        placeholder="https://youtube.com/watch?v=..."
+                      />
                     </div>
+                  ) : (
+                    <>
+                      <div className="field">
+                        <label>Search Anime</label>
+                        <div className="anime-search-wrap">
+                          <Search size={14} className="anime-search-icon" />
+                          <input
+                            className="anime-search-input"
+                            value={animeSearch}
+                            onChange={(e) => handleAnimeSearch(e.target.value)}
+                            placeholder="Search anime..."
+                          />
+                          {animeSearching && <span className="anime-search-spinner" />}
+                        </div>
+                        {animeResults.length > 0 && (
+                          <div className="anime-search-results">
+                            {animeResults.map((a) => (
+                              <button
+                                key={a.id}
+                                type="button"
+                                className={`anime-search-item${pickedAnime?.id === a.id ? ' selected' : ''}`}
+                                onClick={() => handlePickAnime(a)}
+                              >
+                                <div className="anime-search-img">
+                                  {a.img ? <img src={a.img} alt={a.name} /> : <Tv size={14} />}
+                                </div>
+                                <div className="anime-search-info">
+                                  <span className="anime-search-name">{a.name}</span>
+                                  <span className="anime-search-meta">{a.episodes || '?'} eps</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {pickedAnime && (
+                        <div className="field">
+                          <label>Episode</label>
+                          <div className="episode-picker">
+                            <div className="episode-picker-info">
+                              <div className="episode-picker-img">
+                                {pickedAnime.img ? <img src={pickedAnime.img} alt={pickedAnime.name} /> : <Tv size={20} />}
+                              </div>
+                              <div className="episode-picker-text">
+                                <span className="episode-picker-title">{pickedAnime.name}</span>
+                                <span className="episode-picker-range">Episode {pickedEpisode}{episodeCount ? ` of ${episodeCount}` : ''}</span>
+                              </div>
+                            </div>
+                            <div className="episode-picker-controls">
+                              <button
+                                type="button"
+                                className="ep-picker-btn"
+                                disabled={pickedEpisode <= 1}
+                                onClick={() => setPickedEpisode(p => Math.max(1, p - 1))}
+                              >
+                                <SkipBack size={14} />
+                              </button>
+                              <span className="ep-picker-num">{pickedEpisode}</span>
+                              <button
+                                type="button"
+                                className="ep-picker-btn"
+                                disabled={episodeCount > 0 && pickedEpisode >= episodeCount}
+                                onClick={() => setPickedEpisode(p => Math.min(episodeCount || 999, p + 1))}
+                              >
+                                <SkipForward size={14} />
+                              </button>
+                            </div>
+                          </div>
+                          {resolvingStream && <span className="field-hint resolving-hint">Resolving stream source...</span>}
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  <div className="field-row">
                     <div className="field">
                       <label>Privacy Level</label>
                       <select value={privacyMode} onChange={(e) => setPrivacyMode(e.target.value)}>

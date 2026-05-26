@@ -19,7 +19,7 @@ function notifyRoomEnded(participantIds, hostUsername, roomName) {
 // @access  Private
 exports.createRoom = async (req, res) => {
   try {
-    const { name, sourceUrl, targetAnime, privacy, bitrate, inviteUserIds } = req.body;
+    const { name, sourceUrl, sourceType, targetAnime, privacy, bitrate, inviteUserIds, animeId, animeSlug, animeImage, currentEpisode, totalEpisodes } = req.body;
 
     const livekitRoom = `room_${Date.now()}`;
 
@@ -27,7 +27,13 @@ exports.createRoom = async (req, res) => {
       name: name || 'Zenith Broadcast',
       host: req.user.id,
       sourceUrl: sourceUrl || '',
+      sourceType: sourceType || 'external',
       targetAnime: targetAnime || '',
+      animeId: animeId || null,
+      animeSlug: animeSlug || '',
+      animeImage: animeImage || '',
+      currentEpisode: currentEpisode || 1,
+      totalEpisodes: totalEpisodes || 0,
       privacy: privacy || 'public',
       bitrate: bitrate || 6000,
       participants: [req.user.id],

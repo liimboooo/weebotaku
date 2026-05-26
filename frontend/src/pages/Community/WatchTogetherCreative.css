@@ -945,6 +945,265 @@ input[type="range"]::-webkit-slider-thumb {
   color: #fff;
 }
 
+/* ─── Anime Search ─────── */
+.anime-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.anime-search-icon {
+  position: absolute;
+  left: 12px;
+  color: #666;
+  pointer-events: none;
+}
+
+.anime-search-input {
+  width: 100%;
+  padding-left: 36px !important;
+}
+
+.anime-search-spinner {
+  position: absolute;
+  right: 12px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(139, 92, 246, 0.2);
+  border-top-color: #8b5cf6;
+  border-radius: 50%;
+  animation: auth-spin 0.6s linear infinite;
+}
+
+.anime-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.anime-search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: none;
+  color: #ccc;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+  text-align: left;
+}
+
+.anime-search-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.anime-search-item.selected {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #fff;
+}
+
+.anime-search-img {
+  width: 36px;
+  height: 50px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.anime-search-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.anime-search-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.anime-search-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.anime-search-meta {
+  font-size: 0.65rem;
+  color: #888;
+  font-weight: 600;
+}
+
+/* ─── Episode Picker (Config Modal) ─────── */
+.episode-picker {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.episode-picker-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.episode-picker-img {
+  width: 40px;
+  height: 56px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.episode-picker-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.episode-picker-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.episode-picker-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.episode-picker-range {
+  font-size: 0.65rem;
+  color: #8b5cf6;
+  font-weight: 700;
+}
+
+.episode-picker-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ep-picker-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ccc;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ep-picker-btn:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #fff;
+}
+
+.ep-picker-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.ep-picker-num {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #fff;
+  min-width: 24px;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+.resolving-hint {
+  animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ─── Episode Badge & Nav (Stage Header) ─────── */
+.episode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(139, 92, 246, 0.1);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #8b5cf6;
+}
+
+.episode-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ep-nav-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ccc;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.ep-nav-btn:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #fff;
+}
+
+.ep-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+@keyframes auth-spin {
+  to { transform: rotate(360deg); }
+}
+
 @media (max-width: 1000px) {
   .stage-grid {
     grid-template-columns: 1fr;
