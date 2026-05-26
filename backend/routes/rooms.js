@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   createRoom,
   getRooms,
+  getRoomsInit,
   getRoomById,
   getRoomStatus,
   getToken,
@@ -18,6 +19,7 @@ const { protect } = require('../middleware/auth');
 
 router.post('/', protect, createRoom);
 router.get('/', getRooms);
+router.get('/init', protect, getRoomsInit);
 router.get('/friends-activity', protect, getFriendsActivity);
 router.get('/:id', getRoomById);
 router.get('/:id/status', getRoomStatus);

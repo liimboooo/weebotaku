@@ -258,6 +258,102 @@ exports.getFriendsActivity = async (req, res) => {
   }
 };
 
+// @route   GET /api/rooms/init
+// @access  Private (combined rooms + friends activity in one call)
+exports.getRoomsInit = async (req, res) => {
+  try {
+    const now = Date.now();
+    if (now - lastCleanup > 5 * 60 * 1000) {
+      lastCleanup = now;
+      const staleThreshold = new Date(now - 6 * 60 * 60 * 1000);
+      Room.updateMany(
+        { isLive: true, createdAt: { $lt: staleThreshold } },
+        { isLive: false }
+      ).exec().catch(() => {});
+    }
+
+    const userId = req.user.id;
+
+    const [rooms, friendships] = await Promise.all([
+      Room.find({ isLive: true, privacy: 'public' })
+        .select('name host targetAnime participantCount privacy sourceType sourceUrl currentEpisode totalEpisodes animeId bitrate createdAt participants')
+        .populate('host', 'username avatar')
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .lean(),
+      Friendship.find({
+        $or: [{ requester: userId }, { recipient: userId }],
+        status: 'accepted',
+      }).select('requester recipient').lean(),
+    ]);
+
+    const friendIds = friendships.map(f =>
+      f.requester.toString() === userId ? f.recipient : f.requester
+    );
+    const friendIdSet = new Set(friendIds.map(id => id.toString()));
+
+    let watching = [];
+    let available = [];
+
+    if (friendIds.length > 0) {
+      const allFriends = await User.find(
+        { _id: { $in: friendIds } },
+        'username avatar'
+      ).lean();
+
+      const friendMap = new Map(allFriends.map(f => [f._id.toString(), f]));
+      const friendsInRooms = new Set();
+
+      const friendRooms = rooms.filter(room =>
+        room.participants?.some(pid => friendIdSet.has(pid.toString()))
+      );
+
+      watching = friendRooms.map(room => {
+        const friends = (room.participants || [])
+          .filter(pid => friendIdSet.has(pid.toString()))
+          .map(pid => {
+            const key = pid.toString();
+            friendsInRooms.add(key);
+            const f = friendMap.get(key);
+            return f ? { _id: f._id, username: f.username, avatar: f.avatar } : { _id: pid, username: '?', avatar: null };
+          });
+
+        return {
+          _id: room._id,
+          name: room.name,
+          targetAnime: room.targetAnime,
+          host: room.host,
+          participantCount: room.participantCount,
+          privacy: room.privacy,
+          sourceUrl: room.sourceUrl,
+          sourceType: room.sourceType,
+          currentEpisode: room.currentEpisode,
+          totalEpisodes: room.totalEpisodes,
+          animeId: room.animeId,
+          bitrate: room.bitrate,
+          friends,
+        };
+      });
+
+      available = allFriends.filter(f => !friendsInRooms.has(f._id.toString()));
+    }
+
+    const roomsClean = rooms.map(({ participants, ...rest }) => rest);
+
+    res.json({
+      success: true,
+      data: {
+        rooms: roomsClean,
+        watching,
+        available,
+      },
+    });
+  } catch (error) {
+    console.error('GetRoomsInit error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // @route   GET /api/rooms
 // @access  Public
 exports.getRooms = async (req, res) => {

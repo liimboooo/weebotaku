@@ -8,6 +8,10 @@ export async function getRooms() {
   return api.get('/rooms', { auth: false });
 }
 
+export async function getRoomsInit() {
+  return api.get('/rooms/init');
+}
+
 export async function getRoomById(id) {
   return api.get(`/rooms/${id}`, { auth: false });
 }

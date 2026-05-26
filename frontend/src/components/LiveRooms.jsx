@@ -50,7 +50,20 @@ export default function LiveRooms({ rooms: externalRooms, onJoin, loading: exter
         <p>Watch together with the community</p>
       </div>
       {loading ? (
-        <div className="live-rooms-loading">Scanning for active transmissions...</div>
+        <div className="live-rooms-grid">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="live-room-card live-room-skeleton">
+              <div className="live-room-img">
+                <div className="live-room-img-fallback skeleton-shimmer" />
+              </div>
+              <div className="live-room-info">
+                <div className="skeleton-line skeleton-shimmer" style={{ width: '70%', height: 14, borderRadius: 6 }} />
+                <div className="skeleton-line skeleton-shimmer" style={{ width: '40%', height: 10, borderRadius: 4, marginTop: 8 }} />
+                <div className="skeleton-line skeleton-shimmer" style={{ width: '55%', height: 10, borderRadius: 4, marginTop: 6 }} />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : rooms.length === 0 ? (
         <div className="live-rooms-empty">
           <Wifi size={24} />
