@@ -12,6 +12,10 @@ export async function getRoomById(id) {
   return api.get(`/rooms/${id}`, { auth: false });
 }
 
+export async function getRoomStatus(id) {
+  return api.get(`/rooms/${id}/status`, { auth: false });
+}
+
 export async function getRoomToken(id) {
   return api.post(`/rooms/${id}/token`);
 }

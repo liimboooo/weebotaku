@@ -44,7 +44,8 @@ exports.createRoom = async (req, res) => {
       livekitRoom,
     });
 
-    await room.populate('host', 'username avatar');
+    const roomData = room.toObject();
+    roomData.host = { _id: req.user._id, username: req.user.username, avatar: req.user.avatar || '' };
 
     const directInviteIds = new Set();
     if (Array.isArray(inviteUserIds)) {
@@ -55,7 +56,7 @@ exports.createRoom = async (req, res) => {
       directInviteIds.add(req.body.inviteUserId);
     }
 
-    res.status(201).json({ success: true, data: room });
+    res.status(201).json({ success: true, data: roomData });
 
     // fire-and-forget: send notifications after response
     const username = req.user.username;
@@ -75,21 +76,27 @@ exports.createRoom = async (req, res) => {
     Friendship.find({
       $or: [{ requester: userId }, { recipient: userId }],
       status: 'accepted',
-    }).then(friendships => {
-      friendships.forEach(f => {
-        const friendId = f.requester.toString() === userId
-          ? f.recipient.toString()
-          : f.requester.toString();
-        if (directInviteIds.has(friendId)) return;
-        Notification.create({
-          user: friendId,
-          type: 'room_activity',
-          title: `${username} started watching`,
-          body: room.targetAnime || room.name,
-          link: `/watch-together?room=${room._id}`,
-          fromUser: userId,
-        }).then(notif => emitNotification(friendId, notif)).catch(() => {});
-      });
+    }).lean().then(async (friendships) => {
+      const notifs = friendships
+        .map(f => {
+          const friendId = f.requester.toString() === userId
+            ? f.recipient.toString()
+            : f.requester.toString();
+          if (directInviteIds.has(friendId)) return null;
+          return {
+            user: friendId,
+            type: 'room_activity',
+            title: `${username} started watching`,
+            body: room.targetAnime || room.name,
+            link: `/watch-together?room=${room._id}`,
+            fromUser: userId,
+          };
+        })
+        .filter(Boolean);
+      if (notifs.length) {
+        const created = await Notification.insertMany(notifs);
+        created.forEach(n => emitNotification(n.user.toString(), n));
+      }
     }).catch(() => {});
   } catch (error) {
     console.error('CreateRoom error:', error);
@@ -101,7 +108,7 @@ exports.createRoom = async (req, res) => {
 // @access  Private
 exports.joinRoom = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id);
+    const room = await Room.findById(req.params.id).select('isLive privacy host participants').lean();
     if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
     if (!room.isLive) return res.status(400).json({ success: false, message: 'Room ended' });
 
@@ -116,13 +123,16 @@ exports.joinRoom = async (req, res) => {
       if (!isFriend) return res.status(403).json({ success: false, message: 'This room is private' });
     }
 
-    await Room.findByIdAndUpdate(req.params.id, {
-      $addToSet: { participants: req.user.id },
-      $inc: { participantCount: 1 },
-    });
+    const alreadyIn = room.participants.some(p => p.toString() === req.user.id);
 
-    const updated = await Room.findById(req.params.id)
-      .populate('host', 'username avatar');
+    const updated = await Room.findByIdAndUpdate(
+      req.params.id,
+      {
+        $addToSet: { participants: req.user.id },
+        ...(alreadyIn ? {} : { $inc: { participantCount: 1 } }),
+      },
+      { new: true }
+    ).populate('host', 'username avatar');
 
     res.json({ success: true, data: updated });
   } catch (error) {
@@ -135,7 +145,7 @@ exports.joinRoom = async (req, res) => {
 // @access  Private
 exports.leaveRoom = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id);
+    const room = await Room.findById(req.params.id).select('host participants name').lean();
     if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
 
     const isHostLeaving = room.host.toString() === req.user.id;
@@ -145,11 +155,10 @@ exports.leaveRoom = async (req, res) => {
         .map(p => p.toString())
         .filter(id => id !== req.user.id);
 
-      room.isLive = false;
-      room.participants = [];
-      room.participantCount = 0;
-      room.messages = [];
-      await room.save();
+      await Room.updateOne(
+        { _id: req.params.id },
+        { $set: { isLive: false, participants: [], participantCount: 0, messages: [] } }
+      );
 
       res.json({ success: true, message: 'Room ended (host left)' });
 
@@ -157,9 +166,14 @@ exports.leaveRoom = async (req, res) => {
       return;
     }
 
-    room.participants.pull(req.user.id);
-    room.participantCount = room.participants.length;
-    await room.save();
+    const updated = await Room.findByIdAndUpdate(
+      req.params.id,
+      { $pull: { participants: req.user.id } },
+      { new: true, select: 'participants' }
+    );
+    if (updated) {
+      await Room.updateOne({ _id: req.params.id }, { $set: { participantCount: updated.participants.length } });
+    }
 
     res.json({ success: true, message: 'Left room' });
   } catch (error) {
@@ -175,27 +189,43 @@ exports.getFriendsActivity = async (req, res) => {
     const friendships = await Friendship.find({
       $or: [{ requester: req.user.id }, { recipient: req.user.id }],
       status: 'accepted',
-    });
+    }).select('requester recipient').lean();
 
     const friendIds = friendships.map(f =>
       f.requester.toString() === req.user.id ? f.recipient : f.requester
     );
 
-    const activeRooms = await Room.find({
-      isLive: true,
-      privacy: 'public',
-      participants: { $in: friendIds },
-    })
-      .populate('host', 'username avatar')
-      .populate('participants', 'username avatar')
-      .sort({ createdAt: -1 });
+    const friendIdSet = new Set(friendIds.map(id => id.toString()));
 
+    const [activeRooms, allFriends] = await Promise.all([
+      Room.find({
+        isLive: true,
+        privacy: 'public',
+        participants: { $in: friendIds },
+      })
+        .select('name targetAnime host participantCount privacy sourceUrl sourceType currentEpisode totalEpisodes animeId bitrate participants')
+        .populate('host', 'username avatar')
+        .sort({ createdAt: -1 })
+        .lean(),
+      User.find(
+        { _id: { $in: friendIds } },
+        'username avatar'
+      ).lean(),
+    ]);
+
+    const friendMap = new Map(allFriends.map(f => [f._id.toString(), f]));
     const friendsInRooms = new Set();
+
     const roomsWithFriends = activeRooms.map(room => {
-      const friends = room.participants.filter(p =>
-        friendIds.some(fid => fid.toString() === p._id.toString())
-      );
-      friends.forEach(f => friendsInRooms.add(f._id.toString()));
+      const friends = room.participants
+        .filter(pid => friendIdSet.has(pid.toString()))
+        .map(pid => {
+          const key = pid.toString();
+          friendsInRooms.add(key);
+          const f = friendMap.get(key);
+          return f ? { _id: f._id, username: f.username, avatar: f.avatar } : { _id: pid, username: '?', avatar: null };
+        });
+
       return {
         _id: room._id,
         name: room.name,
@@ -209,14 +239,9 @@ exports.getFriendsActivity = async (req, res) => {
         totalEpisodes: room.totalEpisodes,
         animeId: room.animeId,
         bitrate: room.bitrate,
-        friends: friends.map(f => ({ _id: f._id, username: f.username, avatar: f.avatar })),
+        friends,
       };
     });
-
-    const allFriends = await User.find(
-      { _id: { $in: friendIds } },
-      'username avatar'
-    ).lean();
 
     const friendsNotInRooms = allFriends.filter(f => !friendsInRooms.has(f._id.toString()));
 
@@ -241,16 +266,18 @@ exports.getRooms = async (req, res) => {
     if (now - lastCleanup > 5 * 60 * 1000) {
       lastCleanup = now;
       const staleThreshold = new Date(now - 6 * 60 * 60 * 1000);
-      await Room.updateMany(
+      Room.updateMany(
         { isLive: true, createdAt: { $lt: staleThreshold } },
         { isLive: false }
-      );
+      ).exec().catch(() => {});
     }
 
     const rooms = await Room.find({ isLive: true, privacy: 'public' })
+      .select('name host targetAnime participantCount privacy sourceType currentEpisode totalEpisodes bitrate createdAt')
       .populate('host', 'username avatar')
       .sort({ createdAt: -1 })
-      .limit(20);
+      .limit(20)
+      .lean();
 
     res.json({ success: true, data: rooms });
   } catch (error) {
@@ -264,7 +291,8 @@ exports.getRooms = async (req, res) => {
 exports.getRoomById = async (req, res) => {
   try {
     const room = await Room.findById(req.params.id)
-      .populate('host', 'username avatar');
+      .populate('host', 'username avatar')
+      .lean();
 
     if (!room) {
       return res.status(404).json({ success: false, message: 'Room not found' });
@@ -277,11 +305,30 @@ exports.getRoomById = async (req, res) => {
   }
 };
 
+// @route   GET /api/rooms/:id/status
+// @access  Public (lightweight poll endpoint)
+exports.getRoomStatus = async (req, res) => {
+  try {
+    const room = await Room.findById(req.params.id)
+      .select('isLive currentEpisode sourceUrl participantCount')
+      .lean();
+
+    if (!room) {
+      return res.status(404).json({ success: false, message: 'Room not found' });
+    }
+
+    res.json({ success: true, data: room });
+  } catch (error) {
+    console.error('GetRoomStatus error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // @route   POST /api/rooms/:id/token
 // @access  Private
 exports.getToken = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id);
+    const room = await Room.findById(req.params.id).select('isLive participants host livekitRoom').lean();
 
     if (!room) {
       return res.status(404).json({ success: false, message: 'Room not found' });
@@ -334,7 +381,7 @@ exports.getToken = async (req, res) => {
 // @access  Private
 exports.endRoom = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id);
+    const room = await Room.findById(req.params.id).select('host participants name').lean();
 
     if (!room) {
       return res.status(404).json({ success: false, message: 'Room not found' });
@@ -348,11 +395,10 @@ exports.endRoom = async (req, res) => {
       .map(p => p.toString())
       .filter(id => id !== req.user.id);
 
-    room.isLive = false;
-    room.participants = [];
-    room.participantCount = 0;
-    room.messages = [];
-    await room.save();
+    await Room.updateOne(
+      { _id: req.params.id },
+      { $set: { isLive: false, participants: [], participantCount: 0, messages: [] } }
+    );
 
     res.json({ success: true, message: 'Room ended' });
 
@@ -422,13 +468,23 @@ exports.sendMessage = async (req, res) => {
 // @access  Private
 exports.getMessages = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id).select('messages');
+    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+    const after = req.query.after ? new Date(req.query.after) : null;
+
+    let query;
+    if (after) {
+      query = Room.findById(req.params.id, {
+        messages: { $elemMatch: { ts: { $gt: after } } },
+      });
+    } else {
+      query = Room.findById(req.params.id).select('messages');
+    }
+
+    const room = await query.lean();
     if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
 
-    const after = req.query.after ? new Date(req.query.after) : null;
     let msgs = room.messages || [];
     if (after) msgs = msgs.filter(m => new Date(m.ts) > after);
-    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
     msgs = msgs.slice(-limit);
 
     res.json({ success: true, data: msgs });

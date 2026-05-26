@@ -4,9 +4,11 @@ dotenv.config();
 const connectDB = require('../config/db');
 const app = require('../app');
 
-const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()).filter(Boolean)
-  : [];
+// Start DB connection at module load time (not on first request)
+const dbReady = connectDB().catch(err => {
+  console.error('Initial DB connection failed:', err.message);
+  return null;
+});
 
 const setCorsHeaders = (req, res) => {
   const origin = req.headers.origin;
@@ -20,8 +22,6 @@ const sendJSON = (res, status, data) => {
   res.writeHead(status, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(data));
 };
-
-let serverReady = false;
 
 module.exports = async (req, res) => {
   setCorsHeaders(req, res);
@@ -54,15 +54,13 @@ module.exports = async (req, res) => {
     }
   }
 
-  if (!serverReady) {
-    try {
-      await connectDB();
-      serverReady = true;
-    } catch (err) {
-      console.error('DB connection failed:', err.message);
-      sendJSON(res, 500, { success: false, message: 'Database connection failed' });
-      return;
-    }
+  try {
+    await dbReady;
+    await connectDB();
+  } catch (err) {
+    console.error('DB connection failed:', err.message);
+    sendJSON(res, 500, { success: false, message: 'Database connection failed' });
+    return;
   }
   app(req, res);
 };

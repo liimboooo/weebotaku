@@ -4,6 +4,7 @@ const {
   createRoom,
   getRooms,
   getRoomById,
+  getRoomStatus,
   getToken,
   endRoom,
   joinRoom,
@@ -19,6 +20,7 @@ router.post('/', protect, createRoom);
 router.get('/', getRooms);
 router.get('/friends-activity', protect, getFriendsActivity);
 router.get('/:id', getRoomById);
+router.get('/:id/status', getRoomStatus);
 router.post('/:id/token', protect, getToken);
 router.post('/:id/join', protect, joinRoom);
 router.post('/:id/leave', protect, leaveRoom);

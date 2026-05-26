@@ -15,13 +15,14 @@ exports.protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id);
+    req.user = await User.findById(decoded.id).select('username avatar email role').lean();
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'User not found' });
     }
     if (req.user.role === 'banned') {
       return res.status(403).json({ success: false, message: 'Account suspended' });
     }
+    req.user.id = req.user._id.toString();
     next();
   } catch (error) {
     return res.status(401).json({ success: false, message: 'Not authorized' });
@@ -39,7 +40,11 @@ exports.optionalAuth = async (req, res, next) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id);
+      const user = await User.findById(decoded.id).select('username avatar email role').lean();
+      if (user) {
+        user.id = user._id.toString();
+        req.user = user;
+      }
     } catch {
       // Invalid token — just continue without user
     }

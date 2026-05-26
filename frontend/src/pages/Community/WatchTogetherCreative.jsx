@@ -99,6 +99,7 @@ export default function WatchTogetherCreative() {
   const [resolvingStream, setResolvingStream] = useState(false);
   const pickGenRef = useRef(0);
   const [sourceResolving, setSourceResolving] = useState(false);
+  const [preResolvedUrl, setPreResolvedUrl] = useState(null);
   const [currentEpisode, setCurrentEpisode] = useState(1);
   const [totalEpisodes, setTotalEpisodes] = useState(0);
 
@@ -118,6 +119,7 @@ export default function WatchTogetherCreative() {
   const [friendsAvailable, setFriendsAvailable] = useState([]);
   const [selectedInvites, setSelectedInvites] = useState(new Set());
   const [friendSearch, setFriendSearch] = useState("");
+  const [creating, setCreating] = useState(false);
 
   const currentSource = getEmbedSource(currentSourceUrl);
 
@@ -170,6 +172,7 @@ export default function WatchTogetherCreative() {
     return () => { cancelled = true; };
   }, []);
 
+
   // fetch friends activity
   // load trending suggestions when config modal opens
   useEffect(() => {
@@ -181,8 +184,9 @@ export default function WatchTogetherCreative() {
   }, [isConfigOpen, sourceType, pickedAnime, animeResults.length]);
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn || isLive) return;
     const load = async () => {
+      if (document.hidden) return;
       try {
         const res = await roomService.getFriendsActivity();
         if (res.success) {
@@ -191,16 +195,18 @@ export default function WatchTogetherCreative() {
         }
       } catch {}
     };
-    load();
-    const interval = setInterval(load, 15000);
-    return () => clearInterval(interval);
-  }, [isLoggedIn]);
+    // stagger: let rooms load first, then fetch friends after 2s
+    const initialDelay = setTimeout(load, 2000);
+    const interval = setInterval(load, 20000);
+    return () => { clearTimeout(initialDelay); clearInterval(interval); };
+  }, [isLoggedIn, isLive]);
 
   // API chat polling (fallback when LiveKit unavailable)
   const startChatPolling = useCallback((roomId) => {
     if (chatPollRef.current) clearInterval(chatPollRef.current);
     lastMsgTsRef.current = new Date().toISOString();
     chatPollRef.current = setInterval(async () => {
+      if (document.hidden) return;
       try {
         const res = await roomService.getMessages(roomId, lastMsgTsRef.current);
         if (res.success && res.data.length > 0) {
@@ -219,7 +225,7 @@ export default function WatchTogetherCreative() {
           lastMsgTsRef.current = res.data[res.data.length - 1].ts;
         }
       } catch {}
-    }, 3000);
+    }, 5000);
   }, [currentUser?.username]);
 
   const stopChatPolling = useCallback(() => {
@@ -326,7 +332,16 @@ export default function WatchTogetherCreative() {
       setSourceResolving(false);
       if (src) {
         setStreamSource(src);
-        const eps = await getEpisodes(anime.name, src.slug, src.source, src.sourceBase, src.anilistId);
+        setPreResolvedUrl(null);
+        const epsPromise = getEpisodes(anime.name, src.slug, src.source, src.sourceBase, src.anilistId);
+        // pre-resolve episode 1 URL in parallel with episode list fetch
+        getStreamUrls(String(1), src.source, src.anilistId, null, src.slug)
+          .then(servers => {
+            if (gen !== pickGenRef.current) return;
+            const sub = servers.find(s => s.type === 'sub') || servers[0];
+            if (sub?.url) setPreResolvedUrl(sub.url);
+          }).catch(() => {});
+        const eps = await epsPromise;
         if (gen !== pickGenRef.current) return;
         if (eps.length) setEpisodeCount(eps.length);
       } else {
@@ -395,9 +410,12 @@ export default function WatchTogetherCreative() {
         addNotification({ title: "No Source", body: `No stream source for "${pickedAnime.name}". Use External Link mode or pick another anime.`, type: "error" });
         return;
       }
-      setResolvingStream(true);
-      const url = await resolveStreamUrl(pickedEpisode);
-      setResolvingStream(false);
+      let url = (pickedEpisode === 1 && preResolvedUrl) ? preResolvedUrl : null;
+      if (!url) {
+        setResolvingStream(true);
+        url = await resolveStreamUrl(pickedEpisode);
+        setResolvingStream(false);
+      }
       if (!url) {
         addNotification({ title: "Stream Error", body: `Couldn't load Episode ${pickedEpisode} for "${pickedAnime.name}". Try a different episode or use External Link.`, type: "error" });
         return;
@@ -416,6 +434,7 @@ export default function WatchTogetherCreative() {
       initialSourceUrl = setupVideoUrl.trim();
     }
 
+    setCreating(true);
     try {
       const res = await roomService.createRoom({
         name: roomName,
@@ -452,6 +471,8 @@ export default function WatchTogetherCreative() {
       setIsLive(false);
       setIsConfigOpen(false);
       addNotification({ title: "Room Error", body: "Failed to create room. Try again.", type: "error" });
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -551,14 +572,15 @@ export default function WatchTogetherCreative() {
   useEffect(() => {
     if (!isLive || isHost || !dbRoomId) return;
     const check = setInterval(async () => {
+      if (document.hidden) return;
       try {
-        const res = await roomService.getRoomById(dbRoomId);
+        const res = await roomService.getRoomStatus(dbRoomId);
         if (!res.success || !res.data?.isLive) {
           addNotification({ title: "Room Ended", body: "The host ended this room.", type: "info" });
           resetRoomState();
           return;
         }
-        // sync episode changes for viewers
+        if (res.data.participantCount) setParticipantCount(res.data.participantCount);
         if (sourceType === 'anime' && res.data.currentEpisode && res.data.currentEpisode !== currentEpisode) {
           setCurrentEpisode(res.data.currentEpisode);
           if (res.data.sourceUrl) setCurrentSourceUrl(res.data.sourceUrl);
@@ -1002,7 +1024,7 @@ export default function WatchTogetherCreative() {
                             <button
                               type="button"
                               className="clear-anime-btn"
-                              onClick={() => { setPickedAnime(null); setStreamSource(null); setSourceResolving(false); setAnimeResults([]); setAnimeSearch(""); }}
+                              onClick={() => { setPickedAnime(null); setStreamSource(null); setSourceResolving(false); setPreResolvedUrl(null); setAnimeResults([]); setAnimeSearch(""); }}
                             >
                               <X size={12} /> Change
                             </button>
@@ -1108,8 +1130,8 @@ export default function WatchTogetherCreative() {
                 </div>
                 <div className="modal-footer">
                   <button className="cancel-btn" onClick={() => setIsConfigOpen(false)}>Cancel</button>
-                  <button className="start-btn" onClick={handleStartTransmission} disabled={sourceResolving}>
-                    <Zap size={16} /> {sourceResolving ? 'Resolving Source...' : 'Initialize Uplink'}
+                  <button className="start-btn" onClick={handleStartTransmission} disabled={sourceResolving || creating}>
+                    <Zap size={16} /> {creating ? 'Creating Room...' : sourceResolving ? 'Resolving Source...' : 'Initialize Uplink'}
                   </button>
                 </div>
               </motion.div>
