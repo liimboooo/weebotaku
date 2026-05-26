@@ -391,7 +391,7 @@ export default function ProfilePage() {
                         const res = await roomService.createRoom({
                           name: watchRoomName.trim(),
                           privacy: 'encrypted',
-                          inviteUserId: remoteUserId,
+                          inviteUserIds: [remoteUserId],
                         });
                         if (res.success) {
                           setShowWatchModal(false);

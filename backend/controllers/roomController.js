@@ -1,6 +1,7 @@
 const Room = require('../models/Room');
 const Friendship = require('../models/Friendship');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 const { AccessToken } = require('livekit-server-sdk');
 const { emitNotification } = require('./notifyHelper');
 
@@ -212,7 +213,6 @@ exports.getFriendsActivity = async (req, res) => {
       };
     });
 
-    const User = require('../models/User');
     const allFriends = await User.find(
       { _id: { $in: friendIds } },
       'username avatar'

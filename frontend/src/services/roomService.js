@@ -37,8 +37,10 @@ export async function sendMessage(id, text) {
 }
 
 export async function getMessages(id, after) {
-  const q = after ? `?after=${encodeURIComponent(after)}` : '';
-  return api.get(`/rooms/${id}/chat${q}`);
+  const params = [];
+  if (after) params.push(`after=${encodeURIComponent(after)}`);
+  params.push('limit=50');
+  return api.get(`/rooms/${id}/chat?${params.join('&')}`);
 }
 
 export async function updateEpisode(id, episode, sourceUrl) {

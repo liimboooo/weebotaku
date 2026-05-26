@@ -617,7 +617,10 @@ export default function WatchTogetherCreative() {
     try {
       const res = await roomService.getRooms();
       if (res.success) setRooms(res.data);
-    } catch { /* ignore */ }
+      else addNotification({ title: "Refresh Failed", body: res.message || "Could not refresh rooms", type: "error" });
+    } catch {
+      addNotification({ title: "Refresh Failed", body: "Network error. Try again.", type: "error" });
+    }
     setRoomsLoading(false);
   };
 
@@ -695,15 +698,16 @@ export default function WatchTogetherCreative() {
                       <span className="episode-nav">
                         <button
                           className="ep-nav-btn"
-                          disabled={currentEpisode <= 1}
+                          disabled={currentEpisode <= 1 || resolvingStream}
                           onClick={() => handleChangeEpisode(currentEpisode - 1)}
                           title="Previous episode"
                         >
                           <SkipBack size={14} />
                         </button>
+                        {resolvingStream && <span className="ep-nav-spinner" />}
                         <button
                           className="ep-nav-btn"
-                          disabled={currentEpisode >= totalEpisodes}
+                          disabled={currentEpisode >= totalEpisodes || resolvingStream}
                           onClick={() => handleChangeEpisode(currentEpisode + 1)}
                           title="Next episode"
                         >

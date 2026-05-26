@@ -42,7 +42,7 @@ class ApiClient {
 
       clearTimeout(timeout);
 
-      if (response.status === 401 && !this._redirecting) {
+      if (response.status === 401 && !this._redirecting && !options.skipAuthRedirect) {
         this._redirecting = true;
         localStorage.removeItem('token');
         localStorage.removeItem('user');

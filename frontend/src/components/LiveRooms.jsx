@@ -25,9 +25,11 @@ export default function LiveRooms({ rooms: externalRooms, onJoin, loading: exter
 
   useEffect(() => {
     if (externalRooms) return;
+    let cancelled = false;
     roomService.getRooms().then(res => {
-      if (res.success) setFetchedRooms(res.data);
-    }).catch(() => {}).finally(() => setSelfLoading(false));
+      if (!cancelled && res.success) setFetchedRooms(res.data);
+    }).catch(() => {}).finally(() => { if (!cancelled) setSelfLoading(false); });
+    return () => { cancelled = true; };
   }, [externalRooms]);
 
   const rooms = externalRooms || fetchedRooms;
