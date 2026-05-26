@@ -1,11 +1,13 @@
 const Room = require('../models/Room');
+const Notification = require('../models/Notification');
 const { AccessToken } = require('livekit-server-sdk');
+const { emitNotification } = require('./notifyHelper');
 
 // @route   POST /api/rooms
 // @access  Private
 exports.createRoom = async (req, res) => {
   try {
-    const { name, sourceUrl, targetAnime, privacy, bitrate } = req.body;
+    const { name, sourceUrl, targetAnime, privacy, bitrate, inviteUserId } = req.body;
 
     const livekitRoom = `room_${Date.now()}`;
 
@@ -20,6 +22,18 @@ exports.createRoom = async (req, res) => {
     });
 
     await room.populate('host', 'username avatar');
+
+    if (inviteUserId && inviteUserId !== req.user.id) {
+      const notif = await Notification.create({
+        user: inviteUserId,
+        type: 'room_invite',
+        title: `${req.user.username} invited you to watch together`,
+        body: `Join "${room.name}"`,
+        link: `/watch-together?room=${room._id}`,
+        fromUser: req.user.id,
+      });
+      emitNotification(inviteUserId, notif);
+    }
 
     res.status(201).json({ success: true, data: room });
   } catch (error) {

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSearchParams } from "react-router-dom";
 import {
   Globe,
   Link2,
@@ -65,6 +66,7 @@ function getEmbedSource(urlString) {
 export default function WatchTogetherCreative() {
   const currentUser = authService.getCurrentUser();
   const isLoggedIn = authService.isLoggedIn();
+  const [searchParams] = useSearchParams();
 
   const [animeOptions, setAnimeOptions] = useState(["Jujutsu Kaisen", "One Piece", "Demon Slayer", "Attack on Titan", "Naruto", "Chainsaw Man", "Solo Leveling", "My Hero Academia", "Other Broadcast"]);
   const [roomName, setRoomName] = useState("Zenith Watch Room");
@@ -296,6 +298,19 @@ export default function WatchTogetherCreative() {
     } catch { /* ignore */ }
     setRoomsLoading(false);
   };
+
+  useEffect(() => {
+    const roomId = searchParams.get('room');
+    if (!roomId || !isLoggedIn || isLive) return;
+    (async () => {
+      try {
+        const res = await roomService.getRoomById(roomId);
+        if (res.success && res.data) {
+          handleJoinRoom(res.data);
+        }
+      } catch {}
+    })();
+  }, [searchParams, isLoggedIn, isLive]);
 
   return (
     <AnimatedPage>

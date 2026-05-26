@@ -4,12 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { removeFromWatchlist, updateListStatus } from "../services/storage";
 import authService from "../services/authService";
 import friendService from "../services/friendService";
+import * as roomService from "../services/roomService";
 import { setPolledRemoteUserId } from "../services/socket";
 import AnimatedPage from "../components/AnimatedPage";
 import {
   Bookmark, Eye, Clock, CheckCircle, Pause, XCircle,
   Share2, UserPlus, Plus, Star, Edit3, Trash2,
-  Calendar, LogOut, Search, Settings,
+  Calendar, LogOut, Search, Settings, Play,
   Heart, Film, BookOpen, Globe, MessageCircle,
 } from "lucide-react";
 import "./ProfilePage.css";
@@ -57,6 +58,9 @@ export default function ProfilePage() {
   const [remoteUserId, setRemoteUserId] = useState(null);
   const [friendStatus, setFriendStatus] = useState("none");
   const [friendshipId, setFriendshipId] = useState(null);
+  const [showWatchModal, setShowWatchModal] = useState(false);
+  const [watchRoomName, setWatchRoomName] = useState("");
+  const [creatingRoom, setCreatingRoom] = useState(false);
 
   const loadProfileData = useCallback(async () => {
     if (isRemoteProfile) return;
@@ -340,6 +344,11 @@ export default function ProfilePage() {
                   </button>
                 )
               )}
+              {isRemoteProfile && remoteUserId && friendStatus === "accepted" && (
+                <button className="upp-action-btn" onClick={() => { setWatchRoomName(`${username}'s Watch`); setShowWatchModal(true); }}>
+                  <Play size={14} /> Watch Together
+                </button>
+              )}
               {isOwnProfile && (
                 <button className="upp-action-btn" onClick={() => navigate("/settings")}>
                   <Settings size={14} /> Settings
@@ -352,6 +361,51 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
+
+          {/* ── Watch Together Modal ── */}
+          {showWatchModal && (
+            <div className="upp-modal-overlay" onClick={() => setShowWatchModal(false)}>
+              <div className="upp-modal" onClick={e => e.stopPropagation()}>
+                <h3 className="upp-modal-title">Watch Together</h3>
+                <p className="upp-modal-desc">A private room will be created and <strong>{username}</strong> will be notified.</p>
+                <div className="upp-field">
+                  <label>Room Name</label>
+                  <input
+                    className="upp-input"
+                    value={watchRoomName}
+                    onChange={e => setWatchRoomName(e.target.value)}
+                    placeholder="My Watch Party"
+                    autoFocus
+                    maxLength={100}
+                  />
+                </div>
+                <div className="upp-modal-foot">
+                  <button className="upp-btn-ghost" onClick={() => setShowWatchModal(false)}>Cancel</button>
+                  <button
+                    className="upp-btn-primary"
+                    disabled={!watchRoomName.trim() || creatingRoom}
+                    onClick={async () => {
+                      setCreatingRoom(true);
+                      try {
+                        const res = await roomService.createRoom({
+                          name: watchRoomName.trim(),
+                          privacy: 'encrypted',
+                          inviteUserId: remoteUserId,
+                        });
+                        if (res.success) {
+                          setShowWatchModal(false);
+                          navigate('/watch-together');
+                        }
+                      } catch {}
+                      setCreatingRoom(false);
+                    }}
+                  >
+                    {creatingRoom ? "Creating..." : "Create & Invite"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ── WATCHLIST ── */}
           <div className="upp-watchlist-section">

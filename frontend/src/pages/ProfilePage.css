@@ -766,3 +766,111 @@
     gap: 10px;
   }
 }
+
+/* ─── Watch Together Modal ───────────────── */
+.upp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.upp-modal {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+
+.upp-modal-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.upp-modal-desc {
+  color: #999;
+  font-size: 0.9rem;
+  margin: 0 0 1.25rem;
+  line-height: 1.5;
+}
+
+.upp-field {
+  margin-bottom: 1.25rem;
+}
+
+.upp-field label {
+  display: block;
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.upp-input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.upp-input:focus {
+  border-color: #7c3aed;
+}
+
+.upp-modal-foot {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.upp-btn-ghost {
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  color: #ccc;
+  padding: 0.55rem 1.2rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.upp-btn-ghost:hover {
+  background: #252525;
+}
+
+.upp-btn-primary {
+  background: #7c3aed;
+  border: none;
+  color: #fff;
+  padding: 0.55rem 1.4rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.upp-btn-primary:hover {
+  background: #6d28d9;
+}
+
+.upp-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
