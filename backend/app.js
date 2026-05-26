@@ -66,13 +66,18 @@ app.use('/api/friends', require('./routes/friends'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
 app.use('/api/notifications', require('./routes/notifications'));
 
-// Health check
-app.get('/api/health', (req, res) => {
+// Health check (also keeps DB connection warm for cron)
+app.get('/api/health', async (req, res) => {
+  const mongoose = require('mongoose');
+  const dbState = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  if (dbState !== 'connected') {
+    try { await require('./config/db')(); } catch {}
+  }
   res.json({
     success: true,
     message: 'AnimeWch API is running',
     timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV,
+    db: dbState,
   });
 });
 

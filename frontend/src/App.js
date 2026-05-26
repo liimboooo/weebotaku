@@ -93,6 +93,12 @@ function AppLayout() {
     if (token) syncFromBackend();
   }, [token]);
 
+  // warm up the API on app load so serverless function is ready
+  useEffect(() => {
+    const api = process.env.REACT_APP_API_URL;
+    if (api) fetch(`${api}/health`, { method: 'GET', priority: 'low' }).catch(() => {});
+  }, []);
+
   return (
     <>
       <ScrollToTop />

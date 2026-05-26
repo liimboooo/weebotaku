@@ -164,17 +164,15 @@ export default function WatchTogetherCreative() {
   useEffect(() => {
     let cancelled = false;
 
-    // try sessionStorage cache for instant render
+    // show cached data instantly while fresh data loads in background
     try {
       const cached = sessionStorage.getItem('wt_rooms');
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (Date.now() - parsed.ts < 60000) {
-          setRooms(parsed.rooms || []);
-          if (parsed.watching) setFriendsWatching(parsed.watching);
-          if (parsed.available) setFriendsAvailable(parsed.available);
-          setRoomsLoading(false);
-        }
+        setRooms(parsed.rooms || []);
+        if (parsed.watching) setFriendsWatching(parsed.watching);
+        if (parsed.available) setFriendsAvailable(parsed.available);
+        setRoomsLoading(false);
       }
     } catch {}
 

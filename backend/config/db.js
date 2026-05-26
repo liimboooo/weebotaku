@@ -5,18 +5,27 @@ if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
+mongoose.set('bufferCommands', false);
+
 const connectDB = async () => {
-  if (cached.conn) return cached.conn;
+  if (cached.conn) {
+    if (mongoose.connection.readyState === 1) return cached.conn;
+    cached.conn = null;
+    cached.promise = null;
+  }
 
   const uri = process.env.MONGODB_URI;
 
   if (!cached.promise) {
     cached.promise = mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000,
       maxPoolSize: 5,
       minPoolSize: 1,
-      socketTimeoutMS: 30000,
-      maxIdleTimeMS: 60000,
+      socketTimeoutMS: 20000,
+      maxIdleTimeMS: 30000,
+      family: 4,
+      autoIndex: process.env.NODE_ENV !== 'production',
     }).then(m => {
       console.log(`✅ MongoDB connected: ${m.connection.host}`);
       return m;
