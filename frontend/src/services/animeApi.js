@@ -183,9 +183,8 @@ async function getEpisodesReanime(slug) {
 }
 
 async function getStreamUrlsReanime(epNum, anilistId, fallbackId, slug) {
-  const ids = [anilistId, fallbackId].filter(Boolean);
-  if (ids.length === 0 && !slug) return [];
-  const tryIds = ids.length > 0 ? ids : [slug];
+  const tryIds = [...new Set([anilistId, fallbackId, slug].filter(Boolean))];
+  if (tryIds.length === 0) return [];
   for (const id of tryIds) {
     try {
       const url = `${REANIME_BASE}/api/flix/${id}/${epNum}`;
