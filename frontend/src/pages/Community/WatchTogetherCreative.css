@@ -461,6 +461,12 @@
   gap: 8px;
 }
 
+.start-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #4a4a6a;
+}
+
 .field-label-row {
   display: flex;
   justify-content: space-between;
@@ -1149,6 +1155,11 @@ input[type="range"]::-webkit-slider-thumb {
 
 .resolving-hint {
   animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+.source-unavailable-hint {
+  color: #f59e0b;
+  font-size: 0.7rem;
 }
 
 @keyframes pulse-text {

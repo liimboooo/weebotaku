@@ -97,6 +97,7 @@ export default function WatchTogetherCreative() {
   const [episodeCount, setEpisodeCount] = useState(0);
   const [streamSource, setStreamSource] = useState(null);
   const [resolvingStream, setResolvingStream] = useState(false);
+  const [sourceResolving, setSourceResolving] = useState(false);
   const [currentEpisode, setCurrentEpisode] = useState(1);
   const [totalEpisodes, setTotalEpisodes] = useState(0);
 
@@ -303,12 +304,17 @@ export default function WatchTogetherCreative() {
     setAnimeResults([]);
     setEpisodeCount(anime.episodes || 0);
     setPickedEpisode(1);
+    setStreamSource(null);
+    setSourceResolving(true);
 
     const src = await findStreamingSource(anime.name, anime.id);
+    setSourceResolving(false);
     if (src) {
       setStreamSource(src);
       const eps = await getEpisodes(anime.name, src.slug, src.source, src.sourceBase, src.anilistId);
       if (eps.length) setEpisodeCount(eps.length);
+    } else {
+      addNotification({ title: "Source Unavailable", body: `No stream source found for "${anime.name}". Try External Link mode instead.`, type: "warning" });
     }
   }, []);
 
@@ -357,11 +363,19 @@ export default function WatchTogetherCreative() {
     let totalEpVal = 0;
 
     if (sourceType === 'anime' && pickedAnime) {
+      if (!streamSource) {
+        if (sourceResolving) {
+          addNotification({ title: "Still Resolving", body: "Stream source is still loading. Please wait.", type: "info" });
+          return;
+        }
+        addNotification({ title: "No Source", body: `No stream source for "${pickedAnime.name}". Use External Link mode or pick another anime.`, type: "error" });
+        return;
+      }
       setResolvingStream(true);
       const url = await resolveStreamUrl(pickedEpisode);
       setResolvingStream(false);
       if (!url) {
-        addNotification({ title: "Stream Error", body: "Couldn't find a stream for this episode.", type: "error" });
+        addNotification({ title: "Stream Error", body: `Couldn't load Episode ${pickedEpisode} for "${pickedAnime.name}". Try a different episode or use External Link.`, type: "error" });
         return;
       }
       initialSourceUrl = url;
@@ -951,7 +965,7 @@ export default function WatchTogetherCreative() {
                               <button
                                 type="button"
                                 className="ep-picker-btn"
-                                disabled={pickedEpisode <= 1}
+                                disabled={pickedEpisode <= 1 || sourceResolving}
                                 onClick={() => setPickedEpisode(p => Math.max(1, p - 1))}
                               >
                                 <SkipBack size={14} />
@@ -960,14 +974,18 @@ export default function WatchTogetherCreative() {
                               <button
                                 type="button"
                                 className="ep-picker-btn"
-                                disabled={episodeCount > 0 && pickedEpisode >= episodeCount}
+                                disabled={(episodeCount > 0 && pickedEpisode >= episodeCount) || sourceResolving}
                                 onClick={() => setPickedEpisode(p => Math.min(episodeCount || 999, p + 1))}
                               >
                                 <SkipForward size={14} />
                               </button>
                             </div>
                           </div>
-                          {resolvingStream && <span className="field-hint resolving-hint">Resolving stream source...</span>}
+                          {sourceResolving && <span className="field-hint resolving-hint">Searching for stream source...</span>}
+                          {resolvingStream && <span className="field-hint resolving-hint">Resolving stream URL...</span>}
+                          {!sourceResolving && !streamSource && !resolvingStream && (
+                            <span className="field-hint source-unavailable-hint">No stream source available. Try another anime or use External Link mode.</span>
+                          )}
                         </div>
                       )}
                     </>
@@ -1038,8 +1056,8 @@ export default function WatchTogetherCreative() {
                 </div>
                 <div className="modal-footer">
                   <button className="cancel-btn" onClick={() => setIsConfigOpen(false)}>Cancel</button>
-                  <button className="start-btn" onClick={handleStartTransmission}>
-                    <Zap size={16} /> Initialize Uplink
+                  <button className="start-btn" onClick={handleStartTransmission} disabled={sourceResolving}>
+                    <Zap size={16} /> {sourceResolving ? 'Resolving Source...' : 'Initialize Uplink'}
                   </button>
                 </div>
               </motion.div>
