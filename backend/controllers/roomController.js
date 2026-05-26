@@ -406,7 +406,7 @@ exports.getRoomById = async (req, res) => {
 exports.getRoomStatus = async (req, res) => {
   try {
     const room = await Room.findById(req.params.id)
-      .select('isLive currentEpisode sourceUrl participantCount')
+      .select('isLive currentEpisode sourceUrl participantCount playbackStartedAt')
       .lean();
 
     if (!room) {
@@ -521,12 +521,12 @@ exports.updateEpisode = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Only the host can change episodes' });
     }
 
-    const update = { currentEpisode: episode };
+    const update = { currentEpisode: episode, playbackStartedAt: new Date() };
     if (sourceUrl) update.sourceUrl = sourceUrl;
 
     const updated = await Room.findByIdAndUpdate(req.params.id, { $set: update }, { new: true });
 
-    res.json({ success: true, data: { currentEpisode: updated.currentEpisode, sourceUrl: updated.sourceUrl } });
+    res.json({ success: true, data: { currentEpisode: updated.currentEpisode, sourceUrl: updated.sourceUrl, playbackStartedAt: updated.playbackStartedAt } });
   } catch (error) {
     console.error('UpdateEpisode error:', error);
     res.status(500).json({ success: false, message: 'Server error' });

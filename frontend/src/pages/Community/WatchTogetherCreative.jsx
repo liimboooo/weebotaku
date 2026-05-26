@@ -30,8 +30,9 @@ import { fetchTopAnime, fetchSearchAnime } from "../../services/anilistApi";
 import { findStreamingSource, getStreamUrls, getEpisodes } from "../../services/animeApi";
 import "./WatchTogetherCreative.css";
 
-function getEmbedSource(urlString) {
+function getEmbedSource(urlString, startOffsetSec) {
   if (!urlString) return null;
+  const offset = startOffsetSec && startOffsetSec > 5 ? Math.floor(startOffsetSec) : 0;
   try {
     const parsedUrl = new URL(urlString);
     const host = parsedUrl.hostname.replace(/^www\./, "").toLowerCase();
@@ -42,10 +43,12 @@ function getEmbedSource(urlString) {
       if (!videoId && host === "youtu.be") videoId = pathname.split("/").filter(Boolean)[0];
       if (!videoId && pathname.startsWith("/shorts/")) videoId = pathname.split("/")[2];
       if (videoId) {
+        const startParam = offset > 0 ? `&start=${offset}` : '';
         return {
           kind: "iframe",
-          url: `${process.env.REACT_APP_YOUTUBE_EMBED_BASE || "https://www.youtube-nocookie.com/embed/"}${videoId}?autoplay=1&rel=0&modestbranding=1`,
+          url: `${process.env.REACT_APP_YOUTUBE_EMBED_BASE || "https://www.youtube-nocookie.com/embed/"}${videoId}?autoplay=1&rel=0&modestbranding=1${startParam}`,
           title: "YouTube broadcast",
+          offset,
         };
       }
     }
@@ -58,6 +61,7 @@ function getEmbedSource(urlString) {
           kind: "iframe",
           url: `${process.env.REACT_APP_TWITCH_EMBED_BASE || "https://player.twitch.tv/"}?channel=${channel}&parent=${parentHost}&autoplay=true&muted=true`,
           title: "Twitch broadcast",
+          offset: 0,
         };
       }
     }
@@ -67,6 +71,7 @@ function getEmbedSource(urlString) {
       kind: directVideo ? "video" : "iframe",
       url: urlString,
       title: directVideo ? "Direct video broadcast" : "Broadcast feed",
+      offset,
     };
   } catch { return null; }
 }
@@ -102,6 +107,7 @@ export default function WatchTogetherCreative() {
   const [preResolvedUrl, setPreResolvedUrl] = useState(null);
   const [currentEpisode, setCurrentEpisode] = useState(1);
   const [totalEpisodes, setTotalEpisodes] = useState(0);
+  const [playbackStartedAt, setPlaybackStartedAt] = useState(null);
 
   const [rooms, setRooms] = useState([]);
   const [roomsLoading, setRoomsLoading] = useState(true);
@@ -113,6 +119,7 @@ export default function WatchTogetherCreative() {
   const [draftMessage, setDraftMessage] = useState("");
   const messagesEndRef = useRef(null);
   const liveRoomRef = useRef(null);
+  const videoRef = useRef(null);
 
   // friends activity
   const [friendsWatching, setFriendsWatching] = useState([]);
@@ -121,12 +128,13 @@ export default function WatchTogetherCreative() {
   const [friendSearch, setFriendSearch] = useState("");
   const [creating, setCreating] = useState(false);
 
-  const currentSource = getEmbedSource(currentSourceUrl);
+  const playbackOffset = (!isHost && playbackStartedAt) ? (Date.now() - new Date(playbackStartedAt).getTime()) / 1000 : 0;
+  const currentSource = getEmbedSource(currentSourceUrl, playbackOffset);
 
   useEffect(() => {
     const el = messagesEndRef.current?.parentElement;
     if (!el) return;
-    const threshold = 60;
+    const threshold = 120;
     const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     if (distFromBottom <= threshold) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -248,6 +256,7 @@ export default function WatchTogetherCreative() {
               name: m.username,
               avatar: (m.username || 'A').charAt(0).toUpperCase(),
               text: m.text,
+              time: new Date(m.ts),
             }));
           if (newMsgs.length) {
             setChatMessages(prev => [...prev, ...newMsgs]);
@@ -255,7 +264,7 @@ export default function WatchTogetherCreative() {
           lastMsgTsRef.current = res.data[res.data.length - 1].ts;
         }
       } catch {}
-    }, 5000);
+    }, 3000);
   }, [currentUser?.username]);
 
   const stopChatPolling = useCallback(() => {
@@ -274,6 +283,7 @@ export default function WatchTogetherCreative() {
           name: data.name || 'Anonymous',
           avatar: (data.name || 'A').charAt(0).toUpperCase(),
           text: (data.text || '').slice(0, 500),
+          time: new Date(),
         }]);
       }
     } catch { /* ignore bad data */ }
@@ -412,6 +422,7 @@ export default function WatchTogetherCreative() {
     }
     setCurrentEpisode(epNum);
     setCurrentSourceUrl(url);
+    setPlaybackStartedAt(new Date().toISOString());
   }, [resolveStreamUrl, totalEpisodes, dbRoomId]);
 
   const toggleInvite = (friendId) => {
@@ -486,6 +497,7 @@ export default function WatchTogetherCreative() {
         if (initialSourceUrl) setCurrentSourceUrl(initialSourceUrl);
         setCurrentEpisode(epVal);
         setTotalEpisodes(totalEpVal);
+        setPlaybackStartedAt(new Date().toISOString());
         setIsLive(true);
         setIsConfigOpen(false);
         setSelectedInvites(new Set());
@@ -521,6 +533,7 @@ export default function WatchTogetherCreative() {
     setSourceType(room.sourceType || 'external');
     setCurrentEpisode(room.currentEpisode || 1);
     setTotalEpisodes(room.totalEpisodes || 0);
+    setPlaybackStartedAt(room.playbackStartedAt || room.createdAt || null);
 
     if (room.sourceType === 'anime' && room.animeId) {
       findStreamingSource(room.targetAnime, room.animeId).then(src => {
@@ -614,6 +627,7 @@ export default function WatchTogetherCreative() {
         if (sourceType === 'anime' && res.data.currentEpisode && res.data.currentEpisode !== currentEpisode) {
           setCurrentEpisode(res.data.currentEpisode);
           if (res.data.sourceUrl) setCurrentSourceUrl(res.data.sourceUrl);
+          if (res.data.playbackStartedAt) setPlaybackStartedAt(res.data.playbackStartedAt);
           addNotification({ title: "Episode Changed", body: `Now playing Episode ${res.data.currentEpisode}`, type: "info" });
         }
       } catch {}
@@ -632,6 +646,7 @@ export default function WatchTogetherCreative() {
       avatar: (currentUser?.username || 'Y').charAt(0).toUpperCase(),
       name: currentUser?.username || 'You',
       text,
+      time: new Date(),
     }]);
 
     // send via LiveKit if connected
@@ -801,7 +816,17 @@ export default function WatchTogetherCreative() {
                         allow="autoplay; fullscreen"
                       />
                     ) : currentSource?.kind === "video" ? (
-                      <video src={currentSource.url} controls autoPlay />
+                      <video
+                        ref={videoRef}
+                        src={currentSource.url}
+                        controls
+                        autoPlay
+                        onLoadedMetadata={() => {
+                          if (videoRef.current && currentSource.offset > 5) {
+                            videoRef.current.currentTime = currentSource.offset;
+                          }
+                        }}
+                      />
                     ) : (
                       <div className="video-placeholder">
                         <Play size={48} />
@@ -822,19 +847,20 @@ export default function WatchTogetherCreative() {
 
                 <div className="chat-column">
                   <div className="chat-header">
-                    <h3>Neural Chat</h3>
-                    <span>{chatMessages.length} signals</span>
+                    <h3>Live Chat</h3>
+                    <span className="chat-viewer-count"><Users size={12} /> {participantCount}</span>
                   </div>
                   <div className="chat-feed">
                     {chatMessages.length === 0 && (
-                      <div className="chat-empty">No messages yet. Start the conversation!</div>
+                      <div className="chat-empty">No messages yet. Say something!</div>
                     )}
                     {chatMessages.map((msg) => (
-                      <div key={msg.id} className="chat-msg">
+                      <div key={msg.id} className={`chat-msg${msg.name === 'system' ? ' chat-msg--system' : ''}${msg.name === currentUser?.username ? ' chat-msg--own' : ''}`}>
                         <div className="chat-avatar">{msg.avatar}</div>
                         <div className="chat-content">
-                          <strong>{msg.name}</strong>
-                          <p>{msg.text}</p>
+                          <span className="chat-username">{msg.name}</span>
+                          <span className="chat-text">{msg.text}</span>
+                          {msg.time && <span className="chat-time">{new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
                         </div>
                       </div>
                     ))}

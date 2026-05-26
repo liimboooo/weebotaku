@@ -250,9 +250,9 @@
 }
 
 .chat-column {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 24px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   height: auto;
@@ -260,8 +260,8 @@
 }
 
 .chat-header {
-  padding: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -269,83 +269,158 @@
 
 .chat-header h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
 }
 
-.chat-header span {
-  font-size: 0.7rem;
+.chat-viewer-count {
+  font-size: 11px;
   color: #888;
-  font-weight: 800;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .chat-feed {
   flex: 1;
-  padding: 20px;
+  padding: 8px 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
   max-height: 500px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
 }
 
 .chat-msg {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  padding: 4px 12px;
+  align-items: flex-start;
+  animation: chat-slide-in 0.2s ease-out;
+  transition: background 0.15s;
+}
+
+.chat-msg:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+@keyframes chat-slide-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-msg--system {
+  opacity: 0.5;
+}
+
+.chat-msg--system .chat-avatar {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .chat-avatar {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6d28d9, #7f0c12);
+  background: linear-gradient(135deg, #6d28d9, #a855f7);
   display: grid;
   place-items: center;
-  font-size: 0.7rem;
-  font-weight: 900;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.chat-msg--own .chat-avatar {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+}
+
+.chat-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.chat-username {
+  font-size: 12px;
+  font-weight: 700;
+  color: #a78bfa;
   flex-shrink: 0;
 }
 
-.chat-content strong {
-  display: block;
-  font-size: 0.75rem;
-  margin-bottom: 4px;
-  color: #fff;
+.chat-msg--own .chat-username {
+  color: #22d3ee;
 }
 
-.chat-content p {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #ccc;
-  line-height: 1.5;
+.chat-msg--system .chat-username {
+  color: #888;
+}
+
+.chat-text {
+  font-size: 13px;
+  color: #e5e5e5;
+  word-break: break-word;
+}
+
+.chat-time {
+  font-size: 10px;
+  color: #555;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .chat-input {
-  padding: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .chat-input input {
   flex: 1;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 10px 14px;
+  border-radius: 20px;
+  padding: 8px 14px;
   color: #fff;
+  font-size: 13px;
   outline: none;
+  transition: border-color 0.2s;
+}
+
+.chat-input input:focus {
+  border-color: rgba(139, 92, 246, 0.5);
 }
 
 .chat-input button {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   background: #6d28d9;
   color: #fff;
   border: none;
   display: grid;
   place-items: center;
   cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.chat-input button:hover:not(:disabled) {
+  background: #7c3aed;
+  transform: scale(1.05);
+}
+
+.chat-input button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* Config Modal */
@@ -623,9 +698,9 @@ input[type="range"]::-webkit-slider-thumb {
 
 .chat-empty {
   text-align: center;
-  color: rgba(255, 255, 255, 0.2);
-  font-size: 0.8rem;
-  padding: 40px 20px;
+  color: rgba(255, 255, 255, 0.15);
+  font-size: 12px;
+  padding: 40px 16px;
 }
 
 .field-hint {

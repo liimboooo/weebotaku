@@ -70,6 +70,10 @@ const RoomSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  playbackStartedAt: {
+    type: Date,
+    default: Date.now,
+  },
   messages: [{
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     username: String,
