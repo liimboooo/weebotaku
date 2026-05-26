@@ -35,42 +35,42 @@ exports.createRoom = async (req, res) => {
       directInviteIds.add(req.body.inviteUserId);
     }
 
+    res.status(201).json({ success: true, data: room });
+
+    // fire-and-forget: send notifications after response
+    const username = req.user.username;
+    const userId = req.user.id;
+
     for (const uid of directInviteIds) {
-      const notif = await Notification.create({
+      Notification.create({
         user: uid,
         type: 'room_invite',
-        title: `${req.user.username} invited you to watch together`,
+        title: `${username} invited you to watch together`,
         body: `Join "${room.name}"`,
         link: `/watch-together?room=${room._id}`,
-        fromUser: req.user.id,
-      });
-      emitNotification(uid, notif);
+        fromUser: userId,
+      }).then(notif => emitNotification(uid, notif)).catch(() => {});
     }
 
-    // broadcast to all other friends
-    const friendships = await Friendship.find({
-      $or: [{ requester: req.user.id }, { recipient: req.user.id }],
+    Friendship.find({
+      $or: [{ requester: userId }, { recipient: userId }],
       status: 'accepted',
-    });
-
-    const broadcastPromises = friendships.map(async (f) => {
-      const friendId = f.requester.toString() === req.user.id
-        ? f.recipient.toString()
-        : f.requester.toString();
-      if (directInviteIds.has(friendId)) return;
-      const notif = await Notification.create({
-        user: friendId,
-        type: 'room_activity',
-        title: `${req.user.username} started watching`,
-        body: room.targetAnime || room.name,
-        link: `/watch-together?room=${room._id}`,
-        fromUser: req.user.id,
+    }).then(friendships => {
+      friendships.forEach(f => {
+        const friendId = f.requester.toString() === userId
+          ? f.recipient.toString()
+          : f.requester.toString();
+        if (directInviteIds.has(friendId)) return;
+        Notification.create({
+          user: friendId,
+          type: 'room_activity',
+          title: `${username} started watching`,
+          body: room.targetAnime || room.name,
+          link: `/watch-together?room=${room._id}`,
+          fromUser: userId,
+        }).then(notif => emitNotification(friendId, notif)).catch(() => {});
       });
-      emitNotification(friendId, notif);
-    });
-    await Promise.all(broadcastPromises);
-
-    res.status(201).json({ success: true, data: room });
+    }).catch(() => {});
   } catch (error) {
     console.error('CreateRoom error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
