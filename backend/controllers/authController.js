@@ -661,7 +661,10 @@ exports.get2FAStatus = async (req, res) => {
 // @route   POST /api/auth/email/request-verify
 exports.requestEmailVerify = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.json({ success: true, message: 'If that email exists, a verification link was sent' });
     if (user.emailVerified) return res.json({ success: true, message: 'Email already verified' });
     const token = require('crypto').randomBytes(32).toString('hex');
     user.emailVerificationToken = token;

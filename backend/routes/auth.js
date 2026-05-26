@@ -38,7 +38,7 @@ router.post('/2fa/disable', protect, disable2FA);
 router.post('/2fa/verify-login', verifyLogin2FA);
 router.get('/2fa/status', protect, get2FAStatus);
 
-router.post('/email/request-verify', protect, requestEmailVerify);
+router.post('/email/request-verify', requestEmailVerify);
 router.post('/email/verify/:token', verifyEmail);
 
 router.post('/password/forgot', forgotPassword);

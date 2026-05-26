@@ -32,6 +32,15 @@ export async function getFriendsActivity() {
   return api.get('/rooms/friends-activity');
 }
 
+export async function sendMessage(id, text) {
+  return api.post(`/rooms/${id}/chat`, { text });
+}
+
+export async function getMessages(id, after) {
+  const q = after ? `?after=${encodeURIComponent(after)}` : '';
+  return api.get(`/rooms/${id}/chat${q}`);
+}
+
 export async function updateParticipantCount(id, count) {
   return api.put(`/rooms/${id}/participants`, { count }, { auth: false });
 }

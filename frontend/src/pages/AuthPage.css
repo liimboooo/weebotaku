@@ -4,6 +4,91 @@
   background: var(--bg-deep);
 }
 
+/* ─── Status Card (verify / 2FA / registered) ─── */
+.auth-status-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.auth-status-card .auth-title {
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.auth-status-icon {
+  margin-bottom: 8px;
+}
+
+.auth-status-icon--success {
+  color: #4ade80;
+}
+
+.auth-status-icon--warning {
+  color: #fbbf24;
+}
+
+.auth-highlight {
+  color: #c4b5fd;
+}
+
+.auth-hint {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.auth-feedback {
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+}
+
+.auth-feedback--ok {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.auth-feedback--err {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.06);
+}
+
+.auth-back-btn {
+  background: none;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.auth-back-btn:hover {
+  border-color: var(--primary-border);
+  color: var(--text-primary);
+}
+
+.auth-2fa-wrap {
+  justify-content: center;
+}
+
+.auth-input--code {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 0.5em;
+  font-family: var(--font-mono);
+  padding: 16px !important;
+  max-width: 240px;
+}
+
 @keyframes auth-spin {
   to { transform: rotate(360deg); }
 }

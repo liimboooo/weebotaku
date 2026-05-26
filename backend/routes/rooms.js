@@ -10,6 +10,8 @@ const {
   joinRoom,
   leaveRoom,
   getFriendsActivity,
+  sendMessage,
+  getMessages,
 } = require('../controllers/roomController');
 const { protect, optionalAuth } = require('../middleware/auth');
 
@@ -20,6 +22,8 @@ router.get('/:id', getRoomById);
 router.post('/:id/token', protect, getToken);
 router.post('/:id/join', protect, joinRoom);
 router.post('/:id/leave', protect, leaveRoom);
+router.post('/:id/chat', protect, sendMessage);
+router.get('/:id/chat', protect, getMessages);
 router.put('/:id/end', protect, endRoom);
 router.put('/:id/participants', updateParticipantCount);
 

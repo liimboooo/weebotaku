@@ -45,6 +45,12 @@ const RoomSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  messages: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    username: String,
+    text: String,
+    ts: { type: Date, default: Date.now },
+  }],
 }, {
   timestamps: true,
 });

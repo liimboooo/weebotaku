@@ -104,11 +104,22 @@ export default function WatchTogetherCreative() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
+  const dbRoomIdRef = useRef(null);
+  const chatPollRef = useRef(null);
+  const lastMsgTsRef = useRef(null);
+
+  useEffect(() => { dbRoomIdRef.current = dbRoomId; }, [dbRoomId]);
+
+  // cleanup LiveKit + leave room on unmount / navigation
   useEffect(() => {
     const cleanup = () => {
       if (liveRoomRef.current) {
         liveRoomRef.current.disconnect();
         liveRoomRef.current = null;
+      }
+      if (chatPollRef.current) clearInterval(chatPollRef.current);
+      if (dbRoomIdRef.current) {
+        roomService.leaveRoom(dbRoomIdRef.current).catch(() => {});
       }
     };
     window.addEventListener('beforeunload', cleanup);
@@ -149,6 +160,39 @@ export default function WatchTogetherCreative() {
     return () => clearInterval(interval);
   }, [isLoggedIn]);
 
+  // API chat polling (fallback when LiveKit unavailable)
+  const startChatPolling = useCallback((roomId) => {
+    if (chatPollRef.current) clearInterval(chatPollRef.current);
+    lastMsgTsRef.current = new Date().toISOString();
+    chatPollRef.current = setInterval(async () => {
+      try {
+        const res = await roomService.getMessages(roomId, lastMsgTsRef.current);
+        if (res.success && res.data.length > 0) {
+          const myName = currentUser?.username;
+          const newMsgs = res.data
+            .filter(m => m.username !== myName)
+            .map(m => ({
+              id: m.ts + Math.random(),
+              name: m.username,
+              avatar: (m.username || 'A').charAt(0).toUpperCase(),
+              text: m.text,
+            }));
+          if (newMsgs.length) {
+            setChatMessages(prev => [...prev, ...newMsgs]);
+          }
+          lastMsgTsRef.current = res.data[res.data.length - 1].ts;
+        }
+      } catch {}
+    }, 3000);
+  }, [currentUser?.username]);
+
+  const stopChatPolling = useCallback(() => {
+    if (chatPollRef.current) {
+      clearInterval(chatPollRef.current);
+      chatPollRef.current = null;
+    }
+  }, []);
+
   const handleDataReceived = useCallback((payload) => {
     try {
       const data = JSON.parse(new TextDecoder().decode(payload));
@@ -167,11 +211,10 @@ export default function WatchTogetherCreative() {
     if (liveRoomRef.current) {
       const count = liveRoomRef.current.participants.size + 1;
       setParticipantCount(count);
-      if (dbRoomId) {
-        roomService.updateParticipantCount(dbRoomId, count).catch(() => {});
-      }
+      const rid = dbRoomIdRef.current;
+      if (rid) roomService.updateParticipantCount(rid, count).catch(() => {});
     }
-  }, [dbRoomId]);
+  }, []);
 
   const handleParticipantDisconnected = useCallback(() => {
     if (liveRoomRef.current) {
@@ -180,37 +223,18 @@ export default function WatchTogetherCreative() {
     }
   }, []);
 
-  const sendChatMessage = (text) => {
-    if (!liveRoomRef.current || !text.trim()) return;
-    const payload = JSON.stringify({
-      type: 'chat',
-      text: text.trim(),
-      name: currentUser?.username || 'Anonymous',
-    });
-    liveRoomRef.current.localParticipant.publishData(
-      new TextEncoder().encode(payload),
-      { reliable: true, topic: 'chat' }
-    );
-    setChatMessages(prev => [...prev, {
-      id: Date.now(),
-      name: currentUser?.username || 'You',
-      avatar: (currentUser?.username || 'Y').charAt(0).toUpperCase(),
-      text: text.trim(),
-    }]);
-  };
-
-  const connectToLiveKit = async (roomId) => {
+  const connectToLiveKit = useCallback(async (roomId) => {
     if (!isLoggedIn) return;
     try {
       const tokenRes = await roomService.getRoomToken(roomId);
       if (!tokenRes.success) {
-        setLiveKitError(tokenRes.message || 'LiveKit not configured. Chat will be local only.');
+        setLiveKitError('LiveKit unavailable — using server chat.');
+        startChatPolling(roomId);
         return;
       }
 
       const room = new Room();
       liveRoomRef.current = room;
-      chatListenersAttached.current = false;
 
       room.on(RoomEvent.DataReceived, handleDataReceived);
       room.on(RoomEvent.ParticipantConnected, handleParticipantConnected);
@@ -218,22 +242,23 @@ export default function WatchTogetherCreative() {
       room.on(RoomEvent.Disconnected, () => {
         setLiveKitConnected(false);
         setParticipantCount(0);
+        startChatPolling(roomId);
       });
 
       await room.connect(tokenRes.livekitUrl, tokenRes.token);
-      chatListenersAttached.current = true;
       const count = room.participants.size + 1;
       setParticipantCount(count);
       setLiveKitConnected(true);
       setLiveKitError('');
-      if (dbRoomId) {
-        roomService.updateParticipantCount(dbRoomId, count).catch(() => {});
-      }
+      stopChatPolling();
+      const rid = dbRoomIdRef.current;
+      if (rid) roomService.updateParticipantCount(rid, count).catch(() => {});
     } catch (err) {
       console.error('LiveKit connection failed:', err);
-      setLiveKitError('Failed to connect to LiveKit. Chat will be local only.');
+      setLiveKitError('LiveKit unavailable — using server chat.');
+      startChatPolling(roomId);
     }
-  };
+  }, [isLoggedIn, handleDataReceived, handleParticipantConnected, handleParticipantDisconnected, startChatPolling, stopChatPolling]);
 
   const toggleInvite = (friendId) => {
     setSelectedInvites(prev => {
@@ -300,14 +325,14 @@ export default function WatchTogetherCreative() {
       roomService.joinRoom(roomId).catch(() => {});
       connectToLiveKit(roomId);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoggedIn]);
+  }, [isLoggedIn, connectToLiveKit]);
 
   const handleStopTransmission = async () => {
     if (liveRoomRef.current) {
       liveRoomRef.current.disconnect();
       liveRoomRef.current = null;
     }
+    stopChatPolling();
     setLiveKitConnected(false);
     if (dbRoomId) {
       try { await roomService.leaveRoom(dbRoomId); } catch {}
@@ -322,17 +347,35 @@ export default function WatchTogetherCreative() {
 
   const handleCommsSubmit = (e) => {
     e.preventDefault();
-    if (!draftComms.trim()) return;
+    if (!draftComms.trim() || !isLoggedIn) return;
+    const text = draftComms.trim();
+
+    // always add locally immediately
+    setChatMessages(prev => [...prev, {
+      id: Date.now(),
+      avatar: (currentUser?.username || 'Y').charAt(0).toUpperCase(),
+      name: currentUser?.username || 'You',
+      text,
+    }]);
+
+    // send via LiveKit if connected
     if (liveRoomRef.current && liveKitConnected) {
-      sendChatMessage(draftComms);
-    } else {
-      setChatMessages(prev => [...prev, {
-        id: Date.now(),
-        avatar: (currentUser?.username || 'Y').charAt(0).toUpperCase(),
-        name: currentUser?.username || 'You',
-        text: draftComms.trim(),
-      }]);
+      const payload = JSON.stringify({
+        type: 'chat',
+        text,
+        name: currentUser?.username || 'Anonymous',
+      });
+      liveRoomRef.current.localParticipant.publishData(
+        new TextEncoder().encode(payload),
+        { reliable: true, topic: 'chat' }
+      );
     }
+
+    // always persist to API so polling users see it
+    if (dbRoomId) {
+      roomService.sendMessage(dbRoomId, text).catch(() => {});
+    }
+
     setDraftComms("");
   };
 
@@ -451,7 +494,7 @@ export default function WatchTogetherCreative() {
                     <Link2 size={14} color="#10b981" />
                     <span>
                       Secure {privacyMode} Uplink
-                      {liveKitConnected ? ' · Real-time Chat Active' : ' · Local chat only'}
+                      {liveKitConnected ? ' · Real-time Chat Active' : ' · Server Chat Active'}
                     </span>
                     {liveKitConnected && <span className="encryption-pill">E2E Encrypted</span>}
                     {liveKitError && <span className="livekit-warning">{liveKitError}</span>}
@@ -480,7 +523,7 @@ export default function WatchTogetherCreative() {
                   </div>
                   <form className="chat-input" onSubmit={handleCommsSubmit}>
                     <input
-                      placeholder={liveKitConnected ? "Send encrypted signal..." : "Send message..."}
+                      placeholder={!isLoggedIn ? "Login to chat..." : liveKitConnected ? "Send encrypted signal..." : "Send message..."}
                       value={draftComms}
                       onChange={(e) => setDraftComms(e.target.value)}
                     />
@@ -588,7 +631,7 @@ export default function WatchTogetherCreative() {
         </main>
 
           {isConfigOpen && createPortal(
-            <div className="config-overlay">
+            <div className="config-overlay" onClick={(e) => { if (e.target === e.currentTarget) setIsConfigOpen(false); }}>
               <motion.div
                 className="config-modal"
                 initial={{ opacity: 0, scale: 0.9 }}

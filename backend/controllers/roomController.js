@@ -288,6 +288,51 @@ exports.endRoom = async (req, res) => {
   }
 };
 
+// @route   POST /api/rooms/:id/chat
+// @access  Private
+exports.sendMessage = async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || !text.trim()) return res.status(400).json({ success: false, message: 'Message required' });
+
+    const room = await Room.findById(req.params.id);
+    if (!room || !room.isLive) return res.status(404).json({ success: false, message: 'Room not found' });
+
+    const msg = {
+      user: req.user.id,
+      username: req.user.username,
+      text: text.trim().slice(0, 500),
+      ts: new Date(),
+    };
+    room.messages.push(msg);
+    if (room.messages.length > 200) room.messages = room.messages.slice(-200);
+    await room.save();
+
+    res.status(201).json({ success: true, data: msg });
+  } catch (error) {
+    console.error('SendMessage error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   GET /api/rooms/:id/chat
+// @access  Private
+exports.getMessages = async (req, res) => {
+  try {
+    const room = await Room.findById(req.params.id).select('messages');
+    if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
+
+    const after = req.query.after ? new Date(req.query.after) : null;
+    let msgs = room.messages || [];
+    if (after) msgs = msgs.filter(m => new Date(m.ts) > after);
+
+    res.json({ success: true, data: msgs });
+  } catch (error) {
+    console.error('GetMessages error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // @route   PUT /api/rooms/:id/participants
 // @access  Public
 exports.updateParticipantCount = async (req, res) => {

@@ -4,7 +4,7 @@ import AuthForm from "../components/AuthForm";
 import AuthImage from "../components/AuthImage";
 import authService from "../services/authService";
 import { syncFromBackend } from "../services/storage";
-import { Mail, CheckCircle } from "lucide-react";
+import { Mail, CheckCircle, AlertCircle } from "lucide-react";
 import "./AuthPage.css";
 
 export default function AuthPage() {
@@ -144,19 +144,19 @@ export default function AuthPage() {
   if (registeredEmail) {
     return (
       <div className="auth-container">
-        <div className="auth-form">
-          <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-            <CheckCircle size={48} color="#4ade80" style={{ marginBottom: "1rem" }} />
-            <h2 className="auth-title" style={{ fontSize: "22px" }}>Check your email</h2>
-            <p className="auth-subtitle" style={{ lineHeight: "1.5" }}>
-              We sent a verification link to<br />
-              <strong style={{ color: "#c4b5fd" }}>{registeredEmail}</strong>
-            </p>
-            <p className="auth-subtitle" style={{ fontSize: "13px", marginTop: "0.75rem" }}>
-              Click the link to activate your account, then log in.
-            </p>
+        <div className="auth-card auth-status-card">
+          <div className="auth-status-icon auth-status-icon--success">
+            <CheckCircle size={48} />
           </div>
-          <button className="auth-switch" onClick={() => { setRegisteredEmail(""); switchMode(); }} style={{ width: "100%", marginTop: "0.5rem" }}>
+          <h2 className="auth-title">Check your email</h2>
+          <p className="auth-subtitle">
+            We sent a verification link to<br />
+            <strong className="auth-highlight">{registeredEmail}</strong>
+          </p>
+          <p className="auth-subtitle auth-hint">
+            Click the link to activate your account, then log in.
+          </p>
+          <button className="auth-button" onClick={() => { setRegisteredEmail(""); switchMode(); }}>
             Back to login
           </button>
         </div>
@@ -168,28 +168,28 @@ export default function AuthPage() {
   if (needsVerify) {
     return (
       <div className="auth-container">
-        <div className="auth-form">
-          <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-            <Mail size={48} color="#fbbf24" style={{ marginBottom: "1rem" }} />
-            <h2 className="auth-title" style={{ fontSize: "22px" }}>Email not verified</h2>
-            <p className="auth-subtitle" style={{ lineHeight: "1.5" }}>
-              Please verify your email before logging in.
-            </p>
-            {verifyEmail && (
-              <p style={{ color: "#888", fontSize: "13px", marginTop: "0.5rem" }}>
-                We sent a link to <strong style={{ color: "#c4b5fd" }}>{verifyEmail}</strong>
-              </p>
-            )}
+        <div className="auth-card auth-status-card">
+          <div className="auth-status-icon auth-status-icon--warning">
+            <Mail size={48} />
           </div>
+          <h2 className="auth-title">Email not verified</h2>
+          <p className="auth-subtitle">
+            Please verify your email before logging in.
+          </p>
+          {verifyEmail && (
+            <p className="auth-hint">
+              We sent a link to <strong className="auth-highlight">{verifyEmail}</strong>
+            </p>
+          )}
           {resentMsg && (
-            <p style={{ color: resentMsg.includes("sent") ? "#4ade80" : "#ff6b6b", fontSize: "13px", textAlign: "center", marginBottom: "0.75rem" }}>
+            <p className={`auth-feedback ${resentMsg.includes("sent") ? "auth-feedback--ok" : "auth-feedback--err"}`}>
               {resentMsg}
             </p>
           )}
-          <button className="auth-submit" onClick={handleResendVerify} disabled={resending}>
+          <button className="auth-button" onClick={handleResendVerify} disabled={resending}>
             {resending ? "Sending..." : "Resend verification email"}
           </button>
-          <button className="auth-switch" onClick={() => { setNeedsVerify(false); setError(""); setResentMsg(""); }} style={{ width: "100%", marginTop: "0.5rem" }}>
+          <button className="auth-back-btn" onClick={() => { setNeedsVerify(false); setError(""); setResentMsg(""); }}>
             Back to login
           </button>
         </div>
@@ -201,10 +201,10 @@ export default function AuthPage() {
   if (pending2FA) {
     return (
       <div className="auth-container">
-        <div className="auth-form">
+        <div className="auth-card auth-status-card">
           <h2 className="auth-title">Two-Factor Authentication</h2>
           <p className="auth-subtitle">Enter the 6-digit code from your authenticator app</p>
-          <div className="auth-field" style={{ marginTop: "1.5rem" }}>
+          <div className="auth-input-wrap auth-2fa-wrap">
             <input
               className="auth-input auth-input--code"
               type="text"
@@ -217,16 +217,15 @@ export default function AuthPage() {
               autoFocus
             />
           </div>
-          {error && <p className="auth-error" style={{ marginTop: "0.75rem" }}>{error}</p>}
+          {error && <div className="auth-error"><AlertCircle size={14} />{error}</div>}
           <button
-            className="auth-submit"
+            className="auth-button"
             onClick={handle2FASubmit}
             disabled={loading || twoFACode.length < 6}
-            style={{ marginTop: "1rem" }}
           >
             {loading ? "Verifying..." : "Verify"}
           </button>
-          <button className="auth-switch" onClick={() => { setPending2FA(null); setTwoFACode(""); setError(""); }} style={{ marginTop: "0.75rem" }}>
+          <button className="auth-back-btn" onClick={() => { setPending2FA(null); setTwoFACode(""); setError(""); }}>
             Back to login
           </button>
         </div>
@@ -249,6 +248,7 @@ export default function AuthPage() {
         onSubmit={handleSubmit}
         onModeChange={switchMode}
         error={error}
+        setError={setError}
         loading={loading}
         onGoogleSuccess={handleGoogleSuccess}
         onGoogleError={(msg) => setError(msg)}

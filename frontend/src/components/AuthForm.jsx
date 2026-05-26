@@ -4,7 +4,7 @@ import { Sparkles, Mail, User, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from
 
 const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
-export default function AuthForm({ type, username, email, password, setUsername, setEmail, setPassword, onSubmit, onModeChange, error, loading, onGoogleSuccess, onGoogleError }) {
+export default function AuthForm({ type, username, email, password, setUsername, setEmail, setPassword, onSubmit, onModeChange, error, setError, loading, onGoogleSuccess, onGoogleError }) {
   const navigate = useNavigate();
   const [showPw, setShowPw] = useState(false);
   const [confirmPw, setConfirmPw] = useState("");
@@ -67,7 +67,10 @@ export default function AuthForm({ type, username, email, password, setUsername,
 
       <form className="auth-form" onSubmit={(e) => {
         e.preventDefault();
-        if (type === "register" && password !== confirmPw) return;
+        if (type === "register" && password !== confirmPw) {
+          setError?.("Passwords do not match");
+          return;
+        }
         onSubmit();
       }}>
         {type === "register" && (
