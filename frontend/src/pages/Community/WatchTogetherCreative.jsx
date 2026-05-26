@@ -156,7 +156,7 @@ export default function WatchTogetherCreative() {
         liveRoomRef.current.disconnect();
         liveRoomRef.current = null;
       }
-      if (chatPollRef.current) clearInterval(chatPollRef.current);
+      if (chatPollRef.current) clearTimeout(chatPollRef.current);
       if (dbRoomIdRef.current) {
         roomService.leaveRoom(dbRoomIdRef.current).catch(() => {});
       }
@@ -239,12 +239,21 @@ export default function WatchTogetherCreative() {
     }
   }, [isConfigOpen, sourceType, pickedAnime, animeResults.length]);
 
-  // API chat polling (fallback when LiveKit unavailable)
+  // Adaptive chat polling — 2s when active, backs off to 5s when quiet
+  const chatIntervalRef = useRef(2000);
+  const idleCountRef = useRef(0);
+
   const startChatPolling = useCallback((roomId) => {
-    if (chatPollRef.current) clearInterval(chatPollRef.current);
+    if (chatPollRef.current) clearTimeout(chatPollRef.current);
     lastMsgTsRef.current = new Date().toISOString();
-    chatPollRef.current = setInterval(async () => {
-      if (document.hidden) return;
+    chatIntervalRef.current = 2000;
+    idleCountRef.current = 0;
+
+    const poll = async () => {
+      if (document.hidden) {
+        chatPollRef.current = setTimeout(poll, chatIntervalRef.current);
+        return;
+      }
       try {
         const res = await roomService.getMessages(roomId, lastMsgTsRef.current);
         if (res.success && res.data.length > 0) {
@@ -262,14 +271,21 @@ export default function WatchTogetherCreative() {
             setChatMessages(prev => [...prev, ...newMsgs]);
           }
           lastMsgTsRef.current = res.data[res.data.length - 1].ts;
+          chatIntervalRef.current = 2000;
+          idleCountRef.current = 0;
+        } else {
+          idleCountRef.current++;
+          if (idleCountRef.current > 5) chatIntervalRef.current = Math.min(5000, chatIntervalRef.current + 500);
         }
       } catch {}
-    }, 3000);
+      chatPollRef.current = setTimeout(poll, chatIntervalRef.current);
+    };
+    chatPollRef.current = setTimeout(poll, chatIntervalRef.current);
   }, [currentUser?.username]);
 
   const stopChatPolling = useCallback(() => {
     if (chatPollRef.current) {
-      clearInterval(chatPollRef.current);
+      clearTimeout(chatPollRef.current);
       chatPollRef.current = null;
     }
   }, []);
@@ -666,6 +682,10 @@ export default function WatchTogetherCreative() {
     if (dbRoomId) {
       roomService.sendMessage(dbRoomId, text).catch(() => {});
     }
+
+    // reset adaptive polling to fast mode after sending
+    chatIntervalRef.current = 2000;
+    idleCountRef.current = 0;
 
     setDraftMessage("");
   };
