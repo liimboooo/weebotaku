@@ -45,7 +45,7 @@ exports.createRoom = async (req, res) => {
     });
 
     const roomData = room.toObject();
-    roomData.host = { _id: req.user._id, username: req.user.username, avatar: req.user.avatar || '' };
+    roomData.host = { _id: req.user._id, username: req.user.username };
 
     const directInviteIds = new Set();
     if (Array.isArray(inviteUserIds)) {
@@ -132,7 +132,7 @@ exports.joinRoom = async (req, res) => {
         ...(alreadyIn ? {} : { $inc: { participantCount: 1 } }),
       },
       { new: true }
-    ).populate('host', 'username avatar');
+    ).populate('host', 'username');
 
     res.json({ success: true, data: updated });
   } catch (error) {
@@ -204,12 +204,12 @@ exports.getFriendsActivity = async (req, res) => {
         participants: { $in: friendIds },
       })
         .select('name targetAnime host participantCount privacy sourceUrl sourceType currentEpisode totalEpisodes animeId bitrate participants')
-        .populate('host', 'username avatar')
+        .populate('host', 'username')
         .sort({ createdAt: -1 })
         .lean(),
       User.find(
         { _id: { $in: friendIds } },
-        'username avatar'
+        'username'
       ).lean(),
     ]);
 
@@ -223,7 +223,7 @@ exports.getFriendsActivity = async (req, res) => {
           const key = pid.toString();
           friendsInRooms.add(key);
           const f = friendMap.get(key);
-          return f ? { _id: f._id, username: f.username, avatar: f.avatar } : { _id: pid, username: '?', avatar: null };
+          return f ? { _id: f._id, username: f.username } : { _id: pid, username: '?' };
         });
 
       return {
@@ -277,7 +277,7 @@ exports.getRoomsInit = async (req, res) => {
     const [rooms, friendships] = await Promise.all([
       Room.find({ isLive: true, privacy: 'public' })
         .select('name host targetAnime participantCount privacy sourceType sourceUrl currentEpisode totalEpisodes animeId bitrate createdAt participants')
-        .populate('host', 'username avatar')
+        .populate('host', 'username')
         .sort({ createdAt: -1 })
         .limit(20)
         .lean(),
@@ -298,7 +298,7 @@ exports.getRoomsInit = async (req, res) => {
     if (friendIds.length > 0) {
       const allFriends = await User.find(
         { _id: { $in: friendIds } },
-        'username avatar'
+        'username'
       ).lean();
 
       const friendMap = new Map(allFriends.map(f => [f._id.toString(), f]));
@@ -315,7 +315,7 @@ exports.getRoomsInit = async (req, res) => {
             const key = pid.toString();
             friendsInRooms.add(key);
             const f = friendMap.get(key);
-            return f ? { _id: f._id, username: f.username, avatar: f.avatar } : { _id: pid, username: '?', avatar: null };
+            return f ? { _id: f._id, username: f.username } : { _id: pid, username: '?' };
           });
 
         return {
@@ -370,7 +370,7 @@ exports.getRooms = async (req, res) => {
 
     const rooms = await Room.find({ isLive: true, privacy: 'public' })
       .select('name host targetAnime participantCount privacy sourceType currentEpisode totalEpisodes bitrate createdAt')
-      .populate('host', 'username avatar')
+      .populate('host', 'username')
       .sort({ createdAt: -1 })
       .limit(20)
       .lean();
@@ -387,7 +387,7 @@ exports.getRooms = async (req, res) => {
 exports.getRoomById = async (req, res) => {
   try {
     const room = await Room.findById(req.params.id)
-      .populate('host', 'username avatar')
+      .populate('host', 'username')
       .lean();
 
     if (!room) {
