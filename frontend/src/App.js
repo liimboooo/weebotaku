@@ -93,10 +93,14 @@ function AppLayout() {
     if (token) syncFromBackend();
   }, [token]);
 
-  // warm up the API on app load so serverless function is ready
+  // keep API warm — ping every 4 min while user is on site
   useEffect(() => {
     const api = process.env.REACT_APP_API_URL;
-    if (api) fetch(`${api}/health`, { method: 'GET', priority: 'low' }).catch(() => {});
+    if (!api) return;
+    const ping = () => { if (!document.hidden) fetch(`${api}/health`).catch(() => {}); };
+    ping();
+    const interval = setInterval(ping, 4 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   return (

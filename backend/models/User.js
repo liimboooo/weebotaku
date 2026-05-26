@@ -216,9 +216,11 @@ UserSchema.methods.matchPassword = async function (enteredPassword) {
 };
 
 UserSchema.methods.getSignedJwtToken = function () {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE,
-  });
+  return jwt.sign(
+    { id: this._id, username: this.username, avatar: this.avatar || '', role: this.role || 'user' },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRE }
+  );
 };
 
 UserSchema.methods.toPublic = function () {
