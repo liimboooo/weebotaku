@@ -358,7 +358,7 @@ exports.getRooms = async (req, res) => {
     }
 
     const rooms = await Room.find({ isLive: true, privacy: 'public' })
-      .select('name host targetAnime participantCount privacy sourceType sourceUrl currentEpisode totalEpisodes animeId animeSlug bitrate playbackStartedAt createdAt')
+      .select('name host targetAnime participantCount privacy sourceType sourceUrl currentEpisode totalEpisodes animeId animeSlug bitrate playbackStartedAt currentTime positionUpdatedAt createdAt')
       .populate('host', 'username')
       .sort({ createdAt: -1 })
       .limit(20)
