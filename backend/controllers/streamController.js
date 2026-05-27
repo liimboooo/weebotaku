@@ -1,5 +1,3 @@
-const https = require('https');
-const http = require('http');
 const zlib = require('zlib');
 const fetch = require('node-fetch');
 
@@ -10,7 +8,8 @@ const PIPE_HEADERS = {
   'Referer': 'https://www.miruro.tv/',
 };
 
-const PROVIDER_PRIORITY = ['ally', 'bee', 'kiwi', 'dune', 'hop'];
+const PROVIDER_PRIORITY = ['ally', 'bee', 'ANIMEKAI', 'kiwi', 'dune', 'hop'];
+const BLOCKED_CDN_HOSTS = ['uwucdn.top'];
 
 function encodePipeRequest(payload) {
   return Buffer.from(JSON.stringify(payload)).toString('base64url').replace(/=+$/, '');
@@ -185,6 +184,7 @@ exports.autoSources = async (req, res) => {
     deepTranslateIds(epData);
 
     const providers = epData.providers || {};
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
 
     for (const pname of PROVIDER_PRIORITY) {
       const provData = providers[pname];
@@ -201,25 +201,28 @@ exports.autoSources = async (req, res) => {
           body: null, version: '0.1.0',
         });
 
-        const active = (sources.streams || []).find(s => s.type === 'hls' && s.url && s.isActive);
-        const fallback = (sources.streams || []).find(s => s.type === 'hls' && s.url);
-        const stream = active || fallback;
-        if (!stream) continue;
+        const isBlocked = (url) => BLOCKED_CDN_HOSTS.some(h => url.includes(h));
 
-        const baseUrl = `${req.protocol}://${req.get('host')}`;
-        return res.json({
-          success: true,
-          data: {
-            provider: pname,
-            stream: {
-              url: `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(stream.url)}&ref=${encodeURIComponent(stream.referer || '')}`,
-              quality: stream.quality,
+        const active = (sources.streams || []).find(s => s.type === 'hls' && s.url && s.isActive && !isBlocked(s.url));
+        const fallback = (sources.streams || []).find(s => s.type === 'hls' && s.url && !isBlocked(s.url));
+        const stream = active || fallback;
+
+        if (stream) {
+          return res.json({
+            success: true,
+            data: {
+              provider: pname,
+              stream: {
+                url: `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(stream.url)}&ref=${encodeURIComponent(stream.referer || '')}`,
+                quality: stream.quality,
+              },
+              subtitles: (sources.subtitles || []).map(s => ({ url: s.file || s.url, label: s.label || s.language })),
+              intro: sources.intro || null,
+              outro: sources.outro || null,
             },
-            subtitles: (sources.subtitles || []).map(s => ({ url: s.file || s.url, label: s.label || s.language })),
-            intro: sources.intro || null,
-            outro: sources.outro || null,
-          },
-        });
+          });
+        }
+
       } catch { continue; }
     }
 
