@@ -67,9 +67,10 @@ function getEmbedSource(urlString, startOffsetSec) {
     }
 
     const directVideo = /\.(mp4|webm|ogg|m3u8)(\?|#|$)/i.test(parsedUrl.pathname + parsedUrl.search + parsedUrl.hash);
+    const seekHash = offset > 0 ? `${urlString.includes("#") ? "&" : "#"}t=${offset}` : '';
     return {
       kind: directVideo ? "video" : "iframe",
-      url: urlString,
+      url: directVideo ? urlString : `${urlString}${seekHash}`,
       title: directVideo ? "Direct video broadcast" : "Broadcast feed",
       offset,
     };
@@ -824,12 +825,6 @@ export default function WatchTogetherCreative() {
 
               <div className="stage-grid">
                 <div className="video-column">
-                  {!isHost && playbackOffset > 30 && currentSource?.kind === "iframe" && (
-                    <div className="sync-banner">
-                      <Wifi size={14} />
-                      <span>Room started {Math.floor(playbackOffset / 60)}m {Math.floor(playbackOffset % 60)}s ago — skip ahead in the player to sync up</span>
-                    </div>
-                  )}
                   <div className="video-container">
                     {currentSource?.kind === "iframe" ? (
                       <iframe
