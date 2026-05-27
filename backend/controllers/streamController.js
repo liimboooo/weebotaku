@@ -259,11 +259,20 @@ exports.streamProxy = async (req, res) => {
       const baseUrl = `${req.protocol}://${req.get('host')}/api/stream/proxy`;
       const urlDir = targetUrl.substring(0, targetUrl.lastIndexOf('/') + 1);
 
-      body = body.replace(/(^(?!#).*$|URI="([^"]+)")/gm, (match, _full, uriVal) => {
-        if (uriVal !== undefined) {
-          const abs = uriVal.startsWith('http') ? uriVal : urlDir + uriVal;
-          return `URI="${baseUrl}?url=${encodeURIComponent(abs)}&ref=${encodeURIComponent(referer)}"`;
-        }
+      const keyMatch = body.match(/URI="([^"]+)"/);
+      if (keyMatch) {
+        const keyUrl = keyMatch[1].startsWith('http') ? keyMatch[1] : urlDir + keyMatch[1];
+        try {
+          const keyRes = await fetch(keyUrl, { headers, timeout: 5000 });
+          if (keyRes.ok) {
+            const keyBuf = await keyRes.buffer();
+            const keyB64 = keyBuf.toString('base64');
+            body = body.replace(/URI="[^"]+"/g, `URI="data:application/octet-stream;base64,${keyB64}"`);
+          }
+        } catch {}
+      }
+
+      body = body.replace(/(^(?!#).*$)/gm, (match) => {
         const line = match.trim();
         if (!line || line.startsWith('#')) return match;
         const abs = line.startsWith('http') ? line : urlDir + line;
