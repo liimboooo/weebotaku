@@ -10,7 +10,7 @@ const PIPE_HEADERS = {
   'Referer': 'https://www.miruro.tv/',
 };
 
-const PROVIDER_PRIORITY = ['kiwi', 'bee', 'dune', 'ally', 'hop'];
+const PROVIDER_PRIORITY = ['ally', 'bee', 'kiwi', 'dune', 'hop'];
 
 function encodePipeRequest(payload) {
   return Buffer.from(JSON.stringify(payload)).toString('base64url').replace(/=+$/, '');
