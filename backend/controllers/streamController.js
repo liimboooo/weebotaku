@@ -235,10 +235,17 @@ exports.streamProxy = async (req, res) => {
     const referer = req.query.ref || '';
     if (!targetUrl) return res.status(400).send('url parameter required');
 
-    const headers = { 'User-Agent': PIPE_HEADERS['User-Agent'] };
+    const parsed = new URL(referer || targetUrl);
+    const origin = `${parsed.protocol}//${parsed.host}`;
+    const headers = {
+      'User-Agent': PIPE_HEADERS['User-Agent'],
+      'Accept': '*/*',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Origin': origin,
+    };
     if (referer) headers['Referer'] = referer;
 
-    const proxyRes = await fetch(targetUrl, { headers, timeout: 9000 });
+    const proxyRes = await fetch(targetUrl, { headers, timeout: 9000, redirect: 'follow' });
     if (!proxyRes.ok) return res.status(proxyRes.status).send('Upstream error');
 
     const contentType = proxyRes.headers.get('content-type') || '';
