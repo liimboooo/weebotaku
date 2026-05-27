@@ -209,6 +209,43 @@ export default function WatchTogetherCreative() {
     }
   }, [syncElapsed, isLive, countdownSec]);
 
+  // joiner playback restrictions: no forward seek, no pause, no keyboard controls
+  useEffect(() => {
+    if (isHost || !videoRef.current) return;
+    const video = videoRef.current;
+
+    const blockForwardSeek = () => {
+      const livePos = expectedPosRef.current;
+      if (livePos > 5 && video.currentTime > livePos + 1) {
+        video.currentTime = livePos;
+      }
+    };
+
+    const preventPause = (e) => {
+      if (video.paused && !video.ended) {
+        video.play().catch(() => {});
+      }
+    };
+
+    const blockKeys = (e) => {
+      const keys = [' ', 'ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'k', 'f', 'm', 'Home', 'End'];
+      if (keys.includes(e.key)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    video.addEventListener('seeking', blockForwardSeek);
+    video.addEventListener('pause', preventPause);
+    document.addEventListener('keydown', blockKeys, { capture: true });
+
+    return () => {
+      video.removeEventListener('seeking', blockForwardSeek);
+      video.removeEventListener('pause', preventPause);
+      document.removeEventListener('keydown', blockKeys, { capture: true });
+    };
+  }, [isHost, isLive]);
+
   useEffect(() => {
     const el = messagesEndRef.current?.parentElement;
     if (!el) return;
@@ -1004,14 +1041,29 @@ export default function WatchTogetherCreative() {
                         <p className="sync-countdown-hint">Video will load for everyone at the same moment</p>
                       </div>
                     ) : currentSource?.kind === "hls" ? (
-                      <video
-                        ref={videoRef}
-                        key={iframeKey}
-                        controls
-                        autoPlay
-                        playsInline
-                        style={{ width: "100%", height: "100%", background: "#000" }}
-                      />
+                      <div className="video-wrapper">
+                        <video
+                          ref={videoRef}
+                          key={iframeKey}
+                          controls={isHost}
+                          autoPlay
+                          playsInline
+                          disablePictureInPicture
+                          style={{ width: "100%", height: "100%", background: "#000" }}
+                        />
+                        {!isHost && (
+                          <button
+                            className="go-live-btn"
+                            onClick={() => {
+                              const v = videoRef.current;
+                              if (v) v.currentTime = expectedPosRef.current;
+                            }}
+                            title="Jump to live"
+                          >
+                            <Zap size={12} /> LIVE
+                          </button>
+                        )}
+                      </div>
                     ) : currentSource?.kind === "iframe" ? (
                       <iframe
                         key={iframeKey}
@@ -1020,12 +1072,27 @@ export default function WatchTogetherCreative() {
                         allow="autoplay; fullscreen"
                       />
                     ) : currentSource?.kind === "video" ? (
-                      <video
-                        ref={videoRef}
-                        src={currentSource.url}
-                        controls
-                        autoPlay
-                      />
+                      <div className="video-wrapper">
+                        <video
+                          ref={videoRef}
+                          src={currentSource.url}
+                          controls={isHost}
+                          autoPlay
+                          disablePictureInPicture
+                        />
+                        {!isHost && (
+                          <button
+                            className="go-live-btn"
+                            onClick={() => {
+                              const v = videoRef.current;
+                              if (v) v.currentTime = expectedPosRef.current;
+                            }}
+                            title="Jump to live"
+                          >
+                            <Zap size={12} /> LIVE
+                          </button>
+                        )}
+                      </div>
                     ) : (
                       <div className="video-placeholder">
                         <Play size={48} />
