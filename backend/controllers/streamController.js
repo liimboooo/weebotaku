@@ -1,4 +1,5 @@
 const { ANIME } = require('@consumet/extensions');
+const axios = require('axios');
 
 let providers = {};
 
@@ -83,4 +84,34 @@ exports.getStream = async (req, res) => {
     console.error('GetStream error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
+};
+
+exports.testProviders = async (req, res) => {
+  const results = {};
+
+  const sites = [
+    { name: 'hianime.to', url: 'https://hianime.to' },
+    { name: 'animepahe.si', url: 'https://animepahe.si' },
+    { name: 'animepahe.ru', url: 'https://animepahe.ru' },
+    { name: 'animepahe.com', url: 'https://animepahe.com' },
+    { name: 'animekai.to', url: 'https://animekai.to' },
+    { name: 'gogoanime3.co', url: 'https://gogoanime3.co' },
+    { name: 'anitaku.pe', url: 'https://anitaku.pe' },
+    { name: 'reanime.co', url: 'https://reanime.co' },
+  ];
+
+  await Promise.allSettled(sites.map(async (site) => {
+    try {
+      const resp = await axios.get(site.url, {
+        timeout: 5000,
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+        maxRedirects: 3,
+      });
+      results[site.name] = { status: resp.status, length: resp.data?.length || 0 };
+    } catch (e) {
+      results[site.name] = { error: e.code || e.message };
+    }
+  }));
+
+  res.json({ success: true, data: results });
 };
