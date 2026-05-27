@@ -149,11 +149,11 @@ exports.getSources = async (req, res) => {
       return res.status(404).json({ success: false, message: 'No HLS streams found for this provider' });
     }
 
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
     const proxied = hlsStreams.map(s => ({
-      url: s.url,
+      url: `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(s.url)}&ref=${encodeURIComponent(s.referer || '')}`,
       quality: s.quality,
       isActive: s.isActive,
-      referer: s.referer || '',
     }));
 
     res.json({
@@ -206,14 +206,14 @@ exports.autoSources = async (req, res) => {
         const stream = active || fallback;
         if (!stream) continue;
 
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
         return res.json({
           success: true,
           data: {
             provider: pname,
             stream: {
-              url: stream.url,
+              url: `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(stream.url)}&ref=${encodeURIComponent(stream.referer || '')}`,
               quality: stream.quality,
-              referer: stream.referer || '',
             },
             subtitles: (sources.subtitles || []).map(s => ({ url: s.file || s.url, label: s.label || s.language })),
             intro: sources.intro || null,
@@ -258,6 +258,26 @@ exports.streamProxy = async (req, res) => {
       let body = await proxyRes.text();
       const baseUrl = `${req.protocol}://${req.get('host')}/api/stream/proxy`;
       const urlDir = targetUrl.substring(0, targetUrl.lastIndexOf('/') + 1);
+
+      const keyHeaders = {
+        'User-Agent': PIPE_HEADERS['User-Agent'],
+        'Accept': '*/*',
+        'Origin': 'https://www.miruro.tv',
+        'Referer': 'https://www.miruro.tv/',
+      };
+
+      const keyUriMatch = body.match(/URI="([^"]+)"/);
+      if (keyUriMatch) {
+        const keyUrl = keyUriMatch[1].startsWith('http') ? keyUriMatch[1] : urlDir + keyUriMatch[1];
+        try {
+          const keyRes = await fetch(keyUrl, { headers: keyHeaders, timeout: 5000 });
+          if (keyRes.ok) {
+            const keyBuf = await keyRes.buffer();
+            const keyB64 = keyBuf.toString('base64');
+            body = body.replace(/URI="[^"]+"/g, `URI="data:application/octet-stream;base64,${keyB64}"`);
+          }
+        } catch {}
+      }
 
       body = body.replace(/(^(?!#).*$)/gm, (match) => {
         const line = match.trim();
