@@ -72,7 +72,7 @@ const RoomSchema = new mongoose.Schema({
   },
   playbackStartedAt: {
     type: Date,
-    default: Date.now,
+    default: () => new Date(Date.now() + 5000),
   },
   messages: [{
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

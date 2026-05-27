@@ -510,7 +510,7 @@ exports.updateEpisode = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Only the host can change episodes' });
     }
 
-    const update = { currentEpisode: episode, playbackStartedAt: new Date() };
+    const update = { currentEpisode: episode, playbackStartedAt: new Date(Date.now() + 5000) };
     if (sourceUrl) update.sourceUrl = sourceUrl;
 
     const updated = await Room.findByIdAndUpdate(req.params.id, { $set: update }, { new: true });
@@ -532,9 +532,9 @@ exports.syncPlayback = async (req, res) => {
     if (room.host.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Only the host can sync' });
     }
-    const now = new Date();
-    await Room.updateOne({ _id: req.params.id }, { $set: { playbackStartedAt: now } });
-    res.json({ success: true, data: { playbackStartedAt: now } });
+    const startAt = new Date(Date.now() + 5000);
+    await Room.updateOne({ _id: req.params.id }, { $set: { playbackStartedAt: startAt } });
+    res.json({ success: true, data: { playbackStartedAt: startAt } });
   } catch (error) {
     console.error('SyncPlayback error:', error);
     res.status(500).json({ success: false, message: 'Server error' });

@@ -59,7 +59,4 @@ export async function syncPlayback(id) {
   return api.post(`/rooms/${id}/sync`);
 }
 
-export async function getDirectStream(title, episode) {
-  return api.get(`/stream/${encodeURIComponent(title)}/${episode}`, { auth: false });
-}
 

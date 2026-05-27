@@ -28,7 +28,6 @@ import authService from "../../services/authService";
 import { addNotification } from "../../services/notificationService";
 import { fetchTopAnime, fetchSearchAnime } from "../../services/anilistApi";
 import { findStreamingSource, getStreamUrls, getEpisodes } from "../../services/animeApi";
-import Hls from "hls.js";
 import "./WatchTogetherCreative.css";
 
 function getEmbedSource(urlString, startOffsetSec) {
@@ -109,9 +108,7 @@ export default function WatchTogetherCreative() {
   const [currentEpisode, setCurrentEpisode] = useState(1);
   const [totalEpisodes, setTotalEpisodes] = useState(0);
   const [playbackStartedAt, setPlaybackStartedAt] = useState(null);
-  const [hlsUrl, setHlsUrl] = useState(null);
-  const hlsRef = useRef(null);
-  const syncVideoRef = useRef(null);
+  const [countdownSec, setCountdownSec] = useState(null);
 
   const [rooms, setRooms] = useState([]);
   const [roomsLoading, setRoomsLoading] = useState(true);
@@ -135,46 +132,31 @@ export default function WatchTogetherCreative() {
   const [iframeKey, setIframeKey] = useState(0);
   const [syncElapsed, setSyncElapsed] = useState(0);
 
-  const playbackOffset = (!isHost && playbackStartedAt) ? (Date.now() - new Date(playbackStartedAt).getTime()) / 1000 : 0;
-  const currentSource = getEmbedSource(currentSourceUrl, playbackOffset);
+  const currentSource = getEmbedSource(currentSourceUrl, 0);
 
   useEffect(() => {
-    if (!isLive || !playbackStartedAt) return;
-    const tick = () => setSyncElapsed(Math.floor((Date.now() - new Date(playbackStartedAt).getTime()) / 1000));
-    tick();
-    const id = setInterval(tick, 1000);
+    if (!isLive || !playbackStartedAt) { setCountdownSec(null); return; }
+    const check = () => {
+      const diff = Math.ceil((new Date(playbackStartedAt).getTime() - Date.now()) / 1000);
+      if (diff > 0) {
+        setCountdownSec(diff);
+      } else {
+        setCountdownSec(null);
+        setSyncElapsed(Math.abs(diff));
+      }
+    };
+    check();
+    const id = setInterval(check, 250);
     return () => clearInterval(id);
   }, [isLive, playbackStartedAt]);
 
   useEffect(() => {
-    if (!hlsUrl || !syncVideoRef.current) return;
-    if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
-
-    const video = syncVideoRef.current;
-    if (Hls.isSupported()) {
-      const hls = new Hls({ maxBufferLength: 30, maxMaxBufferLength: 60 });
-      hls.loadSource(hlsUrl);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        if (playbackStartedAt) {
-          const offset = (Date.now() - new Date(playbackStartedAt).getTime()) / 1000;
-          if (offset > 2) video.currentTime = offset;
-        }
-        video.play().catch(() => {});
-      });
-      hlsRef.current = hls;
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = hlsUrl;
-      video.addEventListener('loadedmetadata', () => {
-        if (playbackStartedAt) {
-          const offset = (Date.now() - new Date(playbackStartedAt).getTime()) / 1000;
-          if (offset > 2) video.currentTime = offset;
-        }
-        video.play().catch(() => {});
-      }, { once: true });
-    }
-    return () => { if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; } };
-  }, [hlsUrl, iframeKey, playbackStartedAt]);
+    if (!isLive || !playbackStartedAt || countdownSec !== null) return;
+    const tick = () => setSyncElapsed(Math.floor((Date.now() - new Date(playbackStartedAt).getTime()) / 1000));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [isLive, playbackStartedAt, countdownSec]);
 
   useEffect(() => {
     const el = messagesEndRef.current?.parentElement;
@@ -451,32 +433,18 @@ export default function WatchTogetherCreative() {
     }
   }, []);
 
-  const resolveStreamUrl = useCallback(async (epNum, animeName) => {
+  const resolveStreamUrl = useCallback(async (epNum) => {
     setResolvingStream(true);
     try {
-      const title = animeName || selectedAnime || pickedAnime?.name;
-      if (title) {
-        try {
-          const res = await roomService.getDirectStream(title, epNum);
-          if (res.success && res.data?.sources?.length > 0) {
-            const best = res.data.sources.find(s => s.quality === 'default' || s.quality === '1080p' || s.quality === 'auto') || res.data.sources[0];
-            if (best?.url) {
-              setHlsUrl(best.url);
-              return best.url;
-            }
-          }
-        } catch {}
-      }
       if (!streamSource) return null;
       const servers = await getStreamUrls(
         String(epNum), streamSource.source, streamSource.anilistId, null, streamSource.slug
       );
       const sub = servers.find(s => s.type === 'sub') || servers[0];
-      setHlsUrl(null);
       return sub?.url || null;
     } catch { return null; }
     finally { setResolvingStream(false); }
-  }, [streamSource, selectedAnime, pickedAnime?.name]);
+  }, [streamSource]);
 
   const handleChangeEpisode = useCallback(async (epNum) => {
     if (epNum < 1 || (totalEpisodes > 0 && epNum > totalEpisodes)) return;
@@ -495,7 +463,8 @@ export default function WatchTogetherCreative() {
     }
     setCurrentEpisode(epNum);
     setCurrentSourceUrl(url);
-    setPlaybackStartedAt(new Date().toISOString());
+    setPlaybackStartedAt(new Date(Date.now() + 5000).toISOString());
+    setIframeKey(k => k + 1);
   }, [resolveStreamUrl, totalEpisodes, dbRoomId]);
 
   const toggleInvite = (friendId) => {
@@ -570,7 +539,7 @@ export default function WatchTogetherCreative() {
         if (initialSourceUrl) setCurrentSourceUrl(initialSourceUrl);
         setCurrentEpisode(epVal);
         setTotalEpisodes(totalEpVal);
-        setPlaybackStartedAt(new Date().toISOString());
+        setPlaybackStartedAt(res.data.playbackStartedAt || new Date(Date.now() + 5000).toISOString());
         setIsLive(true);
         setIsConfigOpen(false);
         setSelectedInvites(new Set());
@@ -611,12 +580,6 @@ export default function WatchTogetherCreative() {
     if (room.sourceType === 'anime' && room.animeId) {
       findStreamingSource(room.targetAnime, room.animeId).then(src => {
         if (src) setStreamSource(src);
-      }).catch(() => {});
-      roomService.getDirectStream(room.targetAnime, room.currentEpisode || 1).then(res => {
-        if (res.success && res.data?.sources?.length > 0) {
-          const best = res.data.sources.find(s => s.quality === 'default' || s.quality === 'auto') || res.data.sources[0];
-          if (best?.url) setHlsUrl(best.url);
-        }
       }).catch(() => {});
     }
 
@@ -665,8 +628,7 @@ export default function WatchTogetherCreative() {
       liveRoomRef.current.disconnect();
       liveRoomRef.current = null;
     }
-    if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
-    setHlsUrl(null);
+    setCountdownSec(null);
     stopChatPolling();
     setLiveKitConnected(false);
     setIsLive(false);
@@ -713,24 +675,10 @@ export default function WatchTogetherCreative() {
           if (res.data.currentEpisode) setCurrentEpisode(res.data.currentEpisode);
           if (res.data.sourceUrl) setCurrentSourceUrl(res.data.sourceUrl);
           if (serverTs) setPlaybackStartedAt(serverTs);
-          if (epChanged) {
-            setIframeKey(k => k + 1);
-            if (hlsUrl && res.data.currentEpisode) {
-              const title = selectedAnime;
-              roomService.getDirectStream(title, res.data.currentEpisode).then(r => {
-                if (r.success && r.data?.sources?.length > 0) {
-                  const best = r.data.sources.find(s => s.quality === 'default' || s.quality === 'auto') || r.data.sources[0];
-                  if (best?.url) setHlsUrl(best.url);
-                }
-              }).catch(() => {});
-            }
-          } else if (syncVideoRef.current && serverTs) {
-            const offset = (Date.now() - new Date(serverTs).getTime()) / 1000;
-            syncVideoRef.current.currentTime = offset > 2 ? offset : 0;
-          }
+          setIframeKey(k => k + 1);
           addNotification({
-            title: epChanged ? "Episode Changed" : "Playback Synced",
-            body: epChanged ? `Now playing Episode ${res.data.currentEpisode}` : "Synced to host",
+            title: epChanged ? "Episode Changed" : "Syncing...",
+            body: epChanged ? `Now playing Episode ${res.data.currentEpisode}` : "Countdown starting — video will sync!",
             type: "info",
           });
         }
@@ -907,10 +855,11 @@ export default function WatchTogetherCreative() {
                   {isHost && (
                     <button onClick={async () => {
                       try {
-                        await roomService.syncPlayback(dbRoomId);
-                        setPlaybackStartedAt(new Date().toISOString());
+                        const res = await roomService.syncPlayback(dbRoomId);
+                        const ts = res.data?.playbackStartedAt || new Date(Date.now() + 5000).toISOString();
+                        setPlaybackStartedAt(ts);
                         setIframeKey(k => k + 1);
-                        addNotification({ title: "Synced", body: "All viewers reloading to sync.", type: "info" });
+                        addNotification({ title: "Syncing", body: "Countdown starting — all viewers will sync!", type: "info" });
                       } catch {}
                     }}><Wifi size={16} /> Sync All</button>
                   )}
@@ -924,25 +873,22 @@ export default function WatchTogetherCreative() {
 
               <div className="stage-grid">
                 <div className="video-column">
-                  {isLive && playbackStartedAt && (
+                  {isLive && playbackStartedAt && countdownSec === null && (
                     <div className="sync-timer-bar">
                       <span className="sync-live-dot" />
                       <span className="sync-timer-label">
                         {Math.floor(syncElapsed / 60)}:{String(syncElapsed % 60).padStart(2, '0')}
                       </span>
-                      <span className="sync-timer-hint">Sync your player to this timer</span>
+                      <span className="sync-timer-hint">Everyone is synced to this timestamp</span>
                     </div>
                   )}
                   <div className="video-container">
-                    {hlsUrl ? (
-                      <video
-                        key={iframeKey}
-                        ref={syncVideoRef}
-                        controls
-                        autoPlay
-                        playsInline
-                        style={{ width: '100%', height: '100%', background: '#000' }}
-                      />
+                    {countdownSec !== null && countdownSec > 0 ? (
+                      <div className="sync-countdown">
+                        <div className="sync-countdown-number">{countdownSec}</div>
+                        <p className="sync-countdown-label">Starting in sync...</p>
+                        <p className="sync-countdown-hint">Video will load for everyone at the same moment</p>
+                      </div>
                     ) : currentSource?.kind === "iframe" ? (
                       <iframe
                         key={iframeKey}
@@ -956,11 +902,6 @@ export default function WatchTogetherCreative() {
                         src={currentSource.url}
                         controls
                         autoPlay
-                        onLoadedMetadata={() => {
-                          if (videoRef.current && currentSource.offset > 5) {
-                            videoRef.current.currentTime = currentSource.offset;
-                          }
-                        }}
                       />
                     ) : (
                       <div className="video-placeholder">
