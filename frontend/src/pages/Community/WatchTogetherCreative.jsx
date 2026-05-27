@@ -129,9 +129,18 @@ export default function WatchTogetherCreative() {
   const [friendSearch, setFriendSearch] = useState("");
   const [creating, setCreating] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
+  const [syncElapsed, setSyncElapsed] = useState(0);
 
   const playbackOffset = (!isHost && playbackStartedAt) ? (Date.now() - new Date(playbackStartedAt).getTime()) / 1000 : 0;
   const currentSource = getEmbedSource(currentSourceUrl, playbackOffset);
+
+  useEffect(() => {
+    if (!isLive || !playbackStartedAt) return;
+    const tick = () => setSyncElapsed(Math.floor((Date.now() - new Date(playbackStartedAt).getTime()) / 1000));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [isLive, playbackStartedAt]);
 
   useEffect(() => {
     const el = messagesEndRef.current?.parentElement;
@@ -845,6 +854,15 @@ export default function WatchTogetherCreative() {
 
               <div className="stage-grid">
                 <div className="video-column">
+                  {isLive && playbackStartedAt && (
+                    <div className="sync-timer-bar">
+                      <span className="sync-live-dot" />
+                      <span className="sync-timer-label">
+                        {Math.floor(syncElapsed / 60)}:{String(syncElapsed % 60).padStart(2, '0')}
+                      </span>
+                      <span className="sync-timer-hint">Sync your player to this timer</span>
+                    </div>
+                  )}
                   <div className="video-container">
                     {currentSource?.kind === "iframe" ? (
                       <iframe

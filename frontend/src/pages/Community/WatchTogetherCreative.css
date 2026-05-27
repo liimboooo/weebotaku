@@ -211,6 +211,46 @@
   gap: 16px;
 }
 
+.sync-timer-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+
+.sync-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.sync-timer-label {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+  min-width: 50px;
+}
+
+.sync-timer-hint {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-left: auto;
+}
+
 .sync-banner {
   display: flex;
   align-items: center;
