@@ -10,8 +10,9 @@ function getGogoCDN() {
   return gogoCDN;
 }
 
-const GOGO_BASE = 'https://anitaku.pe';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+const GOGO_BASES = ['https://gogoanime3.co', 'https://anitaku.pe', 'https://gogoanime3.net'];
 
 let searchCache = new Map();
 
@@ -19,44 +20,55 @@ async function gogoSearch(title) {
   if (searchCache.has(title)) return searchCache.get(title);
   if (searchCache.size > 200) searchCache.clear();
 
-  const { data } = await axios.get(`${GOGO_BASE}/search.html`, {
-    params: { keyword: title },
-    headers: { 'User-Agent': UA },
-    timeout: 8000,
-  });
+  for (const base of GOGO_BASES) {
+    try {
+      const { data } = await axios.get(`${base}/search.html`, {
+        params: { keyword: title },
+        headers: { 'User-Agent': UA },
+        timeout: 6000,
+      });
 
-  const $ = cheerio.load(data);
-  const results = [];
-  $('div.last_episodes ul.items li').each((i, el) => {
-    const a = $(el).find('p.name a');
-    const href = a.attr('href') || '';
-    const slug = href.replace('/category/', '');
-    results.push({ slug, title: a.text().trim() });
-  });
+      if (data.includes('Checking your browser')) continue;
 
-  if (results.length > 0) {
-    searchCache.set(title, results);
+      const $ = cheerio.load(data);
+      const results = [];
+      $('ul.items li').each((i, el) => {
+        const a = $(el).find('p.name a, .name a, a');
+        const href = a.attr('href') || '';
+        const slug = href.replace('/category/', '').replace(/^\//, '');
+        if (slug) results.push({ slug, title: a.text().trim(), base });
+      });
+
+      if (results.length > 0) {
+        searchCache.set(title, results);
+        return results;
+      }
+    } catch {}
   }
-  return results;
+  return [];
 }
 
-async function gogoGetEpisodeSources(slug, ep) {
-  const epUrl = `${GOGO_BASE}/${slug}-episode-${ep}`;
+async function gogoGetEpisodeSources(base, slug, ep) {
+  const epUrl = `${base}/${slug}-episode-${ep}`;
   const { data } = await axios.get(epUrl, {
     headers: { 'User-Agent': UA },
-    timeout: 8000,
+    timeout: 6000,
   });
+
+  if (data.includes('Checking your browser')) {
+    throw new Error('Cloudflare blocked');
+  }
 
   const $ = cheerio.load(data);
   const embedSrc = $('div.anime_video_body_watch_items iframe').attr('src')
+    || $('iframe#main-embed').attr('src')
     || $('iframe').attr('src');
 
-  if (!embedSrc) return null;
+  if (!embedSrc) throw new Error('No embed iframe found');
 
   const embedUrl = embedSrc.startsWith('http') ? embedSrc : `https:${embedSrc}`;
   const extractor = getGogoCDN();
-  const sources = await extractor.extract(new URL(embedUrl));
-  return sources;
+  return await extractor.extract(new URL(embedUrl));
 }
 
 exports.getStream = async (req, res) => {
@@ -73,11 +85,11 @@ exports.getStream = async (req, res) => {
     try {
       const results = await gogoSearch(decodedTitle);
       debug.searchResults = results.length;
-      debug.firstResult = results[0]?.slug || 'none';
+      debug.firstResult = results[0] || 'none';
 
       if (results.length > 0) {
-        const slug = results[0].slug;
-        const sources = await gogoGetEpisodeSources(slug, ep);
+        const { slug, base } = results[0];
+        const sources = await gogoGetEpisodeSources(base, slug, ep);
         debug.sourcesFound = sources?.sources?.length || 0;
 
         if (sources?.sources?.length > 0) {
@@ -110,10 +122,11 @@ exports.testProviders = async (req, res) => {
   const results = {};
 
   const tests = [
-    { name: 'anitaku-home', url: `${GOGO_BASE}/` },
-    { name: 'anitaku-search', url: `${GOGO_BASE}/search.html?keyword=Death+Note` },
-    { name: 'anitaku-ep', url: `${GOGO_BASE}/death-note-episode-1` },
-    { name: 'gogoanime3-home', url: 'https://gogoanime3.co/' },
+    { name: 'gogoanime3-search', url: 'https://gogoanime3.co/search.html?keyword=Death+Note' },
+    { name: 'gogoanime3-ep', url: 'https://gogoanime3.co/death-note-episode-1' },
+    { name: 'ajax-gogocdn', url: 'https://ajax.gogocdn.net/site/loadAjaxSearch?keyword=Death+Note&id=-1' },
+    { name: 'anitaku-search', url: 'https://anitaku.pe/search.html?keyword=Death+Note' },
+    { name: 'gogoanime3-net-search', url: 'https://gogoanime3.net/search.html?keyword=Death+Note' },
   ];
 
   await Promise.allSettled(tests.map(async (test) => {
@@ -123,12 +136,16 @@ exports.testProviders = async (req, res) => {
         headers: { 'User-Agent': UA },
         maxRedirects: 3,
       });
-      const $ = cheerio.load(resp.data);
+      const html = typeof resp.data === 'string' ? resp.data : JSON.stringify(resp.data);
+      const isCF = html.includes('Checking your browser');
+      const $ = cheerio.load(html);
       results[test.name] = {
         status: resp.status,
-        length: resp.data?.length || 0,
+        length: html.length,
+        cloudflare: isCF,
         title: $('title').text().trim().slice(0, 80),
-        hasItems: $('ul.items li').length,
+        items: $('ul.items li').length,
+        snippet: html.slice(0, 200),
       };
     } catch (e) {
       results[test.name] = { error: e.code || e.message };
