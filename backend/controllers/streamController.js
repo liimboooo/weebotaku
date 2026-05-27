@@ -1,12 +1,21 @@
 const { ANIME } = require('@consumet/extensions');
 
-const gogoanime = new ANIME.Gogoanime();
-const zoro = new ANIME.Zoro();
+let hianime = null;
+let animekai = null;
+
+function getHianime() {
+  if (!hianime) hianime = new ANIME.Hianime();
+  return hianime;
+}
+function getAnimekai() {
+  if (!animekai) animekai = new ANIME.AnimeKai();
+  return animekai;
+}
 
 let searchCache = new Map();
 
-async function findAnimeId(provider, title, anilistId) {
-  const cacheKey = `${provider.name}-${anilistId || title}`;
+async function findAnimeId(provider, title) {
+  const cacheKey = `${provider.name}-${title}`;
   if (searchCache.has(cacheKey)) return searchCache.get(cacheKey);
   if (searchCache.size > 200) searchCache.clear();
 
@@ -32,49 +41,49 @@ exports.getStream = async (req, res) => {
     const decodedTitle = decodeURIComponent(title);
     const errors = [];
 
-    // Try Gogoanime first
     try {
-      const animeId = await findAnimeId(gogoanime, decodedTitle);
+      const provider = getHianime();
+      const animeId = await findAnimeId(provider, decodedTitle);
       if (animeId) {
-        const info = await gogoanime.fetchAnimeInfo(animeId);
+        const info = await provider.fetchAnimeInfo(animeId);
         const epData = info.episodes?.find(e => e.number === ep);
         if (epData) {
-          const sources = await gogoanime.fetchEpisodeSources(epData.id);
+          const sources = await provider.fetchEpisodeSources(epData.id);
           if (sources.sources?.length > 0) {
             return res.json({
               success: true,
               data: {
                 sources: sources.sources.map(s => ({ url: s.url, quality: s.quality })),
                 subtitles: sources.subtitles || [],
-                provider: 'gogoanime',
+                provider: 'hianime',
               },
             });
           }
         }
       }
-    } catch (e) { errors.push(`gogoanime: ${e.message}`); }
+    } catch (e) { errors.push(`hianime: ${e.message}`); }
 
-    // Fallback to Zoro
     try {
-      const animeId = await findAnimeId(zoro, decodedTitle);
+      const provider = getAnimekai();
+      const animeId = await findAnimeId(provider, decodedTitle);
       if (animeId) {
-        const info = await zoro.fetchAnimeInfo(animeId);
+        const info = await provider.fetchAnimeInfo(animeId);
         const epData = info.episodes?.find(e => e.number === ep);
         if (epData) {
-          const sources = await zoro.fetchEpisodeSources(epData.id);
+          const sources = await provider.fetchEpisodeSources(epData.id);
           if (sources.sources?.length > 0) {
             return res.json({
               success: true,
               data: {
                 sources: sources.sources.map(s => ({ url: s.url, quality: s.quality })),
                 subtitles: sources.subtitles || [],
-                provider: 'zoro',
+                provider: 'animekai',
               },
             });
           }
         }
       }
-    } catch (e) { errors.push(`zoro: ${e.message}`); }
+    } catch (e) { errors.push(`animekai: ${e.message}`); }
 
     res.status(404).json({ success: false, message: 'No stream sources found', errors });
   } catch (error) {
