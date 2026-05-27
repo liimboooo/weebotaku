@@ -522,6 +522,25 @@ exports.updateEpisode = async (req, res) => {
   }
 };
 
+// @route   POST /api/rooms/:id/sync
+// @access  Private (host only)
+exports.syncPlayback = async (req, res) => {
+  try {
+    const room = await Room.findById(req.params.id).select('host isLive').lean();
+    if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
+    if (!room.isLive) return res.status(400).json({ success: false, message: 'Room ended' });
+    if (room.host.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Only the host can sync' });
+    }
+    const now = new Date();
+    await Room.updateOne({ _id: req.params.id }, { $set: { playbackStartedAt: now } });
+    res.json({ success: true, data: { playbackStartedAt: now } });
+  } catch (error) {
+    console.error('SyncPlayback error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // @route   POST /api/rooms/:id/chat
 // @access  Private
 exports.sendMessage = async (req, res) => {

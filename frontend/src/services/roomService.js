@@ -55,3 +55,7 @@ export async function updateEpisode(id, episode, sourceUrl) {
   return api.put(`/rooms/${id}/episode`, { episode, sourceUrl });
 }
 
+export async function syncPlayback(id) {
+  return api.post(`/rooms/${id}/sync`);
+}
+

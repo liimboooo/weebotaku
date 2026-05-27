@@ -14,6 +14,7 @@ const {
   sendMessage,
   getMessages,
   updateEpisode,
+  syncPlayback,
 } = require('../controllers/roomController');
 const { protect } = require('../middleware/auth');
 
@@ -30,5 +31,6 @@ router.post('/:id/chat', protect, sendMessage);
 router.get('/:id/chat', protect, getMessages);
 router.put('/:id/end', protect, endRoom);
 router.put('/:id/episode', protect, updateEpisode);
+router.post('/:id/sync', protect, syncPlayback);
 
 module.exports = router;

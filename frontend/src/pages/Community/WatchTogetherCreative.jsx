@@ -67,10 +67,9 @@ function getEmbedSource(urlString, startOffsetSec) {
     }
 
     const directVideo = /\.(mp4|webm|ogg|m3u8)(\?|#|$)/i.test(parsedUrl.pathname + parsedUrl.search + parsedUrl.hash);
-    const seekHash = offset > 0 ? `${urlString.includes("#") ? "&" : "#"}t=${offset}` : '';
     return {
       kind: directVideo ? "video" : "iframe",
-      url: directVideo ? urlString : `${urlString}${seekHash}`,
+      url: urlString,
       title: directVideo ? "Direct video broadcast" : "Broadcast feed",
       offset,
     };
@@ -129,6 +128,7 @@ export default function WatchTogetherCreative() {
   const [selectedInvites, setSelectedInvites] = useState(new Set());
   const [friendSearch, setFriendSearch] = useState("");
   const [creating, setCreating] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0);
 
   const playbackOffset = (!isHost && playbackStartedAt) ? (Date.now() - new Date(playbackStartedAt).getTime()) / 1000 : 0;
   const currentSource = getEmbedSource(currentSourceUrl, playbackOffset);
@@ -628,6 +628,7 @@ export default function WatchTogetherCreative() {
     resetRoomState();
   };
 
+  const lastSyncTsRef = useRef(null);
   useEffect(() => {
     if (!isLive || isHost || !dbRoomId) return;
     const check = setInterval(async () => {
@@ -640,14 +641,23 @@ export default function WatchTogetherCreative() {
           return;
         }
         if (res.data.participantCount) setParticipantCount(res.data.participantCount);
-        if (sourceType === 'anime' && res.data.currentEpisode && res.data.currentEpisode !== currentEpisode) {
-          setCurrentEpisode(res.data.currentEpisode);
+        const serverTs = res.data.playbackStartedAt;
+        const epChanged = sourceType === 'anime' && res.data.currentEpisode && res.data.currentEpisode !== currentEpisode;
+        const playbackRestarted = serverTs && lastSyncTsRef.current && serverTs !== lastSyncTsRef.current;
+        if (epChanged || playbackRestarted) {
+          if (res.data.currentEpisode) setCurrentEpisode(res.data.currentEpisode);
           if (res.data.sourceUrl) setCurrentSourceUrl(res.data.sourceUrl);
-          if (res.data.playbackStartedAt) setPlaybackStartedAt(res.data.playbackStartedAt);
-          addNotification({ title: "Episode Changed", body: `Now playing Episode ${res.data.currentEpisode}`, type: "info" });
+          if (serverTs) setPlaybackStartedAt(serverTs);
+          setIframeKey(k => k + 1);
+          addNotification({
+            title: epChanged ? "Episode Changed" : "Playback Synced",
+            body: epChanged ? `Now playing Episode ${res.data.currentEpisode}` : "Host synced playback — reloading",
+            type: "info",
+          });
         }
+        if (serverTs) lastSyncTsRef.current = serverTs;
       } catch {}
-    }, 8000);
+    }, 4000);
     return () => clearInterval(check);
   }, [isLive, isHost, dbRoomId, resetRoomState, sourceType, currentEpisode]);
 
@@ -815,6 +825,16 @@ export default function WatchTogetherCreative() {
                 </div>
                 <div className="stage-actions">
                   <button onClick={handleShareLink}><Share2 size={16} /> Share</button>
+                  {isHost && (
+                    <button onClick={async () => {
+                      try {
+                        await roomService.syncPlayback(dbRoomId);
+                        setPlaybackStartedAt(new Date().toISOString());
+                        setIframeKey(k => k + 1);
+                        addNotification({ title: "Synced", body: "All viewers reloading to sync.", type: "info" });
+                      } catch {}
+                    }}><Wifi size={16} /> Sync All</button>
+                  )}
                   {isHost ? (
                     <button className="exit-btn" onClick={handleEndStream}><X size={16} /> End Stream</button>
                   ) : (
@@ -828,6 +848,7 @@ export default function WatchTogetherCreative() {
                   <div className="video-container">
                     {currentSource?.kind === "iframe" ? (
                       <iframe
+                        key={iframeKey}
                         src={currentSource.url}
                         title={currentSource.title}
                         allow="autoplay; fullscreen"
