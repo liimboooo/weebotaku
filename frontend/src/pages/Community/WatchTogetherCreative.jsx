@@ -124,6 +124,7 @@ export default function WatchTogetherCreative() {
   // friends activity
   const [friendsWatching, setFriendsWatching] = useState([]);
   const [friendsAvailable, setFriendsAvailable] = useState([]);
+  const [friendsLoading, setFriendsLoading] = useState(true);
   const [selectedInvites, setSelectedInvites] = useState(new Set());
   const [friendSearch, setFriendSearch] = useState("");
   const [creating, setCreating] = useState(false);
@@ -197,7 +198,9 @@ export default function WatchTogetherCreative() {
           setFriendsWatching(res.data.watching || []);
           setFriendsAvailable(res.data.available || []);
         }
-      }).catch(() => {});
+      }).catch(() => {}).finally(() => { if (!cancelled) setFriendsLoading(false); });
+    } else {
+      setFriendsLoading(false);
     }
 
     return () => { cancelled = true; };
@@ -732,7 +735,7 @@ export default function WatchTogetherCreative() {
     })();
   }, [searchParams, isLoggedIn, isLive, handleJoinRoom]);
 
-  const hasFriendsData = friendsWatching.length > 0 || friendsAvailable.length > 0;
+  const hasFriendsData = friendsLoading || friendsWatching.length > 0 || friendsAvailable.length > 0;
 
   return (
     <AnimatedPage>
@@ -925,6 +928,19 @@ export default function WatchTogetherCreative() {
                 <h2><Users size={18} className="section-title-icon" /> Friends Activity</h2>
                 <p>See what your friends are up to</p>
               </div>
+
+              {friendsLoading && (
+                <div className="friends-available-block">
+                  <div className="friends-available-grid">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="friend-available-card" style={{ opacity: 0.4 }}>
+                        <div className="skeleton-shimmer" style={{ width: 32, height: 32, borderRadius: '50%' }} />
+                        <span className="skeleton-shimmer" style={{ width: 60, height: 12, borderRadius: 4, display: 'inline-block' }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {friendsWatching.length > 0 && (
                 <div className="friends-watching-block">
