@@ -149,11 +149,11 @@ exports.getSources = async (req, res) => {
       return res.status(404).json({ success: false, message: 'No HLS streams found for this provider' });
     }
 
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
     const proxied = hlsStreams.map(s => ({
-      url: `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(s.url)}&ref=${encodeURIComponent(s.referer || '')}`,
+      url: s.url,
       quality: s.quality,
       isActive: s.isActive,
+      referer: s.referer || '',
     }));
 
     res.json({
@@ -185,7 +185,6 @@ exports.autoSources = async (req, res) => {
     deepTranslateIds(epData);
 
     const providers = epData.providers || {};
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
 
     for (const pname of PROVIDER_PRIORITY) {
       const provData = providers[pname];
@@ -212,8 +211,9 @@ exports.autoSources = async (req, res) => {
           data: {
             provider: pname,
             stream: {
-              url: `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(stream.url)}&ref=${encodeURIComponent(stream.referer || '')}`,
+              url: stream.url,
               quality: stream.quality,
+              referer: stream.referer || '',
             },
             subtitles: (sources.subtitles || []).map(s => ({ url: s.file || s.url, label: s.label || s.language })),
             intro: sources.intro || null,
