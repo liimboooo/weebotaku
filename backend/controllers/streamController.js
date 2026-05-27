@@ -144,7 +144,7 @@ exports.getSources = async (req, res) => {
       body: null, version: '0.1.0',
     });
 
-    const hlsStreams = (sources.streams || []).filter(s => s.type === 'hls' && s.url);
+    const hlsStreams = (sources.streams || []).filter(s => s.type === 'hls' && s.url && !BLOCKED_CDN_HOSTS.some(h => s.url.includes(h)));
     if (!hlsStreams.length) {
       return res.status(404).json({ success: false, message: 'No HLS streams found for this provider' });
     }
