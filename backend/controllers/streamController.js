@@ -1,15 +1,12 @@
 const { ANIME } = require('@consumet/extensions');
 
-let hianime = null;
-let animekai = null;
+let providers = {};
 
-function getHianime() {
-  if (!hianime) hianime = new ANIME.Hianime();
-  return hianime;
-}
-function getAnimekai() {
-  if (!animekai) animekai = new ANIME.AnimeKai();
-  return animekai;
+function getProvider(name) {
+  if (!providers[name]) {
+    providers[name] = new ANIME[name]();
+  }
+  return providers[name];
 }
 
 let searchCache = new Map();
@@ -55,6 +52,8 @@ async function tryProvider(provider, providerName, decodedTitle, ep) {
   return { sources: null, steps };
 }
 
+const PROVIDER_ORDER = ['AnimePahe', 'Hianime', 'AnimeKai'];
+
 exports.getStream = async (req, res) => {
   try {
     const { title, episode } = req.params;
@@ -66,21 +65,18 @@ exports.getStream = async (req, res) => {
     const decodedTitle = decodeURIComponent(title);
     const debug = {};
 
-    try {
-      const result = await tryProvider(getHianime(), 'hianime', decodedTitle, ep);
-      debug.hianime = result.steps;
-      if (result.sources) {
-        return res.json({ success: true, data: result.sources });
+    for (const name of PROVIDER_ORDER) {
+      try {
+        const provider = getProvider(name);
+        const result = await tryProvider(provider, name.toLowerCase(), decodedTitle, ep);
+        debug[name] = result.steps;
+        if (result.sources) {
+          return res.json({ success: true, data: result.sources });
+        }
+      } catch (e) {
+        debug[name] = e.message;
       }
-    } catch (e) { debug.hianime = e.message; }
-
-    try {
-      const result = await tryProvider(getAnimekai(), 'animekai', decodedTitle, ep);
-      debug.animekai = result.steps;
-      if (result.sources) {
-        return res.json({ success: true, data: result.sources });
-      }
-    } catch (e) { debug.animekai = e.message; }
+    }
 
     res.status(404).json({ success: false, message: 'No stream sources found', debug });
   } catch (error) {
