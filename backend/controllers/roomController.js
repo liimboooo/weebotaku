@@ -395,7 +395,7 @@ exports.getRoomById = async (req, res) => {
 exports.getRoomStatus = async (req, res) => {
   try {
     const room = await Room.findById(req.params.id)
-      .select('isLive currentEpisode sourceUrl participantCount playbackStartedAt')
+      .select('isLive currentEpisode sourceUrl participantCount playbackStartedAt currentTime positionUpdatedAt')
       .lean();
 
     if (!room) {
@@ -510,7 +510,7 @@ exports.updateEpisode = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Only the host can change episodes' });
     }
 
-    const update = { currentEpisode: episode, playbackStartedAt: new Date(Date.now() + 5000) };
+    const update = { currentEpisode: episode, playbackStartedAt: new Date(Date.now() + 5000), currentTime: 0, positionUpdatedAt: new Date() };
     if (sourceUrl) update.sourceUrl = sourceUrl;
 
     const updated = await Room.findByIdAndUpdate(req.params.id, { $set: update }, { new: true });
@@ -532,11 +532,46 @@ exports.syncPlayback = async (req, res) => {
     if (room.host.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Only the host can sync' });
     }
-    const startAt = new Date(Date.now() + 5000);
-    await Room.updateOne({ _id: req.params.id }, { $set: { playbackStartedAt: startAt } });
-    res.json({ success: true, data: { playbackStartedAt: startAt } });
+    const now = Date.now();
+    const currentTime = req.body.currentTime !== undefined
+      ? Math.max(0, req.body.currentTime)
+      : 0;
+    await Room.updateOne({ _id: req.params.id }, {
+      $set: {
+        playbackStartedAt: new Date(now),
+        currentTime,
+        positionUpdatedAt: new Date(now),
+      },
+    });
+    res.json({ success: true, data: { playbackStartedAt: new Date(now), currentTime } });
   } catch (error) {
     console.error('SyncPlayback error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/rooms/:id/position
+// @access  Private (host only)
+exports.updatePosition = async (req, res) => {
+  try {
+    const room = await Room.findById(req.params.id).select('host isLive').lean();
+    if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
+    if (!room.isLive) return res.status(400).json({ success: false, message: 'Room ended' });
+    if (room.host.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Only the host can update position' });
+    }
+    const currentTime = req.body.currentTime !== undefined
+      ? Math.max(0, req.body.currentTime)
+      : undefined;
+    if (currentTime === undefined) {
+      return res.status(400).json({ success: false, message: 'currentTime required' });
+    }
+    await Room.updateOne({ _id: req.params.id }, {
+      $set: { currentTime, positionUpdatedAt: new Date() },
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('UpdatePosition error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

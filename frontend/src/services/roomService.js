@@ -55,8 +55,12 @@ export async function updateEpisode(id, episode, sourceUrl) {
   return api.put(`/rooms/${id}/episode`, { episode, sourceUrl });
 }
 
-export async function syncPlayback(id) {
-  return api.post(`/rooms/${id}/sync`);
+export async function syncPlayback(id, currentTime) {
+  return api.post(`/rooms/${id}/sync`, { currentTime });
+}
+
+export async function updatePosition(id, currentTime) {
+  return api.post(`/rooms/${id}/position`, { currentTime });
 }
 
 

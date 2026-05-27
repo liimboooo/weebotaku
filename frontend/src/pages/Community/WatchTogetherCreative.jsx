@@ -126,6 +126,7 @@ export default function WatchTogetherCreative() {
   const liveRoomRef = useRef(null);
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
+  const expectedPosRef = useRef(0);
 
   // friends activity
   const [friendsWatching, setFriendsWatching] = useState([]);
@@ -147,7 +148,9 @@ export default function WatchTogetherCreative() {
         setCountdownSec(diff);
       } else {
         setCountdownSec(null);
-        setSyncElapsed(Math.abs(diff));
+        const elapsed = Math.floor((Date.now() - new Date(playbackStartedAt).getTime()) / 1000);
+        setSyncElapsed(elapsed);
+        expectedPosRef.current = elapsed;
       }
     };
     check();
@@ -157,7 +160,11 @@ export default function WatchTogetherCreative() {
 
   useEffect(() => {
     if (!isLive || !playbackStartedAt || countdownSec !== null) return;
-    const tick = () => setSyncElapsed(Math.floor((Date.now() - new Date(playbackStartedAt).getTime()) / 1000));
+    const tick = () => {
+      const elapsed = Math.floor((Date.now() - new Date(playbackStartedAt).getTime()) / 1000);
+      setSyncElapsed(elapsed);
+      expectedPosRef.current = elapsed;
+    };
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
@@ -175,20 +182,32 @@ export default function WatchTogetherCreative() {
       hls.loadSource(currentSource.url);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        if (syncElapsed > 5) video.currentTime = syncElapsed;
+        const pos = expectedPosRef.current;
+        if (pos > 5) video.currentTime = pos;
         video.play().catch(() => {});
       });
       hlsRef.current = hls;
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = currentSource.url;
       video.addEventListener("loadedmetadata", () => {
-        if (syncElapsed > 5) video.currentTime = syncElapsed;
+        const pos = expectedPosRef.current;
+        if (pos > 5) video.currentTime = pos;
         video.play().catch(() => {});
       }, { once: true });
     }
 
     return () => { if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; } };
   }, [currentSource?.url, currentSource?.kind, countdownSec]);
+
+  // periodic drift correction for all viewers
+  useEffect(() => {
+    if (!isLive || !videoRef.current || countdownSec !== null) return;
+    const pos = expectedPosRef.current;
+    const video = videoRef.current;
+    if (pos > 5 && Math.abs(video.currentTime - pos) > 2) {
+      video.currentTime = pos;
+    }
+  }, [syncElapsed, isLive, countdownSec]);
 
   useEffect(() => {
     const el = messagesEndRef.current?.parentElement;
@@ -499,15 +518,23 @@ export default function WatchTogetherCreative() {
     }
     if (dbRoomId) {
       try {
-        await roomService.updateEpisode(dbRoomId, epNum, url);
+        const epRes = await roomService.updateEpisode(dbRoomId, epNum, url);
+        if (epRes.success && epRes.data?.playbackStartedAt) {
+          setPlaybackStartedAt(epRes.data.playbackStartedAt);
+        } else {
+          setPlaybackStartedAt(new Date(Date.now() + 5000).toISOString());
+        }
       } catch {
         addNotification({ title: "Sync Error", body: "Episode change failed. Try again.", type: "error" });
         return;
       }
+    } else {
+      setPlaybackStartedAt(new Date(Date.now() + 5000).toISOString());
     }
+    expectedPosRef.current = 0;
+    setSyncElapsed(0);
     setCurrentEpisode(epNum);
     setCurrentSourceUrl(url);
-    setPlaybackStartedAt(new Date(Date.now() + 5000).toISOString());
     setIframeKey(k => k + 1);
   }, [resolveStreamUrl, totalEpisodes, dbRoomId]);
 
@@ -619,7 +646,16 @@ export default function WatchTogetherCreative() {
     setSourceType(room.sourceType || 'external');
     setCurrentEpisode(room.currentEpisode || 1);
     setTotalEpisodes(room.totalEpisodes || 0);
-    setPlaybackStartedAt(room.playbackStartedAt || room.createdAt || null);
+    // use currentTime + positionUpdatedAt for accurate position if available
+    if (room.currentTime !== undefined && room.positionUpdatedAt) {
+      const elapsed = (Date.now() - new Date(room.positionUpdatedAt).getTime()) / 1000;
+      const pos = Math.max(0, room.currentTime + elapsed);
+      expectedPosRef.current = pos;
+      setSyncElapsed(Math.floor(pos));
+      setPlaybackStartedAt(new Date(Date.now() - pos * 1000).toISOString());
+    } else {
+      setPlaybackStartedAt(room.playbackStartedAt || room.createdAt || null);
+    }
 
     if (room.sourceType === 'anime' && room.animeId) {
       findStreamingSource(room.targetAnime, room.animeId).then(src => {
@@ -700,7 +736,20 @@ export default function WatchTogetherCreative() {
     resetRoomState();
   };
 
+  // host: upload currentTime every 3s for drift-free sync
+  useEffect(() => {
+    if (!isLive || !isHost || !dbRoomId || !videoRef.current) return;
+    const upload = setInterval(() => {
+      const video = videoRef.current;
+      if (video && video.currentTime > 0) {
+        roomService.updatePosition(dbRoomId, video.currentTime).catch(() => {});
+      }
+    }, 3000);
+    return () => clearInterval(upload);
+  }, [isLive, isHost, dbRoomId]);
+
   const lastSyncTsRef = useRef(null);
+  const lastPositionTsRef = useRef(null);
   useEffect(() => {
     if (!isLive || isHost || !dbRoomId) return;
     const check = setInterval(async () => {
@@ -713,8 +762,13 @@ export default function WatchTogetherCreative() {
           return;
         }
         if (res.data.participantCount) setParticipantCount(res.data.participantCount);
+
         const serverTs = res.data.playbackStartedAt;
+        const serverPosAt = res.data.positionUpdatedAt;
+        const serverTime = res.data.currentTime;
         const epChanged = sourceType === 'anime' && res.data.currentEpisode && res.data.currentEpisode !== currentEpisode;
+
+        // detect episode change or explicit sync
         const playbackRestarted = serverTs && lastSyncTsRef.current && serverTs !== lastSyncTsRef.current;
         if (epChanged || playbackRestarted) {
           if (res.data.currentEpisode) setCurrentEpisode(res.data.currentEpisode);
@@ -723,13 +777,27 @@ export default function WatchTogetherCreative() {
           setIframeKey(k => k + 1);
           addNotification({
             title: epChanged ? "Episode Changed" : "Syncing...",
-            body: epChanged ? `Now playing Episode ${res.data.currentEpisode}` : "Countdown starting — video will sync!",
+            body: epChanged ? `Now playing Episode ${res.data.currentEpisode}` : "Syncing to accurate position!",
             type: "info",
           });
         }
+
+        // track position changes for drift correction
+        if (serverPosAt && lastPositionTsRef.current && serverPosAt !== lastPositionTsRef.current && !epChanged && !playbackRestarted) {
+          const pos = serverTime + (Date.now() - new Date(serverPosAt).getTime()) / 1000;
+          if (pos > 5) {
+            expectedPosRef.current = pos;
+            const video = videoRef.current;
+            if (video && Math.abs(video.currentTime - pos) > 2) {
+              video.currentTime = pos;
+            }
+          }
+        }
+
         if (serverTs) lastSyncTsRef.current = serverTs;
+        if (serverPosAt) lastPositionTsRef.current = serverPosAt;
       } catch {}
-    }, 4000);
+    }, 5000);
     return () => clearInterval(check);
   }, [isLive, isHost, dbRoomId, resetRoomState, sourceType, currentEpisode]);
 
@@ -900,11 +968,12 @@ export default function WatchTogetherCreative() {
                   {isHost && (
                     <button onClick={async () => {
                       try {
-                        const res = await roomService.syncPlayback(dbRoomId);
-                        const ts = res.data?.playbackStartedAt || new Date(Date.now() + 5000).toISOString();
+                        const ct = videoRef.current?.currentTime || 0;
+                        const res = await roomService.syncPlayback(dbRoomId, ct);
+                        const ts = res.data?.playbackStartedAt || new Date().toISOString();
                         setPlaybackStartedAt(ts);
                         setIframeKey(k => k + 1);
-                        addNotification({ title: "Syncing", body: "Countdown starting — all viewers will sync!", type: "info" });
+                        addNotification({ title: "Syncing", body: "All viewers will seek to current position!", type: "info" });
                       } catch {}
                     }}><Wifi size={16} /> Sync All</button>
                   )}

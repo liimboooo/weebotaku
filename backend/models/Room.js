@@ -74,6 +74,14 @@ const RoomSchema = new mongoose.Schema({
     type: Date,
     default: () => new Date(Date.now() + 5000),
   },
+  currentTime: {
+    type: Number,
+    default: 0,
+  },
+  positionUpdatedAt: {
+    type: Date,
+    default: null,
+  },
   messages: [{
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     username: String,
