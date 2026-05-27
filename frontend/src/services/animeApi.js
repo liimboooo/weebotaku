@@ -282,6 +282,26 @@ export async function getEpisodePage(animeName, tagSlug, sourceName, sourceBase,
   };
 }
 
+export async function getMiruroEpisodes(anilistId) {
+  try {
+    const res = await fetch(`${API_BASE}/stream/episodes/${anilistId}`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (!json.success) return null;
+    return json.data;
+  } catch { return null; }
+}
+
+export async function getMiruroStream(anilistId, episodeNum, category = 'sub') {
+  try {
+    const res = await fetch(`${API_BASE}/stream/auto/${anilistId}/${episodeNum}?cat=${category}`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (!json.success) return null;
+    return json.data;
+  } catch { return null; }
+}
+
 export async function findStreamingSource(animeName, anilistId) {
   const source = SOURCES.reanime;
   try {

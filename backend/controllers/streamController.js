@@ -1,217 +1,293 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
-const CryptoJS = require('crypto-js');
+const https = require('https');
+const http = require('http');
+const zlib = require('zlib');
+const fetch = require('node-fetch');
 
-const KUUDERE_API = 'https://kuudere.to/api';
-const ZENCLOUD_BASE = 'https://zencloudz.cc';
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const MIRURO_PIPE = 'https://www.miruro.tv/api/secure/pipe';
+const ANILIST_URL = 'https://graphql.anilist.co';
+const PIPE_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Referer': 'https://www.miruro.tv/',
+};
 
-let searchCache = new Map();
+const PROVIDER_PRIORITY = ['kiwi', 'bee', 'dune', 'ally', 'hop'];
 
-async function kuudereSearch(query) {
-  if (searchCache.has(query)) return searchCache.get(query);
-  if (searchCache.size > 200) searchCache.clear();
-
-  const { data } = await axios.get(`${KUUDERE_API}/search`, {
-    params: { q: query },
-    headers: { 'User-Agent': UA },
-    timeout: 8000,
-  });
-
-  if (data.success && data.results?.length > 0) {
-    searchCache.set(query, data.results);
-    return data.results;
-  }
-  return [];
+function encodePipeRequest(payload) {
+  return Buffer.from(JSON.stringify(payload)).toString('base64url').replace(/=+$/, '');
 }
 
-async function kuudereGetEpisodeLinks(animeId, episode) {
-  const { data } = await axios.get(`${KUUDERE_API}/watch/${animeId}/${episode}`, {
-    headers: { 'User-Agent': UA },
-    timeout: 8000,
-  });
-
-  if (!data.success || !data.episode_links?.length) return null;
-  return data.episode_links.filter(l => l.serverName.toLowerCase() === 'zen' && l.dataType === 'sub');
+function decodePipeResponse(encoded) {
+  const padded = encoded + '='.repeat((4 - (encoded.length % 4)) % 4);
+  const compressed = Buffer.from(padded, 'base64url');
+  return JSON.parse(zlib.gunzipSync(compressed).toString('utf-8'));
 }
 
-function extractEmbeddedData(html) {
-  const $ = cheerio.load(html);
-  let scriptContent = '';
-  $('script').each((_, el) => {
-    const content = $(el).html();
-    if (content?.includes('__sveltekit_')) {
-      scriptContent = content;
-      return false;
-    }
-  });
-  if (!scriptContent) return null;
-
-  const match = scriptContent.match(/data:\s*\[null,null,\{type:"data",data:(\{[\s\S]*?\}),uses:/);
-  if (!match) return null;
-
+function decodeEpId(b64) {
   try {
-    return new Function(`return ${match[1]}`)();
-  } catch { return null; }
+    const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+    return Buffer.from(padded, 'base64url').toString('utf-8');
+  } catch { return b64; }
 }
 
-function generateFieldMapping(seed) {
-  const hash = CryptoJS.SHA256(seed).toString();
-  return {
-    videoField: `vf_${hash.substring(0, 8)}`,
-    keyField: `kf_${hash.substring(8, 16)}`,
-    ivField: `ivf_${hash.substring(16, 24)}`,
-    containerName: `cd_${hash.substring(24, 32)}`,
-    arrayName: `ad_${hash.substring(32, 40)}`,
-    objectName: `od_${hash.substring(40, 48)}`,
-    tokenField: `${hash.substring(48, 64)}_${hash.substring(56, 64)}`,
-  };
-}
-
-function extractEncryptedData(obfData, mapping) {
-  const container = obfData[mapping.containerName];
-  if (!container) return null;
-  const arr = container[mapping.arrayName];
-  if (!arr?.length) return null;
-  const obj = arr[0][mapping.objectName];
-  if (!obj) return null;
-
-  return {
-    video_b64: obj[mapping.videoField],
-    key_b64: obj[mapping.keyField],
-    iv_b64: obj[mapping.ivField],
-  };
-}
-
-async function zencloudGetSources(embedUrl) {
-  const { data: html } = await axios.get(embedUrl, {
-    headers: { 'User-Agent': UA },
-    timeout: 8000,
-  });
-
-  const extracted = extractEmbeddedData(html);
-  if (!extracted?.obfuscated_crypto_data || !extracted?.obfuscation_seed) return null;
-
-  const mapping = generateFieldMapping(extracted.obfuscation_seed);
-  const encrypted = extractEncryptedData(extracted.obfuscated_crypto_data, mapping);
-  if (!encrypted?.key_b64 || !encrypted?.iv_b64) return null;
-
-  let authToken = null;
-  for (const [key, value] of Object.entries(extracted)) {
-    if (key === mapping.tokenField && typeof value === 'string' && value.length > 0) {
-      authToken = value;
-      break;
+function deepTranslateIds(obj) {
+  if (Array.isArray(obj)) {
+    obj.forEach(item => { if (typeof item === 'object' && item) deepTranslateIds(item); });
+  } else if (obj && typeof obj === 'object') {
+    for (const [key, value] of Object.entries(obj)) {
+      if (key === 'id' && typeof value === 'string') obj[key] = decodeEpId(value);
+      else if (typeof value === 'object' && value) deepTranslateIds(value);
     }
   }
-  if (!authToken) return null;
+}
 
-  const tokenResp = await axios.get(`${ZENCLOUD_BASE}/api/m3u8/${authToken}`, {
-    headers: { 'User-Agent': UA },
-    timeout: 8000,
+async function pipeFetch(payload) {
+  const encoded = encodePipeRequest(payload);
+  const url = `${MIRURO_PIPE}?e=${encoded}`;
+  const res = await fetch(url, { headers: PIPE_HEADERS, timeout: 15000 });
+  if (!res.ok) throw new Error(`Pipe returned ${res.status}`);
+  const body = (await res.text()).trim();
+  return decodePipeResponse(body);
+}
+
+async function anilistSearch(query) {
+  const gql = `query ($search: String) {
+    Page(page: 1, perPage: 10) {
+      media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
+        id title { romaji english native }
+        coverImage { large }
+        format episodes status seasonYear
+      }
+    }
+  }`;
+  const res = await fetch(ANILIST_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: gql, variables: { search: query } }),
+    timeout: 10000,
   });
-  if (!tokenResp.data?.video_b64) return null;
+  if (!res.ok) throw new Error('AniList query failed');
+  const data = await res.json();
+  return data.data?.Page?.media || [];
+}
 
-  const key = CryptoJS.enc.Base64.parse(encrypted.key_b64);
-  const iv = CryptoJS.enc.Base64.parse(encrypted.iv_b64);
-  const encVideoUrl = CryptoJS.enc.Base64.parse(tokenResp.data.video_b64);
-
-  let decryptedUrl;
+exports.searchAnime = async (req, res) => {
   try {
-    const decrypted = CryptoJS.AES.decrypt(encVideoUrl.toString(), key, {
-      iv,
-      mode: CryptoJS.mode.CBC,
-      padding: CryptoJS.pad.Pkcs7,
+    const q = req.query.q;
+    if (!q) return res.status(400).json({ success: false, message: 'q parameter required' });
+    const results = await anilistSearch(q);
+    res.json({ success: true, data: results });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.getEpisodes = async (req, res) => {
+  try {
+    const anilistId = parseInt(req.params.anilistId, 10);
+    if (!anilistId) return res.status(400).json({ success: false, message: 'anilistId required' });
+
+    const data = await pipeFetch({
+      path: 'episodes', method: 'GET',
+      query: { anilistId }, body: null, version: '0.1.0',
     });
-    decryptedUrl = decrypted.toString(CryptoJS.enc.Utf8);
-  } catch {}
+    deepTranslateIds(data);
 
-  if (!decryptedUrl) {
-    try {
-      const cipherParams = CryptoJS.lib.CipherParams.create({ ciphertext: encVideoUrl });
-      const decrypted = CryptoJS.AES.decrypt(cipherParams, key, {
-        iv,
-        mode: CryptoJS.mode.CBC,
-        padding: CryptoJS.pad.Pkcs7,
-      });
-      decryptedUrl = decrypted.toString(CryptoJS.enc.Utf8);
-    } catch {}
-  }
-
-  if (!decryptedUrl?.trim()) return null;
-
-  return {
-    url: decryptedUrl,
-    subtitles: extracted.subtitles || [],
-    thumbnails: extracted.thumbnails_vtt || null,
-  };
-}
-
-exports.getStream = async (req, res) => {
-  try {
-    const { title, episode } = req.params;
-    const ep = parseInt(episode, 10);
-    if (!title || !ep || ep < 1) {
-      return res.status(400).json({ success: false, message: 'title and episode required' });
-    }
-
-    const decodedTitle = decodeURIComponent(title);
-    const debug = {};
-
-    const results = await kuudereSearch(decodedTitle);
-    debug.searchResults = results.length;
-    if (!results.length) {
-      return res.status(404).json({ success: false, message: 'Anime not found on Kuudere', debug });
-    }
-
-    const animeId = results[0].id;
-    debug.animeId = animeId;
-
-    const links = await kuudereGetEpisodeLinks(animeId, ep);
-    debug.zenLinks = links?.length || 0;
-    if (!links?.length) {
-      return res.status(404).json({ success: false, message: 'No Zen server links for this episode', debug });
-    }
-
-    for (const link of links) {
-      try {
-        const sources = await zencloudGetSources(link.dataLink);
-        if (sources?.url) {
-          return res.json({
-            success: true,
-            data: {
-              sources: [{ url: sources.url, quality: 'auto', isM3U8: sources.url.includes('.m3u8') }],
-              subtitles: (sources.subtitles || []).map(s => ({ url: s.url, lang: s.language })),
-              provider: 'kuudere',
-            },
-          });
-        }
-      } catch (e) {
-        debug.zenError = e.message;
+    const providers = data.providers || {};
+    const simplified = {};
+    for (const [pname, pdata] of Object.entries(providers)) {
+      const episodes = pdata.episodes || {};
+      simplified[pname] = {};
+      const cats = typeof episodes === 'object' && !Array.isArray(episodes) ? episodes : { sub: episodes };
+      for (const [cat, epList] of Object.entries(cats)) {
+        if (!Array.isArray(epList)) continue;
+        simplified[pname][cat] = epList.map(ep => ({
+          number: ep.number,
+          title: ep.title || `Episode ${ep.number}`,
+          id: ep.id,
+          image: ep.image || null,
+        }));
       }
     }
 
-    res.status(404).json({ success: false, message: 'Could not extract stream', debug });
-  } catch (error) {
-    console.error('GetStream error:', error);
-    res.status(500).json({ success: false, message: error.message || 'Server error' });
+    res.json({ success: true, data: { mappings: data.mappings, providers: simplified } });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.getSources = async (req, res) => {
+  try {
+    const { anilistId, provider, category, episodeNum } = req.params;
+    const aid = parseInt(anilistId, 10);
+    const epNum = parseInt(episodeNum, 10);
+    if (!aid || !provider || !epNum) {
+      return res.status(400).json({ success: false, message: 'Missing params' });
+    }
+
+    const epData = await pipeFetch({
+      path: 'episodes', method: 'GET',
+      query: { anilistId: aid }, body: null, version: '0.1.0',
+    });
+    deepTranslateIds(epData);
+
+    const provData = epData.providers?.[provider];
+    if (!provData) return res.status(404).json({ success: false, message: `Provider ${provider} not found` });
+
+    const epsList = provData.episodes?.[category || 'sub'] || [];
+    const ep = epsList.find(e => e.number === epNum);
+    if (!ep) return res.status(404).json({ success: false, message: `Episode ${epNum} not found` });
+
+    const encId = Buffer.from(ep.id).toString('base64url').replace(/=+$/, '');
+    const sources = await pipeFetch({
+      path: 'sources', method: 'GET',
+      query: { episodeId: encId, provider, category: category || 'sub', anilistId: aid },
+      body: null, version: '0.1.0',
+    });
+
+    const hlsStreams = (sources.streams || []).filter(s => s.type === 'hls' && s.url);
+    if (!hlsStreams.length) {
+      return res.status(404).json({ success: false, message: 'No HLS streams found for this provider' });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const proxied = hlsStreams.map(s => ({
+      url: `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(s.url)}&ref=${encodeURIComponent(s.referer || '')}`,
+      quality: s.quality,
+      isActive: s.isActive,
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        streams: proxied,
+        subtitles: (sources.subtitles || []).map(s => ({ url: s.file || s.url, label: s.label || s.language })),
+        intro: sources.intro || null,
+        outro: sources.outro || null,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.autoSources = async (req, res) => {
+  try {
+    const { anilistId, episodeNum } = req.params;
+    const category = req.query.cat || 'sub';
+    const aid = parseInt(anilistId, 10);
+    const epNum = parseInt(episodeNum, 10);
+    if (!aid || !epNum) return res.status(400).json({ success: false, message: 'Missing params' });
+
+    const epData = await pipeFetch({
+      path: 'episodes', method: 'GET',
+      query: { anilistId: aid }, body: null, version: '0.1.0',
+    });
+    deepTranslateIds(epData);
+
+    const providers = epData.providers || {};
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    for (const pname of PROVIDER_PRIORITY) {
+      const provData = providers[pname];
+      if (!provData) continue;
+      const epsList = provData.episodes?.[category] || [];
+      const ep = epsList.find(e => e.number === epNum);
+      if (!ep) continue;
+
+      try {
+        const encId = Buffer.from(ep.id).toString('base64url').replace(/=+$/, '');
+        const sources = await pipeFetch({
+          path: 'sources', method: 'GET',
+          query: { episodeId: encId, provider: pname, category, anilistId: aid },
+          body: null, version: '0.1.0',
+        });
+
+        const active = (sources.streams || []).find(s => s.type === 'hls' && s.url && s.isActive);
+        const fallback = (sources.streams || []).find(s => s.type === 'hls' && s.url);
+        const stream = active || fallback;
+        if (!stream) continue;
+
+        return res.json({
+          success: true,
+          data: {
+            provider: pname,
+            stream: {
+              url: `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(stream.url)}&ref=${encodeURIComponent(stream.referer || '')}`,
+              quality: stream.quality,
+            },
+            subtitles: (sources.subtitles || []).map(s => ({ url: s.file || s.url, label: s.label || s.language })),
+            intro: sources.intro || null,
+            outro: sources.outro || null,
+          },
+        });
+      } catch { continue; }
+    }
+
+    res.status(404).json({ success: false, message: 'No working stream found across all providers' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.streamProxy = async (req, res) => {
+  try {
+    const targetUrl = req.query.url;
+    const referer = req.query.ref || '';
+    if (!targetUrl) return res.status(400).send('url parameter required');
+
+    const headers = { 'User-Agent': PIPE_HEADERS['User-Agent'] };
+    if (referer) headers['Referer'] = referer;
+
+    const proxyRes = await fetch(targetUrl, { headers, timeout: 9000 });
+    if (!proxyRes.ok) return res.status(proxyRes.status).send('Upstream error');
+
+    const contentType = proxyRes.headers.get('content-type') || '';
+    const isM3U8 = targetUrl.endsWith('.m3u8') || contentType.includes('mpegurl');
+
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Headers', '*');
+
+    if (isM3U8) {
+      let body = await proxyRes.text();
+      const baseUrl = `${req.protocol}://${req.get('host')}/api/stream/proxy`;
+      const urlDir = targetUrl.substring(0, targetUrl.lastIndexOf('/') + 1);
+
+      body = body.replace(/(^(?!#).*$|URI="([^"]+)")/gm, (match, _full, uriVal) => {
+        if (uriVal !== undefined) {
+          const abs = uriVal.startsWith('http') ? uriVal : urlDir + uriVal;
+          return `URI="${baseUrl}?url=${encodeURIComponent(abs)}&ref=${encodeURIComponent(referer)}"`;
+        }
+        const line = match.trim();
+        if (!line || line.startsWith('#')) return match;
+        const abs = line.startsWith('http') ? line : urlDir + line;
+        return `${baseUrl}?url=${encodeURIComponent(abs)}&ref=${encodeURIComponent(referer)}`;
+      });
+
+      res.set('Content-Type', 'application/vnd.apple.mpegurl');
+      return res.send(body);
+    }
+
+    res.set('Content-Type', contentType || 'application/octet-stream');
+    proxyRes.body.pipe(res);
+  } catch (err) {
+    res.status(500).send('Proxy error');
   }
 };
 
 exports.testProviders = async (req, res) => {
   const results = {};
   try {
-    const resp = await axios.get(`${KUUDERE_API}/search`, {
-      params: { q: 'Death Note' },
-      headers: { 'User-Agent': UA },
-      timeout: 8000,
-    });
-    results.search = { status: resp.status, count: resp.data?.results?.length || 0, first: resp.data?.results?.[0] || null };
-  } catch (e) { results.search = { error: e.message }; }
+    const anilist = await anilistSearch('Death Note');
+    results.anilist = { count: anilist.length, first: anilist[0]?.title || null };
+  } catch (e) { results.anilist = { error: e.message }; }
 
   try {
-    const resp = await axios.get(`${ZENCLOUD_BASE}`, { headers: { 'User-Agent': UA }, timeout: 5000 });
-    results.zencloud = { status: resp.status, length: resp.data?.length || 0 };
-  } catch (e) { results.zencloud = { error: e.code || e.message }; }
+    const data = await pipeFetch({
+      path: 'episodes', method: 'GET',
+      query: { anilistId: 1535 }, body: null, version: '0.1.0',
+    });
+    results.miruro = { providers: Object.keys(data.providers || {}) };
+  } catch (e) { results.miruro = { error: e.message }; }
 
   res.json({ success: true, data: results });
 };

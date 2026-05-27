@@ -36,7 +36,10 @@ const globalLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please try again later' },
 });
-app.use('/api/', globalLimiter);
+app.use('/api/', (req, res, next) => {
+  if (req.path.startsWith('/stream/proxy')) return next();
+  return globalLimiter(req, res, next);
+});
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

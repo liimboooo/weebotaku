@@ -21,13 +21,14 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Room, RoomEvent } from "livekit-client";
+import Hls from "hls.js";
 import AnimatedPage from "../../components/AnimatedPage";
 import LiveRooms from "../../components/LiveRooms";
 import * as roomService from "../../services/roomService";
 import authService from "../../services/authService";
 import { addNotification } from "../../services/notificationService";
 import { fetchTopAnime, fetchSearchAnime } from "../../services/anilistApi";
-import { findStreamingSource, getStreamUrls, getEpisodes } from "../../services/animeApi";
+import { findStreamingSource, getStreamUrls, getEpisodes, getMiruroStream } from "../../services/animeApi";
 import "./WatchTogetherCreative.css";
 
 function getEmbedSource(urlString, startOffsetSec) {
@@ -66,7 +67,10 @@ function getEmbedSource(urlString, startOffsetSec) {
       }
     }
 
-    const directVideo = /\.(mp4|webm|ogg|m3u8)(\?|#|$)/i.test(parsedUrl.pathname + parsedUrl.search + parsedUrl.hash);
+    const isHls = parsedUrl.pathname.includes('/stream/proxy') || /\.m3u8(\?|#|$)/i.test(parsedUrl.pathname);
+    if (isHls) return { kind: "hls", url: urlString, title: "HLS stream", offset };
+
+    const directVideo = /\.(mp4|webm|ogg)(\?|#|$)/i.test(parsedUrl.pathname + parsedUrl.search + parsedUrl.hash);
     return {
       kind: directVideo ? "video" : "iframe",
       url: urlString,
@@ -121,6 +125,7 @@ export default function WatchTogetherCreative() {
   const messagesEndRef = useRef(null);
   const liveRoomRef = useRef(null);
   const videoRef = useRef(null);
+  const hlsRef = useRef(null);
 
   // friends activity
   const [friendsWatching, setFriendsWatching] = useState([]);
@@ -157,6 +162,33 @@ export default function WatchTogetherCreative() {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [isLive, playbackStartedAt, countdownSec]);
+
+  useEffect(() => {
+    if (!currentSource || currentSource.kind !== "hls" || !videoRef.current) return;
+    if (countdownSec !== null && countdownSec > 0) return;
+
+    const video = videoRef.current;
+    if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+
+    if (Hls.isSupported()) {
+      const hls = new Hls({ maxBufferLength: 30, maxMaxBufferLength: 60 });
+      hls.loadSource(currentSource.url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        if (syncElapsed > 5) video.currentTime = syncElapsed;
+        video.play().catch(() => {});
+      });
+      hlsRef.current = hls;
+    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = currentSource.url;
+      video.addEventListener("loadedmetadata", () => {
+        if (syncElapsed > 5) video.currentTime = syncElapsed;
+        video.play().catch(() => {});
+      }, { once: true });
+    }
+
+    return () => { if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; } };
+  }, [currentSource?.url, currentSource?.kind, countdownSec]);
 
   useEffect(() => {
     const el = messagesEndRef.current?.parentElement;
@@ -408,6 +440,14 @@ export default function WatchTogetherCreative() {
     setSourceResolving(true);
 
     try {
+      const miruro = await getMiruroStream(anime.id, 1);
+      if (gen !== pickGenRef.current) return;
+      if (miruro?.stream?.url) {
+        setStreamSource({ source: 'miruro', anilistId: anime.id, slug: anime.id });
+        setPreResolvedUrl(miruro.stream.url);
+        setSourceResolving(false);
+        return;
+      }
       const src = await findStreamingSource(anime.name, anime.id);
       if (gen !== pickGenRef.current) return;
       setSourceResolving(false);
@@ -415,7 +455,6 @@ export default function WatchTogetherCreative() {
         setStreamSource(src);
         setPreResolvedUrl(null);
         const epsPromise = getEpisodes(anime.name, src.slug, src.source, src.sourceBase, src.anilistId);
-        // pre-resolve episode 1 URL in parallel with episode list fetch
         getStreamUrls(String(1), src.source, src.anilistId, null, src.slug)
           .then(servers => {
             if (gen !== pickGenRef.current) return;
@@ -436,6 +475,11 @@ export default function WatchTogetherCreative() {
   const resolveStreamUrl = useCallback(async (epNum) => {
     setResolvingStream(true);
     try {
+      const aniId = pickedAnime?.id || streamSource?.anilistId;
+      if (aniId) {
+        const miruro = await getMiruroStream(aniId, epNum);
+        if (miruro?.stream?.url) return miruro.stream.url;
+      }
       if (!streamSource) return null;
       const servers = await getStreamUrls(
         String(epNum), streamSource.source, streamSource.anilistId, null, streamSource.slug
@@ -444,7 +488,7 @@ export default function WatchTogetherCreative() {
       return sub?.url || null;
     } catch { return null; }
     finally { setResolvingStream(false); }
-  }, [streamSource]);
+  }, [streamSource, pickedAnime]);
 
   const handleChangeEpisode = useCallback(async (epNum) => {
     if (epNum < 1 || (totalEpisodes > 0 && epNum > totalEpisodes)) return;
@@ -628,6 +672,7 @@ export default function WatchTogetherCreative() {
       liveRoomRef.current.disconnect();
       liveRoomRef.current = null;
     }
+    if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
     setCountdownSec(null);
     stopChatPolling();
     setLiveKitConnected(false);
@@ -889,6 +934,15 @@ export default function WatchTogetherCreative() {
                         <p className="sync-countdown-label">Starting in sync...</p>
                         <p className="sync-countdown-hint">Video will load for everyone at the same moment</p>
                       </div>
+                    ) : currentSource?.kind === "hls" ? (
+                      <video
+                        ref={videoRef}
+                        key={iframeKey}
+                        controls
+                        autoPlay
+                        playsInline
+                        style={{ width: "100%", height: "100%", background: "#000" }}
+                      />
                     ) : currentSource?.kind === "iframe" ? (
                       <iframe
                         key={iframeKey}
