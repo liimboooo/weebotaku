@@ -10,6 +10,7 @@ const PIPE_HEADERS = {
 
 const PROVIDER_PRIORITY = ['ally', 'bee', 'ANIMEKAI', 'kiwi', 'dune', 'hop'];
 const BLOCKED_CDN_HOSTS = ['uwucdn.top'];
+const CORS_CDN_HOSTS = ['wixmp.com', 'wixstatic.com'];
 
 function encodePipeRequest(payload) {
   return Buffer.from(JSON.stringify(payload)).toString('base64url').replace(/=+$/, '');
@@ -149,11 +150,14 @@ exports.getSources = async (req, res) => {
     }
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const proxied = hlsStreams.map(s => ({
-      url: `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(s.url)}&ref=${encodeURIComponent(s.referer || '')}`,
-      quality: s.quality,
-      isActive: s.isActive,
-    }));
+    const proxied = hlsStreams.map(s => {
+      const hasCors = CORS_CDN_HOSTS.some(h => s.url.includes(h));
+      return {
+        url: hasCors ? s.url : `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(s.url)}&ref=${encodeURIComponent(s.referer || '')}`,
+        quality: s.quality,
+        isActive: s.isActive,
+      };
+    });
 
     res.json({
       success: true,
@@ -208,14 +212,16 @@ exports.autoSources = async (req, res) => {
         const stream = active || fallback;
 
         if (stream) {
+          const hasCors = CORS_CDN_HOSTS.some(h => stream.url.includes(h));
+          const streamUrl = hasCors
+            ? stream.url
+            : `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(stream.url)}&ref=${encodeURIComponent(stream.referer || '')}`;
+
           return res.json({
             success: true,
             data: {
               provider: pname,
-              stream: {
-                url: `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(stream.url)}&ref=${encodeURIComponent(stream.referer || '')}`,
-                quality: stream.quality,
-              },
+              stream: { url: streamUrl, quality: stream.quality },
               subtitles: (sources.subtitles || []).map(s => ({ url: s.file || s.url, label: s.label || s.language })),
               intro: sources.intro || null,
               outro: sources.outro || null,
