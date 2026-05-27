@@ -177,26 +177,49 @@ export default function WatchTogetherCreative() {
     const video = videoRef.current;
     if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
 
+    // pre-seek: if position is known before HLS loads, jump there once loaded
+    const targetPos = expectedPosRef.current;
+    let seekAttempted = false;
+
     if (Hls.isSupported()) {
       const hls = new Hls({ maxBufferLength: 30, maxMaxBufferLength: 60 });
       hls.loadSource(currentSource.url);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        const pos = expectedPosRef.current;
-        if (pos > 5) video.currentTime = pos;
+        if (targetPos > 5) video.currentTime = targetPos;
         video.play().catch(() => {});
+        seekAttempted = true;
+      });
+      hls.on(Hls.Events.ERROR, (e, data) => {
+        if (data.fatal) {
+          hls.destroy();
+        }
       });
       hlsRef.current = hls;
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = currentSource.url;
       video.addEventListener("loadedmetadata", () => {
-        const pos = expectedPosRef.current;
-        if (pos > 5) video.currentTime = pos;
+        if (targetPos > 5) video.currentTime = targetPos;
         video.play().catch(() => {});
+        seekAttempted = true;
       }, { once: true });
     }
 
-    return () => { if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; } };
+    // retry seek every 500ms until it takes effect
+    const retry = setInterval(() => {
+      if (seekAttempted && video.currentTime > 1) return clearInterval(retry);
+      const pos = expectedPosRef.current;
+      if (pos > 5 && video.readyState > 0) {
+        video.currentTime = pos;
+        video.play().catch(() => {});
+        seekAttempted = true;
+      }
+    }, 500);
+
+    return () => {
+      clearInterval(retry);
+      if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+    };
   }, [currentSource?.url, currentSource?.kind, countdownSec]);
 
   // periodic drift correction for all viewers
@@ -209,42 +232,19 @@ export default function WatchTogetherCreative() {
     }
   }, [syncElapsed, isLive, countdownSec]);
 
-  // joiner playback restrictions: no forward seek, no pause, no keyboard controls
+  // joiner: prevent seeking past live position
   useEffect(() => {
     if (isHost || !videoRef.current) return;
     const video = videoRef.current;
-
-    const blockForwardSeek = () => {
+    const clamp = () => {
       const livePos = expectedPosRef.current;
       if (livePos > 5 && video.currentTime > livePos + 1) {
         video.currentTime = livePos;
       }
     };
-
-    const preventPause = (e) => {
-      if (video.paused && !video.ended) {
-        video.play().catch(() => {});
-      }
-    };
-
-    const blockKeys = (e) => {
-      const keys = [' ', 'ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'k', 'f', 'm', 'Home', 'End'];
-      if (keys.includes(e.key)) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
-    video.addEventListener('seeking', blockForwardSeek);
-    video.addEventListener('pause', preventPause);
-    document.addEventListener('keydown', blockKeys, { capture: true });
-
-    return () => {
-      video.removeEventListener('seeking', blockForwardSeek);
-      video.removeEventListener('pause', preventPause);
-      document.removeEventListener('keydown', blockKeys, { capture: true });
-    };
-  }, [isHost, isLive]);
+    video.addEventListener('seeking', clamp);
+    return () => video.removeEventListener('seeking', clamp);
+  }, [isHost]);
 
   useEffect(() => {
     const el = messagesEndRef.current?.parentElement;
