@@ -1,59 +1,63 @@
-const { ANIME } = require('@consumet/extensions');
 const axios = require('axios');
+const cheerio = require('cheerio');
 
-let providers = {};
-
-function getProvider(name) {
-  if (!providers[name]) {
-    providers[name] = new ANIME[name]();
+let gogoCDN = null;
+function getGogoCDN() {
+  if (!gogoCDN) {
+    const { GogoCDN } = require('@consumet/extensions/dist/extractors');
+    gogoCDN = new GogoCDN();
   }
-  return providers[name];
+  return gogoCDN;
 }
+
+const GOGO_BASE = 'https://anitaku.pe';
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 let searchCache = new Map();
 
-async function findAnimeId(provider, title) {
-  const cacheKey = `${provider.name}-${title}`;
-  if (searchCache.has(cacheKey)) return searchCache.get(cacheKey);
+async function gogoSearch(title) {
+  if (searchCache.has(title)) return searchCache.get(title);
   if (searchCache.size > 200) searchCache.clear();
 
-  const results = await provider.search(title);
-  if (results.results && results.results.length > 0) {
-    const id = results.results[0].id;
-    searchCache.set(cacheKey, id);
-    return id;
+  const { data } = await axios.get(`${GOGO_BASE}/search.html`, {
+    params: { keyword: title },
+    headers: { 'User-Agent': UA },
+    timeout: 8000,
+  });
+
+  const $ = cheerio.load(data);
+  const results = [];
+  $('div.last_episodes ul.items li').each((i, el) => {
+    const a = $(el).find('p.name a');
+    const href = a.attr('href') || '';
+    const slug = href.replace('/category/', '');
+    results.push({ slug, title: a.text().trim() });
+  });
+
+  if (results.length > 0) {
+    searchCache.set(title, results);
   }
-  return null;
+  return results;
 }
 
-async function tryProvider(provider, providerName, decodedTitle, ep) {
-  const steps = [];
-  const animeId = await findAnimeId(provider, decodedTitle);
-  steps.push(`search: ${animeId || 'no results'}`);
-  if (!animeId) return { sources: null, steps };
+async function gogoGetEpisodeSources(slug, ep) {
+  const epUrl = `${GOGO_BASE}/${slug}-episode-${ep}`;
+  const { data } = await axios.get(epUrl, {
+    headers: { 'User-Agent': UA },
+    timeout: 8000,
+  });
 
-  const info = await provider.fetchAnimeInfo(animeId);
-  steps.push(`episodes: ${info.episodes?.length || 0}`);
-  const epData = info.episodes?.find(e => e.number === ep);
-  steps.push(`ep${ep}: ${epData ? epData.id : 'not found'}`);
-  if (!epData) return { sources: null, steps };
+  const $ = cheerio.load(data);
+  const embedSrc = $('div.anime_video_body_watch_items iframe').attr('src')
+    || $('iframe').attr('src');
 
-  const sources = await provider.fetchEpisodeSources(epData.id);
-  steps.push(`sources: ${sources.sources?.length || 0}`);
-  if (sources.sources?.length > 0) {
-    return {
-      sources: {
-        sources: sources.sources.map(s => ({ url: s.url, quality: s.quality })),
-        subtitles: sources.subtitles || [],
-        provider: providerName,
-      },
-      steps,
-    };
-  }
-  return { sources: null, steps };
+  if (!embedSrc) return null;
+
+  const embedUrl = embedSrc.startsWith('http') ? embedSrc : `https:${embedSrc}`;
+  const extractor = getGogoCDN();
+  const sources = await extractor.extract(new URL(embedUrl));
+  return sources;
 }
-
-const PROVIDER_ORDER = ['AnimePahe', 'Hianime', 'AnimeKai'];
 
 exports.getStream = async (req, res) => {
   try {
@@ -66,17 +70,33 @@ exports.getStream = async (req, res) => {
     const decodedTitle = decodeURIComponent(title);
     const debug = {};
 
-    for (const name of PROVIDER_ORDER) {
-      try {
-        const provider = getProvider(name);
-        const result = await tryProvider(provider, name.toLowerCase(), decodedTitle, ep);
-        debug[name] = result.steps;
-        if (result.sources) {
-          return res.json({ success: true, data: result.sources });
+    try {
+      const results = await gogoSearch(decodedTitle);
+      debug.searchResults = results.length;
+      debug.firstResult = results[0]?.slug || 'none';
+
+      if (results.length > 0) {
+        const slug = results[0].slug;
+        const sources = await gogoGetEpisodeSources(slug, ep);
+        debug.sourcesFound = sources?.sources?.length || 0;
+
+        if (sources?.sources?.length > 0) {
+          return res.json({
+            success: true,
+            data: {
+              sources: sources.sources.map(s => ({
+                url: s.url,
+                quality: s.quality || 'default',
+                isM3U8: s.isM3U8 || s.url?.includes('.m3u8'),
+              })),
+              subtitles: sources.subtitles || [],
+              provider: 'gogoanime',
+            },
+          });
         }
-      } catch (e) {
-        debug[name] = e.message;
       }
+    } catch (e) {
+      debug.error = e.message;
     }
 
     res.status(404).json({ success: false, message: 'No stream sources found', debug });
@@ -89,27 +109,29 @@ exports.getStream = async (req, res) => {
 exports.testProviders = async (req, res) => {
   const results = {};
 
-  const sites = [
-    { name: 'hianime.to', url: 'https://hianime.to' },
-    { name: 'animepahe.si', url: 'https://animepahe.si' },
-    { name: 'animepahe.ru', url: 'https://animepahe.ru' },
-    { name: 'animepahe.com', url: 'https://animepahe.com' },
-    { name: 'animekai.to', url: 'https://animekai.to' },
-    { name: 'gogoanime3.co', url: 'https://gogoanime3.co' },
-    { name: 'anitaku.pe', url: 'https://anitaku.pe' },
-    { name: 'reanime.co', url: 'https://reanime.co' },
+  const tests = [
+    { name: 'anitaku-home', url: `${GOGO_BASE}/` },
+    { name: 'anitaku-search', url: `${GOGO_BASE}/search.html?keyword=Death+Note` },
+    { name: 'anitaku-ep', url: `${GOGO_BASE}/death-note-episode-1` },
+    { name: 'gogoanime3-home', url: 'https://gogoanime3.co/' },
   ];
 
-  await Promise.allSettled(sites.map(async (site) => {
+  await Promise.allSettled(tests.map(async (test) => {
     try {
-      const resp = await axios.get(site.url, {
-        timeout: 5000,
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      const resp = await axios.get(test.url, {
+        timeout: 8000,
+        headers: { 'User-Agent': UA },
         maxRedirects: 3,
       });
-      results[site.name] = { status: resp.status, length: resp.data?.length || 0 };
+      const $ = cheerio.load(resp.data);
+      results[test.name] = {
+        status: resp.status,
+        length: resp.data?.length || 0,
+        title: $('title').text().trim().slice(0, 80),
+        hasItems: $('ul.items li').length,
+      };
     } catch (e) {
-      results[site.name] = { error: e.code || e.message };
+      results[test.name] = { error: e.code || e.message };
     }
   }));
 
