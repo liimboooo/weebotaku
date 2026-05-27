@@ -19,15 +19,40 @@ async function findAnimeId(provider, title) {
   if (searchCache.has(cacheKey)) return searchCache.get(cacheKey);
   if (searchCache.size > 200) searchCache.clear();
 
-  try {
-    const results = await provider.search(title);
-    if (results.results && results.results.length > 0) {
-      const id = results.results[0].id;
-      searchCache.set(cacheKey, id);
-      return id;
-    }
-  } catch {}
+  const results = await provider.search(title);
+  if (results.results && results.results.length > 0) {
+    const id = results.results[0].id;
+    searchCache.set(cacheKey, id);
+    return id;
+  }
   return null;
+}
+
+async function tryProvider(provider, providerName, decodedTitle, ep) {
+  const steps = [];
+  const animeId = await findAnimeId(provider, decodedTitle);
+  steps.push(`search: ${animeId || 'no results'}`);
+  if (!animeId) return { sources: null, steps };
+
+  const info = await provider.fetchAnimeInfo(animeId);
+  steps.push(`episodes: ${info.episodes?.length || 0}`);
+  const epData = info.episodes?.find(e => e.number === ep);
+  steps.push(`ep${ep}: ${epData ? epData.id : 'not found'}`);
+  if (!epData) return { sources: null, steps };
+
+  const sources = await provider.fetchEpisodeSources(epData.id);
+  steps.push(`sources: ${sources.sources?.length || 0}`);
+  if (sources.sources?.length > 0) {
+    return {
+      sources: {
+        sources: sources.sources.map(s => ({ url: s.url, quality: s.quality })),
+        subtitles: sources.subtitles || [],
+        provider: providerName,
+      },
+      steps,
+    };
+  }
+  return { sources: null, steps };
 }
 
 exports.getStream = async (req, res) => {
@@ -39,53 +64,25 @@ exports.getStream = async (req, res) => {
     }
 
     const decodedTitle = decodeURIComponent(title);
-    const errors = [];
+    const debug = {};
 
     try {
-      const provider = getHianime();
-      const animeId = await findAnimeId(provider, decodedTitle);
-      if (animeId) {
-        const info = await provider.fetchAnimeInfo(animeId);
-        const epData = info.episodes?.find(e => e.number === ep);
-        if (epData) {
-          const sources = await provider.fetchEpisodeSources(epData.id);
-          if (sources.sources?.length > 0) {
-            return res.json({
-              success: true,
-              data: {
-                sources: sources.sources.map(s => ({ url: s.url, quality: s.quality })),
-                subtitles: sources.subtitles || [],
-                provider: 'hianime',
-              },
-            });
-          }
-        }
+      const result = await tryProvider(getHianime(), 'hianime', decodedTitle, ep);
+      debug.hianime = result.steps;
+      if (result.sources) {
+        return res.json({ success: true, data: result.sources });
       }
-    } catch (e) { errors.push(`hianime: ${e.message}`); }
+    } catch (e) { debug.hianime = e.message; }
 
     try {
-      const provider = getAnimekai();
-      const animeId = await findAnimeId(provider, decodedTitle);
-      if (animeId) {
-        const info = await provider.fetchAnimeInfo(animeId);
-        const epData = info.episodes?.find(e => e.number === ep);
-        if (epData) {
-          const sources = await provider.fetchEpisodeSources(epData.id);
-          if (sources.sources?.length > 0) {
-            return res.json({
-              success: true,
-              data: {
-                sources: sources.sources.map(s => ({ url: s.url, quality: s.quality })),
-                subtitles: sources.subtitles || [],
-                provider: 'animekai',
-              },
-            });
-          }
-        }
+      const result = await tryProvider(getAnimekai(), 'animekai', decodedTitle, ep);
+      debug.animekai = result.steps;
+      if (result.sources) {
+        return res.json({ success: true, data: result.sources });
       }
-    } catch (e) { errors.push(`animekai: ${e.message}`); }
+    } catch (e) { debug.animekai = e.message; }
 
-    res.status(404).json({ success: false, message: 'No stream sources found', errors });
+    res.status(404).json({ success: false, message: 'No stream sources found', debug });
   } catch (error) {
     console.error('GetStream error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
