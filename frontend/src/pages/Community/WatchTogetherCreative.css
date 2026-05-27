@@ -211,6 +211,19 @@
   gap: 16px;
 }
 
+.sync-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 10px;
+  font-size: 0.78rem;
+  color: #c4b5fd;
+  margin-bottom: 8px;
+}
+
 .video-container {
   aspect-ratio: 16 / 9;
   background: #000;

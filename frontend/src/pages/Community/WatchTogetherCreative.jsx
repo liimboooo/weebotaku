@@ -824,6 +824,12 @@ export default function WatchTogetherCreative() {
 
               <div className="stage-grid">
                 <div className="video-column">
+                  {!isHost && playbackOffset > 30 && currentSource?.kind === "iframe" && (
+                    <div className="sync-banner">
+                      <Wifi size={14} />
+                      <span>Room started {Math.floor(playbackOffset / 60)}m {Math.floor(playbackOffset % 60)}s ago — skip ahead in the player to sync up</span>
+                    </div>
+                  )}
                   <div className="video-container">
                     {currentSource?.kind === "iframe" ? (
                       <iframe
