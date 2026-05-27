@@ -189,35 +189,38 @@ exports.getFriendsActivity = async (req, res) => {
     const friendships = await Friendship.find({
       $or: [{ requester: req.user.id }, { recipient: req.user.id }],
       status: 'accepted',
-    }).select('requester recipient').lean();
+    }).select('requester recipient')
+      .populate('requester', 'username')
+      .populate('recipient', 'username')
+      .lean();
 
-    const friendIds = friendships.map(f =>
-      f.requester.toString() === req.user.id ? f.recipient : f.requester
-    );
+    const friends = friendships.map(f => {
+      const isRequester = f.requester._id.toString() === req.user.id;
+      return isRequester ? f.recipient : f.requester;
+    });
 
+    if (friends.length === 0) {
+      return res.json({ success: true, data: { watching: [], available: [] } });
+    }
+
+    const friendIds = friends.map(f => f._id);
     const friendIdSet = new Set(friendIds.map(id => id.toString()));
+    const friendMap = new Map(friends.map(f => [f._id.toString(), f]));
 
-    const [activeRooms, allFriends] = await Promise.all([
-      Room.find({
-        isLive: true,
-        privacy: 'public',
-        participants: { $in: friendIds },
-      })
-        .select('name targetAnime host participantCount privacy sourceUrl sourceType currentEpisode totalEpisodes animeId bitrate participants')
-        .populate('host', 'username')
-        .sort({ createdAt: -1 })
-        .lean(),
-      User.find(
-        { _id: { $in: friendIds } },
-        'username'
-      ).lean(),
-    ]);
+    const activeRooms = await Room.find({
+      isLive: true,
+      privacy: 'public',
+      participants: { $in: friendIds },
+    })
+      .select('name targetAnime host participantCount privacy sourceUrl sourceType currentEpisode totalEpisodes animeId bitrate participants')
+      .populate('host', 'username')
+      .sort({ createdAt: -1 })
+      .lean();
 
-    const friendMap = new Map(allFriends.map(f => [f._id.toString(), f]));
     const friendsInRooms = new Set();
 
-    const roomsWithFriends = activeRooms.map(room => {
-      const friends = room.participants
+    const watching = activeRooms.map(room => {
+      const roomFriends = room.participants
         .filter(pid => friendIdSet.has(pid.toString()))
         .map(pid => {
           const key = pid.toString();
@@ -227,31 +230,17 @@ exports.getFriendsActivity = async (req, res) => {
         });
 
       return {
-        _id: room._id,
-        name: room.name,
-        targetAnime: room.targetAnime,
-        host: room.host,
-        participantCount: room.participantCount,
-        privacy: room.privacy,
-        sourceUrl: room.sourceUrl,
-        sourceType: room.sourceType,
-        currentEpisode: room.currentEpisode,
-        totalEpisodes: room.totalEpisodes,
-        animeId: room.animeId,
-        bitrate: room.bitrate,
-        friends,
+        _id: room._id, name: room.name, targetAnime: room.targetAnime,
+        host: room.host, participantCount: room.participantCount, privacy: room.privacy,
+        sourceUrl: room.sourceUrl, sourceType: room.sourceType,
+        currentEpisode: room.currentEpisode, totalEpisodes: room.totalEpisodes,
+        animeId: room.animeId, bitrate: room.bitrate, friends: roomFriends,
       };
     });
 
-    const friendsNotInRooms = allFriends.filter(f => !friendsInRooms.has(f._id.toString()));
+    const available = friends.filter(f => !friendsInRooms.has(f._id.toString()));
 
-    res.json({
-      success: true,
-      data: {
-        watching: roomsWithFriends,
-        available: friendsNotInRooms,
-      },
-    });
+    res.json({ success: true, data: { watching, available } });
   } catch (error) {
     console.error('GetFriendsActivity error:', error);
     res.status(500).json({ success: false, message: 'Server error' });

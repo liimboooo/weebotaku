@@ -168,11 +168,10 @@ export default function WatchTogetherCreative() {
     };
   }, []);
 
-  // combined initial fetch: rooms + friends activity in one request
+  // fast initial fetch: rooms first (public, 1 query), friends in parallel (non-blocking)
   useEffect(() => {
     let cancelled = false;
 
-    // show cached data instantly while fresh data loads in background
     try {
       const cached = sessionStorage.getItem('wt_rooms');
       if (cached) {
@@ -184,47 +183,44 @@ export default function WatchTogetherCreative() {
       }
     } catch {}
 
-    (async () => {
-      try {
-        if (isLoggedIn) {
-          const res = await roomService.getRoomsInit();
-          if (!cancelled && res.success) {
-            setRooms(res.data.rooms || []);
-            setFriendsWatching(res.data.watching || []);
-            setFriendsAvailable(res.data.available || []);
-            try {
-              sessionStorage.setItem('wt_rooms', JSON.stringify({
-                rooms: res.data.rooms, watching: res.data.watching,
-                available: res.data.available, ts: Date.now(),
-              }));
-            } catch {}
-          }
-        } else {
-          const res = await roomService.getRooms();
-          if (!cancelled && res.success) {
-            setRooms(res.data);
-            try { sessionStorage.setItem('wt_rooms', JSON.stringify({ rooms: res.data, ts: Date.now() })); } catch {}
-          }
-        }
-      } catch {}
-      if (!cancelled) setRoomsLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [isLoggedIn]);
+    roomService.getRooms().then(res => {
+      if (!cancelled && res.success) {
+        setRooms(res.data);
+        setRoomsLoading(false);
+        try { sessionStorage.setItem('wt_rooms', JSON.stringify({ rooms: res.data, ts: Date.now() })); } catch {}
+      }
+    }).catch(() => { if (!cancelled) setRoomsLoading(false); });
 
-  // refresh friends activity periodically (reuse init endpoint)
-  useEffect(() => {
-    if (!isLoggedIn || isLive) return;
-    const load = async () => {
-      if (document.hidden) return;
-      try {
-        const res = await roomService.getRoomsInit();
-        if (res.success) {
-          setRooms(res.data.rooms || []);
+    if (isLoggedIn) {
+      roomService.getFriendsActivity().then(res => {
+        if (!cancelled && res.success) {
           setFriendsWatching(res.data.watching || []);
           setFriendsAvailable(res.data.available || []);
         }
+      }).catch(() => {});
+    }
+
+    return () => { cancelled = true; };
+  }, [isLoggedIn]);
+
+  // refresh rooms + friends periodically
+  useEffect(() => {
+    if (isLive) return;
+    const load = async () => {
+      if (document.hidden) return;
+      try {
+        const res = await roomService.getRooms();
+        if (res.success) setRooms(res.data);
       } catch {}
+      if (isLoggedIn) {
+        try {
+          const res = await roomService.getFriendsActivity();
+          if (res.success) {
+            setFriendsWatching(res.data.watching || []);
+            setFriendsAvailable(res.data.available || []);
+          }
+        } catch {}
+      }
     };
     const interval = setInterval(load, 20000);
     return () => clearInterval(interval);
@@ -702,24 +698,21 @@ export default function WatchTogetherCreative() {
   const handleRefreshRooms = async () => {
     setRoomsLoading(true);
     try {
-      if (isLoggedIn) {
-        const res = await roomService.getRoomsInit();
-        if (res.success) {
-          setRooms(res.data.rooms || []);
-          setFriendsWatching(res.data.watching || []);
-          setFriendsAvailable(res.data.available || []);
-        } else {
-          addNotification({ title: "Refresh Failed", body: res.message || "Could not refresh rooms", type: "error" });
-        }
-      } else {
-        const res = await roomService.getRooms();
-        if (res.success) setRooms(res.data);
-        else addNotification({ title: "Refresh Failed", body: res.message || "Could not refresh rooms", type: "error" });
-      }
+      const res = await roomService.getRooms();
+      if (res.success) setRooms(res.data);
+      else addNotification({ title: "Refresh Failed", body: res.message || "Could not refresh rooms", type: "error" });
     } catch {
       addNotification({ title: "Refresh Failed", body: "Network error. Try again.", type: "error" });
     }
     setRoomsLoading(false);
+    if (isLoggedIn) {
+      roomService.getFriendsActivity().then(res => {
+        if (res.success) {
+          setFriendsWatching(res.data.watching || []);
+          setFriendsAvailable(res.data.available || []);
+        }
+      }).catch(() => {});
+    }
   };
 
   useEffect(() => {
