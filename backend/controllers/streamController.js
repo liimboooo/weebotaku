@@ -1,59 +1,149 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const CryptoJS = require('crypto-js');
 
-let gogoCDN = null;
-function getGogoCDN() {
-  if (!gogoCDN) {
-    const { GogoCDN } = require('@consumet/extensions/dist/extractors');
-    gogoCDN = new GogoCDN();
-  }
-  return gogoCDN;
-}
-
+const KUUDERE_API = 'https://kuudere.to/api';
+const ZENCLOUD_BASE = 'https://zencloudz.cc';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-const AJAX_BASE = 'https://ajax.gogocdn.net';
-const GOGO_BASE = 'https://gogoanime3.co';
 
 let searchCache = new Map();
 
-async function gogoSearch(title) {
-  if (searchCache.has(title)) return searchCache.get(title);
+async function kuudereSearch(query) {
+  if (searchCache.has(query)) return searchCache.get(query);
   if (searchCache.size > 200) searchCache.clear();
 
-  const { data } = await axios.get(`${AJAX_BASE}/site/loadAjaxSearch`, {
-    params: { keyword: title, id: -1 },
+  const { data } = await axios.get(`${KUUDERE_API}/search`, {
+    params: { q: query },
     headers: { 'User-Agent': UA },
     timeout: 8000,
   });
 
-  const html = data.content || data;
-  const $ = cheerio.load(typeof html === 'string' ? html : JSON.stringify(html));
-  const results = [];
-  $('a').each((i, el) => {
-    const href = $(el).attr('href') || '';
-    const slug = href.replace('/category/', '').replace(/^\//, '');
-    if (slug) results.push({ slug, title: $(el).text().trim() });
-  });
-
-  if (results.length > 0) searchCache.set(title, results);
-  return results;
+  if (data.success && data.results?.length > 0) {
+    searchCache.set(query, data.results);
+    return data.results;
+  }
+  return [];
 }
 
-async function gogoGetEpisodeSources(slug, ep) {
-  const epUrl = `${GOGO_BASE}/${slug}-episode-${ep}`;
-  const { data } = await axios.get(epUrl, {
+async function kuudereGetEpisodeLinks(animeId, episode) {
+  const { data } = await axios.get(`${KUUDERE_API}/watch/${animeId}/${episode}`, {
     headers: { 'User-Agent': UA },
     timeout: 8000,
   });
 
-  const $ = cheerio.load(data);
-  const embedSrc = $('iframe').attr('src');
+  if (!data.success || !data.episode_links?.length) return null;
+  return data.episode_links.filter(l => l.serverName.toLowerCase() === 'zen' && l.dataType === 'sub');
+}
 
-  if (!embedSrc) throw new Error('No embed iframe found');
+function extractEmbeddedData(html) {
+  const $ = cheerio.load(html);
+  let scriptContent = '';
+  $('script').each((_, el) => {
+    const content = $(el).html();
+    if (content?.includes('__sveltekit_')) {
+      scriptContent = content;
+      return false;
+    }
+  });
+  if (!scriptContent) return null;
 
-  const embedUrl = embedSrc.startsWith('http') ? embedSrc : `https:${embedSrc}`;
-  const extractor = getGogoCDN();
-  return await extractor.extract(new URL(embedUrl));
+  const match = scriptContent.match(/data:\s*\[null,null,\{type:"data",data:(\{[\s\S]*?\}),uses:/);
+  if (!match) return null;
+
+  try {
+    return new Function(`return ${match[1]}`)();
+  } catch { return null; }
+}
+
+function generateFieldMapping(seed) {
+  const hash = CryptoJS.SHA256(seed).toString();
+  return {
+    videoField: `vf_${hash.substring(0, 8)}`,
+    keyField: `kf_${hash.substring(8, 16)}`,
+    ivField: `ivf_${hash.substring(16, 24)}`,
+    containerName: `cd_${hash.substring(24, 32)}`,
+    arrayName: `ad_${hash.substring(32, 40)}`,
+    objectName: `od_${hash.substring(40, 48)}`,
+    tokenField: `${hash.substring(48, 64)}_${hash.substring(56, 64)}`,
+  };
+}
+
+function extractEncryptedData(obfData, mapping) {
+  const container = obfData[mapping.containerName];
+  if (!container) return null;
+  const arr = container[mapping.arrayName];
+  if (!arr?.length) return null;
+  const obj = arr[0][mapping.objectName];
+  if (!obj) return null;
+
+  return {
+    video_b64: obj[mapping.videoField],
+    key_b64: obj[mapping.keyField],
+    iv_b64: obj[mapping.ivField],
+  };
+}
+
+async function zencloudGetSources(embedUrl) {
+  const { data: html } = await axios.get(embedUrl, {
+    headers: { 'User-Agent': UA },
+    timeout: 8000,
+  });
+
+  const extracted = extractEmbeddedData(html);
+  if (!extracted?.obfuscated_crypto_data || !extracted?.obfuscation_seed) return null;
+
+  const mapping = generateFieldMapping(extracted.obfuscation_seed);
+  const encrypted = extractEncryptedData(extracted.obfuscated_crypto_data, mapping);
+  if (!encrypted?.key_b64 || !encrypted?.iv_b64) return null;
+
+  let authToken = null;
+  for (const [key, value] of Object.entries(extracted)) {
+    if (key === mapping.tokenField && typeof value === 'string' && value.length > 0) {
+      authToken = value;
+      break;
+    }
+  }
+  if (!authToken) return null;
+
+  const tokenResp = await axios.get(`${ZENCLOUD_BASE}/api/m3u8/${authToken}`, {
+    headers: { 'User-Agent': UA },
+    timeout: 8000,
+  });
+  if (!tokenResp.data?.video_b64) return null;
+
+  const key = CryptoJS.enc.Base64.parse(encrypted.key_b64);
+  const iv = CryptoJS.enc.Base64.parse(encrypted.iv_b64);
+  const encVideoUrl = CryptoJS.enc.Base64.parse(tokenResp.data.video_b64);
+
+  let decryptedUrl;
+  try {
+    const decrypted = CryptoJS.AES.decrypt(encVideoUrl.toString(), key, {
+      iv,
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7,
+    });
+    decryptedUrl = decrypted.toString(CryptoJS.enc.Utf8);
+  } catch {}
+
+  if (!decryptedUrl) {
+    try {
+      const cipherParams = CryptoJS.lib.CipherParams.create({ ciphertext: encVideoUrl });
+      const decrypted = CryptoJS.AES.decrypt(cipherParams, key, {
+        iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7,
+      });
+      decryptedUrl = decrypted.toString(CryptoJS.enc.Utf8);
+    } catch {}
+  }
+
+  if (!decryptedUrl?.trim()) return null;
+
+  return {
+    url: decryptedUrl,
+    subtitles: extracted.subtitles || [],
+    thumbnails: extracted.thumbnails_vtt || null,
+  };
 }
 
 exports.getStream = async (req, res) => {
@@ -67,67 +157,61 @@ exports.getStream = async (req, res) => {
     const decodedTitle = decodeURIComponent(title);
     const debug = {};
 
-    try {
-      const results = await gogoSearch(decodedTitle);
-      debug.searchResults = results.length;
-      debug.firstResult = results[0] || 'none';
+    const results = await kuudereSearch(decodedTitle);
+    debug.searchResults = results.length;
+    if (!results.length) {
+      return res.status(404).json({ success: false, message: 'Anime not found on Kuudere', debug });
+    }
 
-      if (results.length > 0) {
-        const { slug } = results[0];
-        const sources = await gogoGetEpisodeSources(slug, ep);
-        debug.sourcesFound = sources?.sources?.length || 0;
+    const animeId = results[0].id;
+    debug.animeId = animeId;
 
-        if (sources?.sources?.length > 0) {
+    const links = await kuudereGetEpisodeLinks(animeId, ep);
+    debug.zenLinks = links?.length || 0;
+    if (!links?.length) {
+      return res.status(404).json({ success: false, message: 'No Zen server links for this episode', debug });
+    }
+
+    for (const link of links) {
+      try {
+        const sources = await zencloudGetSources(link.dataLink);
+        if (sources?.url) {
           return res.json({
             success: true,
             data: {
-              sources: sources.sources.map(s => ({
-                url: s.url,
-                quality: s.quality || 'default',
-                isM3U8: s.isM3U8 || s.url?.includes('.m3u8'),
-              })),
-              subtitles: sources.subtitles || [],
-              provider: 'gogoanime',
+              sources: [{ url: sources.url, quality: 'auto', isM3U8: sources.url.includes('.m3u8') }],
+              subtitles: (sources.subtitles || []).map(s => ({ url: s.url, lang: s.language })),
+              provider: 'kuudere',
             },
           });
         }
+      } catch (e) {
+        debug.zenError = e.message;
       }
-    } catch (e) {
-      debug.error = e.message;
-      debug.stack = e.stack?.split('\n').slice(0, 3);
     }
 
-    res.status(404).json({ success: false, message: 'No stream sources found', debug });
+    res.status(404).json({ success: false, message: 'Could not extract stream', debug });
   } catch (error) {
     console.error('GetStream error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: error.message || 'Server error' });
   }
 };
 
 exports.testProviders = async (req, res) => {
   const results = {};
+  try {
+    const resp = await axios.get(`${KUUDERE_API}/search`, {
+      params: { q: 'Death Note' },
+      headers: { 'User-Agent': UA },
+      timeout: 8000,
+    });
+    results.search = { status: resp.status, count: resp.data?.results?.length || 0, first: resp.data?.results?.[0] || null };
+  } catch (e) { results.search = { error: e.message }; }
 
-  const tests = [
-    { name: 'ajax-search', url: `${AJAX_BASE}/site/loadAjaxSearch?keyword=Death+Note&id=-1` },
-    { name: 'gogo-ep-page', url: `${GOGO_BASE}/death-note-episode-1` },
-  ];
-
-  await Promise.allSettled(tests.map(async (test) => {
-    try {
-      const resp = await axios.get(test.url, {
-        timeout: 8000,
-        headers: { 'User-Agent': UA },
-      });
-      const raw = typeof resp.data === 'string' ? resp.data : JSON.stringify(resp.data);
-      results[test.name] = {
-        status: resp.status,
-        length: raw.length,
-        content: raw.slice(0, 500),
-      };
-    } catch (e) {
-      results[test.name] = { error: e.code || e.message };
-    }
-  }));
+  try {
+    const resp = await axios.get(`${ZENCLOUD_BASE}`, { headers: { 'User-Agent': UA }, timeout: 5000 });
+    results.zencloud = { status: resp.status, length: resp.data?.length || 0 };
+  } catch (e) { results.zencloud = { error: e.code || e.message }; }
 
   res.json({ success: true, data: results });
 };
