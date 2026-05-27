@@ -28,6 +28,7 @@ import authService from "../../services/authService";
 import { addNotification } from "../../services/notificationService";
 import { fetchTopAnime, fetchSearchAnime } from "../../services/anilistApi";
 import { findStreamingSource, getStreamUrls, getEpisodes } from "../../services/animeApi";
+import Hls from "hls.js";
 import "./WatchTogetherCreative.css";
 
 function getEmbedSource(urlString, startOffsetSec) {
@@ -108,6 +109,9 @@ export default function WatchTogetherCreative() {
   const [currentEpisode, setCurrentEpisode] = useState(1);
   const [totalEpisodes, setTotalEpisodes] = useState(0);
   const [playbackStartedAt, setPlaybackStartedAt] = useState(null);
+  const [hlsUrl, setHlsUrl] = useState(null);
+  const hlsRef = useRef(null);
+  const syncVideoRef = useRef(null);
 
   const [rooms, setRooms] = useState([]);
   const [roomsLoading, setRoomsLoading] = useState(true);
@@ -141,6 +145,36 @@ export default function WatchTogetherCreative() {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [isLive, playbackStartedAt]);
+
+  useEffect(() => {
+    if (!hlsUrl || !syncVideoRef.current) return;
+    if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+
+    const video = syncVideoRef.current;
+    if (Hls.isSupported()) {
+      const hls = new Hls({ maxBufferLength: 30, maxMaxBufferLength: 60 });
+      hls.loadSource(hlsUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        if (playbackStartedAt) {
+          const offset = (Date.now() - new Date(playbackStartedAt).getTime()) / 1000;
+          if (offset > 2) video.currentTime = offset;
+        }
+        video.play().catch(() => {});
+      });
+      hlsRef.current = hls;
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = hlsUrl;
+      video.addEventListener('loadedmetadata', () => {
+        if (playbackStartedAt) {
+          const offset = (Date.now() - new Date(playbackStartedAt).getTime()) / 1000;
+          if (offset > 2) video.currentTime = offset;
+        }
+        video.play().catch(() => {});
+      }, { once: true });
+    }
+    return () => { if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; } };
+  }, [hlsUrl, iframeKey, playbackStartedAt]);
 
   useEffect(() => {
     const el = messagesEndRef.current?.parentElement;
@@ -417,18 +451,32 @@ export default function WatchTogetherCreative() {
     }
   }, []);
 
-  const resolveStreamUrl = useCallback(async (epNum) => {
-    if (!streamSource) return null;
+  const resolveStreamUrl = useCallback(async (epNum, animeName) => {
     setResolvingStream(true);
     try {
+      const title = animeName || selectedAnime || pickedAnime?.name;
+      if (title) {
+        try {
+          const res = await roomService.getDirectStream(title, epNum);
+          if (res.success && res.data?.sources?.length > 0) {
+            const best = res.data.sources.find(s => s.quality === 'default' || s.quality === '1080p' || s.quality === 'auto') || res.data.sources[0];
+            if (best?.url) {
+              setHlsUrl(best.url);
+              return best.url;
+            }
+          }
+        } catch {}
+      }
+      if (!streamSource) return null;
       const servers = await getStreamUrls(
         String(epNum), streamSource.source, streamSource.anilistId, null, streamSource.slug
       );
       const sub = servers.find(s => s.type === 'sub') || servers[0];
+      setHlsUrl(null);
       return sub?.url || null;
     } catch { return null; }
     finally { setResolvingStream(false); }
-  }, [streamSource]);
+  }, [streamSource, selectedAnime, pickedAnime?.name]);
 
   const handleChangeEpisode = useCallback(async (epNum) => {
     if (epNum < 1 || (totalEpisodes > 0 && epNum > totalEpisodes)) return;
@@ -564,6 +612,12 @@ export default function WatchTogetherCreative() {
       findStreamingSource(room.targetAnime, room.animeId).then(src => {
         if (src) setStreamSource(src);
       }).catch(() => {});
+      roomService.getDirectStream(room.targetAnime, room.currentEpisode || 1).then(res => {
+        if (res.success && res.data?.sources?.length > 0) {
+          const best = res.data.sources.find(s => s.quality === 'default' || s.quality === 'auto') || res.data.sources[0];
+          if (best?.url) setHlsUrl(best.url);
+        }
+      }).catch(() => {});
     }
 
     setChatMessages([
@@ -611,6 +665,8 @@ export default function WatchTogetherCreative() {
       liveRoomRef.current.disconnect();
       liveRoomRef.current = null;
     }
+    if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+    setHlsUrl(null);
     stopChatPolling();
     setLiveKitConnected(false);
     setIsLive(false);
@@ -657,10 +713,24 @@ export default function WatchTogetherCreative() {
           if (res.data.currentEpisode) setCurrentEpisode(res.data.currentEpisode);
           if (res.data.sourceUrl) setCurrentSourceUrl(res.data.sourceUrl);
           if (serverTs) setPlaybackStartedAt(serverTs);
-          setIframeKey(k => k + 1);
+          if (epChanged) {
+            setIframeKey(k => k + 1);
+            if (hlsUrl && res.data.currentEpisode) {
+              const title = selectedAnime;
+              roomService.getDirectStream(title, res.data.currentEpisode).then(r => {
+                if (r.success && r.data?.sources?.length > 0) {
+                  const best = r.data.sources.find(s => s.quality === 'default' || s.quality === 'auto') || r.data.sources[0];
+                  if (best?.url) setHlsUrl(best.url);
+                }
+              }).catch(() => {});
+            }
+          } else if (syncVideoRef.current && serverTs) {
+            const offset = (Date.now() - new Date(serverTs).getTime()) / 1000;
+            syncVideoRef.current.currentTime = offset > 2 ? offset : 0;
+          }
           addNotification({
             title: epChanged ? "Episode Changed" : "Playback Synced",
-            body: epChanged ? `Now playing Episode ${res.data.currentEpisode}` : "Host synced playback — reloading",
+            body: epChanged ? `Now playing Episode ${res.data.currentEpisode}` : "Synced to host",
             type: "info",
           });
         }
@@ -864,7 +934,16 @@ export default function WatchTogetherCreative() {
                     </div>
                   )}
                   <div className="video-container">
-                    {currentSource?.kind === "iframe" ? (
+                    {hlsUrl ? (
+                      <video
+                        key={iframeKey}
+                        ref={syncVideoRef}
+                        controls
+                        autoPlay
+                        playsInline
+                        style={{ width: '100%', height: '100%', background: '#000' }}
+                      />
+                    ) : currentSource?.kind === "iframe" ? (
                       <iframe
                         key={iframeKey}
                         src={currentSource.url}
