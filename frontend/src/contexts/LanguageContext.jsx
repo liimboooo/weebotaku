@@ -11,10 +11,6 @@ function getInitialLocale() {
     const stored = localStorage.getItem(LOCALE_KEY);
     if (stored === "ar" || stored === "en") return stored;
   } catch {}
-  try {
-    const navLang = navigator.language || navigator.userLanguage || "";
-    if (navLang.startsWith("ar")) return "ar";
-  } catch {}
   return "en";
 }
 

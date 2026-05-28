@@ -4,7 +4,6 @@
   "buildCommand": "CI=false npx react-scripts build",
   "outputDirectory": "build",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://backend-delta-eight-70.vercel.app/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
