@@ -19,7 +19,7 @@ const tmdbCache = new Map();
 
 async function anilistToTmdb(anilistId) {
   if (tmdbCache.has(anilistId)) return tmdbCache.get(anilistId);
-  const res = await fetch(`${ARM_API}?source=anilist&id=${anilistId}`, { timeout: 5000 });
+  const res = await fetch(`${ARM_API}?source=anilist&id=${anilistId}`, { timeout: 3000 });
   if (!res.ok) return null;
   const data = await res.json();
   const result = data.themoviedb ? { id: data.themoviedb, season: data['themoviedb-season'] || 1 } : null;
@@ -28,19 +28,21 @@ async function anilistToTmdb(anilistId) {
 }
 
 async function ezvidapiResolve(tmdbId, season, episode) {
-  for (const provider of EZVIDAPI_PROVIDERS) {
-    try {
+  const results = await Promise.allSettled(
+    EZVIDAPI_PROVIDERS.map(async (provider) => {
       const url = `${EZVIDAPI_BASE}/tv/${provider}/${tmdbId}?season=${season}&episode=${episode}`;
       const res = await fetch(url, {
         headers: { 'Referer': 'https://ezvidapi.com/', 'Accept': 'application/json' },
-        timeout: 12000,
+        timeout: 7000,
       });
-      if (!res.ok) continue;
+      if (!res.ok) throw new Error('not ok');
       const data = await res.json();
-      if (data.stream_url) return { ...data, provider };
-    } catch { continue; }
-  }
-  return null;
+      if (!data.stream_url) throw new Error('no stream');
+      return { ...data, provider };
+    })
+  );
+  const success = results.find(r => r.status === 'fulfilled');
+  return success ? success.value : null;
 }
 
 function encodePipeRequest(payload) {
