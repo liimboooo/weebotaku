@@ -185,6 +185,7 @@ export default function ProfilePage() {
     window.addEventListener('server-notification', onNotif);
     window.addEventListener('friend-status-changed', onFStatus);
     return () => {
+      setPolledRemoteUserId(null);
       window.removeEventListener('server-notification', onNotif);
       window.removeEventListener('friend-status-changed', onFStatus);
     };

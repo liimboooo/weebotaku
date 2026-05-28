@@ -208,7 +208,13 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
   useEffect(() => { goPrevPageRef.current = goPrevPage; });
 
   useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  useEffect(() => {
     const handler = (e) => {
+      if (e.key === "Escape") { onClose?.(); return; }
       if (scrollMode) return;
       if (e.key === "ArrowLeft") { e.preventDefault(); goPrevPageRef.current(); }
       if (e.key === "ArrowRight") { e.preventDefault(); goNextPageRef.current(); }

@@ -378,6 +378,9 @@ export default function News() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={() => setTrailerModal(null)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setTrailerModal(null); }}
+          tabIndex={-1}
+          ref={(el) => el?.focus()}
         >
           <motion.div
             className="news-trailer-modal"

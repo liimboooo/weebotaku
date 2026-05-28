@@ -72,6 +72,16 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const iframeRef = useRef(null);
   const failedServers = useRef(new Set());
 
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
+
   /* ─── COMMENTS ─── */
   const [comments, setComments] = useState([]);
 

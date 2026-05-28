@@ -138,6 +138,10 @@ export default function SettingsPage() {
   const isFirstRender = useRef(true);
 
   useEffect(() => {
+    return () => { if (toastTimer.current) clearTimeout(toastTimer.current); };
+  }, []);
+
+  useEffect(() => {
     if (!settingsReady) return;
     if (isFirstRender.current) { isFirstRender.current = false; return; }
     settingsService.save(settings);
@@ -883,8 +887,8 @@ export default function SettingsPage() {
         {!loading && (
           <>
         {showDeleteModal && createPortal(
-          <div className="st-modal-overlay" onClick={() => setShowDeleteModal(false)}>
-            <div className="st-modal" onClick={e => e.stopPropagation()}>
+          <div className="st-modal-overlay" onClick={() => setShowDeleteModal(false)} onKeyDown={(e) => { if (e.key === 'Escape') setShowDeleteModal(false); }} tabIndex={-1} ref={(el) => el?.focus()}>
+            <div className="st-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
               <div className="st-modal-head">
                 <h3>Delete Account</h3>
                 <button className="st-modal-close" onClick={() => setShowDeleteModal(false)}><X size={18} /></button>
