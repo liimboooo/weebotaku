@@ -9,8 +9,39 @@ const PIPE_HEADERS = {
 };
 
 const PROVIDER_PRIORITY = ['ally', 'bee', 'ANIMEKAI', 'kiwi', 'dune', 'hop'];
-const BLOCKED_CDN_HOSTS = ['uwucdn.top'];
+const BLOCKED_CDN_HOSTS = ['uwucdn.top', 'owocdn.top'];
 const CORS_CDN_HOSTS = ['wixmp.com', 'wixstatic.com'];
+
+const EZVIDAPI_BASE = 'https://api.ezvidapi.com';
+const EZVIDAPI_PROVIDERS = ['vidsrc', 'vidrock', 'vidnest', 'vixsrc'];
+const ARM_API = 'https://arm.haglund.dev/api/v2/ids';
+const tmdbCache = new Map();
+
+async function anilistToTmdb(anilistId) {
+  if (tmdbCache.has(anilistId)) return tmdbCache.get(anilistId);
+  const res = await fetch(`${ARM_API}?source=anilist&id=${anilistId}`, { timeout: 5000 });
+  if (!res.ok) return null;
+  const data = await res.json();
+  const result = data.themoviedb ? { id: data.themoviedb, season: data['themoviedb-season'] || 1 } : null;
+  if (result) tmdbCache.set(anilistId, result);
+  return result;
+}
+
+async function ezvidapiResolve(tmdbId, season, episode) {
+  for (const provider of EZVIDAPI_PROVIDERS) {
+    try {
+      const url = `${EZVIDAPI_BASE}/tv/${provider}/${tmdbId}?season=${season}&episode=${episode}`;
+      const res = await fetch(url, {
+        headers: { 'Referer': 'https://ezvidapi.com/', 'Accept': 'application/json' },
+        timeout: 12000,
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.stream_url) return { ...data, provider };
+    } catch { continue; }
+  }
+  return null;
+}
 
 function encodePipeRequest(payload) {
   return Buffer.from(JSON.stringify(payload)).toString('base64url').replace(/=+$/, '');
@@ -181,6 +212,27 @@ exports.autoSources = async (req, res) => {
     const epNum = parseInt(episodeNum, 10);
     if (!aid || !epNum) return res.status(400).json({ success: false, message: 'Missing params' });
 
+    // Try ezvidapi first — CORS-enabled, zero bandwidth, broad coverage
+    try {
+      const tmdb = await anilistToTmdb(aid);
+      if (tmdb) {
+        const ezvid = await ezvidapiResolve(tmdb.id, tmdb.season, epNum);
+        if (ezvid) {
+          return res.json({
+            success: true,
+            data: {
+              provider: `ezvidapi:${ezvid.provider}`,
+              stream: { url: ezvid.stream_url, quality: 'auto' },
+              subtitles: (ezvid.subtitles || []).map(s => ({ url: s.url, label: s.label || s.language })),
+              intro: null,
+              outro: null,
+            },
+          });
+        }
+      }
+    } catch {}
+
+    // Fallback to miruro pipe
     const epData = await pipeFetch({
       path: 'episodes', method: 'GET',
       query: { anilistId: aid }, body: null, version: '0.1.0',
