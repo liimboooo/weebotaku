@@ -6,6 +6,13 @@ import { STORAGE_KEYS } from "../utils/constants";
 const LOCALE_KEY = STORAGE_KEYS.LOCALE;
 const translations = { en, ar };
 
+// One-time migration: clear auto-detected "ar" locale
+try {
+  if (!localStorage.getItem('locale_user_set') && localStorage.getItem(LOCALE_KEY) === 'ar') {
+    localStorage.removeItem(LOCALE_KEY);
+  }
+} catch {}
+
 function getInitialLocale() {
   try {
     const stored = localStorage.getItem(LOCALE_KEY);
@@ -26,11 +33,15 @@ export function LanguageProvider({ children }) {
   }, [locale]);
 
   const setLocale = useCallback((l) => {
-    if (l === "ar" || l === "en") setLocaleState(l);
+    if (l === "ar" || l === "en") {
+      setLocaleState(l);
+      try { localStorage.setItem('locale_user_set', '1'); } catch {}
+    }
   }, []);
 
   const toggleLocale = useCallback(() => {
     setLocaleState(prev => prev === "en" ? "ar" : "en");
+    try { localStorage.setItem('locale_user_set', '1'); } catch {}
   }, []);
 
   const t = useCallback((key, fallback) => {
