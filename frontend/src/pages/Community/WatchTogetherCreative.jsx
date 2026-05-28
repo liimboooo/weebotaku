@@ -28,7 +28,7 @@ import * as roomService from "../../services/roomService";
 import authService from "../../services/authService";
 import { addNotification } from "../../services/notificationService";
 import { fetchTopAnime, fetchSearchAnime } from "../../services/anilistApi";
-import { findStreamingSource, getStreamUrls, getEpisodes, getMiruroStream } from "../../services/animeApi";
+import { findStreamingSource, getStreamUrls, getEpisodes, getMiruroStream, getDirectStream } from "../../services/animeApi";
 import "./WatchTogetherCreative.css";
 
 function getEmbedSource(urlString, startOffsetSec) {
@@ -67,7 +67,7 @@ function getEmbedSource(urlString, startOffsetSec) {
       }
     }
 
-    const isHls = parsedUrl.pathname.includes('/stream/proxy') || /\.m3u8(\?|#|$)/i.test(parsedUrl.pathname);
+    const isHls = parsedUrl.pathname.includes('/stream/proxy') || host.includes('ezvidapi.com') || /\.m3u8(\?|#|$)/i.test(parsedUrl.pathname);
     if (isHls) return { kind: "hls", url: urlString, title: "HLS stream", offset };
 
     const directVideo = /\.(mp4|webm|ogg)(\?|#|$)/i.test(parsedUrl.pathname + parsedUrl.search + parsedUrl.hash);
@@ -496,6 +496,15 @@ export default function WatchTogetherCreative() {
     setSourceResolving(true);
 
     try {
+      const direct = await getDirectStream(anime.id, 1);
+      if (gen !== pickGenRef.current) return;
+      if (direct?.stream?.url) {
+        setStreamSource({ source: 'ezvidapi', anilistId: anime.id, slug: anime.id });
+        setPreResolvedUrl(direct.stream.url);
+        setSourceResolving(false);
+        return;
+      }
+
       const miruro = await getMiruroStream(anime.id, 1);
       if (gen !== pickGenRef.current) return;
       if (miruro?.stream?.url) {
@@ -533,6 +542,8 @@ export default function WatchTogetherCreative() {
     try {
       const aniId = pickedAnime?.id || streamSource?.anilistId;
       if (aniId) {
+        const direct = await getDirectStream(aniId, epNum);
+        if (direct?.stream?.url) return direct.stream.url;
         const miruro = await getMiruroStream(aniId, epNum);
         if (miruro?.stream?.url) return miruro.stream.url;
       }

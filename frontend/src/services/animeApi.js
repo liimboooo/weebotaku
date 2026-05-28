@@ -282,6 +282,64 @@ export async function getEpisodePage(animeName, tagSlug, sourceName, sourceBase,
   };
 }
 
+const ARM_API = 'https://arm.haglund.dev/api/v2/ids';
+const EZVIDAPI_BASE = 'https://api.ezvidapi.com';
+const EZVIDAPI_PROVIDERS = ['vidsrc', 'vidrock', 'vidnest', 'vixsrc'];
+const tmdbClientCache = new Map();
+
+async function anilistToTmdbClient(anilistId) {
+  if (tmdbClientCache.has(anilistId)) return tmdbClientCache.get(anilistId);
+  const url = `${ARM_API}?source=anilist&id=${anilistId}`;
+  let data = null;
+  try {
+    const res = await fetchWithTimeout(url, 3000);
+    if (res.ok) data = await res.json();
+  } catch {
+    try {
+      const res = await fetchWithTimeout(`${CF_WORKER}${encodeURIComponent(url)}`, 4000);
+      if (res.ok) {
+        const raw = await res.json();
+        data = raw?.success && typeof raw.data === 'string' ? JSON.parse(raw.data) : raw;
+      }
+    } catch {}
+  }
+  if (!data?.themoviedb) return null;
+  const result = { id: data.themoviedb, season: data['themoviedb-season'] || 1 };
+  tmdbClientCache.set(anilistId, result);
+  return result;
+}
+
+async function ezvidapiResolveClient(tmdbId, season, episode) {
+  try {
+    return await Promise.any(
+      EZVIDAPI_PROVIDERS.map(async (provider) => {
+        const url = `${EZVIDAPI_BASE}/tv/${provider}/${tmdbId}?season=${season}&episode=${episode}`;
+        const res = await fetchWithTimeout(url, 7000);
+        if (!res.ok) throw new Error('not ok');
+        const d = await res.json();
+        if (!d.stream_url) throw new Error('no stream');
+        return { ...d, provider };
+      })
+    );
+  } catch { return null; }
+}
+
+export async function getDirectStream(anilistId, episodeNum) {
+  try {
+    const tmdb = await anilistToTmdbClient(anilistId);
+    if (!tmdb) return null;
+    const ezvid = await ezvidapiResolveClient(tmdb.id, tmdb.season, episodeNum);
+    if (!ezvid) return null;
+    return {
+      provider: `ezvidapi:${ezvid.provider}`,
+      stream: { url: ezvid.stream_url, quality: 'auto' },
+      subtitles: (ezvid.subtitles || []).map(s => ({ url: s.url, label: s.label || s.language })),
+      intro: null,
+      outro: null,
+    };
+  } catch { return null; }
+}
+
 export async function getMiruroEpisodes(anilistId) {
   try {
     const res = await fetch(`${API_BASE}/stream/episodes/${anilistId}`);
