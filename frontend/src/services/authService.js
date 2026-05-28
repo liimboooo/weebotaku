@@ -69,7 +69,7 @@ class AuthService {
   async register(username, email, password, passwordConfirm) {
     const response = await api.post('/auth/register', {
       username, email, password, passwordConfirm,
-    }, { auth: false });
+    }, { auth: false, skipAuthRedirect: true });
 
     return response;
   }
@@ -77,7 +77,7 @@ class AuthService {
   async login(username, password) {
     const response = await api.post('/auth/login', {
       username, password,
-    }, { auth: false });
+    }, { auth: false, skipAuthRedirect: true });
 
     if (response.success && response.requires2FA) {
       return response;

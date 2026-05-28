@@ -89,10 +89,12 @@ export default function LiveRooms({ rooms: externalRooms, onJoin, loading: exter
                 <div className="live-room-img-fallback">
                   <Users size={28} />
                   <div className="live-fallback-avatars">
-                    <span className="live-fallback-avatar">M</span>
-                    <span className="live-fallback-avatar">K</span>
-                    <span className="live-fallback-avatar">R</span>
-                    <span className="live-fallback-avatar-more">+3</span>
+                    {room.host?.avatar ? (
+                      <img src={room.host.avatar} alt="" className="live-fallback-avatar" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      <span className="live-fallback-avatar">{(room.host?.username || '?').charAt(0).toUpperCase()}</span>
+                    )}
+                    {room.participantCount > 1 && <span className="live-fallback-avatar-more">+{room.participantCount - 1}</span>}
                   </div>
                 </div>
                 <span className="live-room-badge">

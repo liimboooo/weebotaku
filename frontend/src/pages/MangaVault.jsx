@@ -104,7 +104,7 @@ export default function MangaVault() {
         const seen = new Set();
         return merged.filter(m => { if (seen.has(m.id)) return false; seen.add(m.id); return true; });
       });
-      setHasMore(result.pagination.has_next_page);
+      setHasMore(result.pagination.hasNextPage);
       setPage(p);
       hasLoadedOnce.current = true;
     } catch (err) {

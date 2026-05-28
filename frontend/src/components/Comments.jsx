@@ -611,7 +611,8 @@ export default function Comments({ comments: externalComments, setComments, curr
 
   const handlePostReply = useCallback(async (parentId, reply) => {
     if (onReplyComment) {
-      await onReplyComment(parentId, reply.text || reply.content);
+      const res = await onReplyComment(parentId, reply.text || reply.content);
+      if (res?.success) return;
     }
     setComments?.(c => addReplyDeep(c, parentId, reply));
   }, [setComments, onReplyComment]);

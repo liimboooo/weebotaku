@@ -33,6 +33,10 @@ async function pollNotifications() {
         const key = n._id || n.id;
         if (key && !lastNotifSeen.has(key)) {
           lastNotifSeen.add(key);
+          if (lastNotifSeen.size > 200) {
+            const arr = Array.from(lastNotifSeen);
+            lastNotifSeen = new Set(arr.slice(arr.length - 100));
+          }
           window.dispatchEvent(new CustomEvent('server-notification', { detail: n }));
         }
       }

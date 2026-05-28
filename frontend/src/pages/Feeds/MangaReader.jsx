@@ -4,7 +4,7 @@ import { getChapterPages } from "../../services/mangaApi";
 import { setMangaProgress } from "../../services/storage";
 import "./MangaReader.css";
 
-const API_BASE = process.env.REACT_APP_API_URL;
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 const QUALITY_ICON = { data: "HD", "data-saver": "SD" };
 const PRELOAD_COUNT = 5;
 

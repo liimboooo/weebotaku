@@ -219,7 +219,7 @@ export default function AnimeInfo() {
 
   const synopsisClean = anime.synopsis ? anime.synopsis.replace(/<[^>]*>/g, "") : "";
   const needsExpand = synopsisClean.length > 280;
-  const displaySynopsis = expanded ? synopsisClean : synopsisClean;
+  const displaySynopsis = expanded ? synopsisClean : synopsisClean.slice(0, 280);
   const isCollapsed = !expanded && needsExpand;
 
   return (

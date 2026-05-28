@@ -534,6 +534,8 @@ export default function WatchTogetherCreative() {
       }
     } catch {
       if (gen === pickGenRef.current) setSourceResolving(false);
+    } finally {
+      if (gen !== pickGenRef.current) setSourceResolving(false);
     }
   }, []);
 
@@ -682,6 +684,20 @@ export default function WatchTogetherCreative() {
   const handleJoinRoom = useCallback(async (room) => {
     const roomId = room._id;
     const hostId = room.host?._id || room.host;
+
+    if (isLoggedIn) {
+      try {
+        const joinRes = await roomService.joinRoom(roomId);
+        if (!joinRes.success) {
+          addNotification({ title: "Can't Join", body: joinRes.message || "Room unavailable", type: "error" });
+          return;
+        }
+      } catch {
+        addNotification({ title: "Can't Join", body: "Failed to join room", type: "error" });
+        return;
+      }
+    }
+
     setRoomName(room.name || 'Zenith Broadcast');
     setCurrentSourceUrl(room.sourceUrl || '');
     setSelectedAnime(room.targetAnime || 'Other Broadcast');
@@ -706,6 +722,7 @@ export default function WatchTogetherCreative() {
     }
 
     if (room.sourceType === 'anime' && room.animeId) {
+      setPickedAnime({ id: room.animeId, name: room.targetAnime, img: room.animeImage, episodes: room.totalEpisodes });
       findStreamingSource(room.targetAnime, room.animeId).then(src => {
         if (src) setStreamSource(src);
       }).catch(() => {});
@@ -722,20 +739,6 @@ export default function WatchTogetherCreative() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (isLoggedIn) {
-      try {
-        const joinRes = await roomService.joinRoom(roomId);
-        if (!joinRes.success) {
-          setIsLive(false);
-          setDbRoomId(null);
-          addNotification({ title: "Can't Join", body: joinRes.message || "Room unavailable", type: "error" });
-          return;
-        }
-      } catch {
-        setIsLive(false);
-        setDbRoomId(null);
-        addNotification({ title: "Can't Join", body: "Failed to join room", type: "error" });
-        return;
-      }
       const historyRes = await roomService.getMessages(roomId);
       if (historyRes.success && historyRes.data.length > 0) {
         const history = historyRes.data.map(m => ({
@@ -760,11 +763,13 @@ export default function WatchTogetherCreative() {
     setCountdownSec(null);
     stopChatPolling();
     setLiveKitConnected(false);
+    setLiveKitError('');
     setIsLive(false);
     setIsHost(false);
     setChatMessages([]);
     setParticipantCount(0);
     setDbRoomId(null);
+    dbRoomIdRef.current = null;
   }, [stopChatPolling]);
 
   const handleLeaveRoom = async () => {
@@ -863,7 +868,7 @@ export default function WatchTogetherCreative() {
       time: new Date(),
     }]);
 
-    // send via LiveKit if connected
+    // send via LiveKit if connected (polling users get it via LiveKit too)
     if (liveRoomRef.current && liveKitConnected) {
       const payload = JSON.stringify({
         type: 'chat',
@@ -877,8 +882,8 @@ export default function WatchTogetherCreative() {
       );
     }
 
-    // always persist to API so polling users see it
-    if (dbRoomId) {
+    // persist to API only when LiveKit isn't available (polling fallback)
+    if (!liveKitConnected && dbRoomId) {
       roomService.sendMessage(dbRoomId, text).catch(() => {});
     }
 
@@ -1019,7 +1024,10 @@ export default function WatchTogetherCreative() {
                       try {
                         const ct = videoRef.current?.currentTime || 0;
                         const res = await roomService.syncPlayback(dbRoomId, ct);
+                        const newPos = res.data?.currentTime ?? ct;
                         const ts = res.data?.playbackStartedAt || new Date().toISOString();
+                        expectedPosRef.current = newPos;
+                        setSyncElapsed(Math.floor(newPos));
                         setPlaybackStartedAt(ts);
                         setIframeKey(k => k + 1);
                         addNotification({ title: "Syncing", body: "All viewers will seek to current position!", type: "info" });

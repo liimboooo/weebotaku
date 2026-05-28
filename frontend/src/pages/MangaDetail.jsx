@@ -19,7 +19,6 @@ export default function MangaDetail() {
 
   const [manga, setManga] = useState(null);
   const [chapters, setChapters] = useState([]);
-  const [, setFilteredCh] = useState([]);
   const [loading, setLoading] = useState(true);
   const [chLoading, setChLoading] = useState(true);
   const [error, setError] = useState("");
@@ -109,14 +108,13 @@ export default function MangaDetail() {
           }
         }
         setChapters(ch);
-        setFilteredCh(ch.slice(0, chapterLimit));
       } catch {
         console.error("Failed to load chapters");
       } finally {
         setChLoading(false);
       }
     })();
-  }, [manga, id, chapterLimit]);
+  }, [manga, id]);
 
   const openReader = async (ch) => {
     if (!ch) {

@@ -71,9 +71,10 @@ async function tryFetch(url, signal) {
     const res = await fetch(url, { signal, mode: "cors" });
     if (!res.ok) return null;
     const text = await res.text();
-    const parsed = JSON.parse(text);
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { return null; }
     if (parsed && parsed.success && typeof parsed.data === "string") {
-      return JSON.parse(parsed.data);
+      try { return JSON.parse(parsed.data); } catch { return null; }
     }
     if (parsed && parsed.success === false) return null;
     return parsed;

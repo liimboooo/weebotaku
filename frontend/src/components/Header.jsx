@@ -72,7 +72,7 @@ export default function Header() {
   const moreDropdownRef = useRef(null);
 
   const username = localStorage.getItem('username') || 'Guest';
-  const episodesWatched = loadWatchHistory().length;
+  const [episodesWatched, setEpisodesWatched] = useState(() => loadWatchHistory().length);
   const hasUnclaimedRewards = localStorage.getItem('userUnclaimedRewards') === 'true';
 
   const feedItems = useMemo(
@@ -112,15 +112,22 @@ export default function Header() {
       setNotifications(getNotifications(s));
       setUnreadCount(getUnreadCount(s));
     };
+    const refreshEps = () => setEpisodesWatched(loadWatchHistory().length);
     window.addEventListener('storage', syncAvatar);
     window.addEventListener('profile-avatar-updated', syncAvatar);
     window.addEventListener('online', syncOnline);
     window.addEventListener('offline', syncOnline);
     window.addEventListener('notification-added', refreshNotifs);
     window.addEventListener('settings-changed', refreshNotifs);
+    window.addEventListener('profile-data-changed', refreshEps);
     return () => {
+      window.removeEventListener('storage', syncAvatar);
+      window.removeEventListener('profile-avatar-updated', syncAvatar);
+      window.removeEventListener('online', syncOnline);
+      window.removeEventListener('offline', syncOnline);
       window.removeEventListener('notification-added', refreshNotifs);
       window.removeEventListener('settings-changed', refreshNotifs);
+      window.removeEventListener('profile-data-changed', refreshEps);
     };
   }, []);
 

@@ -610,7 +610,7 @@ export default function AnimeDetail() {
                   {filteredEpisodes.slice(0, visibleCount).map((ep, i) => {
                     const realIdx = episodes.indexOf(ep);
                     return (
-                      <button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} onClick={() => { setEpIndex(realIdx); }}>
+                      <button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}>
                         <div className="watch-ep-info">
                           <span className="watch-ep-name">Episode {ep.episode}</span>
                           {ep.title && <span className="watch-ep-title">{ep.title}</span>}

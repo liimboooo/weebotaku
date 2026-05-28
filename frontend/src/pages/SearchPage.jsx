@@ -109,6 +109,9 @@ export default function SearchPage() {
   };
 
   const searchFromPill = (term) => {
+    setActiveGenre(null);
+    setActiveType("All");
+    setActiveStatus("All");
     const next = [term, ...recentSearches.filter(s => s !== term)].slice(0, 8);
     setRecentSearches(next);
     localStorage.setItem(STORAGE_KEYS.RECENT_SEARCHES, JSON.stringify(next));

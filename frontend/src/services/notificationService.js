@@ -123,6 +123,7 @@ export function seedBroadcastNotifications() {
 
 let seenServerIds = new Set();
 let pollTimer = null;
+let initialNotifFetchDone = false;
 
 export async function fetchServerNotifications() {
   try {
@@ -133,13 +134,16 @@ export async function fetchServerNotifications() {
 
       seenServerIds = new Set(serverNotifs.map(n => n._id));
 
-      for (const n of serverNotifs) {
-        if (!n.read && !prevIds.has(n._id)) {
-          window.dispatchEvent(new CustomEvent("notification-added", {
-            detail: { message: n.title, type: "info" },
-          }));
+      if (initialNotifFetchDone) {
+        for (const n of serverNotifs) {
+          if (!n.read && !prevIds.has(n._id)) {
+            window.dispatchEvent(new CustomEvent("notification-added", {
+              detail: { message: n.title, type: "info" },
+            }));
+          }
         }
       }
+      initialNotifFetchDone = true;
     }
   } catch {}
 }
@@ -225,6 +229,7 @@ export async function clearNotifications() {
     serverNotifs = [];
   } catch {}
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(BROADCAST_KEY);
   window.dispatchEvent(new CustomEvent("notification-added", { detail: {} }));
 }
 

@@ -82,8 +82,10 @@ exports.createComment = async (req, res) => {
 
 exports.likeComment = async (req, res) => {
   try {
-    const comment = await Comment.findById(req.params.id);
+    let comment = await Comment.findById(req.params.id);
     if (!comment) {
+      comment = await Comment.findOne({ 'replies._id': req.params.id });
+      if (comment) return exports.likeReply(req, res);
       return res.status(404).json({ success: false, message: 'Comment not found' });
     }
 
@@ -123,8 +125,10 @@ exports.likeComment = async (req, res) => {
 
 exports.dislikeComment = async (req, res) => {
   try {
-    const comment = await Comment.findById(req.params.id);
+    let comment = await Comment.findById(req.params.id);
     if (!comment) {
+      comment = await Comment.findOne({ 'replies._id': req.params.id });
+      if (comment) return exports.dislikeReply(req, res);
       return res.status(404).json({ success: false, message: 'Comment not found' });
     }
 
@@ -194,8 +198,10 @@ exports.replyToComment = async (req, res) => {
 
 exports.deleteComment = async (req, res) => {
   try {
-    const comment = await Comment.findById(req.params.id);
+    let comment = await Comment.findById(req.params.id);
     if (!comment) {
+      comment = await Comment.findOne({ 'replies._id': req.params.id });
+      if (comment) return exports.deleteReply(req, res);
       return res.status(404).json({ success: false, message: 'Comment not found' });
     }
 
@@ -213,8 +219,10 @@ exports.deleteComment = async (req, res) => {
 
 exports.editComment = async (req, res) => {
   try {
-    const comment = await Comment.findById(req.params.id);
+    let comment = await Comment.findById(req.params.id);
     if (!comment) {
+      comment = await Comment.findOne({ 'replies._id': req.params.id });
+      if (comment) return exports.editReply(req, res);
       return res.status(404).json({ success: false, message: 'Comment not found' });
     }
 
@@ -232,6 +240,111 @@ exports.editComment = async (req, res) => {
     res.json({ success: true, data: comment });
   } catch (error) {
     console.error('EditComment error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+exports.likeReply = async (req, res) => {
+  try {
+    const comment = await Comment.findOne({ 'replies._id': req.params.replyId });
+    if (!comment) return res.status(404).json({ success: false, message: 'Reply not found' });
+
+    const reply = comment.replies.id(req.params.replyId);
+    if (!reply) return res.status(404).json({ success: false, message: 'Reply not found' });
+
+    const userId = req.user.id;
+    const likeIdx = reply.likes ? reply.likes.indexOf(userId) : -1;
+    if (!reply.likes) reply.likes = [];
+
+    if (likeIdx > -1) {
+      reply.likes.splice(likeIdx, 1);
+    } else {
+      reply.likes.push(userId);
+    }
+
+    const dislikeIdx = reply.dislikes ? reply.dislikes.indexOf(userId) : -1;
+    if (dislikeIdx > -1) reply.dislikes.splice(dislikeIdx, 1);
+
+    await comment.save();
+    res.json({ success: true, likes: reply.likes.length, dislikes: reply.dislikes?.length || 0, liked: likeIdx === -1 });
+  } catch (error) {
+    console.error('LikeReply error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+exports.dislikeReply = async (req, res) => {
+  try {
+    const comment = await Comment.findOne({ 'replies._id': req.params.replyId });
+    if (!comment) return res.status(404).json({ success: false, message: 'Reply not found' });
+
+    const reply = comment.replies.id(req.params.replyId);
+    if (!reply) return res.status(404).json({ success: false, message: 'Reply not found' });
+
+    const userId = req.user.id;
+    const dislikeIdx = reply.dislikes ? reply.dislikes.indexOf(userId) : -1;
+    if (!reply.dislikes) reply.dislikes = [];
+
+    if (dislikeIdx > -1) {
+      reply.dislikes.splice(dislikeIdx, 1);
+    } else {
+      reply.dislikes.push(userId);
+    }
+
+    const likeIdx = reply.likes ? reply.likes.indexOf(userId) : -1;
+    if (likeIdx > -1) reply.likes.splice(likeIdx, 1);
+
+    await comment.save();
+    res.json({ success: true, likes: reply.likes?.length || 0, dislikes: reply.dislikes.length, disliked: dislikeIdx === -1 });
+  } catch (error) {
+    console.error('DislikeReply error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+exports.editReply = async (req, res) => {
+  try {
+    const comment = await Comment.findOne({ 'replies._id': req.params.replyId });
+    if (!comment) return res.status(404).json({ success: false, message: 'Reply not found' });
+
+    const reply = comment.replies.id(req.params.replyId);
+    if (!reply) return res.status(404).json({ success: false, message: 'Reply not found' });
+
+    if (reply.user.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    const { content } = req.body;
+    if (content !== undefined) reply.content = content.trim();
+
+    await comment.save();
+    await comment.populate('replies.user', 'username avatar role');
+
+    res.json({ success: true, data: comment });
+  } catch (error) {
+    console.error('EditReply error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+exports.deleteReply = async (req, res) => {
+  try {
+    const comment = await Comment.findOne({ 'replies._id': req.params.replyId });
+    if (!comment) return res.status(404).json({ success: false, message: 'Reply not found' });
+
+    const reply = comment.replies.id(req.params.replyId);
+    if (!reply) return res.status(404).json({ success: false, message: 'Reply not found' });
+
+    if (reply.user.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    reply.deleteOne();
+    await comment.save();
+
+    res.json({ success: true, message: 'Reply deleted' });
+  } catch (error) {
+    console.error('DeleteReply error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

@@ -1,10 +1,5 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import AuthPage from "./pages/AuthPage";
-import VerifyEmailPage from "./pages/VerifyEmailPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import SyncCallbackMAL from "./pages/SyncCallbackMAL";
-import SyncCallbackAniList from "./pages/SyncCallbackAniList";
 import './App.css';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { syncFromBackend } from "./services/storage";
@@ -15,33 +10,40 @@ import { LoadingProvider } from "./components/LoadingProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AnimatedPage from "./components/AnimatedPage";
 import ErrorBoundary from "./components/ErrorBoundary";
-import Home from "./pages/Home";
-import AnimeDetail from "./pages/AnimeDetail";
-import AnimeInfo from "./pages/AnimeInfo";
-import SearchPage from "./pages/SearchPage";
-import WatchlistPage from "./pages/WatchlistPage";
-import ProfilePage from "./pages/ProfilePage";
-import SettingsPage from "./pages/SettingsPage";
-import HistoryPage from "./pages/HistoryPage";
+import Loader from "./components/Loader";
 
 import { AnimatePresence } from "framer-motion";
-import GenericRoutePage from "./components/GenericRoutePage";
-import Browse from "./pages/Browse";
-import MangaVault from "./pages/MangaVault";
-import MangaDetail from "./pages/MangaDetail";
-import News from "./pages/News";
-import NotFound from "./pages/NotFound";
+import { LanguageProvider } from "./contexts/LanguageContext";
 
-import FriendsPage from "./pages/Friends/FriendsPage";
-import LeaderboardPage from "./pages/Leaderboard/LeaderboardPage";
-import AMVsEdits from "./pages/Feeds/AMVsEdits";
-import WatchTogetherCreative from "./pages/Community/WatchTogetherCreative";
-import Rankings from "./pages/Rankings/Rankings";
-import BestAnime from "./pages/Rankings/BestAnime";
-import TierLists from "./pages/Rankings/TierLists";
-import TierListView from "./pages/Rankings/TierListView";
-import Rules from "./pages/System/Rules";
-import Report from "./pages/System/Report";
+const Home = lazy(() => import("./pages/Home"));
+const AnimeDetail = lazy(() => import("./pages/AnimeDetail"));
+const AnimeInfo = lazy(() => import("./pages/AnimeInfo"));
+const SearchPage = lazy(() => import("./pages/SearchPage"));
+const WatchlistPage = lazy(() => import("./pages/WatchlistPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const HistoryPage = lazy(() => import("./pages/HistoryPage"));
+const Browse = lazy(() => import("./pages/Browse"));
+const MangaVault = lazy(() => import("./pages/MangaVault"));
+const MangaDetail = lazy(() => import("./pages/MangaDetail"));
+const News = lazy(() => import("./pages/News"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const FriendsPage = lazy(() => import("./pages/Friends/FriendsPage"));
+const LeaderboardPage = lazy(() => import("./pages/Leaderboard/LeaderboardPage"));
+const AMVsEdits = lazy(() => import("./pages/Feeds/AMVsEdits"));
+const WatchTogetherCreative = lazy(() => import("./pages/Community/WatchTogetherCreative"));
+const Rankings = lazy(() => import("./pages/Rankings/Rankings"));
+const BestAnime = lazy(() => import("./pages/Rankings/BestAnime"));
+const TierLists = lazy(() => import("./pages/Rankings/TierLists"));
+const TierListView = lazy(() => import("./pages/Rankings/TierListView"));
+const Rules = lazy(() => import("./pages/System/Rules"));
+const Report = lazy(() => import("./pages/System/Report"));
+const GenericRoutePage = lazy(() => import("./components/GenericRoutePage"));
+const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const SyncCallbackMAL = lazy(() => import("./pages/SyncCallbackMAL"));
+const SyncCallbackAniList = lazy(() => import("./pages/SyncCallbackAniList"));
 
 const simplePage = (eyebrow, title, description, items) => ({
   eyebrow,
@@ -78,7 +80,9 @@ function RouteShell({ children }) {
   return (
     <AnimatedPage>
       <ErrorBoundary>
-        <main className="route-content">{children}</main>
+        <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}><Loader /></div>}>
+          <main className="route-content">{children}</main>
+        </Suspense>
       </ErrorBoundary>
     </AnimatedPage>
   );
@@ -93,7 +97,6 @@ function AppLayout() {
     if (token) syncFromBackend();
   }, [token]);
 
-  // keep API warm — ping every 4 min while user is on site
   useEffect(() => {
     const api = process.env.REACT_APP_API_URL;
     if (!api) return;
@@ -114,8 +117,8 @@ function AppLayout() {
           <Route path="/auth/verify-email/:token" element={<RouteShell><VerifyEmailPage /></RouteShell>} />
           <Route path="/auth/forgot-password" element={<RouteShell><ForgotPasswordPage /></RouteShell>} />
           <Route path="/auth/reset-password/:token" element={<RouteShell><ResetPasswordPage /></RouteShell>} />
-          <Route path="/auth/sync/mal/callback" element={<SyncCallbackMAL />} />
-          <Route path="/auth/sync/anilist/callback" element={<SyncCallbackAniList />} />
+          <Route path="/auth/sync/mal/callback" element={<Suspense fallback={null}><SyncCallbackMAL /></Suspense>} />
+          <Route path="/auth/sync/anilist/callback" element={<Suspense fallback={null}><SyncCallbackAniList /></Suspense>} />
           <Route path="/home" element={<RouteShell><Home /></RouteShell>} />
           <Route path="/browse/anime" element={<RouteShell><Browse /></RouteShell>} />
           <Route path="/browse/manga" element={<RouteShell><MangaVault /></RouteShell>} />
@@ -153,11 +156,13 @@ function AppLayout() {
 
 function App() {
   return (
-    <LoadingProvider>
-      <Router>
-        <AppLayout />
-      </Router>
-    </LoadingProvider>
+    <LanguageProvider>
+      <LoadingProvider>
+        <Router>
+          <AppLayout />
+        </Router>
+      </LoadingProvider>
+    </LanguageProvider>
   );
 }
 

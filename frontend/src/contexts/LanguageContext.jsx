@@ -1,6 +1,7 @@
 ﻿import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import en from "../locales/en";
 import ar from "../locales/ar";
+import { STORAGE_KEYS } from "../utils/constants";
 
 const LOCALE_KEY = STORAGE_KEYS.LOCALE;
 const translations = { en, ar };

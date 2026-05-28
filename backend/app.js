@@ -50,7 +50,7 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
-app.use('/api/auth/forgot-password', authLimiter);
+app.use('/api/auth/password/forgot', authLimiter);
 
 // ─── Routes ──────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));

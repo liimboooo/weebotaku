@@ -159,11 +159,11 @@ exports.updateTierList = async (req, res) => {
     if (isPublic !== undefined) tierList.isPublic = isPublic;
     if (tiers) {
       tierList.tiers = {
-        s: tiers.s || [],
-        a: tiers.a || [],
-        b: tiers.b || [],
-        c: tiers.c || [],
-        d: tiers.d || [],
+        s: tiers.s !== undefined ? tiers.s : tierList.tiers?.s || [],
+        a: tiers.a !== undefined ? tiers.a : tierList.tiers?.a || [],
+        b: tiers.b !== undefined ? tiers.b : tierList.tiers?.b || [],
+        c: tiers.c !== undefined ? tiers.c : tierList.tiers?.c || [],
+        d: tiers.d !== undefined ? tiers.d : tierList.tiers?.d || [],
       };
     }
     if (unranked !== undefined) tierList.unranked = unranked;

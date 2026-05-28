@@ -15,7 +15,7 @@ router.post('/', protect, createTierList);
 router.get('/user/:userId', optionalAuth, getUserTierLists);
 router.get('/by-username/:username', getUserTierListsByUsername);
 router.get('/community', getCommunityTierLists);
-router.get('/:id', getTierListById);
+router.get('/:id', optionalAuth, getTierListById);
 router.put('/:id', protect, updateTierList);
 router.delete('/:id', protect, deleteTierList);
 

@@ -3,6 +3,7 @@ const Notification = require('../models/Notification');
 const { emitNotification } = require('./notifyHelper');
 const { OAuth2Client } = require('google-auth-library');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../emailService');
+const bcrypt = require('bcryptjs');
 
 // @route   POST /api/auth/register
 exports.register = async (req, res) => {
@@ -39,6 +40,7 @@ exports.register = async (req, res) => {
       success: true,
       message: 'Registration successful! Please check your email to verify your account.',
       needsEmailVerification: true,
+      email: user.email,
     });
   } catch (error) {
     if (error.code === 11000) {

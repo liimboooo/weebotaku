@@ -558,7 +558,7 @@ function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onWatch
           <Sparkles size={14} /> Featured
         </motion.div>
         <motion.h1 variants={heroItem}>{spotlight.name}</motion.h1>
-        <motion.p variants={heroItem} className="home-hero-desc" dangerouslySetInnerHTML={{ __html: spotlight.synopsis?.slice(0, 280) || '' }} />
+        <motion.p variants={heroItem} className="home-hero-desc">{(spotlight.synopsis || '').replace(/<[^>]*>/g, '').slice(0, 280)}</motion.p>
         <motion.div variants={heroItem} className="home-hero-meta">
           {spotlight.rating && <span><Star size={12} fill="#ffd700" color="#ffd700" /> {spotlight.rating.toFixed(1)}</span>}
           <span>{spotlight.year || "?"}</span>

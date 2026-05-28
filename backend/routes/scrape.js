@@ -292,7 +292,8 @@ router.get('/manga-toonily-chapters', safeHandler(async (req, res) => {
     const chapters = [];
     $('li.wp-manga-chapter a').each((i, el) => {
       const href = $(el).attr('href') || '';
-      const chapterId = href.split('/').filter(Boolean).pop() || href.split('/').slice(-2).join('/');
+      const parts = href.split('/').filter(Boolean);
+      const chapterId = parts.slice(-2).join('/') || parts.pop();
       const label = $(el).text().trim();
       const match = label.match(/(\d+(?:\.\d+)?)/);
       chapters.push({
@@ -313,7 +314,7 @@ router.get('/manga-toonily-pages', safeHandler(async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
   try {
-    const url = id.includes('toonily.com') ? id : `${process.env.TOONILY_BASE_URL || 'https://toonily.com'}/${id}/`;
+    const url = id.includes('toonily.com') ? id : `${process.env.TOONILY_BASE_URL || 'https://toonily.com'}/manga/${id}/`;
     const html = await fetchWithHeaders(url);
     if (!html) return res.json({ success: true, data: [] });
     const $ = cheerio.load(html);
@@ -445,7 +446,7 @@ router.get('/manga-bato-pages', safeHandler(async (req, res) => {
   const { id } = req.query;
   if (!id) return res.status(400).json({ success: false, message: 'Missing id' });
   try {
-    const html = await fetchWithHeaders(`${process.env.BATO_BASE_URL || 'https://bato.to'}/series/${id}`);
+    const html = await fetchWithHeaders(`${process.env.BATO_BASE_URL || 'https://bato.to'}/chapter/${id}`);
     if (!html) return res.json({ success: true, data: [] });
     const $ = cheerio.load(html);
     const pages = [];

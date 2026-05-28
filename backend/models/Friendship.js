@@ -16,6 +16,11 @@ const FriendshipSchema = new mongoose.Schema({
     enum: ['pending', 'accepted', 'blocked'],
     default: 'pending',
   },
+  blockedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
 }, { timestamps: true });
 
 FriendshipSchema.index({ requester: 1, recipient: 1 }, { unique: true });

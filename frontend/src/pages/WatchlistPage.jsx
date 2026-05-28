@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, BookOpen, Search, Star, Play, Sparkles } from "lucide-react";
+import { Heart, BookOpen, Search, Star, Play, Sparkles, X } from "lucide-react";
 import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
 import { loadWatchlist, removeFromWatchlist, loadReadlist, removeFromReadlist, loadWatchHistory, getMangaProgress as getMangaProgressFromStorage } from "../services/storage";
@@ -12,6 +12,7 @@ export default function WatchlistPage() {
   const [tab, setTab] = useState("anime");
   const [animeList, setAnimeList] = useState([]);
   const [mangaList, setMangaList] = useState([]);
+  const [search, setSearch] = useState("");
 
   const refresh = () => {
     setAnimeList(loadWatchlist());
@@ -22,7 +23,11 @@ export default function WatchlistPage() {
     refresh();
     const handler = () => refresh();
     window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
+    window.addEventListener("watchlist-updated", handler);
+    return () => {
+      window.removeEventListener("storage", handler);
+      window.removeEventListener("watchlist-updated", handler);
+    };
   }, []);
 
   const removeAnime = (id) => {
@@ -33,17 +38,32 @@ export default function WatchlistPage() {
     setMangaList(removeFromReadlist(id));
   };
 
-  const getProgress = (id) => {
+  const progressMap = useMemo(() => {
     const history = loadWatchHistory();
-    const entry = history.find(h => h.animeId === id);
-    return entry ? entry.episode : 0;
-  };
+    const map = {};
+    history.forEach(h => { if (!map[h.animeId]) map[h.animeId] = h.episode; });
+    return map;
+  }, [animeList]);
+
+  const getProgress = (id) => progressMap[id] || 0;
 
   const getMangaProgressLocal = (id) => {
     return getMangaProgressFromStorage(id);
   };
 
-  const activeList = tab === "anime" ? animeList : mangaList;
+  const filteredAnime = useMemo(() => {
+    if (!search) return animeList;
+    const q = search.toLowerCase();
+    return animeList.filter(a => (a.name || '').toLowerCase().includes(q));
+  }, [animeList, search]);
+
+  const filteredManga = useMemo(() => {
+    if (!search) return mangaList;
+    const q = search.toLowerCase();
+    return mangaList.filter(m => (m.title || '').toLowerCase().includes(q));
+  }, [mangaList, search]);
+
+  const activeList = tab === "anime" ? filteredAnime : filteredManga;
   const totalItems = animeList.length + mangaList.length;
   const totalEps = animeList.reduce((s, a) => s + (a.episodes || 0), 0);
   const totalCh = mangaList.reduce((s, m) => s + (m.ch || 0), 0);
@@ -95,15 +115,27 @@ export default function WatchlistPage() {
             <button className={`wl-tab ${tab === "manga" ? "active" : ""}`} onClick={() => setTab("manga")}>
               <BookOpen size={14} /> Readlist <span className="wl-tab-count">{mangaList.length}</span>
             </button>
+            <div className="wl-search-wrap" style={{ marginLeft: 'auto', position: 'relative' }}>
+              <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+              <input
+                className="wl-search-input"
+                type="text"
+                placeholder={`Search ${tab === 'anime' ? 'watchlist' : 'readlist'}...`}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ padding: '8px 32px 8px 34px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none', width: 200 }}
+              />
+              {search && <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><X size={14} /></button>}
+            </div>
           </div>
 
           <AnimatePresence mode="wait">
             {tab === "anime" ? (
               <motion.div key="anime" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                {animeList.length > 0 ? (
+                {filteredAnime.length > 0 ? (
                   <div className="wl-grid">
                     <AnimatePresence mode="popLayout">
-                      {animeList.map((anime, i) => (
+                      {filteredAnime.map((anime, i) => (
                         <motion.article
                           className="wl-card"
                           key={anime.id}
@@ -158,20 +190,20 @@ export default function WatchlistPage() {
                 ) : (
                   <div className="wl-empty">
                     <Heart size={48} />
-                    <h3>Watchlist is empty</h3>
-                    <p>Browse anime and save them to your watchlist.</p>
-                    <button className="wl-browse-btn" onClick={() => navigate("/browse/anime")}>
+                    <h3>{search ? 'No matches' : 'Watchlist is empty'}</h3>
+                    <p>{search ? `No anime matching "${search}"` : 'Browse anime and save them to your watchlist.'}</p>
+                    {!search && <button className="wl-browse-btn" onClick={() => navigate("/browse/anime")}>
                       <Search size={14} /> Browse Anime
-                    </button>
+                    </button>}
                   </div>
                 )}
               </motion.div>
             ) : (
               <motion.div key="manga" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                {mangaList.length > 0 ? (
+                {filteredManga.length > 0 ? (
                   <div className="wl-grid">
                     <AnimatePresence mode="popLayout">
-                      {mangaList.map((manga, i) => (
+                      {filteredManga.map((manga, i) => (
                         <motion.article
                           className="wl-card"
                           key={manga.id}
@@ -182,6 +214,7 @@ export default function WatchlistPage() {
                           transition={{ delay: (i % 12) * 0.03, type: "spring", stiffness: 100, damping: 14 }}
                           whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(139,92,246,0.3)", borderColor: "#8b5cf6" }}
                           whileTap={{ scale: 0.98 }}
+                          onClick={() => navigate(`/manga/${manga.id}`)}
                         >
                           <div className="wl-card-thumb">
                             <img src={manga.cover} alt={manga.title} loading="lazy" />
@@ -221,11 +254,11 @@ export default function WatchlistPage() {
                 ) : (
                   <div className="wl-empty">
                     <BookOpen size={48} />
-                    <h3>Readlist is empty</h3>
-                    <p>Browse manga and save them to your readlist.</p>
-                    <button className="wl-browse-btn" onClick={() => navigate("/browse/manga")}>
+                    <h3>{search ? 'No matches' : 'Readlist is empty'}</h3>
+                    <p>{search ? `No manga matching "${search}"` : 'Browse manga and save them to your readlist.'}</p>
+                    {!search && <button className="wl-browse-btn" onClick={() => navigate("/browse/manga")}>
                       <Search size={14} /> Browse Manga
-                    </button>
+                    </button>}
                   </div>
                 )}
               </motion.div>
