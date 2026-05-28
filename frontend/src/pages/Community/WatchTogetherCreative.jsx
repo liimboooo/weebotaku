@@ -674,10 +674,11 @@ export default function WatchTogetherCreative() {
           connectToLiveKit(res.data._id);
         }
       }
-    } catch {
+    } catch (err) {
+      console.error('Create room failed:', err);
       setIsLive(false);
       setIsConfigOpen(false);
-      addNotification({ title: "Room Error", body: "Failed to create room. Try again.", type: "error" });
+      addNotification({ title: "Room Error", body: err?.message || "Failed to create room. Try again.", type: "error" });
     } finally {
       setCreating(false);
     }

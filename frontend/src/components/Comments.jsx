@@ -605,7 +605,9 @@ export default function Comments({ comments: externalComments, setComments, curr
       setText("");
       setPosted(true);
       setTimeout(() => setPosted(false), 3000);
-    } catch {}
+    } catch (err) {
+      console.error('Failed to post comment:', err);
+    }
     setPosting(false);
   };
 
