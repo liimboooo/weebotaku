@@ -1,0 +1,87 @@
+const https = require('https');
+
+const PROXY_TIMEOUT = 25000;
+
+module.exports = async (req, res) => {
+  const pathSegments = req.query.catchAll;
+  const path = Array.isArray(pathSegments) ? pathSegments.join('/') : (pathSegments || '');
+
+  const queryIdx = req.url.indexOf('?');
+  const queryString = queryIdx >= 0 ? req.url.substring(queryIdx) : '';
+
+  const options = {
+    hostname: 'backend-delta-eight-70.vercel.app',
+    port: 443,
+    path: `/api/${path}${queryString}`,
+    method: req.method,
+    timeout: PROXY_TIMEOUT,
+    headers: {},
+    rejectUnauthorized: true,
+  };
+
+  const forwardHeaders = [
+    'accept', 'accept-encoding', 'accept-language',
+    'authorization', 'content-type',
+    'origin', 'referer', 'user-agent',
+  ];
+  for (const h of forwardHeaders) {
+    if (req.headers[h]) {
+      options.headers[h] = req.headers[h];
+    }
+  }
+
+  if (['GET', 'HEAD'].includes(req.method)) {
+    delete options.headers['content-type'];
+  }
+
+  return new Promise((resolve) => {
+    const proxyReq = https.request(options, (proxyRes) => {
+      let body = '';
+      proxyRes.on('data', chunk => { body += chunk; });
+      proxyRes.on('end', () => {
+        res.status(proxyRes.statusCode);
+        const forwardResHeaders = [
+          'content-type', 'content-length',
+          'access-control-allow-origin', 'access-control-allow-credentials',
+          'access-control-allow-methods', 'access-control-allow-headers',
+          'cache-control', 'etag', 'vary',
+        ];
+        for (const h of forwardResHeaders) {
+          if (proxyRes.headers[h]) {
+            res.setHeader(h, proxyRes.headers[h]);
+          }
+        }
+        if (body) {
+          res.send(body);
+        } else {
+          res.end();
+        }
+        resolve();
+      });
+    });
+
+    proxyReq.on('error', err => {
+      console.error('Proxy error:', err.message);
+      if (!res.headersSent) {
+        res.status(502).json({ success: false, message: 'Backend unreachable' });
+      }
+      resolve();
+    });
+
+    proxyReq.on('timeout', () => {
+      proxyReq.destroy();
+      if (!res.headersSent) {
+        res.status(504).json({ success: false, message: 'Backend timeout' });
+      }
+      resolve();
+    });
+
+    if (req.body && !['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+      const bodyStr = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+      proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyStr));
+      proxyReq.write(bodyStr);
+    }
+
+    proxyReq.end();
+  });
+};
