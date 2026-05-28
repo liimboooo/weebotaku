@@ -9,6 +9,9 @@ connectDB().catch(err => {
 });
 
 module.exports = async (req, res) => {
+  delete req.headers.cookie;
+  delete req.headers['x-vercel-proxy-signature'];
+  delete req.headers['x-vercel-forwarded-for'];
   const origin = req.headers.origin;
   res.setHeader('Access-Control-Allow-Origin', origin || '*');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
