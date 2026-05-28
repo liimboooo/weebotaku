@@ -425,6 +425,13 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
               )}
             </div>
 
+            {servers.length > 0 && (
+              <div className="watch-lang-toggle">
+                <button className={`watch-lang-btn ${language === 'sub' ? 'active' : ''}`} onClick={() => setLanguage('sub')} disabled={!servers.some(s => s.type === 'sub')}>SUB</button>
+                <button className={`watch-lang-btn ${language === 'dub' ? 'active' : ''}`} onClick={() => setLanguage('dub')} disabled={!servers.some(s => s.type === 'dub')}>DUB</button>
+              </div>
+            )}
+
             <div className="watch-scroll-area">
               <div className="watch-notif-banner">
                 <span>Report broken episodes to help us improve</span>
