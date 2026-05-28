@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
 import Hls from "hls.js";
-import { findStreamingSource, getEpisodes, getStreamUrls, getEpisodePage, getDirectStream } from "../services/animeApi";
+import { findStreamingSource, getEpisodes, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream } from "../services/animeApi";
 import { fetchAnimeRecommendations } from "../services/anilistApi";
 import { loadWatchHistory, addToWatchHistory } from "../services/storage";
 import commentService from "../services/commentService";
@@ -284,17 +284,32 @@ export default function AnimeDetail() {
     (async () => {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
+        const epNum = episode.episode || (epIndex + 1);
         const aniId = watchAnime.anilistId || parseInt(id);
+        const hlsServers = [];
+
         if (aniId) {
-          const direct = await getDirectStream(aniId, episode.episode || (epIndex + 1));
-          if (direct?.stream?.url) {
-            setStreamMode("hls");
-            setStreamUrl(direct.stream.url);
-            setServers([{ label: `ezvidapi (${language})`, url: direct.stream.url, type: language }]);
-            setStreamLoading(false);
-            return;
-          }
+          const [directRes, miruroSubRes] = await Promise.allSettled([
+            getDirectStream(aniId, epNum),
+            getMiruroStream(aniId, epNum, 'sub'),
+          ]);
+          const direct = directRes.status === 'fulfilled' ? directRes.value : null;
+          const miruroSub = miruroSubRes.status === 'fulfilled' ? miruroSubRes.value : null;
+
+          if (miruroSub?.stream?.url) hlsServers.push({ label: 'Sub (HLS)', url: miruroSub.stream.url, type: 'sub' });
+          if (direct?.stream?.url && direct.stream.url !== miruroSub?.stream?.url)
+            hlsServers.push({ label: 'Dub (HLS)', url: direct.stream.url, type: 'dub' });
         }
+
+        if (hlsServers.length > 0) {
+          setStreamMode("hls");
+          setServers(hlsServers);
+          const preferred = hlsServers.find(s => s.type === language) || hlsServers[0];
+          setStreamUrl(preferred.url);
+          setStreamLoading(false);
+          return;
+        }
+
         setStreamMode("iframe");
         const urls = await getStreamUrls(episode.url, watchAnime.source, watchAnime.anilistId, parseInt(id), watchAnime.slug);
         if (urls.length > 0) { setServers(urls); }
@@ -310,7 +325,7 @@ export default function AnimeDetail() {
       const ls = servers.filter(s => s.type === language);
       if (ls.length > 0) {
         setServerIndex(0);
-        setStreamUrl(toStreamUrl(ls[0]));
+        setStreamUrl(streamMode === "hls" ? ls[0].url : toStreamUrl(ls[0]));
         setLangKey(k => k + 1);
       }
     }

@@ -52,7 +52,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     const langServers = servers.filter(s => s.type === language);
     if (langServers.length > 0) {
       setServerIndex(0);
-      setStreamUrl(makeStreamUrl(langServers[0]));
+      setStreamUrl(streamMode === "hls" ? langServers[0].url : makeStreamUrl(langServers[0]));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language, servers]);
@@ -209,17 +209,33 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     (async () => {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
-        if (anime.anilistId) {
-          const direct = await getDirectStream(anime.anilistId, episode.episode || (epIndex + 1));
-          if (direct?.stream?.url) {
-            setStreamMode("hls");
-            setStreamUrl(direct.stream.url);
-            setServers([{ label: `ezvidapi (${language})`, url: direct.stream.url, type: language }]);
-            setStreamCache(c => ({ ...c, [episode.url]: [{ label: 'ezvidapi', url: direct.stream.url, type: language }] }));
-            setStreamLoading(false);
-            return;
-          }
+        const epNum = episode.episode || (epIndex + 1);
+        const aniId = anime.anilistId;
+        const hlsServers = [];
+
+        if (aniId) {
+          const [directRes, miruroSubRes] = await Promise.allSettled([
+            getDirectStream(aniId, epNum),
+            getMiruroStream(aniId, epNum, 'sub'),
+          ]);
+          const direct = directRes.status === 'fulfilled' ? directRes.value : null;
+          const miruroSub = miruroSubRes.status === 'fulfilled' ? miruroSubRes.value : null;
+
+          if (miruroSub?.stream?.url) hlsServers.push({ label: 'Sub (HLS)', url: miruroSub.stream.url, type: 'sub' });
+          if (direct?.stream?.url && direct.stream.url !== miruroSub?.stream?.url)
+            hlsServers.push({ label: 'Dub (HLS)', url: direct.stream.url, type: 'dub' });
         }
+
+        if (hlsServers.length > 0) {
+          setStreamMode("hls");
+          setServers(hlsServers);
+          const preferred = hlsServers.find(s => s.type === language) || hlsServers[0];
+          setStreamUrl(preferred.url);
+          setStreamCache(c => ({ ...c, [episode.url]: hlsServers }));
+          setStreamLoading(false);
+          return;
+        }
+
         setStreamMode("iframe");
         const urls = await getStreamUrls(episode.url, anime.source, anime.anilistId, anime.anilistId, anime.slug);
         if (urls.length > 0) {

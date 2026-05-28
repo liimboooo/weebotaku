@@ -214,27 +214,29 @@ exports.autoSources = async (req, res) => {
     const epNum = parseInt(episodeNum, 10);
     if (!aid || !epNum) return res.status(400).json({ success: false, message: 'Missing params' });
 
-    // Try ezvidapi first — CORS-enabled, zero bandwidth, broad coverage
-    try {
-      const tmdb = await anilistToTmdb(aid);
-      if (tmdb) {
-        const ezvid = await ezvidapiResolve(tmdb.id, tmdb.season, epNum);
-        if (ezvid) {
-          return res.json({
-            success: true,
-            data: {
-              provider: `ezvidapi:${ezvid.provider}`,
-              stream: { url: ezvid.stream_url, quality: 'auto' },
-              subtitles: (ezvid.subtitles || []).map(s => ({ url: s.url, label: s.label || s.language })),
-              intro: null,
-              outro: null,
-            },
-          });
+    // Only try ezvidapi when no specific category — frontend calls ezvidapi directly for dub
+    if (category === 'sub') {
+      try {
+        const tmdb = await anilistToTmdb(aid);
+        if (tmdb) {
+          const ezvid = await ezvidapiResolve(tmdb.id, tmdb.season, epNum);
+          if (ezvid) {
+            return res.json({
+              success: true,
+              data: {
+                provider: `ezvidapi:${ezvid.provider}`,
+                stream: { url: ezvid.stream_url, quality: 'auto' },
+                subtitles: (ezvid.subtitles || []).map(s => ({ url: s.url, label: s.label || s.language })),
+                intro: null,
+                outro: null,
+              },
+            });
+          }
         }
-      }
-    } catch {}
+      } catch {}
+    }
 
-    // Fallback to miruro pipe
+    // Miruro pipe — supports sub/dub categories natively
     const epData = await pipeFetch({
       path: 'episodes', method: 'GET',
       query: { anilistId: aid }, body: null, version: '0.1.0',
