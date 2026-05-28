@@ -11,6 +11,7 @@ import MangaReader from "./Feeds/MangaReader";
 import ErrorBoundary from "../components/ErrorBoundary";
 import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./MangaDetail.css";
 
 export default function MangaDetail() {
@@ -29,6 +30,8 @@ export default function MangaDetail() {
   const [readerChapters, setReaderChapters] = useState([]);
   const [readerChapter, setReaderChapter] = useState(null);
   const [readerOpen, setReaderOpen] = useState(false);
+
+  useDocumentTitle(manga?.title || "Manga");
 
   useEffect(() => {
     setIsInList(loadReadlist().some(i => i.id === id));

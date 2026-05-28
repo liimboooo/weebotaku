@@ -7,6 +7,7 @@ import AnimatedPage from "../components/AnimatedPage";
 import Background from "../components/Background";
 import Loader from "../components/Loader";
 import { fetchAggregatedNews, formatTimestamp } from "../services/newsAggregator";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./News.css";
 
 function useDebounce(value, delay) {
@@ -16,6 +17,7 @@ function useDebounce(value, delay) {
 }
 
 export default function News() {
+  useDocumentTitle("Anime News");
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -53,10 +55,18 @@ export default function News() {
 
   useEffect(() => {
     if (sortedFeed.length < 2) return;
-    heroTimerRef.current = setInterval(() => {
-      setHeroIndex(prev => (prev + 1) % Math.min(sortedFeed.length, 5));
-    }, 6000);
-    return () => clearInterval(heroTimerRef.current);
+    const start = () => {
+      heroTimerRef.current = setInterval(() => {
+        setHeroIndex(prev => (prev + 1) % Math.min(sortedFeed.length, 5));
+      }, 6000);
+    };
+    const onVis = () => {
+      clearInterval(heroTimerRef.current);
+      if (!document.hidden) start();
+    };
+    start();
+    document.addEventListener("visibilitychange", onVis);
+    return () => { clearInterval(heroTimerRef.current); document.removeEventListener("visibilitychange", onVis); };
   }, [sortedFeed.length]);
 
   const heroItems = sortedFeed.slice(0, 5);

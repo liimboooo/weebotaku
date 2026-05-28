@@ -46,7 +46,8 @@ class ApiClient {
         this._redirecting = true;
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/';
+        window.dispatchEvent(new CustomEvent('auth-logout', { detail: { reason: 'token_expired' } }));
+        setTimeout(() => { this._redirecting = false; }, 2000);
       }
 
       const data = await response.json();

@@ -32,6 +32,7 @@ import Background from "../components/Background";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
 import { loadWatchlist, loadWatchHistory, loadRatings } from "../services/storage";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./Home.css";
 
 function useAnimeData() {
@@ -107,14 +108,23 @@ function useAnimeData() {
 
   useEffect(() => {
     if (spotlightQueue.length < 2) return;
-    const interval = setInterval(() => {
-      setSpotlightIndex(i => {
-        const next = (i + 1) % spotlightQueue.length;
-        setSpotlight(spotlightQueue[next]);
-        return next;
-      });
-    }, 20000);
-    return () => clearInterval(interval);
+    let interval;
+    const start = () => {
+      interval = setInterval(() => {
+        setSpotlightIndex(i => {
+          const next = (i + 1) % spotlightQueue.length;
+          setSpotlight(spotlightQueue[next]);
+          return next;
+        });
+      }, 20000);
+    };
+    const onVisibility = () => {
+      clearInterval(interval);
+      if (!document.hidden) start();
+    };
+    start();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { clearInterval(interval); document.removeEventListener("visibilitychange", onVisibility); };
   }, [spotlightQueue]);
 
   const refreshTrending = useCallback(async () => {
@@ -608,6 +618,7 @@ function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onWatch
 // ─── Main Home component ────────────────────────────────
 
 export default function Home() {
+  useDocumentTitle("Home");
   const navigate = useNavigate();
   const { spotlight, topTen, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending } = useAnimeData();
   const [quote, setQuote] = useState(null);

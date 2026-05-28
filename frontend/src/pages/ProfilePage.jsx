@@ -14,6 +14,7 @@ import {
   Calendar, LogOut, Search, Settings, Play,
   Heart, Film, BookOpen, Globe, MessageCircle,
 } from "lucide-react";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./ProfilePage.css";
 
 const TABS = [
@@ -41,6 +42,7 @@ export default function ProfilePage() {
   const currentUser = authService.getCurrentUser();
   const isRemoteProfile = profileUsername && profileUsername !== currentUser?.username;
   const isOwnProfile = !isRemoteProfile;
+  useDocumentTitle(isRemoteProfile ? `${profileUsername}'s Profile` : "My Profile");
 
   const [username, setUsername] = useState("Anime Fan");
   const [avatar, setAvatar] = useState("");

@@ -6,7 +6,7 @@ import { Clock, Trash2, Play, X, Compass, Sparkles, Film } from "lucide-react";
 import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
 import { loadWatchHistory, clearWatchHistory as clearStorageHistory, removeFromWatchHistory } from "../services/storage";
-
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./HistoryPage.css";
 
 function groupByDate(items) {
@@ -35,6 +35,7 @@ function groupByDate(items) {
 }
 
 export default function HistoryPage() {
+  useDocumentTitle("Watch History");
   const navigate = useNavigate();
   const [history, setHistory] = useState([]);
 

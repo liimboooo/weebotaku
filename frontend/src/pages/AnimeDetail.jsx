@@ -13,6 +13,7 @@ import commentService from "../services/commentService";
 import authService from "../services/authService";
 import { getSocket, joinAnimeRoom, leaveAnimeRoom } from "../services/socket";
 import Comments from "../components/Comments";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./Feeds/AnimeWatch.css";
 
 export default function AnimeDetail() {
@@ -179,6 +180,7 @@ export default function AnimeDetail() {
   }, []);
 
   const anime = apiAnime;
+  useDocumentTitle(anime ? `${anime.name} - Ep ${selectedEp}` : "Loading...");
   const totalEps = anime?.episodes ?? 12;
 
   useEffect(() => {
@@ -376,11 +378,16 @@ export default function AnimeDetail() {
     }
   }, [servers, language, streamMode]);
 
+  const savedPositionRef = useRef(0);
+
   useEffect(() => {
     if (streamMode !== "hls" || !streamUrl) return;
     const video = hlsVideoRef.current;
     if (!video) return;
+
+    const prevPos = savedPositionRef.current;
     if (hlsInstanceRef.current) { hlsInstanceRef.current.destroy(); hlsInstanceRef.current = null; }
+
     if (Hls.isSupported()) {
       const hls = new Hls({
         maxBufferLength: 60,
@@ -393,6 +400,7 @@ export default function AnimeDetail() {
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
         if (data.levels.length > 1) hls.currentLevel = data.levels.length - 1;
+        if (prevPos > 2) video.currentTime = prevPos;
         video.play().catch(() => {});
       });
       hls.on(Hls.Events.ERROR, (_, data) => {
@@ -401,10 +409,45 @@ export default function AnimeDetail() {
       hlsInstanceRef.current = hls;
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = streamUrl;
-      video.addEventListener("loadedmetadata", () => { video.play().catch(() => {}); }, { once: true });
+      video.addEventListener("loadedmetadata", () => {
+        if (prevPos > 2) video.currentTime = prevPos;
+        video.play().catch(() => {});
+      }, { once: true });
     }
-    return () => { if (hlsInstanceRef.current) { hlsInstanceRef.current.destroy(); hlsInstanceRef.current = null; } };
+
+    const onTimeUpdate = () => { savedPositionRef.current = video.currentTime; };
+    video.addEventListener("timeupdate", onTimeUpdate);
+
+    return () => {
+      video.removeEventListener("timeupdate", onTimeUpdate);
+      if (hlsInstanceRef.current) { hlsInstanceRef.current.destroy(); hlsInstanceRef.current = null; }
+    };
   }, [streamMode, streamUrl]);
+
+  useEffect(() => {
+    savedPositionRef.current = 0;
+  }, [episode]);
+
+  useEffect(() => {
+    if (streamMode !== "hls") return;
+    const onKey = (e) => {
+      const video = hlsVideoRef.current;
+      if (!video || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      switch (e.key) {
+        case ' ':
+        case 'k': e.preventDefault(); video.paused ? video.play() : video.pause(); break;
+        case 'ArrowRight': e.preventDefault(); video.currentTime = Math.min(video.duration, video.currentTime + 10); break;
+        case 'ArrowLeft': e.preventDefault(); video.currentTime = Math.max(0, video.currentTime - 10); break;
+        case 'ArrowUp': e.preventDefault(); video.volume = Math.min(1, video.volume + 0.1); break;
+        case 'ArrowDown': e.preventDefault(); video.volume = Math.max(0, video.volume - 0.1); break;
+        case 'f': e.preventDefault(); document.fullscreenElement ? document.exitFullscreen() : video.requestFullscreen?.(); break;
+        case 'm': e.preventDefault(); video.muted = !video.muted; break;
+        default: break;
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [streamMode]);
 
   useEffect(() => {
     if (!watchAnime?.anilistId) return;

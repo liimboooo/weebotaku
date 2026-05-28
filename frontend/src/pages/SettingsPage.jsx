@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   ChevronLeft, RefreshCw, ArrowRight, Mail,
 } from "lucide-react";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./SettingsPage.css";
 
 const SECTIONS = [
@@ -66,6 +67,7 @@ const CONTENT_RATINGS = ["G", "PG", "PG-13", "R", "R+ (17+)", "Rx (18+)"];
 const LIST_VIEWS = ["Grid", "List", "Compact"];
 
 export default function SettingsPage() {
+  useDocumentTitle("Settings");
   const navigate = useNavigate();
   const currentUser = authService.getCurrentUser();
 

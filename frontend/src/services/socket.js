@@ -18,30 +18,10 @@ export function getFriendStatusCache() {
 
 // ─── Polling fallback (used on Vercel where WS doesn't work) ───
 
-let lastNotifSeen = new Set();
 let polledRemoteUserId = null;
 
 export function setPolledRemoteUserId(uid) {
   polledRemoteUserId = uid;
-}
-
-async function pollNotifications() {
-  try {
-    const res = await api.get('/notifications');
-    if (res?.success && Array.isArray(res.data)) {
-      for (const n of res.data) {
-        const key = n._id || n.id;
-        if (key && !lastNotifSeen.has(key)) {
-          lastNotifSeen.add(key);
-          if (lastNotifSeen.size > 200) {
-            const arr = Array.from(lastNotifSeen);
-            lastNotifSeen = new Set(arr.slice(arr.length - 100));
-          }
-          window.dispatchEvent(new CustomEvent('server-notification', { detail: n }));
-        }
-      }
-    }
-  } catch {}
 }
 
 async function pollFriendStatus() {
@@ -58,12 +38,8 @@ async function pollFriendStatus() {
 
 function startPollingFallback() {
   stopPollingFallback();
-  lastNotifSeen = new Set();
-  pollNotifications();
-  pollTimer = setInterval(() => {
-    pollNotifications();
-    pollFriendStatus();
-  }, 5000);
+  pollFriendStatus();
+  pollTimer = setInterval(pollFriendStatus, 10000);
 }
 
 function stopPollingFallback() {

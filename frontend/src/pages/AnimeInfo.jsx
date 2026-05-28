@@ -9,6 +9,7 @@ import { gql, fetchAnimeRecommendations, fetchAnimeCharacters } from "../service
 import { statusLabel, LIST_OPTIONS } from "../utils/constants";
 import { loadWatchlist, addToWatchlist, removeFromWatchlist, updateListStatus } from "../services/storage";
 import authService from "../services/authService";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./AnimeInfo.css";
 
 const DETAIL_FIELDS = `id idMal title { romaji english native } coverImage { extraLarge large } bannerImage averageScore popularity episodes duration genres description status season seasonYear startDate { year month day } studios(isMain:true) { nodes { name } } trailer { site id } format nextAiringEpisode { episode airingAt timeUntilAiring }`;
@@ -58,6 +59,7 @@ const SHARE_OPTIONS = [
 export default function AnimeInfo() {
   const { id } = useParams();
   const [anime, setAnime] = useState(null);
+  useDocumentTitle(anime?.name || "Anime Details");
   const [related, setRelated] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

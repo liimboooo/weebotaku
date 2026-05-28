@@ -5,9 +5,11 @@ import { Heart, BookOpen, Search, Star, Play, Sparkles, X } from "lucide-react";
 import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
 import { loadWatchlist, removeFromWatchlist, loadReadlist, removeFromReadlist, loadWatchHistory, getMangaProgress as getMangaProgressFromStorage } from "../services/storage";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./WatchlistPage.css";
 
 export default function WatchlistPage() {
+  useDocumentTitle("My Library");
   const navigate = useNavigate();
   const [tab, setTab] = useState("anime");
   const [animeList, setAnimeList] = useState([]);

@@ -29,6 +29,7 @@ import { loadWatchlist, addToWatchlist, removeFromWatchlist, loadWatchHistory } 
 import { addNotification } from "../services/notificationService";
 import { findStreamingSource } from "../services/animeApi";
 import AnimeWatch from "./Feeds/AnimeWatch";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./Browse.css";
 
 const sortOptions = [
@@ -154,6 +155,7 @@ function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchLoading }) {
 }
 
 export default function Browse() {
+  useDocumentTitle("Browse Anime");
   const navigate = useNavigate();
 
   const [allAnime, setAllAnime] = useState([]);

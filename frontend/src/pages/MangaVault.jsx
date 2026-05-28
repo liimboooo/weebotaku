@@ -12,6 +12,7 @@ import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/sto
 import { addNotification } from "../services/notificationService";
 import { searchManga as mdSearch, getMangaChapters, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages, searchBato, getBatoChapters, getBatoPages } from "../services/mangaApi";
 import MangaReader from "./Feeds/MangaReader";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./MangaVault.css";
 
 const DEMOGRAPHICS = ["Shonen", "Seinen", "Shojo", "Josei"];
@@ -55,6 +56,7 @@ function FilterDropdown({ label, icon: Icon, items, active, children }) {
 }
 
 export default function MangaVault() {
+  useDocumentTitle("Browse Manga");
   const navigate = useNavigate();
   const [allManga, setAllManga] = useState([]);
   const [heroManga, setHeroManga] = useState(null);

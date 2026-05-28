@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import authService from '../services/authService';
 import { loadWatchHistory } from '../services/storage';
-import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications, fetchServerNotifications, seedBroadcastNotifications, handleSocketNotification } from '../services/notificationService';
+import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications, fetchServerNotifications, seedBroadcastNotifications, handleSocketNotification, startPolling, stopPolling } from '../services/notificationService';
 import { connectSocket, disconnectSocket } from '../services/socket';
 import { fetchAggregatedNews } from '../services/newsAggregator';
 import FastSearch from './FastSearch';
@@ -109,8 +109,9 @@ export default function Header() {
     const refreshNotifs = () => {
       let s;
       try { s = JSON.parse(localStorage.getItem('animewch_settings')); } catch {}
-      setNotifications(getNotifications(s));
-      setUnreadCount(getUnreadCount(s));
+      const all = getNotifications(s);
+      setNotifications(all);
+      setUnreadCount(all.filter(n => !n.read).length);
     };
     const refreshEps = () => setEpisodesWatched(loadWatchHistory().length);
     window.addEventListener('storage', syncAvatar);
@@ -140,6 +141,7 @@ export default function Header() {
       setNotifications(getNotifications(s));
       setUnreadCount(getUnreadCount(s));
     });
+    startPolling(30000);
     connectSocket();
 
     const onServerNotif = (e) => {
@@ -151,6 +153,7 @@ export default function Header() {
     };
     window.addEventListener('server-notification', onServerNotif);
     return () => {
+      stopPolling();
       disconnectSocket();
       window.removeEventListener('server-notification', onServerNotif);
     };

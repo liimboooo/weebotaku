@@ -12,6 +12,7 @@ import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchSearchAnime, fetchTopAnime, fetchAnimeGenres } from "../services/anilistApi";
 import { addToWatchlist, removeFromWatchlist, loadWatchlist } from "../services/storage";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./SearchPage.css";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -19,6 +20,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function SearchPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  useDocumentTitle(searchParams.get("q") ? `Search: ${searchParams.get("q")}` : "Search");
   const [query, setQuery] = useState(searchParams.get("q") || "");
   const [results, setResults] = useState([]);
   const [genres, setGenres] = useState([]);

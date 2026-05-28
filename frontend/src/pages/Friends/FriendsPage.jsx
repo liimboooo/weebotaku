@@ -5,6 +5,7 @@ import {
   Users, UserPlus, UserMinus, Check, X, Clock,
   Search, ChevronRight,
 } from "lucide-react";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
 import "./FriendsPage.css";
 
 const TABS = [
@@ -78,6 +79,7 @@ function RequestCard({ friendship, type, onAccept, onReject, onNavigate }) {
 }
 
 export default function FriendsPage() {
+  useDocumentTitle("Friends");
   const navigate = useNavigate();
   const [tab, setTab] = useState("friends");
   const [friends, setFriends] = useState([]);

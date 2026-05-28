@@ -134,6 +134,7 @@ export async function fetchServerNotifications() {
 
       seenServerIds = new Set(serverNotifs.map(n => n._id));
 
+      invalidateCache();
       if (initialNotifFetchDone) {
         for (const n of serverNotifs) {
           if (!n.read && !prevIds.has(n._id)) {
@@ -163,19 +164,35 @@ export function handleSocketNotification(data) {
   if (exists) return;
   serverNotifs.unshift(data);
   seenServerIds.add(data._id);
+  invalidateCache();
   window.dispatchEvent(new CustomEvent("notification-added", {
     detail: { message: data.title, type: "info" },
   }));
 }
 
+let _cachedMerged = null;
+let _cachedTime = 0;
+
+function getCachedMerged() {
+  const now = Date.now();
+  if (_cachedMerged && now - _cachedTime < 500) return _cachedMerged;
+  _cachedMerged = getAllMerged();
+  _cachedTime = now;
+  return _cachedMerged;
+}
+
+export function invalidateCache() {
+  _cachedMerged = null;
+}
+
 export function getNotifications(settings) {
-  const all = getAllMerged();
+  const all = getCachedMerged();
   if (!settings) return all;
   return all.filter(n => isNotifTypeEnabled(n, settings));
 }
 
 export function getUnreadCount(settings) {
-  const all = getAllMerged();
+  const all = getCachedMerged();
   if (!settings) return all.filter(n => !n.read).length;
   return all.filter(n => !n.read && isNotifTypeEnabled(n, settings)).length;
 }
@@ -193,6 +210,7 @@ export function addNotification({ title, body, type = "info", link = null }) {
   };
   list.unshift(notif);
   saveLocal(list);
+  invalidateCache();
   window.dispatchEvent(new CustomEvent("notification-added", { detail: notif }));
   return notif;
 }
@@ -209,6 +227,7 @@ export async function markRead(id) {
     const n = list.find(i => i.id === id);
     if (n) { n.read = true; saveLocal(list); }
   }
+  invalidateCache();
   window.dispatchEvent(new CustomEvent("notification-added", { detail: {} }));
 }
 
@@ -220,6 +239,7 @@ export async function markAllRead() {
   const list = getLocalAll();
   list.forEach(n => n.read = true);
   saveLocal(list);
+  invalidateCache();
   window.dispatchEvent(new CustomEvent("notification-added", { detail: {} }));
 }
 
@@ -230,6 +250,7 @@ export async function clearNotifications() {
   } catch {}
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(BROADCAST_KEY);
+  invalidateCache();
   window.dispatchEvent(new CustomEvent("notification-added", { detail: {} }));
 }
 

@@ -9,6 +9,7 @@ export default function Background() {
     const ctx = canvas.getContext("2d");
     let animId;
     let particles = [];
+    let running = true;
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -27,6 +28,7 @@ export default function Background() {
     }));
 
     const draw = () => {
+      if (!running) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       particles.forEach((p) => {
         p.x += p.vx;
@@ -40,11 +42,25 @@ export default function Background() {
       });
       animId = requestAnimationFrame(draw);
     };
-    draw();
+
+    const onVisibility = () => {
+      if (document.hidden) {
+        running = false;
+        cancelAnimationFrame(animId);
+      } else {
+        running = true;
+        draw();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    if (!document.hidden) draw();
 
     return () => {
+      running = false;
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 

@@ -1,7 +1,7 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useCallback } from "react";
 import AuthPage from "./pages/AuthPage";
 import './App.css';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
 import { syncFromBackend } from "./services/storage";
 import ScrollToTop from "./components/ScrollToTop";
 import Header from "./components/Header";
@@ -90,12 +90,19 @@ function RouteShell({ children }) {
 
 function AppLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isAuthPage = location.pathname === "/" || location.pathname.startsWith("/auth/sync/");
   const token = localStorage.getItem('token');
 
   useEffect(() => {
     if (token) syncFromBackend();
   }, [token]);
+
+  useEffect(() => {
+    const onAuthLogout = () => navigate('/', { replace: true });
+    window.addEventListener('auth-logout', onAuthLogout);
+    return () => window.removeEventListener('auth-logout', onAuthLogout);
+  }, [navigate]);
 
   useEffect(() => {
     const api = process.env.REACT_APP_API_URL;
