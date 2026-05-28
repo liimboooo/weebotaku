@@ -3,15 +3,15 @@ const https = require('https');
 const PROXY_TIMEOUT = 25000;
 
 module.exports = async (req, res) => {
-  if (req.query._debug === '1') {
-    return res.json({ url: req.url, catchAll: req.query.catchAll, query: req.query, method: req.method });
-  }
-
-  const pathSegments = req.query.catchAll;
-  const path = Array.isArray(pathSegments) ? pathSegments.join('/') : (pathSegments || '');
-
-  const queryIdx = req.url.indexOf('?');
-  const queryString = queryIdx >= 0 ? req.url.substring(queryIdx) : '';
+  const urlParts = req.url.split('?');
+  const pathname = urlParts[0].replace(/^\/api\//, '');
+  const rawQuery = urlParts[1] || '';
+  const params = new URLSearchParams(rawQuery);
+  params.delete('...catchAll');
+  params.delete('catchAll');
+  const cleanQuery = params.toString();
+  const path = pathname;
+  const queryString = cleanQuery ? `?${cleanQuery}` : '';
 
   const options = {
     hostname: 'backend-delta-eight-70.vercel.app',

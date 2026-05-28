@@ -10,5 +10,8 @@
         { "key": "Set-Cookie", "value": "__vercel_live_token=; Path=/; Max-Age=0; SameSite=Lax" }
       ]
     }
+  ],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/[...catchAll]" }
   ]
 }
