@@ -524,7 +524,7 @@ export default function ProfilePage() {
                           onClick={() => navigate(`/anime/${item.id}/info`)}
                         >
                           <div className="upp-list-img">
-                            <img src={item.img} alt={item.name} loading="lazy" />
+                            <img src={item.img} alt={item.name} loading="lazy" decoding="async" />
                           </div>
                           <div className="upp-list-info">
                             <h4 className="upp-list-title">{item.name}</h4>

@@ -402,7 +402,7 @@ export default function MangaVault() {
                       {view === "grid" ? (
                         <>
                           <div className="mv-card-thumb" onClick={() => { setPreview(m); setReaderError(""); }}>
-                            <img src={m.cover} alt={m.title} loading="lazy" />
+                            <img src={m.cover} alt={m.title} loading="lazy" decoding="async" />
                             <div className="mv-card-overlay">
                               <div className="mv-card-play"><Eye size={20} /></div>
                               <div className="mv-card-tech">
@@ -438,7 +438,7 @@ export default function MangaVault() {
                       ) : (
                         <>
                           <div className="mv-row-thumb" onClick={() => { setPreview(m); setReaderError(""); }}>
-                            <img src={m.cover} alt={m.title} loading="lazy" />
+                            <img src={m.cover} alt={m.title} loading="lazy" decoding="async" />
                           </div>
                           <div className="mv-row-body" onClick={() => { setPreview(m); setReaderError(""); }}>
                             <div className="mv-row-head">

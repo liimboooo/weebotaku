@@ -149,7 +149,7 @@ export default function HistoryPage() {
                           onClick={() => navigate(`/anime/${item.animeId}/info?ep=${item.episode || 1}`)}
                         >
                           <div className="hp-card-thumb">
-                            <img src={item.img || item.animeImg || ""} alt="" loading="lazy" />
+                            <img src={item.img || item.animeImg || ""} alt="" loading="lazy" decoding="async" />
                             <div className="hp-card-play">
                               <div className="hp-card-play-icon"><Play size={14} fill="currentColor" /></div>
                             </div>

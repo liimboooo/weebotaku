@@ -116,7 +116,7 @@ function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchLoading }) {
   return (
     <>
       <div className="br-card-thumb">
-        {imgErr ? <div className="br-card-img-fallback">{anime.name?.[0] || "?"}</div> : <img src={anime.img} alt={anime.name} loading="lazy" onError={() => setImgErr(true)} />}
+        {imgErr ? <div className="br-card-img-fallback">{anime.name?.[0] || "?"}</div> : <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" onError={() => setImgErr(true)} />}
         <div className="br-card-overlay">
           <button className="br-card-play" onClick={(e) => { e.stopPropagation(); onWatch(anime); }} disabled={watchLoading}>
             <Play size={20} fill="currentColor" />
@@ -209,7 +209,7 @@ export default function Browse() {
         ? await fetchSearchAnime(q, p)
         : await fetchTopAnime(p);
       setAllAnime(prev => replace ? result.data : [...prev, ...result.data]);
-      setHasMore(result.pagination.has_next_page);
+      setHasMore(result.pagination.hasNextPage);
       setPage(p);
       hasLoadedOnce.current = true;
     } catch (err) {
@@ -434,16 +434,15 @@ export default function Browse() {
           ) : (
             <>
               <div className={`br-grid ${view === "list" ? "br-list" : ""}`}>
-                <AnimatePresence mode="popLayout">
+                <AnimatePresence>
                   {filteredAnime.map((anime, i) => (
                     <motion.article
                       key={anime.id}
                       className="br-card"
-                      layout
-                      initial={{ opacity: 0, scale: 0.92 }}
+                      initial={{ opacity: 0, scale: 0.96 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.92 }}
-                      transition={{ delay: (i % 12) * 0.025 }}
+                      exit={{ opacity: 0, scale: 0.96 }}
+                      transition={{ duration: 0.2 }}
                       onClick={() => navigate(`/anime/${anime.id}/info`)}
                     >
                       <AnimeCard

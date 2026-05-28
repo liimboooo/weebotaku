@@ -135,6 +135,7 @@ export default function SearchPage() {
       },
       once: true
     });
+    return () => ScrollTrigger.getAll().forEach(t => t.kill());
   }, { dependencies: [results] });
 
   return (
@@ -279,7 +280,7 @@ export default function SearchPage() {
                     onClick={() => navigate(`/anime/${anime.id}/info`)}
                   >
                     <div className="sr-card-thumb">
-                      <img src={anime.img} alt={anime.name} loading="lazy" />
+                      <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
                       <div className="sr-card-overlay">
                         <button className="sr-card-play" onClick={(e) => { e.stopPropagation(); navigate(`/anime/${anime.id}/info`); }}>
                           <Play size={20} fill="currentColor" />

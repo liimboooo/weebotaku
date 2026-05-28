@@ -39,6 +39,7 @@ function SliderCard({ item, onClick }) {
             src={item.img}
             alt={item.name}
             loading="lazy"
+            decoding="async"
             onLoad={() => setLoaded(true)}
             onError={() => setImgErr(true)}
             style={{ opacity: loaded ? 1 : 0 }}
@@ -66,7 +67,7 @@ function SliderCard({ item, onClick }) {
             <Bookmark size={12} fill={inWishlist ? "currentColor" : "none"} />
           </button>
         </div>
-        <p className="slider-card-desc" dangerouslySetInnerHTML={{ __html: item.synopsis || '' }} />
+        <p className="slider-card-desc">{(item.synopsis || '').replace(/<[^>]*>/g, '')}</p>
         <div className="slider-card-foot">
           <span className="slider-card-rating"><Star size={10} fill="currentColor" /> {item.rating?.toFixed(1)}</span>
           <span className="slider-card-ch"><Play size={10} /> {item.episodes} eps</span>

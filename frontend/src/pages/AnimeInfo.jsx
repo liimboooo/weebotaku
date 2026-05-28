@@ -80,6 +80,7 @@ export default function AnimeInfo() {
   const shareRef = useRef(null);
   const downloadRef = useRef(null);
   const relatedRef = useRef(null);
+  const galleryRef = useRef(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -164,12 +165,14 @@ export default function AnimeInfo() {
   const nextImg = useCallback(() => setGalleryIdx(i => (i < galleryImgs.length - 1 ? i + 1 : 0)), [galleryImgs.length]);
 
   useEffect(() => {
+    const el = galleryRef.current;
+    if (!el || galleryImgs.length < 2) return;
     const handler = (e) => {
       if (e.key === "ArrowLeft") { setGalleryIdx(i => (i > 0 ? i - 1 : galleryImgs.length - 1)); e.preventDefault(); }
       if (e.key === "ArrowRight") { setGalleryIdx(i => (i < galleryImgs.length - 1 ? i + 1 : 0)); e.preventDefault(); }
     };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
+    el.addEventListener("keydown", handler);
+    return () => el.removeEventListener("keydown", handler);
   }, [galleryImgs.length]);
 
   const handleCopyLink = async () => {
@@ -237,7 +240,7 @@ export default function AnimeInfo() {
 
       {/* â”€â”€â”€ HERO â”€â”€â”€ */}
       <div className="ai-hero">
-        <div className="ai-carousel">
+        <div className="ai-carousel" ref={galleryRef} tabIndex={0}>
           <div className="glow-card">
             <div className="ai-carousel-main">
               {galleryImgs.length > 0 ? (
@@ -537,7 +540,7 @@ export default function AnimeInfo() {
                   {related.map(r => (
                     <Link key={r.id} to={`/anime/${r.id}/info`} className={`ai-related-card${Number(r.id) === Number(id) ? " active" : ""}`}>
                       <div className="ai-related-card-thumb">
-                        <img src={r.image} alt={r.name} loading="lazy" />
+                        <img src={r.image} alt={r.name} loading="lazy" decoding="async" />
                         <div className="ai-related-card-overlay">
                           <div className="ai-related-card-play"><Play size={18} fill="currentColor" /></div>
                         </div>

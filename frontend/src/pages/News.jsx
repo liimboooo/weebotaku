@@ -178,7 +178,7 @@ export default function News() {
                         <h4 className="magazine-stack-title">{item.title || item.name || ""}</h4>
                       </div>
                       <div className="magazine-stack-img">
-                        <img src={item.image || item.coverImage?.large || ""} alt="" loading="lazy" />
+                        <img src={item.image || item.coverImage?.large || ""} alt="" loading="lazy" decoding="async" />
                       </div>
                     </div>
                   ))}
@@ -212,7 +212,7 @@ export default function News() {
                         }}
                       >
                         <div className="news-rail-card-img">
-                          <img src={item.image || item.coverImage?.large || ""} alt={item.title || item.name || ""} loading="lazy" />
+                          <img src={item.image || item.coverImage?.large || ""} alt={item.title || item.name || ""} loading="lazy" decoding="async" />
                           <div className="rail-card-img-gradient" />
                           {item.kind === "trailer" && (
                             <div className="news-rail-play">
@@ -295,7 +295,7 @@ export default function News() {
                         onClick={() => handleItemClick(item)}
                       >
                         <div className="news-grid-thumb">
-                          <img src={item.image || item.coverImage?.large || ""} alt="" loading="lazy" />
+                          <img src={item.image || item.coverImage?.large || ""} alt="" loading="lazy" decoding="async" />
                           <div className="news-grid-thumb-gradient" />
                           {item.embedUrl && (
                             <div className="news-grid-play">
@@ -347,7 +347,7 @@ export default function News() {
                         {section.items.map(item => (
                           <div key={item.id} className="sidebar-entry" onClick={() => navigate(`/anime/${item.id}/info`)}>
                             <div className="sidebar-entry-img">
-                              <img src={item.image || item.coverImage?.large || ""} alt="" loading="lazy" />
+                              <img src={item.image || item.coverImage?.large || ""} alt="" loading="lazy" decoding="async" />
                               {item.score && <span className="sidebar-entry-img-badge">{item.score}</span>}
                             </div>
                             <div className="sidebar-entry-info">

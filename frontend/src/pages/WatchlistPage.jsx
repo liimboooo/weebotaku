@@ -151,7 +151,7 @@ export default function WatchlistPage() {
                           onClick={() => navigate(`/anime/${anime.id}/info`)}
                         >
                           <div className="wl-card-thumb">
-                            <img src={anime.img} alt={anime.name} loading="lazy" />
+                            <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
                             <div className="wl-card-overlay">
                               <div className="wl-card-play"><Play size={20} fill="currentColor" /></div>
                               <div className="wl-card-tech">
@@ -219,7 +219,7 @@ export default function WatchlistPage() {
                           onClick={() => navigate(`/manga/${manga.id}`)}
                         >
                           <div className="wl-card-thumb">
-                            <img src={manga.cover} alt={manga.title} loading="lazy" />
+                            <img src={manga.cover} alt={manga.title} loading="lazy" decoding="async" />
                             <div className="wl-card-overlay">
                               <div className="wl-card-play"><Play size={20} fill="currentColor" /></div>
                               <div className="wl-card-tech">

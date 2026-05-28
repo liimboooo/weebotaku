@@ -311,7 +311,7 @@ function ContinueWatchingRow() {
             whileHover={{ y: -4, transition: { type: "spring", stiffness: 300 } }}
           >
             <div className="cw-card-img">
-              <img src={item.img} alt={item.name} loading="lazy" />
+              <img src={item.img} alt={item.name} loading="lazy" decoding="async" />
               <div className="cw-card-ep">EP {item.episode}</div>
             </div>
             <div className="cw-card-body">
@@ -384,7 +384,7 @@ function SeasonGrid({ animeList }) {
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
             <div className="upcoming-card-img">
-              <img src={anime.img} alt={anime.name} loading="lazy" />
+              <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
               <div className="upcoming-card-badge">
                 {anime.rating && <><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</>}
               </div>
@@ -425,7 +425,7 @@ function TopTenRow({ animeList }) {
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
             <div className="upcoming-card-img">
-              <img src={anime.img} alt={anime.name} loading="lazy" />
+              <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
               <div className="upcoming-card-badge">
                 {anime.rating && <><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</>}
               </div>
@@ -491,7 +491,7 @@ function UpcomingSection({ animeList }) {
             whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
           >
             <div className="upcoming-card-img">
-              <img src={anime.img} alt={anime.name} loading="lazy" />
+              <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
               <div className="upcoming-card-badge">
                 <Calendar size={10} /> {anime.season || "TBA"}
               </div>
@@ -695,7 +695,7 @@ export default function Home() {
                   onClick={() => navigate(`/anime/${anime.id}/info`)}
                 >
                   <div className="upcoming-card-img">
-                    <img src={anime.img} alt={anime.name} loading="lazy" />
+                    <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
                     <div className="upcoming-card-badge">
                       {anime.rating && <><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</>}
                     </div>
@@ -737,7 +737,7 @@ export default function Home() {
                   onClick={() => navigate(`/anime/${anime.id}/info`)}
                 >
                   <div className="upcoming-card-img">
-                    <img src={anime.img} alt={anime.name} loading="lazy" />
+                    <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
                     <div className="upcoming-card-badge">
                       {anime.rating && <><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</>}
                     </div>

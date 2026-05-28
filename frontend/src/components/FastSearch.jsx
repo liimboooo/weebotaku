@@ -229,7 +229,7 @@ export default function FastSearch() {
                         <div className="fs-trending-grid">
                           {trending.map(a => (
                             <button key={a.id} className="fs-trending-card" onClick={() => navigateToResult(`/anime/${a.id}/info`)}>
-                              <img src={a.img} alt={a.name} />
+                              <img src={a.img} alt={a.name} decoding="async" />
                               <div className="fs-trending-info">
                                 <span className="fs-trending-name">{a.name}</span>
                                 <span className="fs-trending-meta">
@@ -258,7 +258,7 @@ export default function FastSearch() {
                           onMouseEnter={() => setSelectedIdx(i)}
                         >
                           <div className="fs-result-poster">
-                            <img src={item.img} alt={item.name} />
+                            <img src={item.img} alt={item.name} decoding="async" />
                           </div>
                           <div className="fs-result-info">
                             <span className="fs-result-title">{item.name}</span>

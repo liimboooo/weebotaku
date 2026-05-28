@@ -70,6 +70,7 @@ export default function TierLists() {
   const [searchIndex, setSearchIndex] = useState(-1);
 
   const debounceRef = useRef(null);
+  const toastTimerRef = useRef(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('tierListDraft');
@@ -142,7 +143,8 @@ export default function TierLists() {
 
   const showToast = useCallback((msg) => {
     setToast(msg);
-    setTimeout(() => setToast(null), 2500);
+    clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 2500);
   }, []);
 
   // ─── Search ───────────────────────────────────

@@ -681,7 +681,7 @@ export default function AnimeDetail() {
                 {recommendations.slice(0, 5).map((rec, i) => (
                   <button key={rec.id || i} className="watch-rec-item" onClick={() => navigate(`/anime/${rec.id}/info`)}>
                     <div className="watch-rec-thumb">
-                      <img src={rec.image} alt="" />
+                      <img src={rec.image} alt="" loading="lazy" decoding="async" />
                     </div>
                     <div className="watch-rec-info">
                       <span className="watch-rec-name">{rec.name}</span>
