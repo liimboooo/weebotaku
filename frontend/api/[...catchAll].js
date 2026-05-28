@@ -3,6 +3,10 @@ const https = require('https');
 const PROXY_TIMEOUT = 25000;
 
 module.exports = async (req, res) => {
+  if (req.query._debug === '1') {
+    return res.json({ url: req.url, catchAll: req.query.catchAll, query: req.query, method: req.method });
+  }
+
   const pathSegments = req.query.catchAll;
   const path = Array.isArray(pathSegments) ? pathSegments.join('/') : (pathSegments || '');
 
