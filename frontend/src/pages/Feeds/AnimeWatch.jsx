@@ -13,6 +13,7 @@ import { fetchAnimeRecommendations } from "../../services/anilistApi";
 import { addToWatchHistory } from "../../services/storage";
 import Comments from "../../components/Comments";
 import commentService from "../../services/commentService";
+import authService from "../../services/authService";
 import "./AnimeWatch.css";
 
 export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onEpisodeChange, detail, totalEpisodes }) {
@@ -451,7 +452,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
               </div>
 
               {/* ═══ COMMENTS ═══ */}
-              <Comments comments={comments} setComments={setComments} onSeek={handleSeek} onAdd={handleAddComment} onLikeComment={handleLikeComment} onDislikeComment={handleDislikeComment} onReplyComment={handleReplyComment} onEditComment={handleEditComment} onDeleteComment={handleDeleteComment} />
+              <Comments comments={comments} setComments={setComments} currentUser={authService.getCurrentUser()?.username || "You"} onSeek={handleSeek} onAdd={handleAddComment} onLikeComment={handleLikeComment} onDislikeComment={handleDislikeComment} onReplyComment={handleReplyComment} onEditComment={handleEditComment} onDeleteComment={handleDeleteComment} />
 
             </div>
           </div>

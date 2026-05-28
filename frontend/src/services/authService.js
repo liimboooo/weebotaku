@@ -6,7 +6,7 @@ function storeUserData(user) {
   localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
   localStorage.setItem(STORAGE_KEYS.USERNAME, user.username);
   localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
-  if (user.avatar) localStorage.setItem(STORAGE_KEYS.USER_AVATAR, user.avatar);
+  localStorage.setItem(STORAGE_KEYS.USER_AVATAR, user.avatar || '');
   if (user.memberSince) localStorage.setItem(STORAGE_KEYS.MEMBER_SINCE, String(user.memberSince));
   if (user.socialLinks) localStorage.setItem(STORAGE_KEYS.SOCIAL_LINKS, JSON.stringify(user.socialLinks));
 

@@ -59,6 +59,7 @@ export default function ProfilePage() {
   const [remoteUserId, setRemoteUserId] = useState(null);
   const [friendStatus, setFriendStatus] = useState("none");
   const [friendshipId, setFriendshipId] = useState(null);
+  const [isRequester, setIsRequester] = useState(false);
   const [showWatchModal, setShowWatchModal] = useState(false);
   const [watchRoomName, setWatchRoomName] = useState("");
   const [creatingRoom, setCreatingRoom] = useState(false);
@@ -113,6 +114,7 @@ export default function ProfilePage() {
               if (r?.data) {
                 setFriendStatus(r.data.status);
                 setFriendshipId(r.data.friendshipId || null);
+                setIsRequester(!!r.data.isRequester);
               }
             }).catch(() => {});
             if (u.watchlist) {
@@ -157,6 +159,7 @@ export default function ProfilePage() {
         if (r?.data) {
           setFriendStatus(r.data.status);
           setFriendshipId(r.data.friendshipId || null);
+          setIsRequester(!!r.data.isRequester);
         }
       }).catch(() => {});
     };
@@ -318,7 +321,7 @@ export default function ProfilePage() {
                 <Share2 size={14} /> Share
               </button>
               {isRemoteProfile && remoteUserId && (
-                friendStatus === "pending" && friendshipId ? (
+                friendStatus === "pending" && friendshipId && !isRequester ? (
                   <div className="upp-follow-actions">
                     <button className="upp-action-btn upp-action-btn--accept" onClick={async () => { await friendService.acceptRequest(friendshipId); setFriendStatus("accepted"); }}>
                       Accept
@@ -334,6 +337,12 @@ export default function ProfilePage() {
                       if (friendStatus === "none") {
                         await friendService.sendRequest(remoteUserId);
                         setFriendStatus("pending");
+                        setIsRequester(true);
+                      } else if (friendStatus === "pending" && isRequester) {
+                        await friendService.rejectRequest(friendshipId);
+                        setFriendStatus("none");
+                        setFriendshipId(null);
+                        setIsRequester(false);
                       } else if (friendStatus === "accepted") {
                         await friendService.removeFriend(remoteUserId);
                         setFriendStatus("none");

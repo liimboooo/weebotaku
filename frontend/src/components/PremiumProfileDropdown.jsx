@@ -20,14 +20,17 @@ export default function PremiumProfileDropdown() {
         aria-label="Open profile menu"
       >
         <div className="premium-avatar-wrapper">
-          <img 
-            src={avatar}
-            alt={username} 
-            className="premium-avatar"
-            onError={(e) => {
-              e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ff5959"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2a8 8 0 1 1 0 16 8 8 0 0 1 0-16z"/></svg>';
-            }}
-          />
+          {avatar ? (
+            <img
+              src={avatar}
+              alt={username}
+              className="premium-avatar"
+              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+            />
+          ) : null}
+          <div className="premium-avatar-fallback" style={{ display: avatar ? 'none' : 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #7c3aed, #a855f7)', borderRadius: '50%', color: '#fff', fontWeight: 700, fontSize: 14 }}>
+            {(username || '?').charAt(0).toUpperCase()}
+          </div>
           <div className="premium-status-ring"></div>
         </div>
         <div className="premium-profile-info">
