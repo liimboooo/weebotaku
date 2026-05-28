@@ -5,7 +5,8 @@ import {
   X
 } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
-import { findStreamingSource, getEpisodes, getStreamUrls, getEpisodePage } from "../services/animeApi";
+import Hls from "hls.js";
+import { findStreamingSource, getEpisodes, getStreamUrls, getEpisodePage, getDirectStream } from "../services/animeApi";
 import { fetchAnimeRecommendations } from "../services/anilistApi";
 import { loadWatchHistory, addToWatchHistory } from "../services/storage";
 import commentService from "../services/commentService";
@@ -47,6 +48,9 @@ export default function AnimeDetail() {
   const [allEpsLoaded, setAllEpsLoaded] = useState(false);
   const [seekTo, setSeekTo] = useState(null);
   const [sourceLookupDone, setSourceLookupDone] = useState(false);
+  const [streamMode, setStreamMode] = useState("iframe");
+  const hlsVideoRef = useRef(null);
+  const hlsInstanceRef = useRef(null);
 
   const handleSeek = useCallback((seconds) => {
     setSeekTo(seconds);
@@ -280,6 +284,18 @@ export default function AnimeDetail() {
     (async () => {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
+        const aniId = watchAnime.anilistId || parseInt(id);
+        if (aniId) {
+          const direct = await getDirectStream(aniId, episode.episode || (epIndex + 1));
+          if (direct?.stream?.url) {
+            setStreamMode("hls");
+            setStreamUrl(direct.stream.url);
+            setServers([{ label: `ezvidapi (${language})`, url: direct.stream.url, type: language }]);
+            setStreamLoading(false);
+            return;
+          }
+        }
+        setStreamMode("iframe");
         const urls = await getStreamUrls(episode.url, watchAnime.source, watchAnime.anilistId, parseInt(id), watchAnime.slug);
         if (urls.length > 0) { setServers(urls); }
         else setError("No video servers found.");
@@ -299,6 +315,27 @@ export default function AnimeDetail() {
       }
     }
   }, [servers, language]);
+
+  useEffect(() => {
+    if (streamMode !== "hls" || !streamUrl) return;
+    const video = hlsVideoRef.current;
+    if (!video) return;
+    if (hlsInstanceRef.current) { hlsInstanceRef.current.destroy(); hlsInstanceRef.current = null; }
+    if (Hls.isSupported()) {
+      const hls = new Hls({ maxBufferLength: 30, maxMaxBufferLength: 60 });
+      hls.loadSource(streamUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => {}); });
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (data.fatal) { hls.destroy(); hlsInstanceRef.current = null; setError("HLS stream failed. Retrying..."); setStreamMode("iframe"); }
+      });
+      hlsInstanceRef.current = hls;
+    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = streamUrl;
+      video.addEventListener("loadedmetadata", () => { video.play().catch(() => {}); }, { once: true });
+    }
+    return () => { if (hlsInstanceRef.current) { hlsInstanceRef.current.destroy(); hlsInstanceRef.current = null; } };
+  }, [streamMode, streamUrl]);
 
   useEffect(() => {
     if (!watchAnime?.anilistId) return;
@@ -429,7 +466,10 @@ export default function AnimeDetail() {
                   </div>
                 </div>
               )}
-              {!loading && !error && streamUrl && !streamLoading && !iframeError && (
+              {!loading && !error && streamUrl && !streamLoading && !iframeError && streamMode === "hls" && (
+                <video ref={hlsVideoRef} key={`hls-${episode?.episode || 0}-${serverIndex}`} className="watch-frame" controls autoPlay playsInline style={{ background: '#000' }} />
+              )}
+              {!loading && !error && streamUrl && !streamLoading && !iframeError && streamMode === "iframe" && (
                 <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}-${langKey}-${seekTo ?? 0}`} className="watch-frame" src={seekTo != null ? `${streamUrl}${streamUrl.includes("#") ? "&" : "#"}t=${seekTo}` : streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
               )}
               {!loading && !error && iframeError && streamUrl && (

@@ -7,7 +7,8 @@ import {
   X
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { getEpisodes, getStreamUrls, getEpisodePage } from "../../services/animeApi";
+import Hls from "hls.js";
+import { getEpisodes, getStreamUrls, getEpisodePage, getDirectStream } from "../../services/animeApi";
 import { fetchAnimeRecommendations } from "../../services/anilistApi";
 import { addToWatchHistory } from "../../services/storage";
 import Comments from "../../components/Comments";
@@ -35,6 +36,9 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [allEpsLoaded, setAllEpsLoaded] = useState(false);
   const [language, setLanguage] = useState("sub");
   const [seekTo, setSeekTo] = useState(null);
+  const [streamMode, setStreamMode] = useState("iframe");
+  const hlsVideoRef = useRef(null);
+  const hlsInstanceRef = useRef(null);
 
   const handleSeek = useCallback((seconds) => {
     setSeekTo(seconds);
@@ -205,6 +209,18 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     (async () => {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
+        if (anime.anilistId) {
+          const direct = await getDirectStream(anime.anilistId, episode.episode || (epIndex + 1));
+          if (direct?.stream?.url) {
+            setStreamMode("hls");
+            setStreamUrl(direct.stream.url);
+            setServers([{ label: `ezvidapi (${language})`, url: direct.stream.url, type: language }]);
+            setStreamCache(c => ({ ...c, [episode.url]: [{ label: 'ezvidapi', url: direct.stream.url, type: language }] }));
+            setStreamLoading(false);
+            return;
+          }
+        }
+        setStreamMode("iframe");
         const urls = await getStreamUrls(episode.url, anime.source, anime.anilistId, anime.anilistId, anime.slug);
         if (urls.length > 0) {
           setServers(urls);
@@ -224,6 +240,27 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       if (urls.length > 0) setStreamCache(c => ({ ...c, [nextEp.url]: urls }));
     }).catch(() => {});
   }, [epIndex, episodes, anime.anilistId, streamCache]);
+
+  useEffect(() => {
+    if (streamMode !== "hls" || !streamUrl) return;
+    const video = hlsVideoRef.current;
+    if (!video) return;
+    if (hlsInstanceRef.current) { hlsInstanceRef.current.destroy(); hlsInstanceRef.current = null; }
+    if (Hls.isSupported()) {
+      const hls = new Hls({ maxBufferLength: 30, maxMaxBufferLength: 60 });
+      hls.loadSource(streamUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => {}); });
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (data.fatal) { hls.destroy(); hlsInstanceRef.current = null; setError("HLS stream failed. Retrying..."); setStreamMode("iframe"); }
+      });
+      hlsInstanceRef.current = hls;
+    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = streamUrl;
+      video.addEventListener("loadedmetadata", () => { video.play().catch(() => {}); }, { once: true });
+    }
+    return () => { if (hlsInstanceRef.current) { hlsInstanceRef.current.destroy(); hlsInstanceRef.current = null; } };
+  }, [streamMode, streamUrl]);
 
   useEffect(() => {
     if (!anime.anilistId) return;
@@ -330,7 +367,18 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                   </div>
                 </div>
               )}
-              {!loading && !error && streamUrl && !streamLoading && !iframeError && (
+              {!loading && !error && streamUrl && !streamLoading && !iframeError && streamMode === "hls" && (
+                <video
+                  ref={hlsVideoRef}
+                  key={`hls-${episode?.episode || 0}-${serverIndex}`}
+                  className="watch-frame"
+                  controls
+                  autoPlay
+                  playsInline
+                  style={{ background: '#000' }}
+                />
+              )}
+              {!loading && !error && streamUrl && !streamLoading && !iframeError && streamMode === "iframe" && (
                 <iframe
                   ref={iframeRef}
                   key={`${episode?.episode || 0}-${serverIndex}-${seekTo ?? 0}`}
