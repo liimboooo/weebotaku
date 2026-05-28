@@ -547,7 +547,7 @@ function deleteCommentDeep(list, id) {
   }, []);
 }
 
-export default function Comments({ comments: externalComments, setComments, currentUser = "You", isLoggedIn = false, onSeek, onAdd, onLikeComment, onDislikeComment, onReplyComment, onEditComment: onEditCommentApi, onDeleteComment: onDeleteCommentApi, loading: commentsLoading }) {
+function Comments({ comments: externalComments, setComments, currentUser = "You", isLoggedIn = false, onSeek, onAdd, onLikeComment, onDislikeComment, onReplyComment, onEditComment: onEditCommentApi, onDeleteComment: onDeleteCommentApi, loading: commentsLoading }) {
   const [sort, setSort] = useState("newest");
   const [sortOpen, setSortOpen] = useState(false);
   const [text, setText] = useState("");
@@ -741,3 +741,5 @@ export default function Comments({ comments: externalComments, setComments, curr
     </section>
   );
 }
+
+export default React.memo(Comments);

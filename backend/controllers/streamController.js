@@ -299,11 +299,28 @@ exports.autoSources = async (req, res) => {
   }
 };
 
+function isBlockedHost(hostname) {
+  if (!hostname) return true;
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return true;
+  if (hostname.endsWith('.local') || hostname.endsWith('.internal')) return true;
+  const parts = hostname.split('.');
+  if (parts[0] === '10') return true;
+  if (parts[0] === '172' && +parts[1] >= 16 && +parts[1] <= 31) return true;
+  if (parts[0] === '192' && parts[1] === '168') return true;
+  if (parts[0] === '0') return true;
+  return false;
+}
+
 exports.streamProxy = async (req, res) => {
   try {
     const targetUrl = req.query.url;
     const referer = req.query.ref || '';
     if (!targetUrl) return res.status(400).send('url parameter required');
+
+    let targetParsed;
+    try { targetParsed = new URL(targetUrl); } catch { return res.status(400).send('Invalid URL'); }
+    if (targetParsed.protocol !== 'https:' && targetParsed.protocol !== 'http:') return res.status(400).send('Invalid protocol');
+    if (isBlockedHost(targetParsed.hostname)) return res.status(403).send('Forbidden');
 
     const parsed = new URL(referer || targetUrl);
     const origin = `${parsed.protocol}//${parsed.host}`;
