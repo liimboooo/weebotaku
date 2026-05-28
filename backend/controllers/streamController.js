@@ -28,21 +28,21 @@ async function anilistToTmdb(anilistId) {
 }
 
 async function ezvidapiResolve(tmdbId, season, episode) {
-  const results = await Promise.allSettled(
-    EZVIDAPI_PROVIDERS.map(async (provider) => {
-      const url = `${EZVIDAPI_BASE}/tv/${provider}/${tmdbId}?season=${season}&episode=${episode}`;
-      const res = await fetch(url, {
-        headers: { 'Referer': 'https://ezvidapi.com/', 'Accept': 'application/json' },
-        timeout: 7000,
-      });
-      if (!res.ok) throw new Error('not ok');
-      const data = await res.json();
-      if (!data.stream_url) throw new Error('no stream');
-      return { ...data, provider };
-    })
-  );
-  const success = results.find(r => r.status === 'fulfilled');
-  return success ? success.value : null;
+  try {
+    return await Promise.any(
+      EZVIDAPI_PROVIDERS.map(async (provider) => {
+        const url = `${EZVIDAPI_BASE}/tv/${provider}/${tmdbId}?season=${season}&episode=${episode}`;
+        const res = await fetch(url, {
+          headers: { 'Referer': 'https://ezvidapi.com/', 'Accept': 'application/json' },
+          timeout: 7000,
+        });
+        if (!res.ok) throw new Error('not ok');
+        const data = await res.json();
+        if (!data.stream_url) throw new Error('no stream');
+        return { ...data, provider };
+      })
+    );
+  } catch { return null; }
 }
 
 function encodePipeRequest(payload) {
