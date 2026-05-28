@@ -395,6 +395,26 @@
   inset: 0;
 }
 
+video.watch-frame {
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+video.watch-frame::-webkit-media-controls-panel {
+  background: linear-gradient(transparent, rgba(10,10,14,0.9));
+}
+
+video.watch-frame::-webkit-media-controls-current-time-display,
+video.watch-frame::-webkit-media-controls-time-remaining-display {
+  color: #e2e2e8;
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+}
+
+video.watch-frame:fullscreen {
+  border-radius: 0;
+}
+
 .watch-player-controls {
   position: absolute;
   bottom: 0;

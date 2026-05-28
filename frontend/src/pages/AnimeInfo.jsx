@@ -311,9 +311,15 @@ export default function AnimeInfo() {
 
           {/* Actions */}
           <div className="ai-hero-actions">
-            <Link to={`/anime/${anime.id}`} className="ai-btn-primary">
-              <Play size={16} fill="currentColor" /> Watch Now
-            </Link>
+            {anime.status === "NOT_YET_RELEASED" || anime.status === "CANCELLED" ? (
+              <span className="ai-btn-primary" style={{ opacity: 0.5, pointerEvents: 'none', cursor: 'default' }}>
+                {anime.status === "NOT_YET_RELEASED" ? "Coming Soon" : "Cancelled"}
+              </span>
+            ) : (
+              <Link to={`/anime/${anime.id}`} className="ai-btn-primary">
+                <Play size={16} fill="currentColor" /> Watch Now
+              </Link>
+            )}
 
             <div className="ai-dropdown-wrap" ref={listRef}>
               <button className="ai-btn-secondary" onClick={() => { setListOpen(o => !o); setShareOpen(false); }}>

@@ -340,10 +340,19 @@ export default function AnimeDetail() {
     if (!video) return;
     if (hlsInstanceRef.current) { hlsInstanceRef.current.destroy(); hlsInstanceRef.current = null; }
     if (Hls.isSupported()) {
-      const hls = new Hls({ maxBufferLength: 30, maxMaxBufferLength: 60 });
+      const hls = new Hls({
+        maxBufferLength: 60,
+        maxMaxBufferLength: 120,
+        capLevelToPlayerSize: false,
+        startLevel: -1,
+        autoStartLoad: true,
+      });
       hls.loadSource(streamUrl);
       hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => {}); });
+      hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+        if (data.levels.length > 1) hls.currentLevel = data.levels.length - 1;
+        video.play().catch(() => {});
+      });
       hls.on(Hls.Events.ERROR, (_, data) => {
         if (data.fatal) { hls.destroy(); hlsInstanceRef.current = null; setError("HLS stream failed. Try another source."); }
       });

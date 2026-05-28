@@ -566,9 +566,15 @@ function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onWatch
           <span>{spotlight.status}</span>
         </motion.div>
         <motion.div variants={heroItem} className="home-hero-actions">
-          <button className="hero-btn-primary" onClick={onWatch}>
-            <Play size={16} fill="currentColor" /> Watch Now
-          </button>
+          {spotlight.status === "NOT_YET_RELEASED" || spotlight.status === "CANCELLED" ? (
+            <span className="hero-btn-primary" style={{ opacity: 0.5, cursor: 'default' }}>
+              {spotlight.status === "NOT_YET_RELEASED" ? "Coming Soon" : "Cancelled"}
+            </span>
+          ) : (
+            <button className="hero-btn-primary" onClick={onWatch}>
+              <Play size={16} fill="currentColor" /> Watch Now
+            </button>
+          )}
           <button className="hero-btn-secondary" onClick={onDetails}>
             <Plus size={16} /> Details
           </button>
