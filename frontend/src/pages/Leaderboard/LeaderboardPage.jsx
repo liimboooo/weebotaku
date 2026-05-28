@@ -4,6 +4,7 @@ import leaderboardService from "../../services/leaderboardService";
 import {
   Trophy, BookOpen, Star, Crown, Medal,
 } from "lucide-react";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
 import "./LeaderboardPage.css";
 
 const BOARDS = [
@@ -14,6 +15,7 @@ const BOARDS = [
 const RANK_COLORS = ["#fbbf24", "#94a3b8", "#cd7f32"];
 
 export default function LeaderboardPage() {
+  useDocumentTitle("Leaderboard");
   const navigate = useNavigate();
   const [board, setBoard] = useState("watchlist");
   const [data, setData] = useState([]);

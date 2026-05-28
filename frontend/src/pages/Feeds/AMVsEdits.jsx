@@ -24,6 +24,7 @@ import { formatCount, timeAgo, notify } from "../../utils/helpers";
 import { fetchTopAnime } from "../../services/anilistApi";
 import authService from "../../services/authService";
 
+import useDocumentTitle from "../../hooks/useDocumentTitle";
 import "./AMVsEdits.css";
 
 const HERO_VIDEO_ID = process.env.REACT_APP_HERO_VIDEO_ID || "-Ek_MAxM6cY";
@@ -120,6 +121,7 @@ function generateThumbnail(file) {
 }
 
 export default function AMVsEdits() {
+  useDocumentTitle("AMVs & Edits");
   const [animeTitles, setAnimeTitles] = useState([]);
   useEffect(() => {
     fetchTopAnime(1).then(r => {

@@ -29,6 +29,7 @@ import authService from "../../services/authService";
 import { addNotification } from "../../services/notificationService";
 import { fetchTopAnime, fetchSearchAnime } from "../../services/anilistApi";
 import { findStreamingSource, getStreamUrls, getEpisodes, getMiruroStream, getDirectStream } from "../../services/animeApi";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
 import "./WatchTogetherCreative.css";
 
 function getEmbedSource(urlString, startOffsetSec) {
@@ -81,6 +82,7 @@ function getEmbedSource(urlString, startOffsetSec) {
 }
 
 export default function WatchTogetherCreative() {
+  useDocumentTitle("Watch Together");
   const currentUser = authService.getCurrentUser();
   const isLoggedIn = authService.isLoggedIn();
   const [searchParams] = useSearchParams();

@@ -16,6 +16,8 @@ const EZVIDAPI_BASE = 'https://api.ezvidapi.com';
 const EZVIDAPI_PROVIDERS = ['vidsrc', 'vidrock', 'vidnest', 'vixsrc'];
 const ARM_API = 'https://arm.haglund.dev/api/v2/ids';
 const tmdbCache = new Map();
+const episodesCache = new Map();
+const EP_CACHE_TTL = 5 * 60 * 1000;
 
 async function anilistToTmdb(anilistId) {
   if (tmdbCache.has(anilistId)) return tmdbCache.get(anilistId);
@@ -82,6 +84,22 @@ async function pipeFetch(payload) {
   return decodePipeResponse(body);
 }
 
+async function getEpisodesData(anilistId) {
+  const cached = episodesCache.get(anilistId);
+  if (cached && Date.now() - cached.time < EP_CACHE_TTL) return cached.data;
+  const data = await pipeFetch({
+    path: 'episodes', method: 'GET',
+    query: { anilistId }, body: null, version: '0.1.0',
+  });
+  deepTranslateIds(data);
+  episodesCache.set(anilistId, { data, time: Date.now() });
+  if (episodesCache.size > 200) {
+    const oldest = episodesCache.keys().next().value;
+    episodesCache.delete(oldest);
+  }
+  return data;
+}
+
 async function anilistSearch(query) {
   const gql = `query ($search: String) {
     Page(page: 1, perPage: 10) {
@@ -119,11 +137,7 @@ exports.getEpisodes = async (req, res) => {
     const anilistId = parseInt(req.params.anilistId, 10);
     if (!anilistId) return res.status(400).json({ success: false, message: 'anilistId required' });
 
-    const data = await pipeFetch({
-      path: 'episodes', method: 'GET',
-      query: { anilistId }, body: null, version: '0.1.0',
-    });
-    deepTranslateIds(data);
+    const data = await getEpisodesData(anilistId);
 
     const providers = data.providers || {};
     const simplified = {};
@@ -157,11 +171,7 @@ exports.getSources = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing params' });
     }
 
-    const epData = await pipeFetch({
-      path: 'episodes', method: 'GET',
-      query: { anilistId: aid }, body: null, version: '0.1.0',
-    });
-    deepTranslateIds(epData);
+    const epData = await getEpisodesData(aid);
 
     const provData = epData.providers?.[provider];
     if (!provData) return res.status(404).json({ success: false, message: `Provider ${provider} not found` });
@@ -214,12 +224,7 @@ exports.autoSources = async (req, res) => {
     const epNum = parseInt(episodeNum, 10);
     if (!aid || !epNum) return res.status(400).json({ success: false, message: 'Missing params' });
 
-    // Miruro pipe first — supports sub/dub categories natively with correct episode mapping
-    const epData = await pipeFetch({
-      path: 'episodes', method: 'GET',
-      query: { anilistId: aid }, body: null, version: '0.1.0',
-    });
-    deepTranslateIds(epData);
+    const epData = await getEpisodesData(aid);
 
     const providers = epData.providers || {};
     const baseUrl = `${req.protocol}://${req.get('host')}`;
