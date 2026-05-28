@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import { gql, fetchAnimeRecommendations, fetchAnimeCharacters } from "../services/anilistApi";
 import { statusLabel, LIST_OPTIONS } from "../utils/constants";
+import { loadWatchlist, addToWatchlist, removeFromWatchlist, updateListStatus } from "../services/storage";
+import authService from "../services/authService";
 import "./AnimeInfo.css";
 
 const DETAIL_FIELDS = `id idMal title { romaji english native } coverImage { extraLarge large } bannerImage averageScore popularity episodes duration genres description status season seasonYear startDate { year month day } studios(isMain:true) { nodes { name } } trailer { site id } format nextAiringEpisode { episode airingAt timeUntilAiring }`;
@@ -116,6 +118,13 @@ export default function AnimeInfo() {
   }, [anime, charImgs]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    if (!anime) return;
+    const wl = loadWatchlist();
+    const entry = wl.find(i => i.id === anime.id);
+    if (entry) setListStatus(entry.listStatus || "");
+  }, [anime]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -332,7 +341,21 @@ export default function AnimeInfo() {
                       key={opt}
                       className="ai-dropdown-item"
                       role="menuitem"
-                      onClick={() => { setListStatus(opt === listStatus ? "" : opt); setListOpen(false); }}
+                      onClick={() => {
+                        const newStatus = opt === listStatus ? "" : opt;
+                        setListStatus(newStatus);
+                        setListOpen(false);
+                        if (newStatus) {
+                          const wl = loadWatchlist();
+                          if (!wl.find(i => i.id === anime.id)) {
+                            addToWatchlist({ id: anime.id, name: anime.name, img: anime.img, rating: anime.rating, episodes: anime.episodes, year: anime.year, status: anime.status, genres: anime.genres, listStatus: newStatus });
+                          } else {
+                            updateListStatus(anime.id, newStatus);
+                          }
+                        } else {
+                          removeFromWatchlist(anime.id);
+                        }
+                      }}
                     >
                       {opt}
                       {listStatus === opt && <Check size={14} className="ai-check" />}

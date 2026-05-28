@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
 import Hls from "hls.js";
-import { findStreamingSource, getEpisodes, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream } from "../services/animeApi";
+import { findStreamingSource, getEpisodes, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream, getMiruroEpisodes } from "../services/animeApi";
 import { fetchAnimeRecommendations } from "../services/anilistApi";
 import { loadWatchHistory, addToWatchHistory } from "../services/storage";
 import commentService from "../services/commentService";
@@ -227,37 +227,70 @@ export default function AnimeDetail() {
     setSourceLookupDone(false);
     setWatchAnime(null);
     setError("");
-    findStreamingSource(anime.name, anime.id).then((src) => {
-      if (src) setWatchAnime(src);
+    (async () => {
+      const src = await findStreamingSource(anime.name, anime.id).catch(() => null);
+      if (src) {
+        setWatchAnime(src);
+      } else {
+        setWatchAnime({ source: 'direct', anilistId: anime.id, slug: String(anime.id), tagSlug: String(anime.id), title: anime.name, sourceBase: '' });
+      }
       setSourceLookupDone(true);
-    }).catch(() => {
-      setSourceLookupDone(true);
-    });
+    })();
   }, [anime]);
 
   useEffect(() => {
-    if (!sourceLookupDone) return;
-    if (!watchAnime) { setLoading(false); setError("Could not find streaming source."); return; }
+    if (!sourceLookupDone || !watchAnime) return;
     let timedOut = false;
     const timer = setTimeout(() => { timedOut = true; setError("Request timed out. Try again."); setLoading(false); }, 25000);
     (async () => {
       setLoading(true); setError(""); setEpPage(0); setAllEpsLoaded(false);
+
+      if (watchAnime.source !== 'direct') {
+        try {
+          const result = await getEpisodePage(
+            watchAnime.title || watchAnime.slug, watchAnime.tagSlug,
+            watchAnime.source, watchAnime.sourceBase, watchAnime.anilistId, 0
+          );
+          if (timedOut) return;
+          if (result.episodes.length > 0) {
+            clearTimeout(timer);
+            setEpisodes(result.episodes);
+            setHasMoreEps(result.hasMore);
+            setEpIndex(Math.min(Math.max(0, selectedEp - 1), result.episodes.length - 1));
+            setLoading(false);
+            return;
+          }
+        } catch {}
+      }
+
       try {
-        const result = await getEpisodePage(
-          watchAnime.title || watchAnime.slug, watchAnime.tagSlug,
-          watchAnime.source, watchAnime.sourceBase, watchAnime.anilistId, 0
-        );
+        const miruroEps = await getMiruroEpisodes(watchAnime.anilistId);
         if (timedOut) return;
-        clearTimeout(timer);
-        if (result.episodes.length > 0) {
-          setEpisodes(result.episodes);
-          setHasMoreEps(result.hasMore);
-          setEpIndex(Math.min(Math.max(0, selectedEp - 1), result.episodes.length - 1));
-          setLoading(false);
-          return;
+        if (miruroEps?.providers) {
+          const provNames = Object.keys(miruroEps.providers);
+          for (const pname of provNames) {
+            const epList = miruroEps.providers[pname]?.sub || miruroEps.providers[pname]?.dub || [];
+            if (epList.length > 0) {
+              clearTimeout(timer);
+              setEpisodes(epList.map(ep => ({ episode: ep.number, title: ep.title || `Episode ${ep.number}`, url: String(ep.number) })));
+              setEpIndex(Math.min(Math.max(0, selectedEp - 1), epList.length - 1));
+              setLoading(false);
+              return;
+            }
+          }
         }
       } catch {}
-      if (!timedOut) { clearTimeout(timer); setError("No streaming links available."); setLoading(false); }
+
+      const epCount = anime?.episodes || 0;
+      if (epCount > 0) {
+        clearTimeout(timer);
+        setEpisodes(Array.from({ length: epCount }, (_, i) => ({ episode: i + 1, title: `Episode ${i + 1}`, url: String(i + 1) })));
+        setEpIndex(Math.min(Math.max(0, selectedEp - 1), epCount - 1));
+        setLoading(false);
+        return;
+      }
+
+      if (!timedOut) { clearTimeout(timer); setError("No episodes available for this anime."); setLoading(false); }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchAnime, sourceLookupDone, retryCount]);
