@@ -315,6 +315,7 @@ export default function AnimeDetail() {
 
   useEffect(() => {
     if (!episode) return;
+    let cancelled = false;
     addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img);
     (async () => {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
@@ -328,6 +329,7 @@ export default function AnimeDetail() {
             getMiruroStream(aniId, epNum, 'sub'),
             getMiruroStream(aniId, epNum, 'dub'),
           ]);
+          if (cancelled) return;
           const miruroSub = miruroSubRes.status === 'fulfilled' ? miruroSubRes.value : null;
           const miruroDub = miruroDubRes.status === 'fulfilled' ? miruroDubRes.value : null;
 
@@ -341,6 +343,7 @@ export default function AnimeDetail() {
           if (hlsServers.length === 0) {
             try {
               const direct = await getDirectStream(aniId, epNum);
+              if (cancelled) return;
               if (direct?.stream?.url) {
                 hlsServers.push({ label: 'Sub (HLS)', url: direct.stream.url, type: 'sub' });
               }
@@ -348,6 +351,7 @@ export default function AnimeDetail() {
           }
         }
 
+        if (cancelled) return;
         if (hlsServers.length > 0) {
           setStreamMode("hls");
           setServers(hlsServers);
@@ -359,11 +363,13 @@ export default function AnimeDetail() {
 
         setStreamMode("iframe");
         const urls = await getStreamUrls(episode.url, watchAnime.source, watchAnime.anilistId, parseInt(id), watchAnime.slug);
+        if (cancelled) return;
         if (urls.length > 0) { setServers(urls); }
         else setError("No video servers found.");
-      } catch { setError("Failed to load stream."); }
-      finally { setStreamLoading(false); }
+      } catch { if (!cancelled) setError("Failed to load stream."); }
+      finally { if (!cancelled) setStreamLoading(false); }
     })();
+    return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episode, streamRetryCount]);
 

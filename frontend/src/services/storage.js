@@ -145,7 +145,8 @@ export function getMangaProgress(mangaId) {
 }
 
 export function setMangaProgress(mangaId, chapter, extra) {
-  const progress = JSON.parse(localStorage.getItem(STORAGE_KEYS.MANGA_PROGRESS) || "{}");
+  let progress;
+  try { progress = JSON.parse(localStorage.getItem(STORAGE_KEYS.MANGA_PROGRESS) || "{}"); } catch { progress = {}; }
   progress[mangaId] = extra ? { ch: chapter, ...extra } : chapter;
   localStorage.setItem(STORAGE_KEYS.MANGA_PROGRESS, JSON.stringify(progress));
 
