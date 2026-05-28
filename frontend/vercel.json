@@ -7,12 +7,8 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Set-Cookie", "value": "__vercel_live_token=; Path=/; Max-Age=0; SameSite=Lax" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" }
+        { "key": "Set-Cookie", "value": "__vercel_live_token=; Path=/; Max-Age=0; SameSite=Lax" }
       ]
     }
-  ],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
