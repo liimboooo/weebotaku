@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Hls from "hls.js";
-import { getEpisodes, getStreamUrls, getEpisodePage, getDirectStream } from "../../services/animeApi";
+import { getEpisodes, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream } from "../../services/animeApi";
 import { fetchAnimeRecommendations } from "../../services/anilistApi";
 import { addToWatchHistory } from "../../services/storage";
 import Comments from "../../components/Comments";
