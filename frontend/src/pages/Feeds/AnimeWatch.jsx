@@ -55,7 +55,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       setStreamUrl(streamMode === "hls" ? langServers[0].url : makeStreamUrl(langServers[0]));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language, servers]);
+  }, [language, servers, streamMode]);
 
   const makeStreamUrl = useCallback((srv) => {
     if (!srv) return "";
@@ -203,7 +203,8 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     addToWatchHistory(anime.anilistId, episode.episode, animeName, '');
     const cached = streamCache[episode.url];
     if (cached) {
-      setError(""); setStreamLoading(false); setStreamUrl(""); setServers(cached); setServerIndex(0);
+      const mode = cached._mode || "iframe";
+      setError(""); setStreamLoading(false); setStreamUrl(""); setStreamMode(mode); setServers(cached.servers || cached); setServerIndex(0);
       return;
     }
     (async () => {
@@ -214,16 +215,19 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         const hlsServers = [];
 
         if (aniId) {
-          const [directRes, miruroSubRes] = await Promise.allSettled([
+          const [directRes, miruroSubRes, miruroDubRes] = await Promise.allSettled([
             getDirectStream(aniId, epNum),
             getMiruroStream(aniId, epNum, 'sub'),
+            getMiruroStream(aniId, epNum, 'dub'),
           ]);
           const direct = directRes.status === 'fulfilled' ? directRes.value : null;
           const miruroSub = miruroSubRes.status === 'fulfilled' ? miruroSubRes.value : null;
+          const miruroDub = miruroDubRes.status === 'fulfilled' ? miruroDubRes.value : null;
 
-          if (miruroSub?.stream?.url) hlsServers.push({ label: 'Sub (HLS)', url: miruroSub.stream.url, type: 'sub' });
-          if (direct?.stream?.url && direct.stream.url !== miruroSub?.stream?.url)
-            hlsServers.push({ label: 'Dub (HLS)', url: direct.stream.url, type: 'dub' });
+          const subUrl = miruroSub?.stream?.url || direct?.stream?.url;
+          const dubUrl = miruroDub?.stream?.url;
+          if (subUrl) hlsServers.push({ label: 'Sub (HLS)', url: subUrl, type: 'sub' });
+          if (dubUrl && dubUrl !== subUrl) hlsServers.push({ label: 'Dub (HLS)', url: dubUrl, type: 'dub' });
         }
 
         if (hlsServers.length > 0) {
@@ -231,7 +235,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
           setServers(hlsServers);
           const preferred = hlsServers.find(s => s.type === language) || hlsServers[0];
           setStreamUrl(preferred.url);
-          setStreamCache(c => ({ ...c, [episode.url]: hlsServers }));
+          setStreamCache(c => ({ ...c, [episode.url]: { servers: hlsServers, _mode: "hls" } }));
           setStreamLoading(false);
           return;
         }
@@ -240,7 +244,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         const urls = await getStreamUrls(episode.url, anime.source, anime.anilistId, anime.anilistId, anime.slug);
         if (urls.length > 0) {
           setServers(urls);
-          setStreamCache(c => ({ ...c, [episode.url]: urls }));
+          setStreamCache(c => ({ ...c, [episode.url]: { servers: urls, _mode: "iframe" } }));
         }
         else setError("No video servers found.");
       } catch { setError("Failed to load stream."); }
@@ -253,7 +257,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     const nextEp = episodes[epIndex + 1];
     if (!nextEp || streamCache[nextEp.url]) return;
     getStreamUrls(nextEp.url, anime.source, anime.anilistId).then(urls => {
-      if (urls.length > 0) setStreamCache(c => ({ ...c, [nextEp.url]: urls }));
+      if (urls.length > 0) setStreamCache(c => ({ ...c, [nextEp.url]: { servers: urls, _mode: "iframe" } }));
     }).catch(() => {});
   }, [epIndex, episodes, anime.anilistId, streamCache]);
 
@@ -268,7 +272,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => {}); });
       hls.on(Hls.Events.ERROR, (_, data) => {
-        if (data.fatal) { hls.destroy(); hlsInstanceRef.current = null; setError("HLS stream failed. Retrying..."); setStreamMode("iframe"); }
+        if (data.fatal) { hls.destroy(); hlsInstanceRef.current = null; setError("HLS stream failed. Try another source."); }
       });
       hlsInstanceRef.current = hls;
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
@@ -290,6 +294,15 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     }
   }, [epIndex, episodes]);
 
+  const filteredEpisodes = useMemo(() => {
+    if (!epSearch) return episodes;
+    const q = epSearch.toLowerCase();
+    return episodes.filter(ep =>
+      `Episode ${ep.episode}`.toLowerCase().includes(q) ||
+      (ep.title && ep.title.toLowerCase().includes(q))
+    );
+  }, [episodes, epSearch]);
+
   const handleSideScroll = useCallback((e) => {
     const el = e.currentTarget;
     if (el.scrollTop + el.clientHeight >= el.scrollHeight - 200) {
@@ -303,7 +316,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       setServerIndex(idx);
       setIframeError(false);
       failedServers.current = new Set();
-      setStreamUrl(makeStreamUrl(srv));
+      setStreamUrl(streamMode === "hls" ? srv.url : makeStreamUrl(srv));
     }
   };
 
@@ -313,11 +326,11 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       failedServers.current.add(serverIndex);
       setServerIndex(nextIdx);
       setIframeError(false);
-      setStreamUrl(makeStreamUrl(filteredServers[nextIdx]));
+      setStreamUrl(streamMode === "hls" ? filteredServers[nextIdx].url : makeStreamUrl(filteredServers[nextIdx]));
     } else {
       setIframeError(true);
     }
-  }, [serverIndex, filteredServers, makeStreamUrl]);
+  }, [serverIndex, filteredServers, makeStreamUrl, streamMode]);
 
   const handleIframeError = useCallback(() => {
     failedServers.current.add(serverIndex);
@@ -325,20 +338,11 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     if (filteredServers[nextIdx]) {
       setIframeError(false);
       setServerIndex(nextIdx);
-      setStreamUrl(makeStreamUrl(filteredServers[nextIdx]));
+      setStreamUrl(streamMode === "hls" ? filteredServers[nextIdx].url : makeStreamUrl(filteredServers[nextIdx]));
     } else {
       setIframeError(true);
     }
-  }, [serverIndex, filteredServers, makeStreamUrl]);
-
-  const filteredEpisodes = useMemo(() => {
-    if (!epSearch) return episodes;
-    const q = epSearch.toLowerCase();
-    return episodes.filter(ep =>
-      `Episode ${ep.episode}`.toLowerCase().includes(q) ||
-      (ep.title && ep.title.toLowerCase().includes(q))
-    );
-  }, [episodes, epSearch]);
+  }, [serverIndex, filteredServers, makeStreamUrl, streamMode]);
 
   const metadataItems = useMemo(() => {
     const items = [];

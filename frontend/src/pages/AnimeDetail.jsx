@@ -289,16 +289,19 @@ export default function AnimeDetail() {
         const hlsServers = [];
 
         if (aniId) {
-          const [directRes, miruroSubRes] = await Promise.allSettled([
+          const [directRes, miruroSubRes, miruroDubRes] = await Promise.allSettled([
             getDirectStream(aniId, epNum),
             getMiruroStream(aniId, epNum, 'sub'),
+            getMiruroStream(aniId, epNum, 'dub'),
           ]);
           const direct = directRes.status === 'fulfilled' ? directRes.value : null;
           const miruroSub = miruroSubRes.status === 'fulfilled' ? miruroSubRes.value : null;
+          const miruroDub = miruroDubRes.status === 'fulfilled' ? miruroDubRes.value : null;
 
-          if (miruroSub?.stream?.url) hlsServers.push({ label: 'Sub (HLS)', url: miruroSub.stream.url, type: 'sub' });
-          if (direct?.stream?.url && direct.stream.url !== miruroSub?.stream?.url)
-            hlsServers.push({ label: 'Dub (HLS)', url: direct.stream.url, type: 'dub' });
+          const subUrl = miruroSub?.stream?.url || direct?.stream?.url;
+          const dubUrl = miruroDub?.stream?.url;
+          if (subUrl) hlsServers.push({ label: 'Sub (HLS)', url: subUrl, type: 'sub' });
+          if (dubUrl && dubUrl !== subUrl) hlsServers.push({ label: 'Dub (HLS)', url: dubUrl, type: 'dub' });
         }
 
         if (hlsServers.length > 0) {
@@ -329,7 +332,7 @@ export default function AnimeDetail() {
         setLangKey(k => k + 1);
       }
     }
-  }, [servers, language]);
+  }, [servers, language, streamMode]);
 
   useEffect(() => {
     if (streamMode !== "hls" || !streamUrl) return;
@@ -342,7 +345,7 @@ export default function AnimeDetail() {
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => {}); });
       hls.on(Hls.Events.ERROR, (_, data) => {
-        if (data.fatal) { hls.destroy(); hlsInstanceRef.current = null; setError("HLS stream failed. Retrying..."); setStreamMode("iframe"); }
+        if (data.fatal) { hls.destroy(); hlsInstanceRef.current = null; setError("HLS stream failed. Try another source."); }
       });
       hlsInstanceRef.current = hls;
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
