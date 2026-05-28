@@ -44,11 +44,13 @@ export async function gql(query, variables = {}, retries = 2) {
   const key = `gql:${query.replace(/\s+/g, " ").slice(0, 80)}:${JSON.stringify(variables)}`;
   const cached = getCached(key);
   if (cached) return cached;
+  let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const r = await fetch(ANILIST, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query, variables }) });
       if (r.status === 429) {
-        const wait = Math.min((attempt + 1) * 1500, 5000);
+        const retryAfter = r.headers.get('Retry-After');
+        const wait = retryAfter ? Math.min(Number(retryAfter) * 1000, 10000) : Math.min((attempt + 1) * 1500, 5000);
         await new Promise(res => setTimeout(res, wait));
         continue;
       }
@@ -61,10 +63,12 @@ export async function gql(query, variables = {}, retries = 2) {
       setCache(key, j.data);
       return j.data;
     } catch (e) {
+      lastErr = e;
       if (attempt < retries) { await new Promise(res => setTimeout(res, 1000)); continue; }
       throw e;
     }
   }
+  throw lastErr || new Error('AniList request failed');
 }
 
 
