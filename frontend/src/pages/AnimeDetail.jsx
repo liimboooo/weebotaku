@@ -322,19 +322,28 @@ export default function AnimeDetail() {
         const hlsServers = [];
 
         if (aniId) {
-          const [directRes, miruroSubRes, miruroDubRes] = await Promise.allSettled([
-            getDirectStream(aniId, epNum),
+          const [miruroSubRes, miruroDubRes] = await Promise.allSettled([
             getMiruroStream(aniId, epNum, 'sub'),
             getMiruroStream(aniId, epNum, 'dub'),
           ]);
-          const direct = directRes.status === 'fulfilled' ? directRes.value : null;
           const miruroSub = miruroSubRes.status === 'fulfilled' ? miruroSubRes.value : null;
           const miruroDub = miruroDubRes.status === 'fulfilled' ? miruroDubRes.value : null;
 
-          const subUrl = miruroSub?.stream?.url || direct?.stream?.url;
-          const dubUrl = miruroDub?.stream?.url;
-          if (subUrl) hlsServers.push({ label: 'Sub (HLS)', url: subUrl, type: 'sub' });
-          if (dubUrl && dubUrl !== subUrl) hlsServers.push({ label: 'Dub (HLS)', url: dubUrl, type: 'dub' });
+          if (miruroSub?.stream?.url) {
+            hlsServers.push({ label: 'Sub (HLS)', url: miruroSub.stream.url, type: 'sub' });
+          }
+          if (miruroDub?.stream?.url && miruroDub.stream.url !== miruroSub?.stream?.url) {
+            hlsServers.push({ label: 'Dub (HLS)', url: miruroDub.stream.url, type: 'dub' });
+          }
+
+          if (hlsServers.length === 0) {
+            try {
+              const direct = await getDirectStream(aniId, epNum);
+              if (direct?.stream?.url) {
+                hlsServers.push({ label: 'Sub (HLS)', url: direct.stream.url, type: 'sub' });
+              }
+            } catch {}
+          }
         }
 
         if (hlsServers.length > 0) {
@@ -565,6 +574,7 @@ export default function AnimeDetail() {
                 comments={comments}
                 setComments={setComments}
                 currentUser={currentUsername}
+                isLoggedIn={authService.isLoggedIn()}
                 onSeek={handleSeek}
                 onAdd={handleAddComment}
                 onLikeComment={handleLikeComment}

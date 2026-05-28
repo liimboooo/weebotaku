@@ -589,6 +589,7 @@ exports.sendMessage = async (req, res) => {
     const msg = {
       user: req.user.id,
       username: req.user.username,
+      avatar: req.user.avatar || '',
       text: text.trim().slice(0, 500),
       ts: new Date(),
     };

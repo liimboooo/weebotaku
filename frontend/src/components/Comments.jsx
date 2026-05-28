@@ -547,7 +547,7 @@ function deleteCommentDeep(list, id) {
   }, []);
 }
 
-export default function Comments({ comments: externalComments, setComments, currentUser = "You", onSeek, onAdd, onLikeComment, onDislikeComment, onReplyComment, onEditComment: onEditCommentApi, onDeleteComment: onDeleteCommentApi, loading: commentsLoading }) {
+export default function Comments({ comments: externalComments, setComments, currentUser = "You", isLoggedIn = false, onSeek, onAdd, onLikeComment, onDislikeComment, onReplyComment, onEditComment: onEditCommentApi, onDeleteComment: onDeleteCommentApi, loading: commentsLoading }) {
   const [sort, setSort] = useState("newest");
   const [sortOpen, setSortOpen] = useState(false);
   const [text, setText] = useState("");
@@ -612,39 +612,34 @@ export default function Comments({ comments: externalComments, setComments, curr
   const handlePostReply = useCallback(async (parentId, reply) => {
     if (onReplyComment) {
       await onReplyComment(parentId, reply.text || reply.content);
-    } else {
-      setComments?.(c => addReplyDeep(c, parentId, reply));
     }
+    setComments?.(c => addReplyDeep(c, parentId, reply));
   }, [setComments, onReplyComment]);
 
   const handleLike = useCallback(async (id) => {
     if (onLikeComment) {
       await onLikeComment(id);
     }
-    setComments?.(c => toggleLikeDeep(c, id, 1));
-  }, [setComments, onLikeComment]);
+  }, [onLikeComment]);
 
   const handleDislike = useCallback(async (id) => {
     if (onDislikeComment) {
       await onDislikeComment(id);
     }
-    setComments?.(c => toggleDislikeDeep(c, id, 1));
-  }, [setComments, onDislikeComment]);
+  }, [onDislikeComment]);
 
   const handleEditComment = useCallback(async (id, newText) => {
     if (onEditCommentApi) {
       await onEditCommentApi(id, newText);
-    } else {
-      setComments?.(c => editCommentDeep(c, id, newText));
     }
+    setComments?.(c => editCommentDeep(c, id, newText));
   }, [setComments, onEditCommentApi]);
 
   const handleDeleteComment = useCallback(async (id) => {
     if (onDeleteCommentApi) {
       await onDeleteCommentApi(id);
-    } else {
-      setComments?.(c => deleteCommentDeep(c, id));
     }
+    setComments?.(c => deleteCommentDeep(c, id));
   }, [setComments, onDeleteCommentApi]);
 
   const handleLoadMore = () => {
@@ -686,11 +681,11 @@ export default function Comments({ comments: externalComments, setComments, curr
             ref={inputRef}
             className="awc-input-field"
             type="text"
-            placeholder="Add comment..."
+            placeholder={isLoggedIn ? "Add comment..." : "Login to comment..."}
             value={text}
             onChange={e => setText(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && !posting && handleAdd()}
-            disabled={posting}
+            onKeyDown={e => e.key === "Enter" && !posting && isLoggedIn && handleAdd()}
+            disabled={posting || !isLoggedIn}
             maxLength={MAX_CHARS}
           />
           <div className="awc-format-bar">

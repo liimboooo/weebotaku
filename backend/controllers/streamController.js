@@ -214,29 +214,7 @@ exports.autoSources = async (req, res) => {
     const epNum = parseInt(episodeNum, 10);
     if (!aid || !epNum) return res.status(400).json({ success: false, message: 'Missing params' });
 
-    // Only try ezvidapi when no specific category — frontend calls ezvidapi directly for dub
-    if (category === 'sub') {
-      try {
-        const tmdb = await anilistToTmdb(aid);
-        if (tmdb) {
-          const ezvid = await ezvidapiResolve(tmdb.id, tmdb.season, epNum);
-          if (ezvid) {
-            return res.json({
-              success: true,
-              data: {
-                provider: `ezvidapi:${ezvid.provider}`,
-                stream: { url: ezvid.stream_url, quality: 'auto' },
-                subtitles: (ezvid.subtitles || []).map(s => ({ url: s.url, label: s.label || s.language })),
-                intro: null,
-                outro: null,
-              },
-            });
-          }
-        }
-      } catch {}
-    }
-
-    // Miruro pipe — supports sub/dub categories natively
+    // Miruro pipe first — supports sub/dub categories natively with correct episode mapping
     const epData = await pipeFetch({
       path: 'episodes', method: 'GET',
       query: { anilistId: aid }, body: null, version: '0.1.0',
@@ -286,6 +264,28 @@ exports.autoSources = async (req, res) => {
         }
 
       } catch { continue; }
+    }
+
+    // Fallback: try ezvidapi (TMDB-based) only for sub category
+    if (category === 'sub') {
+      try {
+        const tmdb = await anilistToTmdb(aid);
+        if (tmdb) {
+          const ezvid = await ezvidapiResolve(tmdb.id, tmdb.season, epNum);
+          if (ezvid) {
+            return res.json({
+              success: true,
+              data: {
+                provider: `ezvidapi:${ezvid.provider}`,
+                stream: { url: ezvid.stream_url, quality: 'auto' },
+                subtitles: (ezvid.subtitles || []).filter(s => !s.label || /english/i.test(s.label || s.language || '')).map(s => ({ url: s.url, label: s.label || s.language })),
+                intro: null,
+                outro: null,
+              },
+            });
+          }
+        }
+      } catch {}
     }
 
     res.status(404).json({ success: false, message: 'No working stream found across all providers' });

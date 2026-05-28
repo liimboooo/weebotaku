@@ -85,6 +85,7 @@ const RoomSchema = new mongoose.Schema({
   messages: [{
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     username: String,
+    avatar: { type: String, default: '' },
     text: String,
     ts: { type: Date, default: Date.now },
   }],

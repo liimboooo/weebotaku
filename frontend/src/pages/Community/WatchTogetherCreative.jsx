@@ -376,7 +376,7 @@ export default function WatchTogetherCreative() {
             .map(m => ({
               id: m.ts + Math.random(),
               name: m.username,
-              avatar: (m.username || 'A').charAt(0).toUpperCase(),
+              avatar: m.avatar || null,
               text: m.text,
               time: new Date(m.ts),
             }));
@@ -410,7 +410,7 @@ export default function WatchTogetherCreative() {
         setChatMessages(prev => [...prev, {
           id: Date.now() + Math.random(),
           name: data.name || 'Anonymous',
-          avatar: (data.name || 'A').charAt(0).toUpperCase(),
+          avatar: data.avatar || null,
           text: (data.text || '').slice(0, 500),
           time: new Date(),
         }]);
@@ -496,20 +496,20 @@ export default function WatchTogetherCreative() {
     setSourceResolving(true);
 
     try {
+      const miruro = await getMiruroStream(anime.id, 1, 'sub');
+      if (gen !== pickGenRef.current) return;
+      if (miruro?.stream?.url) {
+        setStreamSource({ source: 'miruro', anilistId: anime.id, slug: anime.id });
+        setPreResolvedUrl(miruro.stream.url);
+        setSourceResolving(false);
+        return;
+      }
+
       const direct = await getDirectStream(anime.id, 1);
       if (gen !== pickGenRef.current) return;
       if (direct?.stream?.url) {
         setStreamSource({ source: 'ezvidapi', anilistId: anime.id, slug: anime.id });
         setPreResolvedUrl(direct.stream.url);
-        setSourceResolving(false);
-        return;
-      }
-
-      const miruro = await getMiruroStream(anime.id, 1);
-      if (gen !== pickGenRef.current) return;
-      if (miruro?.stream?.url) {
-        setStreamSource({ source: 'miruro', anilistId: anime.id, slug: anime.id });
-        setPreResolvedUrl(miruro.stream.url);
         setSourceResolving(false);
         return;
       }
@@ -542,10 +542,10 @@ export default function WatchTogetherCreative() {
     try {
       const aniId = pickedAnime?.id || streamSource?.anilistId;
       if (aniId) {
+        const miruro = await getMiruroStream(aniId, epNum, 'sub');
+        if (miruro?.stream?.url) return miruro.stream.url;
         const direct = await getDirectStream(aniId, epNum);
         if (direct?.stream?.url) return direct.stream.url;
-        const miruro = await getMiruroStream(aniId, epNum);
-        if (miruro?.stream?.url) return miruro.stream.url;
       }
       if (!streamSource) return null;
       const servers = await getStreamUrls(
@@ -715,7 +715,7 @@ export default function WatchTogetherCreative() {
       {
         id: 1,
         name: 'system',
-        avatar: 'S',
+        avatar: null,
         text: `Joined "${room.name}"`,
       },
     ]);
@@ -741,7 +741,7 @@ export default function WatchTogetherCreative() {
         const history = historyRes.data.map(m => ({
           id: m.ts + Math.random(),
           name: m.username,
-          avatar: (m.username || 'A').charAt(0).toUpperCase(),
+          avatar: m.avatar || null,
           text: m.text,
         }));
         setChatMessages(prev => [...history, ...prev]);
@@ -857,7 +857,7 @@ export default function WatchTogetherCreative() {
     // always add locally immediately
     setChatMessages(prev => [...prev, {
       id: Date.now(),
-      avatar: (currentUser?.username || 'Y').charAt(0).toUpperCase(),
+      avatar: currentUser?.avatar || null,
       name: currentUser?.username || 'You',
       text,
       time: new Date(),
@@ -869,6 +869,7 @@ export default function WatchTogetherCreative() {
         type: 'chat',
         text,
         name: currentUser?.username || 'Anonymous',
+        avatar: currentUser?.avatar || '',
       });
       liveRoomRef.current.localParticipant.publishData(
         new TextEncoder().encode(payload),
@@ -1133,7 +1134,9 @@ export default function WatchTogetherCreative() {
                     )}
                     {chatMessages.map((msg) => (
                       <div key={msg.id} className={`chat-msg${msg.name === 'system' ? ' chat-msg--system' : ''}${msg.name === currentUser?.username ? ' chat-msg--own' : ''}`}>
-                        <div className="chat-avatar">{msg.avatar}</div>
+                        <div className="chat-avatar">
+                          {msg.avatar ? <img src={msg.avatar} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : (msg.name || '?').charAt(0).toUpperCase()}
+                        </div>
                         <div className="chat-content">
                           <span className="chat-username">{msg.name}</span>
                           <span className="chat-text">{msg.text}</span>

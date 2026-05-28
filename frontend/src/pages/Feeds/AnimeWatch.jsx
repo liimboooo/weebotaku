@@ -38,6 +38,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [language, setLanguage] = useState("sub");
   const [seekTo, setSeekTo] = useState(null);
   const [streamMode, setStreamMode] = useState("iframe");
+  const [subtitles, setSubtitles] = useState([]);
   const hlsVideoRef = useRef(null);
   const hlsInstanceRef = useRef(null);
 
@@ -135,6 +136,35 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     }
   };
 
+  const refetchComments = useCallback(async () => {
+    if (!anime.anilistId) return;
+    const res = await commentService.getComments(anime.anilistId, { episode: epIndex + 1, limit: 50 });
+    if (res.success) {
+      const mapped = res.data.map(c => ({
+        id: c._id || c.id,
+        user: c.user?.username || "Unknown",
+        avatar: c.user?.avatar || null,
+        text: c.content,
+        time: new Date(c.createdAt).getTime().toString(),
+        likes: c.likes?.length || 0,
+        dislikes: c.dislikes?.length || 0,
+        replies: (c.replies || []).map(r => ({
+          id: r._id || r.id,
+          user: r.user?.username || "Unknown",
+          avatar: r.user?.avatar || null,
+          text: r.content,
+          time: new Date(r.createdAt).getTime().toString(),
+          likes: r.likes?.length || 0,
+          dislikes: 0,
+          replies: [],
+        })),
+        pinned: c.pinned || false,
+        hasSpoiler: c.isSpoiler || false,
+      }));
+      setComments(mapped);
+    }
+  }, [anime.anilistId, epIndex]);
+
   const handleLikeComment = async (id) => {
     await commentService.likeComment(id).catch(() => {});
   };
@@ -144,15 +174,24 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   };
 
   const handleReplyComment = async (parentId, content) => {
-    await commentService.replyToComment(parentId, content).catch(() => {});
+    try {
+      await commentService.replyToComment(parentId, content);
+      await refetchComments();
+    } catch {}
   };
 
   const handleEditComment = async (id, content) => {
-    await commentService.editComment(id, content).catch(() => {});
+    try {
+      await commentService.editComment(id, content);
+      await refetchComments();
+    } catch {}
   };
 
   const handleDeleteComment = async (id) => {
-    await commentService.deleteComment(id).catch(() => {});
+    try {
+      await commentService.deleteComment(id);
+      await refetchComments();
+    } catch {}
   };
 
   useEffect(() => {
@@ -216,19 +255,32 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         const hlsServers = [];
 
         if (aniId) {
-          const [directRes, miruroSubRes, miruroDubRes] = await Promise.allSettled([
-            getDirectStream(aniId, epNum),
+          const [miruroSubRes, miruroDubRes] = await Promise.allSettled([
             getMiruroStream(aniId, epNum, 'sub'),
             getMiruroStream(aniId, epNum, 'dub'),
           ]);
-          const direct = directRes.status === 'fulfilled' ? directRes.value : null;
           const miruroSub = miruroSubRes.status === 'fulfilled' ? miruroSubRes.value : null;
           const miruroDub = miruroDubRes.status === 'fulfilled' ? miruroDubRes.value : null;
 
-          const subUrl = miruroSub?.stream?.url || direct?.stream?.url;
-          const dubUrl = miruroDub?.stream?.url;
-          if (subUrl) hlsServers.push({ label: 'Sub (HLS)', url: subUrl, type: 'sub' });
-          if (dubUrl && dubUrl !== subUrl) hlsServers.push({ label: 'Dub (HLS)', url: dubUrl, type: 'dub' });
+          if (miruroSub?.stream?.url) {
+            hlsServers.push({ label: 'Sub (HLS)', url: miruroSub.stream.url, type: 'sub' });
+            const subs = (miruroSub.subtitles || []).filter(s => !s.label || /english/i.test(s.label));
+            if (subs.length) setSubtitles(subs);
+          }
+          if (miruroDub?.stream?.url && miruroDub.stream.url !== miruroSub?.stream?.url) {
+            hlsServers.push({ label: 'Dub (HLS)', url: miruroDub.stream.url, type: 'dub' });
+          }
+
+          if (hlsServers.length === 0) {
+            try {
+              const direct = await getDirectStream(aniId, epNum);
+              if (direct?.stream?.url) {
+                hlsServers.push({ label: 'Sub (HLS)', url: direct.stream.url, type: 'sub' });
+                const subs = (direct.subtitles || []).filter(s => !s.label || /english/i.test(s.label));
+                if (subs.length) setSubtitles(subs);
+              }
+            } catch {}
+          }
         }
 
         if (hlsServers.length > 0) {
@@ -279,6 +331,17 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
         if (data.levels.length > 1) hls.currentLevel = data.levels.length - 1;
+        subtitles.forEach((sub, i) => {
+          if (sub.url && !video.querySelector(`track[src="${sub.url}"]`)) {
+            const track = document.createElement('track');
+            track.kind = 'subtitles';
+            track.label = sub.label || 'English';
+            track.srclang = 'en';
+            track.src = sub.url;
+            if (i === 0) track.default = true;
+            video.appendChild(track);
+          }
+        });
         video.play().catch(() => {});
       });
       hls.on(Hls.Events.ERROR, (_, data) => {
@@ -290,6 +353,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       video.addEventListener("loadedmetadata", () => { video.play().catch(() => {}); }, { once: true });
     }
     return () => { if (hlsInstanceRef.current) { hlsInstanceRef.current.destroy(); hlsInstanceRef.current = null; } };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [streamMode, streamUrl]);
 
   useEffect(() => {
@@ -452,7 +516,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
               </div>
 
               {/* ═══ COMMENTS ═══ */}
-              <Comments comments={comments} setComments={setComments} currentUser={authService.getCurrentUser()?.username || "You"} onSeek={handleSeek} onAdd={handleAddComment} onLikeComment={handleLikeComment} onDislikeComment={handleDislikeComment} onReplyComment={handleReplyComment} onEditComment={handleEditComment} onDeleteComment={handleDeleteComment} />
+              <Comments comments={comments} setComments={setComments} currentUser={authService.getCurrentUser()?.username || "You"} isLoggedIn={authService.isLoggedIn()} onSeek={handleSeek} onAdd={handleAddComment} onLikeComment={handleLikeComment} onDislikeComment={handleDislikeComment} onReplyComment={handleReplyComment} onEditComment={handleEditComment} onDeleteComment={handleDeleteComment} />
 
             </div>
           </div>

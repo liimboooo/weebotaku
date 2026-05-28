@@ -330,10 +330,12 @@ export async function getDirectStream(anilistId, episodeNum) {
     if (!tmdb) return null;
     const ezvid = await ezvidapiResolveClient(tmdb.id, tmdb.season, episodeNum);
     if (!ezvid) return null;
+    const allSubs = (ezvid.subtitles || []).map(s => ({ url: s.url, label: s.label || s.language || '' }));
+    const engSubs = allSubs.filter(s => /english/i.test(s.label));
     return {
       provider: `ezvidapi:${ezvid.provider}`,
       stream: { url: ezvid.stream_url, quality: 'auto' },
-      subtitles: (ezvid.subtitles || []).map(s => ({ url: s.url, label: s.label || s.language })),
+      subtitles: engSubs.length > 0 ? engSubs : allSubs.slice(0, 3),
       intro: null,
       outro: null,
     };
