@@ -21,6 +21,7 @@ function getAuthUrl() {
     response_type: 'code',
     client_id: MAL_CLIENT_ID,
     code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
     redirect_uri: MAL_REDIRECT_URI,
   });
   return { url: `${MAL_AUTH_URL}?${params.toString()}`, codeVerifier };
@@ -32,6 +33,7 @@ function getConnectUrl() {
     response_type: 'code',
     client_id: MAL_CLIENT_ID,
     code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
     redirect_uri: MAL_REDIRECT_URI,
     state: 'connect',
   });
