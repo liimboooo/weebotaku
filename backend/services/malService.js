@@ -9,9 +9,8 @@ const MAL_TOKEN_URL = 'https://myanimelist.net/v1/oauth2/token';
 const MAL_AUTH_URL = 'https://myanimelist.net/v1/oauth2/authorize';
 
 function generateCodeChallenge() {
-  const codeVerifier = crypto.randomBytes(32).toString('hex');
-  const challenge = crypto.createHash('sha256').update(codeVerifier).digest('base64')
-    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const codeVerifier = crypto.randomBytes(32).toString('base64url');
+  const challenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
   return { codeVerifier, codeChallenge: challenge };
 }
 
@@ -47,6 +46,7 @@ async function exchangeCode(code, codeVerifier) {
     code,
     code_verifier: codeVerifier,
     grant_type: 'authorization_code',
+    redirect_uri: MAL_REDIRECT_URI,
   });
   const res = await fetch(MAL_TOKEN_URL, {
     method: 'POST',
