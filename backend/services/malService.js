@@ -64,7 +64,7 @@ async function exchangeCode(code, codeVerifier) {
 }
 
 async function getUserInfo(token) {
-  const url = 'https://api.myanimelist.net/v2/users/' + encodeURIComponent('@self');
+  const url = 'https://api.myanimelist.net/v2/users/@me';
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -83,7 +83,7 @@ async function fetchAnimeList(accessToken) {
   let hasNext = true;
 
   while (hasNext) {
-    const base = 'https://api.myanimelist.net/v2/users/' + encodeURIComponent('@self') + '/animelist';
+    const base = 'https://api.myanimelist.net/v2/users/@me/animelist';
     const url = `${base}?limit=${limit}&offset=${offset}&fields=list_status,title,main_picture,media_type,num_episodes,average_epoch`;
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${accessToken}` },
