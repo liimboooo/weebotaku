@@ -4,7 +4,7 @@ import './App.css';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
 import { syncFromBackend } from "./services/storage";
 import ScrollToTop from "./components/ScrollToTop";
-import Header from "./components/Header";
+import Sidebar from "./components/Sidebar";
 import ToastContainer from "./components/Toast";
 import { LoadingProvider } from "./components/LoadingProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -74,7 +74,8 @@ function AppLayout() {
   return (
     <>
       <ScrollToTop />
-      {!isAuthPage && <Header />}
+      {!isAuthPage && <Sidebar />}
+      <div className="app-main">
       <ToastContainer />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
@@ -98,6 +99,7 @@ function AppLayout() {
           <Route path="*" element={<RouteShell><NotFound /></RouteShell>} />
         </Routes>
       </AnimatePresence>
+      </div>
     </>
   );
 }

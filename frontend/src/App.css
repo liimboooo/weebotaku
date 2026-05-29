@@ -16,10 +16,28 @@ html, body {
 }
 
 /* ─── Route Content Shell ─────────────────────────────── */
+.app-main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .route-content {
   min-height: 100vh;
   position: relative;
   z-index: 1;
+}
+
+@media (max-width: 1024px) {
+  .app-main {
+    margin-left: var(--sidebar-w-collapsed);
+  }
+}
+
+@media (max-width: 768px) {
+  .app-main {
+    margin-left: 0;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
