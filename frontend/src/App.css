@@ -20,6 +20,19 @@ html, body {
   min-height: 100vh;
 }
 
+/* Subpages: offset content below the fixed navbar so nothing
+   slides underneath. Home keeps padding: 0 so the hero remains
+   edge-to-edge. */
+.app-main--padded {
+  padding-top: calc(var(--top-nav-h, 64px) + 12px);
+}
+
+@media (max-width: 768px) {
+  .app-main--padded {
+    padding-top: calc(var(--top-nav-h, 58px) + 8px);
+  }
+}
+
 .route-content {
   min-height: 100vh;
   position: relative;

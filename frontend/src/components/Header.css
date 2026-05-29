@@ -4,13 +4,21 @@
    while letting the hero poster show through behind.
    ═══════════════════════════════════════════════════════ */
 
+/* Header height var — used by .app-main--padded too */
+:root {
+  --top-nav-h: 64px;
+}
+
+@media (max-width: 768px) {
+  :root { --top-nav-h: 58px; }
+}
+
 .top-nav {
-  position: absolute;
   top: 0;
   left: 0;
   right: 0;
   z-index: 50;
-  height: 64px;
+  height: var(--top-nav-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -18,33 +26,55 @@
   pointer-events: none;
 }
 
+/* Home: absolute so it scrolls away with the hero */
+.top-nav.is-home { position: absolute; }
+
+/* Subpages: fixed so it stays as a persistent glass bar */
+.top-nav.is-subpage { position: fixed; }
+
 .top-nav * {
   pointer-events: auto;
 }
 
-/* ─── Background — Pure gradient, no solid block ───────── */
+/* ─── Background ──────────────────────────────────────── */
 .top-nav-bg {
   position: absolute;
   inset: 0;
+  transition: all 0.35s var(--ease-out);
+  pointer-events: none;
+}
+
+/* HOME — transparent gradient, hero shows through */
+.top-nav.is-home .top-nav-bg {
   background: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 0.65) 0%,
     rgba(0, 0, 0, 0.35) 50%,
     rgba(0, 0, 0, 0) 100%
   );
-  transition: opacity 0.35s var(--ease-out);
-  pointer-events: none;
 }
 
-/* On scroll: gain a subtle blur/darken (no hard border) */
-.top-nav.is-scrolled .top-nav-bg {
+.top-nav.is-home.is-scrolled .top-nav-bg {
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.8) 0%,
-    rgba(0, 0, 0, 0.5) 100%
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.55) 100%
   );
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
+}
+
+/* SUBPAGE — sleek glass, content scrolls cleanly underneath */
+.top-nav.is-subpage .top-nav-bg {
+  background: rgba(9, 9, 14, 0.78);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.top-nav.is-subpage.is-scrolled .top-nav-bg {
+  background: rgba(8, 8, 12, 0.88);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
 }
 
 /* ─── Left Cluster ────────────────────────────────────── */
@@ -654,7 +684,6 @@
 /* ─── Responsive ──────────────────────────────────────── */
 @media (max-width: 768px) {
   .top-nav {
-    height: 58px;
     padding: 0 16px;
   }
   .top-nav-left {

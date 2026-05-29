@@ -24,7 +24,7 @@ function formatTime(ts) {
   return new Date(ts).toLocaleDateString();
 }
 
-export default function Header() {
+export default function Header({ isHome = false }) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -155,7 +155,7 @@ export default function Header() {
   };
 
   return (
-    <nav className={`top-nav${scrolled ? ' is-scrolled' : ''}`}>
+    <nav className={`top-nav${scrolled ? ' is-scrolled' : ''}${isHome ? ' is-home' : ' is-subpage'}`}>
       <div className="top-nav-bg" />
 
       <div className="top-nav-left">

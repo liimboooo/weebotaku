@@ -51,6 +51,8 @@ function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const isAuthPage = location.pathname === "/auth" || location.pathname.startsWith("/auth/sync/");
+  const isHome = location.pathname === "/home" || location.pathname === "/";
+  const needsHeaderOffset = !isAuthPage && !isHome;
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -75,9 +77,9 @@ function AppLayout() {
   return (
     <>
       <ScrollToTop />
-      {!isAuthPage && <Header />}
+      {!isAuthPage && <Header isHome={isHome} />}
       {!isAuthPage && <Sidebar />}
-      <div className="app-main">
+      <div className={`app-main${needsHeaderOffset ? ' app-main--padded' : ''}`}>
       <ToastContainer />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
