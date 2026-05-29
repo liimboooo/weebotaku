@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════════
-   TOP NAV — Restrained Editorial Black Glass
-   Premium = precision, restraint, hairline detail.
+   TOP NAV — Transparent Gradient Overlay
+   Sits above hero; gradient darken keeps text readable
+   while letting the hero poster show through behind.
    ═══════════════════════════════════════════════════════ */
 
 .top-nav {
@@ -9,7 +10,7 @@
   left: 0;
   right: 0;
   z-index: 50;
-  height: 60px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -21,21 +22,29 @@
   pointer-events: auto;
 }
 
-/* ─── Background ──────────────────────────────────────── */
+/* ─── Background — Pure gradient, no solid block ───────── */
 .top-nav-bg {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.045);
-  transition: all 0.35s var(--ease-out);
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.65) 0%,
+    rgba(0, 0, 0, 0.35) 50%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  transition: opacity 0.35s var(--ease-out);
   pointer-events: none;
 }
 
+/* On scroll: gain a subtle blur/darken (no hard border) */
 .top-nav.is-scrolled .top-nav-bg {
-  background: rgba(0, 0, 0, 0.72);
-  border-bottom-color: rgba(255, 255, 255, 0.07);
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
 }
 
 /* ─── Left Cluster ────────────────────────────────────── */
@@ -52,18 +61,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.75);
   cursor: pointer;
   transition: all 0.18s var(--ease-out);
 }
 
 .top-nav-hamburger:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   color: #fff;
 }
 
@@ -71,10 +80,10 @@
 .top-nav-divider {
   width: 1px;
   height: 18px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
 }
 
-/* ─── Brand — Editorial Wordmark ──────────────────────── */
+/* ─── Brand ───────────────────────────────────────────── */
 .top-nav-brand {
   display: flex;
   align-items: center;
@@ -85,10 +94,11 @@
   padding: 4px 2px;
   font-family: var(--font-body);
   transition: opacity 0.18s var(--ease-out);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
 }
 
 .top-nav-brand:hover {
-  opacity: 0.7;
+  opacity: 0.75;
 }
 
 .brand-dot {
@@ -97,6 +107,7 @@
   border-radius: 50%;
   background: #fff;
   flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
 .brand-text {
@@ -106,7 +117,7 @@
   letter-spacing: -0.015em;
 }
 
-/* ─── Right ────────────────────────────────────────────── */
+/* ─── Right Cluster ───────────────────────────────────── */
 .top-nav-right {
   position: relative;
   z-index: 1;
@@ -114,31 +125,34 @@
   align-items: center;
 }
 
-/* ─── Search — Restrained ─────────────────────────────── */
+/* ─── Search — Opaque pill on transparent header ──────── */
 .top-nav-search {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  padding: 6px 8px 6px 10px;
-  width: 260px;
+  background: rgba(24, 24, 27, 0.5);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 7px 8px 7px 10px;
+  width: 280px;
   transition: all 0.2s var(--ease-out);
 }
 
 .top-nav-search:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.09);
+  background: rgba(24, 24, 27, 0.65);
+  border-color: rgba(255, 255, 255, 0.07);
 }
 
 .top-nav-search:focus-within {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(24, 24, 27, 0.78);
+  border-color: rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
 }
 
 .top-nav-search-icon {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.45);
   flex-shrink: 0;
 }
 
@@ -147,14 +161,14 @@
   border: none;
   outline: none;
   color: #fff;
-  font-size: 12.5px;
+  font-size: 13px;
   width: 100%;
   font-family: var(--font-body);
   letter-spacing: -0.005em;
 }
 
 .top-nav-search input::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .search-kbd {
@@ -165,15 +179,14 @@
   font-family: var(--font-mono);
   font-size: 9.5px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 4px;
   letter-spacing: 0.02em;
 }
 
 /* ─── Search Popout ───────────────────────────────────── */
-
 .search-popout {
   position: absolute;
   top: calc(100% + 8px);
@@ -181,15 +194,15 @@
   width: 360px;
   max-height: 420px;
   border-radius: 12px;
-  background: rgba(8, 8, 12, 0.96);
+  background: rgba(8, 8, 12, 0.92);
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: popout-in 0.15s ease-out;
+  animation: popout-in 0.16s ease-out;
 }
 
 @keyframes popout-in {
@@ -204,7 +217,7 @@
   padding: 10px 10px 10px 14px;
   font-size: 10px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.4);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
@@ -352,14 +365,14 @@
 /* ─── Responsive ──────────────────────────────────────── */
 @media (max-width: 768px) {
   .top-nav {
-    height: 56px;
+    height: 58px;
     padding: 0 16px;
   }
   .top-nav-left {
     gap: 10px;
   }
   .top-nav-search {
-    width: 180px;
+    width: 200px;
   }
   .search-kbd {
     display: none;
@@ -368,6 +381,10 @@
 
 @media (max-width: 480px) {
   .top-nav-search {
-    width: 140px;
+    width: 160px;
+  }
+  .search-popout {
+    width: calc(100vw - 32px);
+    right: -8px;
   }
 }
