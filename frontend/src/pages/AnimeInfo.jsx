@@ -9,6 +9,7 @@ import { gql, fetchAnimeRecommendations, fetchAnimeCharacters } from "../service
 import { statusLabel, LIST_OPTIONS } from "../utils/constants";
 import { formatDate, formatTimeAgo } from "../utils/helpers";
 import { loadWatchlist, addToWatchlist, removeFromWatchlist, updateListStatus, loadWatchHistory } from "../services/storage";
+import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import authService from "../services/authService";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./AnimeInfo.css";
@@ -52,6 +53,7 @@ const SHARE_OPTIONS = [
 
 export default function AnimeInfo() {
   const { id } = useParams();
+  const prefetch = usePrefetchAnime();
   const [anime, setAnime] = useState(null);
   useDocumentTitle(anime?.name || "Anime Details");
   const [related, setRelated] = useState([]);
@@ -573,7 +575,10 @@ export default function AnimeInfo() {
                 )}
                 <div className="ai-related-scroll" ref={relatedRef}>
                   {related.map(r => (
-                    <Link key={r.id} to={`/anime/${r.id}/info`} className={`ai-related-card${Number(r.id) === Number(id) ? " active" : ""}`}>
+                    <Link key={r.id} to={`/anime/${r.id}/info`} className={`ai-related-card${Number(r.id) === Number(id) ? " active" : ""}`}
+                      onMouseEnter={() => prefetch.onMouseEnter(r.id)}
+                      onMouseLeave={prefetch.onMouseLeave}
+                    >
                       <div className="ai-related-card-thumb">
                         <img src={r.image} alt={r.name} loading="lazy" decoding="async" />
                         <div className="ai-related-card-overlay">

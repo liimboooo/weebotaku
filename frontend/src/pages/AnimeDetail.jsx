@@ -9,6 +9,7 @@ import Hls from "hls.js";
 import { findStreamingSource, getEpisodes, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream, getMiruroEpisodes } from "../services/animeApi";
 import { fetchAnimeRecommendations } from "../services/anilistApi";
 import { loadWatchHistory, addToWatchHistory } from "../services/storage";
+import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import commentService from "../services/commentService";
 import authService from "../services/authService";
 import { getSocket, joinAnimeRoom, leaveAnimeRoom } from "../services/socket";
@@ -25,6 +26,7 @@ export default function AnimeDetail() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const prefetch = usePrefetchAnime();
 
   const [apiAnime, setApiAnime] = useState(null);
   const [animeLoading, setAnimeLoading] = useState(true);
@@ -943,7 +945,13 @@ export default function AnimeDetail() {
                   <span>Recommended Anime</span>
                 </div>
                 {recommendations.slice(0, 5).map((rec, i) => (
-                  <button key={rec.id || i} className="watch-rec-item" onClick={() => navigate(`/anime/${rec.id}/info`)}>
+                  <button
+                    key={rec.id || i}
+                    className="watch-rec-item"
+                    onClick={() => navigate(`/anime/${rec.id}/info`)}
+                    onMouseEnter={() => prefetch.onMouseEnter(rec.id)}
+                    onMouseLeave={prefetch.onMouseLeave}
+                  >
                     <div className="watch-rec-thumb">
                       <img src={rec.image} alt="" loading="lazy" decoding="async" />
                     </div>

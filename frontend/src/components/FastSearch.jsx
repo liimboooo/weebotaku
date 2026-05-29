@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Film, User, ArrowRight, Star, Clock, TrendingUp, Loader, Command } from 'lucide-react';
 import { fetchSearchAnime, fetchTopAnime } from '../services/anilistApi';
 import authService from '../services/authService';
+import usePrefetchAnime from '../hooks/usePrefetchAnime';
 import './FastSearch.css';
 
 const DEBOUNCE_MS = 250;
@@ -12,6 +13,7 @@ const MAX_USERS = 4;
 
 export default function FastSearch() {
   const navigate = useNavigate();
+  const prefetch = usePrefetchAnime();
   const inputRef = useRef(null);
   const overlayRef = useRef(null);
   const [query, setQuery] = useState('');
@@ -228,7 +230,13 @@ export default function FastSearch() {
                         <div className="fs-group-header"><TrendingUp size={13} /> Trending Now</div>
                         <div className="fs-trending-grid">
                           {trending.map(a => (
-                            <button key={a.id} className="fs-trending-card" onClick={() => navigateToResult(`/anime/${a.id}/info`)}>
+                            <button
+                              key={a.id}
+                              className="fs-trending-card"
+                              onClick={() => navigateToResult(`/anime/${a.id}/info`)}
+                              onMouseEnter={() => prefetch.onMouseEnter(a.id)}
+                              onMouseLeave={prefetch.onMouseLeave}
+                            >
                               <img src={a.img} alt={a.name} decoding="async" />
                               <div className="fs-trending-info">
                                 <span className="fs-trending-name">{a.name}</span>
@@ -255,7 +263,8 @@ export default function FastSearch() {
                           key={item.id}
                           className={`fs-result-item${selectedIdx === i ? ' selected' : ''}`}
                           onClick={() => navigateToResult(`/anime/${item.id}/info`)}
-                          onMouseEnter={() => setSelectedIdx(i)}
+                          onMouseEnter={() => { setSelectedIdx(i); prefetch.onMouseEnter(item.id); }}
+                          onMouseLeave={prefetch.onMouseLeave}
                         >
                           <div className="fs-result-poster">
                             <img src={item.img} alt={item.name} decoding="async" />
