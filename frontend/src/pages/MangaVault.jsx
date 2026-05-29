@@ -110,7 +110,6 @@ export default function MangaVault() {
       setPage(p);
       hasLoadedOnce.current = true;
     } catch (err) {
-      console.error("Failed to load manga:", err);
       setHasMore(false);
     } finally {
       setLoading(false);

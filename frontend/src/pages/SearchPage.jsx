@@ -285,7 +285,7 @@ export default function SearchPage() {
                     onClick={() => navigate(`/anime/${anime.id}/info`)}
                   >
                     <div className="sr-card-thumb">
-                      <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
+                      <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" onError={e => { e.target.style.display = 'none'; }} />
                       <div className="sr-card-overlay">
                         <button className="sr-card-play" onClick={(e) => { e.stopPropagation(); navigate(`/anime/${anime.id}/info`); }}>
                           <Play size={20} fill="currentColor" />

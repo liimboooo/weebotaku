@@ -463,7 +463,6 @@ export default function WatchTogetherCreative() {
       setLiveKitError('');
       stopChatPolling();
     } catch (err) {
-      console.error('LiveKit connection failed:', err);
       setLiveKitError('LiveKit unavailable — using server chat.');
       startChatPolling(roomId);
     }
@@ -675,7 +674,6 @@ export default function WatchTogetherCreative() {
         }
       }
     } catch (err) {
-      console.error('Create room failed:', err);
       setIsLive(false);
       setIsConfigOpen(false);
       addNotification({ title: "Room Error", body: err?.message || "Failed to create room. Try again.", type: "error" });

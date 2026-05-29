@@ -202,16 +202,6 @@ export default function AMVsEdits() {
     return () => { document.body.style.overflow = ""; };
   }, [selectedEdit]);
 
-  // Reset video state when switching edits in pin modal
-  useEffect(() => {
-    const stored = loadFromStorage(STORAGE_KEY, []);
-    setEdits(stored);
-    setReady(true);
-    fetchTopAnime(1, "bypopularity").then(r => {
-      const titles = r.data.map(a => a.name).filter(Boolean);
-      if (titles.length) setAnimeTitles(titles.slice(0, 25));
-    }).catch(() => {});
-  }, []);
 
   const filteredEdits = [...edits]
     .filter(e => {

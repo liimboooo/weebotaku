@@ -3,20 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, Users, Wifi, User, Clock } from "lucide-react";
 import * as roomService from "../services/roomService";
+import { formatTimeAgo as timeAgo } from "../utils/helpers";
 import "./LiveRooms.css";
-
-function timeAgo(dateStr) {
-  if (!dateStr) return "";
-  const ts = new Date(dateStr).getTime();
-  if (isNaN(ts)) return "";
-  const diff = Date.now() - ts;
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
 
 export default function LiveRooms({ rooms: externalRooms, onJoin, loading: externalLoading }) {
   const navigate = useNavigate();

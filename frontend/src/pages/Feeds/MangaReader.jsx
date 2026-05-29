@@ -236,9 +236,7 @@ export default function MangaReader({ manga, chapters, initialChapter, onClose }
     }
   };
 
-  const handleImgMouseDown = (e) => {
-    window.lastClickX = e.nativeEvent.offsetX;
-  };
+  const handleImgMouseDown = () => {};
 
   const chNum = chapter?.chapter || "?";
   const chTitle = chapter?.title || `Ch. ${chNum}`;

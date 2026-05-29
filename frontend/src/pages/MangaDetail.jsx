@@ -113,7 +113,6 @@ export default function MangaDetail() {
         }
         setChapters(ch);
       } catch {
-        console.error("Failed to load chapters");
       } finally {
         setChLoading(false);
       }

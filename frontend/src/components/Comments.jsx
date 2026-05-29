@@ -605,9 +605,7 @@ function Comments({ comments: externalComments, setComments, currentUser = "You"
       setText("");
       setPosted(true);
       setTimeout(() => setPosted(false), 3000);
-    } catch (err) {
-      console.error('Failed to post comment:', err);
-    }
+    } catch {}
     setPosting(false);
   };
 

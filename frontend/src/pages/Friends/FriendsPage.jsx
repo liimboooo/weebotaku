@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import friendService from "../../services/friendService";
 import {
   Users, UserPlus, UserMinus, Check, X, Clock,
-  Search, ChevronRight,
+  Search,
 } from "lucide-react";
 import useDocumentTitle from "../../hooks/useDocumentTitle";
 import "./FriendsPage.css";
@@ -13,16 +13,6 @@ const TABS = [
   { key: "requests", label: "Requests", icon: Clock },
 ];
 
-function timeAgo(date) {
-  const diff = Date.now() - new Date(date).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
-}
 
 function FriendCard({ user, onRemove, onNavigate }) {
   return (

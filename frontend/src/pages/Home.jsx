@@ -32,6 +32,7 @@ import Background from "../components/Background";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
 import { loadWatchlist, loadWatchHistory, loadRatings } from "../services/storage";
+import { formatTimeAgo } from "../utils/helpers";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./Home.css";
 
@@ -233,17 +234,6 @@ function SpotlightQuote({ quote, onRefresh, loading }) {
   );
 }
 
-  function formatTimeAgo(ts) {
-    const diff = Date.now() - (typeof ts === 'string' ? new Date(ts).getTime() : ts);
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    if (days < 7) return `${days}d ago`;
-    return new Date(ts).toLocaleDateString();
-  }
 
 function ContinueWatchingRow() {
   const navigate = useNavigate();

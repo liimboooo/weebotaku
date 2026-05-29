@@ -6,9 +6,12 @@ export function formatCount(n) {
 }
 
 export function timeAgo(ts) {
-  if (!ts || typeof ts !== "number") return "Just now";
-  const diff = Date.now() - ts;
-  if (diff < 0) return "Just now";
+  if (!ts) return "Just now";
+  const time = typeof ts === "string" ? new Date(ts).getTime()
+    : ts instanceof Date ? ts.getTime()
+    : ts;
+  const diff = Date.now() - time;
+  if (diff < 0 || isNaN(diff)) return "Just now";
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "Just now";
   if (mins < 60) return `${mins}m ago`;
@@ -16,7 +19,16 @@ export function timeAgo(ts) {
   if (hrs < 24) return `${hrs}h ago`;
   const days = Math.floor(hrs / 24);
   if (days < 30) return `${days}d ago`;
-  return new Date(ts).toLocaleDateString();
+  return new Date(time).toLocaleDateString();
+}
+
+export const formatTimeAgo = timeAgo;
+
+export function formatDate(d) {
+  if (!d?.year) return "N/A";
+  const m = String(d.month || 1).padStart(2, "0");
+  const day = String(d.day || 1).padStart(2, "0");
+  return `${d.year}-${m}-${day}`;
 }
 
 export function notify(message, type = "info") {

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { gql, fetchAnimeRecommendations, fetchAnimeCharacters } from "../services/anilistApi";
 import { statusLabel, LIST_OPTIONS } from "../utils/constants";
+import { formatDate } from "../utils/helpers";
 import { loadWatchlist, addToWatchlist, removeFromWatchlist, updateListStatus } from "../services/storage";
 import authService from "../services/authService";
 import useDocumentTitle from "../hooks/useDocumentTitle";
@@ -37,13 +38,6 @@ function mapDetail(a) {
     startDate: a.startDate ? { year: a.startDate.year, month: a.startDate.month, day: a.startDate.day } : null,
     trailerUrl: a.trailer?.site === "youtube" ? `${process.env.REACT_APP_YOUTUBE_EMBED_BASE || "https://www.youtube.com/embed/"}${a.trailer.id}` : null,
   };
-}
-
-function formatDate(d) {
-  if (!d?.year) return "N/A";
-  const m = String(d.month || 1).padStart(2, "0");
-  const day = String(d.day || 1).padStart(2, "0");
-  return `${d.year}-${m}-${day}`;
 }
 
 

@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import AuthImage from "../components/AuthImage";
 import authService from "../services/authService";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import { CheckCircle, XCircle, Loader } from "lucide-react";
 import "./AuthPage.css";
 
 export default function VerifyEmailPage() {
+  useDocumentTitle("Verify Email");
   const { token } = useParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState("loading");

@@ -2,11 +2,12 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import AnimatedPage from "../../components/AnimatedPage";
-
+import useDocumentTitle from "../../hooks/useDocumentTitle";
 import Background from "../../components/Background";
 import "./ArenaShowcase.css";
 
 export default function Overview() {
+  useDocumentTitle("Arena Overview");
   const navigate = useNavigate();
 
   return (
