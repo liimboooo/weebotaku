@@ -116,7 +116,7 @@
   display: grid;
   place-items: center;
   background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .watch-poster-glow {
@@ -160,7 +160,7 @@
   color: #ffffff;
   padding: 2px 7px;
   border-radius: 5px;
-  background: rgba(255,255,255,0.03);
+  background: transparent;
   border: 1px solid rgba(255,255,255,0.05);
   font-family: "Space Grotesk", sans-serif;
 }
@@ -227,7 +227,7 @@
   height: 32px;
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.03);
+  background: transparent;
   color: #ffffff;
   cursor: pointer;
   display: grid;
@@ -309,7 +309,7 @@
   padding: 4px 8px;
   border-radius: 7px;
   border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.02);
+  background: transparent;
   color: #ffffff;
   cursor: pointer;
   font-size: 10px;
@@ -344,7 +344,7 @@
   height: 28px;
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.02);
+  background: transparent;
   color: #ffffff;
   cursor: pointer;
   transition: all 0.2s;
@@ -485,7 +485,7 @@ video.watch-frame:fullscreen {
 .watch-timeline-progress {
   height: 100%;
   border-radius: 2px;
-  background: linear-gradient(90deg, #ffffff, #ffffff);
+  background: #ffffff;
   transition: width 0.3s;
   box-shadow: 0 0 6px rgba(255,255,255,0.3);
 }
@@ -525,7 +525,7 @@ video.watch-frame:fullscreen {
   padding: 5px 10px;
   border-radius: 7px;
   border: 1px solid rgba(255,255,255,0.05);
-  background: rgba(255,255,255,0.02);
+  background: transparent;
   color: #ffffff;
   cursor: pointer;
   font-size: 10px;
@@ -650,7 +650,7 @@ video.watch-frame:fullscreen {
   padding: 3px 10px;
   border-radius: 7px;
   border: 1px solid rgba(255,255,255,0.03);
-  background: rgba(255,255,255,0.02);
+  background: transparent;
   color: #ffffff;
   cursor: pointer;
   font-size: 10px;
@@ -667,9 +667,9 @@ video.watch-frame:fullscreen {
 }
 
 .watch-server-chip.active {
-  background: linear-gradient(135deg, #ffffff, #ffffff);
+  background: #ffffff;
   border-color: #ffffff;
-  color: #fff;
+  color: #000;
   font-weight: 800;
   box-shadow: 0 0 16px rgba(255,255,255,0.25);
 }
@@ -806,7 +806,7 @@ video.watch-frame:fullscreen {
   padding: 7px 28px 7px 30px;
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.02);
+  background: transparent;
   color: #ffffff;
   font-size: 11px;
   font-family: inherit;
@@ -869,7 +869,7 @@ video.watch-frame:fullscreen {
   padding: 10px;
   margin-bottom: 6px;
   border-radius: 10px;
-  background: rgba(255,255,255,0.01);
+  background: transparent;
   border: 1px solid rgba(255,255,255,0.04);
   color: #ffffff;
   cursor: pointer;
@@ -920,7 +920,7 @@ video.watch-frame:fullscreen {
 
 .watch-ep-date {
   font-size: 9px;
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
   font-weight: 600;
 }
 
@@ -997,7 +997,7 @@ video.watch-frame:fullscreen {
   align-items: center;
   gap: 5px;
   border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.03);
+  background: transparent;
   color: #ffffff;
   padding: 6px 14px;
   border-radius: 8px;
@@ -1149,7 +1149,7 @@ video.watch-frame:fullscreen {
   padding: 8px 16px;
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.02);
+  background: transparent;
   color: #ffffff;
   cursor: pointer;
   transition: all 0.15s;
@@ -1213,7 +1213,7 @@ video.watch-frame:fullscreen {
   width: 160px;
   border-radius: 12px;
   overflow: hidden;
-  background: rgba(255,255,255,0.02);
+  background: transparent;
   border: 1px solid rgba(255,255,255,0.05);
   cursor: pointer;
   transition: all 0.25s ease;
@@ -1326,7 +1326,7 @@ video.watch-frame:fullscreen {
   width: 110px;
   border-radius: 10px;
   overflow: hidden;
-  background: rgba(255,255,255,0.01);
+  background: transparent;
   border: 1px solid rgba(255,255,255,0.04);
   cursor: pointer;
   transition: all 0.2s;
@@ -1364,7 +1364,7 @@ video.watch-frame:fullscreen {
   display: grid;
   place-items: center;
   background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent);
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .watch-char-name {
@@ -1590,8 +1590,8 @@ video.watch-frame:fullscreen {
   padding: 10px 24px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, #ffffff, #ffffff);
-  color: #fff;
+  background: #ffffff;
+  color: #000;
   font-size: 13px;
   font-weight: 700;
   font-family: "Inter", sans-serif;
@@ -1601,7 +1601,7 @@ video.watch-frame:fullscreen {
 }
 
 .auto-next-play:hover {
-  background: linear-gradient(135deg, #ffffff, #ffffff);
+  background: #ffffff;
   box-shadow: 0 0 30px rgba(255,255,255,0.4);
 }
 

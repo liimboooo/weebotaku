@@ -215,7 +215,7 @@
 
 .slider-wish-btn {
   border: none;
-  background: rgba(255, 255, 255, 0.03);
+  background: transparent;
   color: var(--text-tertiary);
   width: 28px;
   height: 28px;

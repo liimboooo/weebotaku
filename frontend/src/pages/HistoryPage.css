@@ -113,7 +113,7 @@
 .hp-hero-accent {
   display: block;
   font-size: clamp(2.8rem, 5.5vw, 4.5rem);
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
   font-weight: 900;
   font-family: var(--font-display);
   text-transform: uppercase;
@@ -224,7 +224,7 @@
   font-size: 0.55rem;
   font-weight: 900;
   letter-spacing: 0.12em;
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
   text-transform: uppercase;
 }
 
@@ -385,7 +385,7 @@
 
 .hp-card:hover .hp-card-play-icon {
   background: rgba(255, 255, 255,0.25);
-  border-color: #000000;
+  border-color: rgba(255, 255, 255, 0.65);
 }
 
 .hp-card-progress-bar {
@@ -393,7 +393,7 @@
   bottom: 0;
   left: 0;
   height: 3px;
-  background: linear-gradient(90deg, #ffffff, #ffffff);
+  background: #ffffff;
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
   border-radius: 0 0 10px 10px;
 }
@@ -478,7 +478,7 @@
 
 .hp-card-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #ffffff, #ffffff);
+  background: #ffffff;
   border-radius: 4px;
   box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
   transition: width 0.4s var(--ease-out);
@@ -500,7 +500,7 @@
   border: none;
   border-radius: 50%;
   background: rgba(255,255,255,0.04);
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -525,7 +525,7 @@
   padding: 100px 24px;
   border: 1px dashed var(--border-subtle);
   border-radius: var(--radius-2xl);
-  background: rgba(255, 255, 255, 0.01);
+  background: transparent;
 }
 
 .hp-empty-icon {
@@ -564,8 +564,8 @@
   padding: 12px 28px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, #ffffff, #ffffff);
-  color: #fff;
+  background: #ffffff;
+  color: #000;
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;

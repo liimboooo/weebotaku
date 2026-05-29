@@ -235,7 +235,7 @@
 }
 
 .upp-search-input:focus {
-  border-color: #000000;
+  border-color: rgba(255, 255, 255, 0.65);
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
 }
 
@@ -383,7 +383,7 @@
 }
 
 .upp-list-rating-empty {
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .upp-list-actions {
@@ -396,7 +396,7 @@
 .upp-list-action {
   background: none;
   border: none;
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
   cursor: pointer;
   padding: 5px;
   display: flex;

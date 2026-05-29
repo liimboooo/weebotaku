@@ -96,7 +96,7 @@
 .wl-hero-accent {
   display: block;
   font-size: clamp(3rem, 6vw, 5rem);
-  color: #000000;
+  color: #ffffff;
   font-weight: 900;
   font-family: var(--font-display);
   text-transform: uppercase;
@@ -171,7 +171,7 @@
   font-size: 0.55rem;
   font-weight: 900;
   letter-spacing: 0.12em;
-  color: #000000;
+  color: rgba(255, 255, 255, 0.6);
   text-transform: uppercase;
 }
 
@@ -197,7 +197,7 @@
   display: flex;
   gap: 6px;
   margin-bottom: 28px;
-  background: rgba(255,255,255,0.02);
+  background: transparent;
   padding: 5px;
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.06);
@@ -297,7 +297,7 @@
 }
 .wl-card:hover .wl-card-play {
   background: rgba(255, 255, 255,0.2);
-  border-color: #000000;
+  border-color: #ffffff;
 }
 
 .wl-card-tech {
@@ -350,7 +350,7 @@
   right: 10px;
   border: 0;
   background: rgba(255, 255, 255,0.2);
-  color: #000000;
+  color: #ffffff;
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -434,7 +434,7 @@
   color: var(--text-tertiary);
   border: 1px dashed var(--border-subtle);
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.01);
+  background: transparent;
 }
 
 .wl-empty svg { color: var(--primary); margin-bottom: 20px; opacity: 0.4; }
@@ -450,8 +450,8 @@
   padding: 12px 28px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, #ffffff, #ffffff);
-  color: #fff;
+  background: #ffffff;
+  color: #000;
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;

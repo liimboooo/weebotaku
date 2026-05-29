@@ -156,7 +156,7 @@
   background: #000000;
   display: grid;
   place-items: center;
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
   font-size: 13px;
 }
 
@@ -881,7 +881,7 @@
   border: none;
   cursor: pointer;
   padding: 2px;
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
   transition: color 0.15s, transform 0.15s;
 }
 
@@ -897,7 +897,7 @@
 }
 
 .ai-star-display .ai-star-icon.filled { color: #eab308; }
-.ai-star-display .ai-star-icon { color: #000000; }
+.ai-star-display .ai-star-icon { color: rgba(255, 255, 255, 0.65); }
 .ai-star-display .ai-star-num { font-size: 14px; font-weight: 600; color: #eab308; }
 .ai-star-display .ai-star-max { font-size: 12px; color: #ffffff; }
 .ai-star-display .ai-star-votes { font-size: 11px; color: #ffffff; margin-left: 4px; }

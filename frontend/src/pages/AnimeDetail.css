@@ -162,13 +162,13 @@
   padding: 15px 36px;
   border: none;
   border-radius: 14px;
-  background: linear-gradient(135deg, #000000, #ffffff);
-  color: #fff;
+  background: #ffffff;
+  color: #000;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.25s;
-  box-shadow: 0 4px 24px rgba(255, 255, 255,0.35);
+  box-shadow: 0 4px 24px rgba(255, 255, 255,0.25);
   white-space: nowrap;
   position: relative;
   overflow: hidden;
@@ -309,7 +309,7 @@
   margin-bottom: 28px;
   padding: 0;
   border-radius: var(--radius-lg);
-  background: rgba(255,255,255,0.02);
+  background: transparent;
   border: 1px solid rgba(255,255,255,0.04);
   overflow: hidden;
 }
@@ -328,7 +328,7 @@
 .ad-status-item:last-child { border-right: none; }
 
 .ad-status-item .label {
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
   text-transform: uppercase;
   font-size: 0.6rem;
   letter-spacing: 0.08em;
@@ -380,7 +380,7 @@
 }
 
 .ad-rating-global { color: #ffd700; font-weight: 800; font-size: 1.1rem; }
-.ad-rating-votes { color: #000000; font-size: 0.75rem; }
+.ad-rating-votes { color: rgba(255, 255, 255, 0.65); font-size: 0.75rem; }
 .ad-rating-user { color: #ffffff; font-weight: 700; font-size: 0.82rem; }
 
 /* ═══ GENRES ═══ */
@@ -442,7 +442,7 @@
   margin-bottom: 28px;
   padding: 5px;
   overflow-x: auto;
-  background: rgba(255,255,255,0.02);
+  background: transparent;
   border: 1px solid rgba(255,255,255,0.05);
   border-radius: 14px;
   scrollbar-width: none;
@@ -469,7 +469,7 @@
 
 .ad-tab:hover {
   color: #ffffff;
-  background: rgba(255,255,255,0.03);
+  background: transparent;
 }
 
 .ad-tab.active {
@@ -526,7 +526,7 @@
 }
 
 .ad-cour-dates {
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
   font-size: 0.72rem;
   font-weight: 500;
 }
@@ -547,7 +547,7 @@
   padding: 12px 6px;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.02);
+  background: transparent;
   color: #ffffff;
   cursor: pointer;
   transition: all 0.2s var(--ease-out);
@@ -601,7 +601,7 @@
 
 .ad-episode-label {
   font-size: 0.58rem;
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
   text-transform: uppercase;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -616,7 +616,7 @@
 }
 
 .ad-character-card {
-  background: rgba(255,255,255,0.02);
+  background: transparent;
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 14px;
   overflow: hidden;
@@ -712,7 +712,7 @@
   align-items: center;
   gap: 10px;
   padding: 12px;
-  background: rgba(255,255,255,0.02);
+  background: transparent;
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 14px;
   cursor: pointer;
@@ -763,7 +763,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,0.02);
+  background: transparent;
   border: 1px solid rgba(255,255,255,0.04);
   color: rgba(255,255,255,0.1);
 }
@@ -868,13 +868,13 @@
 }
 
 .ad-tab-empty {
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
   text-align: center;
   padding: 56px 32px;
   font-size: 0.85rem;
   border: 1px dashed rgba(255,255,255,0.06);
   border-radius: 14px;
-  background: rgba(255,255,255,0.01);
+  background: transparent;
 }
 
 /* ═══ LOADING ═══ */

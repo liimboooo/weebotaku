@@ -122,7 +122,7 @@
   min-height: 20px;
 }
 
-.awc-input-field::placeholder { color: #000000; }
+.awc-input-field::placeholder { color: rgba(255, 255, 255, 0.65); }
 .awc-input-field:disabled { opacity: 0.5; }
 
 .awc-format-bar {
@@ -181,7 +181,7 @@
 
 .awc-input-chars {
   font-size: 12px;
-  color: #000000;
+  color: rgba(255, 255, 255, 0.65);
   white-space: nowrap;
   margin-right: 12px;
 }
@@ -521,7 +521,7 @@
   min-height: 18px;
 }
 
-.awc-reply-input-field::placeholder { color: #000000; }
+.awc-reply-input-field::placeholder { color: rgba(255, 255, 255, 0.65); }
 .awc-reply-input-field:disabled { opacity: 0.5; }
 
 .awc-reply-input-bar {

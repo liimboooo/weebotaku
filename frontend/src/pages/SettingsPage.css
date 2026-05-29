@@ -192,7 +192,7 @@
   padding: 0.5rem 1rem;
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.03);
+  background: transparent;
   color: #ffffff;
   font-size: 13px;
   font-weight: 500;
@@ -364,7 +364,7 @@
   box-shadow: 0 0 0 3px rgba(255,255,255,0.15), 0 0 12px rgba(255,255,255,0.05);
 }
 
-.st-input::placeholder { color: #000000; }
+.st-input::placeholder { color: rgba(255, 255, 255, 0.65); }
 
 .st-input--flex { flex: 1; }
 
@@ -607,7 +607,7 @@
   padding: 0.45rem 0.9rem;
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.03);
+  background: transparent;
   color: #ffffff;
   font-size: 13px;
   font-weight: 500;
@@ -647,7 +647,7 @@
   padding: 0.6rem 1rem;
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.03);
+  background: transparent;
   color: #ffffff;
   font-size: 13px;
   font-weight: 500;
@@ -697,7 +697,7 @@
   margin-top: 8px;
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  background: rgba(255,255,255,0.03);
+  background: transparent;
   border: 1px solid rgba(255,255,255,0.1);
   color: #ffffff;
 }
@@ -917,12 +917,12 @@
   place-items: center;
   font-size: 14px;
   font-weight: 800;
-  color: #fff;
+  color: #000;
   flex-shrink: 0;
 }
 
 .st-sync-logo.mal { background: #ffffff; }
-.st-sync-logo.ani { background: linear-gradient(135deg, #ffffff, #ffffff); }
+.st-sync-logo.ani { background: #ffffff; }
 
 .st-sync-info {
   display: flex;
