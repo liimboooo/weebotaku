@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLoading } from "../components/LoadingProvider";
 import {
@@ -157,6 +157,7 @@ function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchLoading }) {
 export default function Browse() {
   useDocumentTitle("Browse Anime");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [allAnime, setAllAnime] = useState([]);
   const [heroAnime, setHeroAnime] = useState(null);
@@ -169,12 +170,12 @@ export default function Browse() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const [activeGenres, setActiveGenres] = useState([]);
+  const [activeGenres, setActiveGenres] = useState(() => searchParams.get("genre") ? [searchParams.get("genre")] : []);
   const [activeFormats, setActiveFormats] = useState([]);
   const [activeStatuses, setActiveStatuses] = useState([]);
   const [activeSeasons, setActiveSeasons] = useState([]);
-  const [activeYears, setActiveYears] = useState([]);
-  const [activeStudios, setActiveStudios] = useState([]);
+  const [activeYears, setActiveYears] = useState(() => searchParams.get("year") ? [searchParams.get("year")] : []);
+  const [activeStudios, setActiveStudios] = useState(() => searchParams.get("studio") ? [searchParams.get("studio")] : []);
   const [sortBy, setSortBy] = useState("popularity");
   const [view, setView] = useState("grid");
   const [watchlist, setWatchlist] = useState(loadWatchlist());

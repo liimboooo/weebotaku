@@ -7,8 +7,8 @@ import {
 } from "lucide-react";
 import { gql, fetchAnimeRecommendations, fetchAnimeCharacters } from "../services/anilistApi";
 import { statusLabel, LIST_OPTIONS } from "../utils/constants";
-import { formatDate } from "../utils/helpers";
-import { loadWatchlist, addToWatchlist, removeFromWatchlist, updateListStatus } from "../services/storage";
+import { formatDate, formatTimeAgo } from "../utils/helpers";
+import { loadWatchlist, addToWatchlist, removeFromWatchlist, updateListStatus, loadWatchHistory } from "../services/storage";
 import authService from "../services/authService";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./AnimeInfo.css";
@@ -123,6 +123,23 @@ export default function AnimeInfo() {
     const wl = loadWatchlist();
     const entry = wl.find(i => i.id === anime.id);
     if (entry) setListStatus(entry.listStatus || "");
+  }, [anime]);
+
+  const [resumeInfo, setResumeInfo] = useState(null);
+  useEffect(() => {
+    if (!anime) return;
+    const hist = loadWatchHistory();
+    const latest = hist.find(h => h.animeId === anime.id);
+    if (latest) {
+      setResumeInfo({
+        episode: latest.episode,
+        position: latest.position || 0,
+        timestamp: latest.timestamp,
+        isFinished: anime.episodes > 0 && latest.episode >= anime.episodes,
+      });
+    } else {
+      setResumeInfo(null);
+    }
   }, [anime]);
 
   useEffect(() => {
@@ -332,10 +349,21 @@ export default function AnimeInfo() {
 
           {/* Actions */}
           <div className="ai-hero-actions">
-            {anime.status === "NOT_YET_RELEASED" || anime.status === "CANCELLED" ? (
+            {anime.status === "Upcoming" || anime.status === "Cancelled" ? (
               <span className="ai-btn-primary" style={{ opacity: 0.5, pointerEvents: 'none', cursor: 'default' }}>
-                {anime.status === "NOT_YET_RELEASED" ? "Coming Soon" : "Cancelled"}
+                {anime.status === "Upcoming" ? "Coming Soon" : "Cancelled"}
               </span>
+            ) : resumeInfo && !resumeInfo.isFinished ? (
+              <Link to={`/anime/${anime.id}?ep=${resumeInfo.episode}`} className="ai-btn-primary" title={`Last watched ${formatTimeAgo(resumeInfo.timestamp)}`}>
+                <Play size={16} fill="currentColor" /> Continue Ep {resumeInfo.episode}
+                {anime.episodes > 0 && (
+                  <span style={{ opacity: 0.75, fontWeight: 500, marginLeft: 4 }}>/ {anime.episodes}</span>
+                )}
+              </Link>
+            ) : resumeInfo?.isFinished ? (
+              <Link to={`/anime/${anime.id}?ep=1`} className="ai-btn-primary">
+                <Play size={16} fill="currentColor" /> Rewatch
+              </Link>
             ) : (
               <Link to={`/anime/${anime.id}`} className="ai-btn-primary">
                 <Play size={16} fill="currentColor" /> Watch Now

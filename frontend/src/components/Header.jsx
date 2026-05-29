@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import authService from '../services/authService';
 import { loadWatchHistory } from '../services/storage';
+import { formatTimeAgo } from '../utils/helpers';
 import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications, fetchServerNotifications, seedBroadcastNotifications, handleSocketNotification, startPolling, stopPolling } from '../services/notificationService';
 import { connectSocket, disconnectSocket } from '../services/socket';
 import { fetchAggregatedNews } from '../services/newsAggregator';
@@ -368,7 +369,7 @@ export default function Header() {
                       <div className="notif-item-body">
                         <div className="notif-item-title">{n.title}</div>
                         {n.body && <div className="notif-item-text">{n.body}</div>}
-                        <div className="notif-item-time">{new Date(n.time).toLocaleDateString()}</div>
+                        <div className="notif-item-time">{formatTimeAgo(n.time)}</div>
                       </div>
                     </div>
                   ))}

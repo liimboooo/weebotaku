@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, BookOpen, Search, Star, Play, Sparkles, X } from "lucide-react";
+import { Heart, BookOpen, Search, Star, Play, Sparkles, X, ArrowUpDown } from "lucide-react";
 import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
 import { loadWatchlist, removeFromWatchlist, loadReadlist, removeFromReadlist, loadWatchHistory, getMangaProgress as getMangaProgressFromStorage } from "../services/storage";
@@ -16,6 +16,7 @@ export default function WatchlistPage() {
   const [mangaList, setMangaList] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [sortBy, setSortBy] = useState("recent");
 
   const refresh = () => {
     setAnimeList(loadWatchlist());
@@ -54,6 +55,14 @@ export default function WatchlistPage() {
     return getMangaProgressFromStorage(id);
   };
 
+  const sortList = (list, key, getName, getRating, getProgress) => {
+    const sorted = [...list];
+    if (key === "title") sorted.sort((a, b) => (getName(a) || "").localeCompare(getName(b) || ""));
+    else if (key === "rating") sorted.sort((a, b) => (getRating(b) || 0) - (getRating(a) || 0));
+    else if (key === "progress") sorted.sort((a, b) => (getProgress(b) || 0) - (getProgress(a) || 0));
+    return sorted;
+  };
+
   const filteredAnime = useMemo(() => {
     let list = animeList;
     if (statusFilter !== "All") {
@@ -63,14 +72,17 @@ export default function WatchlistPage() {
       const q = search.toLowerCase();
       list = list.filter(a => (a.name || '').toLowerCase().includes(q));
     }
-    return list;
-  }, [animeList, search, statusFilter]);
+    return sortList(list, sortBy, a => a.name, a => a.rating, a => progressMap[a.id] || 0);
+  }, [animeList, search, statusFilter, sortBy, progressMap]);
 
   const filteredManga = useMemo(() => {
-    if (!search) return mangaList;
-    const q = search.toLowerCase();
-    return mangaList.filter(m => (m.title || '').toLowerCase().includes(q));
-  }, [mangaList, search]);
+    let list = mangaList;
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(m => (m.title || '').toLowerCase().includes(q));
+    }
+    return sortList(list, sortBy, m => m.title, m => m.rating, m => getMangaProgressFromStorage(m.id) || 0);
+  }, [mangaList, search, sortBy]);
 
   const activeList = tab === "anime" ? filteredAnime : filteredManga;
   const totalItems = animeList.length + mangaList.length;
@@ -124,17 +136,33 @@ export default function WatchlistPage() {
             <button className={`wl-tab ${tab === "manga" ? "active" : ""}`} onClick={() => setTab("manga")}>
               <BookOpen size={14} /> Readlist <span className="wl-tab-count">{mangaList.length}</span>
             </button>
-            <div className="wl-search-wrap" style={{ marginLeft: 'auto', position: 'relative' }}>
-              <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
-              <input
-                className="wl-search-input"
-                type="text"
-                placeholder={`Search ${tab === 'anime' ? 'watchlist' : 'readlist'}...`}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                style={{ padding: '8px 32px 8px 34px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none', width: 200 }}
-              />
-              {search && <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><X size={14} /></button>}
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                <ArrowUpDown size={13} style={{ position: 'absolute', left: 10, color: 'rgba(255,255,255,0.5)', pointerEvents: 'none' }} />
+                <select
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value)}
+                  aria-label="Sort by"
+                  style={{ padding: '8px 12px 8px 30px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none', cursor: 'pointer', appearance: 'none' }}
+                >
+                  <option value="recent" style={{ background: '#1a1a1f' }}>Recently Added</option>
+                  <option value="title" style={{ background: '#1a1a1f' }}>Title A–Z</option>
+                  <option value="rating" style={{ background: '#1a1a1f' }}>Highest Rated</option>
+                  <option value="progress" style={{ background: '#1a1a1f' }}>Most Progress</option>
+                </select>
+              </div>
+              <div className="wl-search-wrap" style={{ position: 'relative' }}>
+                <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+                <input
+                  className="wl-search-input"
+                  type="text"
+                  placeholder={`Search ${tab === 'anime' ? 'watchlist' : 'readlist'}...`}
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  style={{ padding: '8px 32px 8px 34px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none', width: 200 }}
+                />
+                {search && <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><X size={14} /></button>}
+              </div>
             </div>
           </div>
 

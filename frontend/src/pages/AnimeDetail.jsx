@@ -61,6 +61,7 @@ export default function AnimeDetail() {
   const [autoNextCountdown, setAutoNextCountdown] = useState(null);
   const [playbackSpeed, setPlaybackSpeed] = useState(() => loadSettings().playbackSpeed || 1);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const hlsVideoRef = useRef(null);
   const hlsInstanceRef = useRef(null);
   const autoNextTimerRef = useRef(null);
@@ -571,13 +572,25 @@ export default function AnimeDetail() {
   }, []);
 
   useEffect(() => {
-    if (streamMode !== "hls") return;
     const onKey = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
+        e.preventDefault();
+        setShowShortcutsHelp(s => !s);
+        return;
+      }
+      if (e.key === 'Escape' && showShortcutsHelp) {
+        setShowShortcutsHelp(false);
+        return;
+      }
+      if (streamMode !== "hls") return;
       const video = hlsVideoRef.current;
-      if (!video || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (!video) return;
       switch (e.key) {
         case ' ':
         case 'k': e.preventDefault(); video.paused ? video.play() : video.pause(); break;
+        case 'j': e.preventDefault(); video.currentTime = Math.max(0, video.currentTime - 10); break;
+        case 'l': e.preventDefault(); video.currentTime = Math.min(video.duration, video.currentTime + 10); break;
         case 'ArrowRight': e.preventDefault(); video.currentTime = Math.min(video.duration, video.currentTime + 10); break;
         case 'ArrowLeft': e.preventDefault(); video.currentTime = Math.max(0, video.currentTime - 10); break;
         case 'ArrowUp': e.preventDefault(); video.volume = Math.min(1, video.volume + 0.1); break;
@@ -585,12 +598,18 @@ export default function AnimeDetail() {
         case 'f': e.preventDefault(); document.fullscreenElement ? document.exitFullscreen() : video.requestFullscreen?.(); break;
         case 'm': e.preventDefault(); video.muted = !video.muted; break;
         case 'n': e.preventDefault(); if (epIndex < episodes.length - 1) { setEpIndex(i => i + 1); setSelectedEp(episodes[epIndex + 1]?.episode || (epIndex + 2)); } break;
-        default: break;
+        case 'p': e.preventDefault(); if (epIndex > 0) { setEpIndex(i => i - 1); setSelectedEp(episodes[epIndex - 1]?.episode || epIndex); } break;
+        default:
+          if (e.key >= '0' && e.key <= '9' && video.duration) {
+            e.preventDefault();
+            video.currentTime = (parseInt(e.key, 10) / 10) * video.duration;
+          }
+          break;
       }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [streamMode]);
+  }, [streamMode, showShortcutsHelp, epIndex, episodes]);
 
   useEffect(() => {
     if (!watchAnime?.anilistId) return;
@@ -772,6 +791,17 @@ export default function AnimeDetail() {
               )}
 
               {streamMode === "hls" && !loading && !error && streamUrl && !streamLoading && (
+                <button
+                  className="speed-btn"
+                  onClick={() => setShowShortcutsHelp(s => !s)}
+                  title="Keyboard shortcuts (press ?)"
+                  style={{ position: 'absolute', top: 12, right: 12, zIndex: 20, padding: '6px 10px', fontWeight: 700 }}
+                >
+                  ?
+                </button>
+              )}
+
+              {streamMode === "hls" && !loading && !error && streamUrl && !streamLoading && (
                 <div className="speed-control">
                   <button className="speed-btn" onClick={() => setShowSpeedMenu(p => !p)}>
                     {playbackSpeed}x
@@ -785,6 +815,39 @@ export default function AnimeDetail() {
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+
+              {showShortcutsHelp && (
+                <div
+                  onClick={() => setShowShortcutsHelp(false)}
+                  style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 24 }}
+                >
+                  <div onClick={e => e.stopPropagation()} style={{ background: 'rgba(20,20,28,0.95)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 14, padding: '24px 28px', maxWidth: 480, width: '100%', color: '#fff' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+                      <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, letterSpacing: '0.02em' }}>Keyboard Shortcuts</h3>
+                      <button onClick={() => setShowShortcutsHelp(false)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', padding: 4 }}>✕</button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px', fontSize: '0.82rem' }}>
+                      {[
+                        ['Space / K', 'Play / Pause'],
+                        ['J / ←', 'Back 10s'],
+                        ['L / →', 'Forward 10s'],
+                        ['↑ / ↓', 'Volume'],
+                        ['0-9', 'Jump to %'],
+                        ['F', 'Fullscreen'],
+                        ['M', 'Mute'],
+                        ['N', 'Next episode'],
+                        ['P', 'Previous episode'],
+                        ['?', 'Toggle this help'],
+                      ].map(([k, v]) => (
+                        <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 6 }}>
+                          <kbd style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 5, padding: '2px 7px', fontFamily: 'monospace', fontSize: '0.72rem', color: '#c084fc' }}>{k}</kbd>
+                          <span style={{ color: '#bbb' }}>{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
