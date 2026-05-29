@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -9,18 +9,11 @@ import {
   Gift,
   BookOpen,
   LogOut,
-  PenLine,
   Globe,
   Menu,
-  MessageSquare,
-  Newspaper,
   Settings,
-  Star,
-  Swords,
   Trophy,
-  TrendingUp,
   Users,
-  Video,
   X,
 } from 'lucide-react';
 import authService from '../services/authService';
@@ -39,16 +32,10 @@ export default function Header() {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
-  const [feedsOpen, setFeedsOpen] = useState(false);
-  const [arenaOpen, setArenaOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const path = location.pathname;
 
   const isExploreActive = path.startsWith('/browse/');
-  const isFeedsActive = ['/feeds/amvs', '/watch-together', '/news'].some(p => path.startsWith(p));
-  const isArenaActive = path.startsWith('/arena/') || path.startsWith('/rankings/');
-  const isMoreActive = ['/settings', '/help', '/system/rules', '/report'].some(p => path.startsWith(p));
   const [profileImage, setProfileImage] = useState(() => localStorage.getItem('userAvatar') || '');
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -65,33 +52,17 @@ export default function Header() {
   });
 
   const notifRef = useRef(null);
-  const feedsRef = useRef(null);
   const exploreRef = useRef(null);
-  const arenaRef = useRef(null);
   const profileRef = useRef(null);
-  const moreDropdownRef = useRef(null);
 
   const username = localStorage.getItem('username') || 'Guest';
   const [episodesWatched, setEpisodesWatched] = useState(() => loadWatchHistory().length);
   const hasUnclaimedRewards = localStorage.getItem('userUnclaimedRewards') === 'true';
 
-  const feedItems = useMemo(
-    () => [
-      { label: 'AMVs & Edits', path: '/feeds/amvs', icon: Star, description: 'High-energy AMVs and creative edits from the community' },
-      { label: 'Live Rooms', path: '/watch-together', icon: Video, description: 'Jump into live rooms and sync the next episode together' },
-      { label: 'Anime News', path: '/news', icon: Newspaper, description: 'Trending, new episodes & announcements' },
-    ],
-    []
-  );
-
-
   useEffect(() => {
     const closeOnClickOutside = (event) => {
-      if (feedsRef.current && !feedsRef.current.contains(event.target)) setFeedsOpen(false);
       if (exploreRef.current && !exploreRef.current.contains(event.target)) setExploreOpen(false);
-      if (arenaRef.current && !arenaRef.current.contains(event.target)) setArenaOpen(false);
       if (profileRef.current && !profileRef.current.contains(event.target)) setProfileOpen(false);
-      if (moreDropdownRef.current && !moreDropdownRef.current.contains(event.target)) setMoreDropdownOpen(false);
       if (notifRef.current && !notifRef.current.contains(event.target)) setNotifOpen(false);
     };
     document.addEventListener('click', closeOnClickOutside);
@@ -99,8 +70,7 @@ export default function Header() {
     window.addEventListener('scroll', onScroll, { passive: true });
     const onEsc = (e) => {
       if (e.key === 'Escape') {
-        setMobileOpen(false); setExploreOpen(false); setFeedsOpen(false);
-        setArenaOpen(false); setProfileOpen(false); setMoreDropdownOpen(false); setNotifOpen(false);
+        setMobileOpen(false); setExploreOpen(false); setProfileOpen(false); setNotifOpen(false);
       }
     };
     document.addEventListener('keydown', onEsc);
@@ -175,10 +145,7 @@ export default function Header() {
     navigate(path);
     setMobileOpen(false);
     setExploreOpen(false);
-    setFeedsOpen(false);
-    setArenaOpen(false);
     setProfileOpen(false);
-    setMoreDropdownOpen(false);
     setNotifOpen(false);
   };
 
@@ -238,75 +205,6 @@ export default function Header() {
               )}
             </div>
 
-            <div className="feeds-dropdown-container" ref={feedsRef}>
-              <button
-                className={`nav-link ${feedsOpen || isFeedsActive ? 'active' : ''}`}
-                onClick={() => setFeedsOpen((value) => !value)}
-                aria-expanded={feedsOpen}
-                aria-haspopup="true"
-              >
-                <MessageSquare size={16} />
-                <span>Feeds</span>
-                <ChevronDown size={14} className="nav-chevron" />
-              </button>
-              {feedsOpen && (
-                <motion.div className="feeds-dropdown"
-                  initial={{ opacity: 0, scale: 0.95, y: -8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -8 }}
-                  transition={{ duration: 0.18, ease: [0.2, 0.9, 0.2, 1] }}
-                >
-                  {feedItems.map((item, idx) => {
-                    const Icon = item.icon;
-                    return (
-                      <motion.button key={item.path} className="feeds-item" onClick={() => navigateTo(item.path)}
-                        initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}>
-                        <span className="feeds-item-icon"><Icon size={16} /></span>
-                        <div>
-                          <span className="feeds-item-label">{item.label}</span>
-                          {item.description ? <span className="feeds-item-description">{item.description}</span> : null}
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-                </motion.div>
-              )}
-            </div>
-
-            <div className="arena-dropdown-container" ref={arenaRef}>
-              <button
-                className={`nav-link arena-link ${arenaOpen || isArenaActive ? 'active' : ''}`}
-                onClick={() => setArenaOpen((value) => !value)}
-                aria-expanded={arenaOpen}
-                aria-haspopup="true"
-              >
-                <Swords size={16} className="arena-icon-shimmer" />
-                <span>The Arena</span>
-                <ChevronDown size={14} className="nav-chevron" />
-              </button>
-              {arenaOpen && (
-                <motion.div className="arena-mega-menu"
-                  initial={{ opacity: 0, scale: 0.95, y: -8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -8 }}
-                  transition={{ duration: 0.18, ease: [0.2, 0.9, 0.2, 1] }}
-                >
-                  <div className="arena-mega-menu-glow" />
-                  <div className="arena-grid">
-                    <div className="arena-column">
-                      <div className="column-header"><Star size={14} /> Community Tiers</div>
-                      <div className="column-items">
-                        <button className="arena-item" onClick={() => navigateTo('/arena/tier-lists')}>
-                          <span className="arena-item-icon"><TrendingUp size={16} /></span>
-                          <span className="arena-item-label">View Tier Lists</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </div>
-
             <button className={`nav-link ${path === '/friends' ? 'active' : ''}`} onClick={() => navigateTo('/friends')}>
               <Users size={16} />
               <span>Friends</span>
@@ -317,22 +215,10 @@ export default function Header() {
               <span>Leaderboard</span>
             </button>
 
-            <div className="more-dropdown-container" ref={moreDropdownRef}>
-              <button className={`more-button ${moreDropdownOpen || isMoreActive ? 'active' : ''}`} onClick={() => setMoreDropdownOpen((value) => !value)}
-                aria-expanded={moreDropdownOpen} aria-haspopup="true">
-                More <ChevronDown size={14} />
-              </button>
-              {moreDropdownOpen && (
-                <div className="more-dropdown">
-                  <button className="more-item" onClick={() => navigateTo('/settings')}>
-                    <Settings size={16} /> <span>Settings</span>
-                  </button>
-                  <button className="more-item" onClick={() => navigateTo('/help')}>
-                    <MessageSquare size={16} /> <span>Help & Support</span>
-                  </button>
-                </div>
-              )}
-            </div>
+            <button className={`nav-link ${path === '/settings' ? 'active' : ''}`} onClick={() => navigateTo('/settings')}>
+              <Settings size={16} />
+              <span>Settings</span>
+            </button>
           </nav>
         </div>
 

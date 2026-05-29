@@ -41,7 +41,7 @@ const SECTIONS = [
     subtitle: "Connect your favorite services",
     cols: 1,
     cards: [
-      { key: "sync",          icon: Link2,    label: "Sync & Connected Apps", desc: "MAL, AniList, auto-sync",              color: "#4ade80" },
+      { key: "sync",          icon: Link2,    label: "Sync & Connected Apps", desc: "MAL, AniList",                        color: "#4ade80" },
     ],
   },
 ];
@@ -842,19 +842,6 @@ export default function SettingsPage() {
         onDisconnect={handleDisconnectAniList}
         onSync={handleSyncAniList}
       />
-
-      <div className="st-divider" />
-      {renderSectionHeader("Auto-Sync Options")}
-      {(syncStatus.mal?.connected || syncStatus.anilist?.connected) ? (
-        <>
-          {renderToggle("autoSyncEpisode", "Auto-sync when episode finishes", "Update MAL/AniList when you finish watching")}
-          {renderToggle("autoSyncInterval", "Auto-sync every 6 hours", "Periodically sync your watchlist")}
-          {renderToggle("autoSyncStartup", "Sync on app startup", "Automatically sync when you open AnimeWch")}
-          {renderToggle("autoSyncShutdown", "Sync on shutdown", "Sync before closing the app")}
-        </>
-      ) : (
-        <p className="st-muted-text">Connect at least one service to enable auto-sync options.</p>
-      )}
 
       <div className="st-divider" />
       {renderSectionHeader("Sync Information")}

@@ -17,7 +17,6 @@ const DEFAULTS = {
   allowMessaging: "anyone", showActivityStatus: true, showLastActive: false,
   defaultDubbed: "subbed", contentRating: "PG-13", defaultListView: "Grid",
   malConnected: false, aniConnected: false,
-  autoSyncEpisode: true, autoSyncInterval: false, autoSyncStartup: true, autoSyncShutdown: false,
   playbackSpeed: 1,
 };
 

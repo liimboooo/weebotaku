@@ -26,7 +26,6 @@ import {
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Skeleton from "../components/Skeleton";
-import LiveRooms from "../components/LiveRooms";
 import Categories from "../components/Categories";
 import Background from "../components/Background";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
@@ -753,14 +752,6 @@ export default function Home() {
             </div>
           </section>
         )}
-
-        <div className="section-divider">
-          <span>Community</span>
-        </div>
-
-        <section className="home-section" id="live-rooms">
-          <LiveRooms />
-        </section>
 
         {categories.length > 0 && (
           <Categories categories={categories} />

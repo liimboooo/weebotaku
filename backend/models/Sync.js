@@ -38,10 +38,6 @@ const SyncSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
-  autoSync: {
-    type: Boolean,
-    default: false,
-  },
 }, { timestamps: true });
 
 SyncSchema.index({ userId: 1, service: 1 }, { unique: true });

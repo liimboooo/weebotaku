@@ -183,10 +183,7 @@ const UserSchema = new mongoose.Schema({
     malUsername: { type: String, default: '' },
     aniConnected: { type: Boolean, default: false },
     aniUsername: { type: String, default: '' },
-    autoSyncEpisode: { type: Boolean, default: true },
-    autoSyncInterval: { type: Boolean, default: false },
-    autoSyncStartup: { type: Boolean, default: true },
-    autoSyncShutdown: { type: Boolean, default: false },
+
   },
   memberSince: {
     type: Number,

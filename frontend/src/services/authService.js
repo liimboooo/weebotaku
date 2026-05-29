@@ -240,10 +240,6 @@ class AuthService {
     return api.post('/auth/sync/anilist/sync', {});
   }
 
-  async updateSyncAuto(service, autoSync) {
-    return api.put('/auth/sync/auto', { service, autoSync });
-  }
-
   async updateFavorites(favorites) {
     return api.put('/auth/favorites', { favorites });
   }

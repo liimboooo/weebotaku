@@ -502,8 +502,7 @@ exports.updateSettings = async (req, res) => {
       'pushNotifs','newsNotifications','newEpisodeAlerts','commentReplies','friendRequests',
       'animeRecs','newFeatures','publicProfile','showWatchlistPublic',
       'allowMessaging','showActivityStatus','showLastActive','defaultDubbed',
-      'contentRating','defaultListView','playbackSpeed',
-      'autoSyncEpisode','autoSyncInterval','autoSyncStartup','autoSyncShutdown',
+      'contentRating','defaultListView',      'playbackSpeed',
     ];
     const update = {};
     for (const key of allowed) {
@@ -798,14 +797,12 @@ exports.getSyncStatus = async (req, res) => {
         status: malSync.syncStatus,
         lastSynced: malSync.lastSynced,
         username: malSync.username,
-        autoSync: malSync.autoSync,
       } : { connected: false },
       anilist: aniSync ? {
         connected: true,
         status: aniSync.syncStatus,
         lastSynced: aniSync.lastSynced,
         username: aniSync.username,
-        autoSync: aniSync.autoSync,
       } : { connected: false },
     });
   } catch (error) {
@@ -832,7 +829,12 @@ exports.malCallback = async (req, res) => {
     if (!code) return res.status(400).json({ success: false, message: 'Authorization code required' });
 
     const tokenData = await malService.exchangeCode(code, codeVerifier || code);
-    const userInfo = await malService.getUserInfo(tokenData.accessToken);
+    let userInfo = { username: 'mal_user', avatar: '' };
+    try {
+      userInfo = await malService.getUserInfo(tokenData.accessToken);
+    } catch (e) {
+      console.warn('MAL user info fetch failed, using fallback:', e.message);
+    }
     const list = await malService.fetchAnimeList(tokenData.accessToken);
 
     const existing = await Sync.findOne({ userId: req.user.id, service: 'mal' });
@@ -1072,20 +1074,4 @@ exports.syncAniList = async (req, res) => {
   }
 };
 
-// @route   PUT /api/auth/sync/auto
-exports.updateSyncAuto = async (req, res) => {
-  try {
-    const { service, autoSync } = req.body;
-    if (!['mal', 'anilist'].includes(service)) {
-      return res.status(400).json({ success: false, message: 'Invalid service' });
-    }
-    const sync = await Sync.findOne({ userId: req.user.id, service });
-    if (!sync) return res.status(400).json({ success: false, message: 'Service not connected' });
-    sync.autoSync = !!autoSync;
-    await sync.save();
-    res.json({ success: true, autoSync: sync.autoSync });
-  } catch (error) {
-    console.error('UpdateSyncAuto error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
+
