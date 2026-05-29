@@ -28,7 +28,7 @@ export default function SyncCard({ service, status, username, lastSynced, loadin
                 <div style={{ fontSize: 12, color: "#ffffff" }}>Synced {timeAgo}</div>
               )}
               {syncStatus === "syncing" && (
-                <div style={{ fontSize: 12, color: "#fbbf24", display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ fontSize: 12, color: "#ffffff", display: "flex", alignItems: "center", gap: 4 }}>
                   <Loader size={12} className="st-spin" /> Syncing...
                 </div>
               )}

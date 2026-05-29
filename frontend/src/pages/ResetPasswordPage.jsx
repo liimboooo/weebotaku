@@ -48,7 +48,7 @@ export default function ResetPasswordPage() {
     if (/[0-9]/.test(pw)) s++;
     if (/[^A-Za-z0-9]/.test(pw)) s++;
     const labels = ["", "Weak", "Fair", "Good", "Strong"];
-    const colors = ["", "#ffffff", "#fbbf24", "#ffffff", "#4ade80"];
+    const colors = ["", "#ffffff", "#ffffff", "#ffffff", "#4ade80"];
     return { label: labels[s], color: colors[s], width: `${s * 25}%` };
   };
 

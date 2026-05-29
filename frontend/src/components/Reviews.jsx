@@ -119,7 +119,7 @@ export default function Reviews({ animeId, selectedEp }) {
               <div className="review-body">
                 <div className="review-head">
                   <strong>{r.user}</strong>
-                  {r.rating && <span className="review-rating"><Star size={10} fill="#ffd700" color="#ffd700" /> {r.rating}/10</span>}
+                  {r.rating && <span className="review-rating"><Star size={10} fill="#ffffff" color="#ffffff" /> {r.rating}/10</span>}
                   <span>{formatTimeAgo(r.time)}</span>
                 </div>
                 <p>{r.text}</p>

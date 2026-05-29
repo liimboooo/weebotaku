@@ -843,7 +843,7 @@
   align-items: center;
   gap: 3px;
   font-size: 0.7rem;
-  color: #fbbf24;
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -886,8 +886,8 @@
 }
 
 .ai-star-btn:hover { transform: scale(1.2); }
-.ai-star-btn.filled { color: #eab308; }
-.ai-star-btn.half { color: #eab308; }
+.ai-star-btn.filled { color: #ffffff; }
+.ai-star-btn.half { color: #ffffff; }
 .ai-star-btn:focus-visible { outline: 2px solid rgba(255,255,255,0.5); outline-offset: 2px; border-radius: 4px; }
 
 .ai-star-display {
@@ -896,9 +896,9 @@
   gap: 6px;
 }
 
-.ai-star-display .ai-star-icon.filled { color: #eab308; }
+.ai-star-display .ai-star-icon.filled { color: #ffffff; }
 .ai-star-display .ai-star-icon { color: rgba(255, 255, 255, 0.65); }
-.ai-star-display .ai-star-num { font-size: 14px; font-weight: 600; color: #eab308; }
+.ai-star-display .ai-star-num { font-size: 14px; font-weight: 600; color: #ffffff; }
 .ai-star-display .ai-star-max { font-size: 12px; color: #ffffff; }
 .ai-star-display .ai-star-votes { font-size: 11px; color: #ffffff; margin-left: 4px; }
 

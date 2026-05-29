@@ -18,11 +18,11 @@
   --primary-surface: rgba(255, 255, 255, 0.06);
   --primary-border: rgba(255, 255, 255, 0.2);
 
-  /* Accent — warm amber (sparing use only) */
-  --accent: #eab308;
-  --accent-hover: #facc15;
-  --accent-soft: rgba(234, 179, 8, 0.12);
-  --accent-ink: #1a1100;
+  /* Accent — white (pure mono, dark ink for text on white CTAs) */
+  --accent: #ffffff;
+  --accent-hover: #ffffff;
+  --accent-soft: rgba(255, 255, 255, 0.12);
+  --accent-ink: #000000;
 
   /* Color — Neutrals (pure black bgs, white-alpha for hover) */
   --bg-deep: #000000;

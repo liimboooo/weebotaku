@@ -301,7 +301,7 @@ export default function AnimeInfo() {
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
             {anime.rating > 0 && (
               <div className="ai-star-display" style={{ margin: 0 }}>
-                <Star size={16} className="ai-star-icon filled" fill="#eab308" />
+                <Star size={16} className="ai-star-icon filled" fill="#ffffff" />
                 <span className="ai-star-num">{anime.rating.toFixed(1)}</span>
                 <span className="ai-star-max">/ 10</span>
                 <span className="ai-star-votes">({anime.popularity} votes)</span>

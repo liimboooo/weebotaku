@@ -25,13 +25,13 @@
 
 .review-star-picker:hover,
 .review-star-picker.active {
-  color: #ffd700;
+  color: #ffffff;
   transform: scale(1.15);
 }
 
 .review-rating-label {
   font-size: 12px;
-  color: #ffd700;
+  color: #ffffff;
   margin-left: 6px;
 }
 

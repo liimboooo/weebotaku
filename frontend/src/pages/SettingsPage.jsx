@@ -25,7 +25,7 @@ const SECTIONS = [
     cards: [
       { key: "account",       icon: User,     label: "Account",           desc: "Manage profile, email, bio",               color: "#ffffff" },
       { key: "privacy",       icon: Shield,   label: "Privacy & Security",desc: "2FA, password, privacy",                   color: "#ffffff" },
-      { key: "notifications", icon: Bell,     label: "Notifications",     desc: "Email, push, alerts",                      color: "#fbbf24" },
+      { key: "notifications", icon: Bell,     label: "Notifications",     desc: "Email, push, alerts",                      color: "#ffffff" },
     ],
   },
   {
@@ -734,7 +734,7 @@ export default function SettingsPage() {
       )}
       {twoFAStep === "backup" && (
         <div className="st-2fa-card">
-          <p className="st-2fa-desc" style={{ color: "#fbbf24" }}>Save these backup codes in a safe place. Each can be used once if you lose access to your authenticator app.</p>
+          <p className="st-2fa-desc" style={{ color: "#ffffff" }}>Save these backup codes in a safe place. Each can be used once if you lose access to your authenticator app.</p>
           <div className="st-2fa-codes">
             {twoFABackupCodes.map((code, i) => (
               <code key={i} className="st-backup-code">{code}</code>

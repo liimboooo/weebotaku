@@ -385,7 +385,7 @@ function SeasonGrid({ animeList }) {
             <div className="upcoming-card-img">
               <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
               <div className="upcoming-card-badge">
-                {anime.rating && <><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</>}
+                {anime.rating && <><Star size={10} fill="#ffffff" color="#ffffff" /> {anime.rating?.toFixed(1)}</>}
               </div>
             </div>
             <div className="upcoming-card-body">
@@ -426,7 +426,7 @@ function TopTenRow({ animeList }) {
             <div className="upcoming-card-img">
               <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
               <div className="upcoming-card-badge">
-                {anime.rating && <><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</>}
+                {anime.rating && <><Star size={10} fill="#ffffff" color="#ffffff" /> {anime.rating?.toFixed(1)}</>}
               </div>
             </div>
             <div className="upcoming-card-body">
@@ -613,7 +613,7 @@ function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onWatch
             <span className="hero-sidecard-label">NOW TRENDING</span>
             <strong className="hero-sidecard-title">{spotlight.name}</strong>
             <span className="hero-sidecard-rating">
-              <Star size={11} fill="#ffd700" color="#ffd700" /> {spotlight.rating?.toFixed(1) || "?"}
+              <Star size={11} fill="#ffffff" color="#ffffff" /> {spotlight.rating?.toFixed(1) || "?"}
             </span>
           </div>
         </motion.div>
@@ -701,7 +701,7 @@ export default function Home() {
                   <div className="upcoming-card-img">
                     <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
                     <div className="upcoming-card-badge">
-                      {anime.rating && <><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</>}
+                      {anime.rating && <><Star size={10} fill="#ffffff" color="#ffffff" /> {anime.rating?.toFixed(1)}</>}
                     </div>
                   </div>
                   <div className="upcoming-card-body">
@@ -743,7 +743,7 @@ export default function Home() {
                   <div className="upcoming-card-img">
                     <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
                     <div className="upcoming-card-badge">
-                      {anime.rating && <><Star size={10} fill="#ffd700" color="#ffd700" /> {anime.rating?.toFixed(1)}</>}
+                      {anime.rating && <><Star size={10} fill="#ffffff" color="#ffffff" /> {anime.rating?.toFixed(1)}</>}
                     </div>
                   </div>
                   <div className="upcoming-card-body">
