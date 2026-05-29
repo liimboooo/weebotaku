@@ -18,6 +18,12 @@
   --primary-surface: rgba(255, 255, 255, 0.06);
   --primary-border: rgba(255, 255, 255, 0.2);
 
+  /* Accent — single restrained brand red (sparing use only) */
+  --accent: #e50914;
+  --accent-hover: #ff1f2d;
+  --accent-glow: rgba(229, 9, 20, 0.45);
+  --accent-soft: rgba(229, 9, 20, 0.12);
+
   /* Color — Neutrals (pure black bgs, white-alpha for hover) */
   --bg-deep: #000000;
   --bg-base: #000000;

@@ -63,9 +63,9 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--accent);
   flex-shrink: 0;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 8px var(--accent-glow);
 }
 
 .sd-brand-text {
@@ -95,6 +95,7 @@
 
 /* ─── Nav Item — Breathable ───────────────────────────── */
 .sd-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -115,6 +116,21 @@
   letter-spacing: -0.005em;
 }
 
+.sd-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 18px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent);
+  transform: translateY(-50%) scaleY(0);
+  transform-origin: center;
+  transition: transform 0.25s var(--ease-spring);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
 .sd-item svg {
   flex-shrink: 0;
   opacity: 0.85;
@@ -130,10 +146,14 @@
   opacity: 1;
 }
 
-/* ─── Active — Subtle ─────────────────────────────────── */
+/* ─── Active — Subtle with accent bar ─────────────────── */
 .sd-item.active {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.06);
   color: #fff;
+}
+
+.sd-item.active::before {
+  transform: translateY(-50%) scaleY(1);
 }
 
 .sd-item.active svg {
