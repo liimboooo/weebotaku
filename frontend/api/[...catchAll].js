@@ -2,6 +2,16 @@ const https = require('https');
 
 const PROXY_TIMEOUT = 25000;
 
+function readBody(req) {
+  return new Promise((resolve) => {
+    if (req.body) return resolve(req.body);
+    let raw = '';
+    req.on('data', chunk => { raw += chunk; });
+    req.on('end', () => resolve(raw));
+    setTimeout(() => resolve(raw), 5000);
+  });
+}
+
 module.exports = async (req, res) => {
   const urlParts = req.url.split('?');
   const pathname = urlParts[0].replace(/^\/api\//, '');
@@ -10,7 +20,6 @@ module.exports = async (req, res) => {
   params.delete('...catchAll');
   params.delete('catchAll');
   const cleanQuery = params.toString();
-  const path = pathname;
   const queryString = cleanQuery ? `?${cleanQuery}` : '';
 
   const options = {
@@ -34,14 +43,12 @@ module.exports = async (req, res) => {
     }
   }
 
-  if (['GET', 'HEAD'].includes(req.method)) {
-    delete options.headers['content-type'];
-  }
+  const body = await readBody(req);
 
   return new Promise((resolve) => {
     const proxyReq = https.request(options, (proxyRes) => {
-      let body = '';
-      proxyRes.on('data', chunk => { body += chunk; });
+      let resBody = '';
+      proxyRes.on('data', chunk => { resBody += chunk; });
       proxyRes.on('end', () => {
         res.status(proxyRes.statusCode);
         const forwardResHeaders = [
@@ -55,8 +62,8 @@ module.exports = async (req, res) => {
             res.setHeader(h, proxyRes.headers[h]);
           }
         }
-        if (body) {
-          res.send(body);
+        if (resBody) {
+          res.send(resBody);
         } else {
           res.end();
         }
@@ -80,10 +87,13 @@ module.exports = async (req, res) => {
       resolve();
     });
 
-    if (req.body && !['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
-      const bodyStr = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
-      proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyStr));
-      proxyReq.write(bodyStr);
+    if (!['GET', 'HEAD'].includes(req.method)) {
+      if (body) {
+        proxyReq.setHeader('Content-Length', Buffer.byteLength(body));
+        proxyReq.write(body);
+      } else {
+        proxyReq.setHeader('Content-Length', 0);
+      }
     }
 
     proxyReq.end();
