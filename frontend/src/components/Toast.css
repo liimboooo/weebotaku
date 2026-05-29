@@ -33,8 +33,8 @@
 }
 
 .toast-success { border-left: 3px solid #22c55e; }
-.toast-error { border-left: 3px solid #7c3aed; }
-.toast-info { border-left: 3px solid #7c3aed; }
+.toast-error { border-left: 3px solid #d1d5db; }
+.toast-info { border-left: 3px solid #d1d5db; }
 
 .toast-close {
   margin-left: auto;

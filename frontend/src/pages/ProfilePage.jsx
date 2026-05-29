@@ -404,7 +404,7 @@ export default function ProfilePage() {
                           </span>
                           <div className="upp-list-rating">
                             {userRating ? (
-                              <><Star size={12} fill="#7c3aed" color="#7c3aed" /> {userRating}</>
+                              <><Star size={12} fill="#d1d5db" color="#d1d5db" /> {userRating}</>
                             ) : (
                               <span className="upp-list-rating-empty">--</span>
                             )}

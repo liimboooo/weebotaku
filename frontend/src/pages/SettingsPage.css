@@ -67,7 +67,7 @@
 
 .st-section-divider {
   height: 1px;
-  background: linear-gradient(90deg, #7c3aed 0%, rgba(102,126,234,0.1) 100%);
+  background: linear-gradient(90deg, #d1d5db 0%, rgba(102,126,234,0.1) 100%);
   width: 100%;
 }
 
@@ -113,7 +113,7 @@
 }
 
 .st-dash-card:hover {
-  border-color: #7c3aed;
+  border-color: #d1d5db;
   box-shadow: 0 8px 48px rgba(102,126,234,0.15), 0 0 0 1px rgba(102,126,234,0.05);
   transform: translateY(-2px);
 }
@@ -247,7 +247,7 @@
 
 .st-detail-section-divider {
   height: 1px;
-  background: linear-gradient(90deg, #7c3aed 0%, rgba(102,126,234,0.1) 100%);
+  background: linear-gradient(90deg, #d1d5db 0%, rgba(102,126,234,0.1) 100%);
   width: 100%;
   margin-top: 0.75rem;
 }
@@ -280,8 +280,8 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
-  border: 3px solid #7c3aed;
+  background: linear-gradient(135deg, #d1d5db, #374151);
+  border: 3px solid #d1d5db;
   display: grid;
   place-items: center;
   font-size: 28px;
@@ -360,7 +360,7 @@
 }
 
 .st-input:focus {
-  border-color: #7c3aed;
+  border-color: #d1d5db;
   box-shadow: 0 0 0 3px rgba(102,126,234,0.15), 0 0 12px rgba(102,126,234,0.05);
 }
 
@@ -395,7 +395,7 @@
 }
 
 .st-textarea:focus {
-  border-color: #7c3aed;
+  border-color: #d1d5db;
   box-shadow: 0 0 0 3px rgba(102,126,234,0.15), 0 0 12px rgba(102,126,234,0.05);
 }
 
@@ -563,7 +563,7 @@
 }
 
 .st-toggle.active {
-  background: #7c3aed;
+  background: #d1d5db;
 }
 
 .st-toggle-knob {
@@ -622,8 +622,8 @@
 }
 
 .st-radio.active {
-  background: #7c3aed;
-  border-color: #7c3aed;
+  background: #d1d5db;
+  border-color: #d1d5db;
   color: #fff;
   box-shadow: 0 2px 10px rgba(102,126,234,0.2);
 }
@@ -662,8 +662,8 @@
 }
 
 .st-theme-btn.active {
-  background: #7c3aed;
-  border-color: #7c3aed;
+  background: #d1d5db;
+  border-color: #d1d5db;
   color: #fff;
   box-shadow: 0 2px 10px rgba(102,126,234,0.2);
 }
@@ -688,7 +688,7 @@
 
 .st-accent-btn.active {
   border-color: #fff;
-  box-shadow: 0 0 0 2px #7c3aed;
+  box-shadow: 0 0 0 2px #d1d5db;
 }
 
 /* ─── Font Preview ─── */
@@ -834,7 +834,7 @@
   width: 32px;
   height: 32px;
   border: 3px solid rgba(102,126,234,0.15);
-  border-top-color: #7c3aed;
+  border-top-color: #d1d5db;
   border-radius: 50%;
   animation: st-spin 0.8s linear infinite;
 }
@@ -869,7 +869,7 @@
 }
 
 .st-toast--info {
-  background: #7c3aed;
+  background: #d1d5db;
   color: #fff;
 }
 
@@ -1120,7 +1120,7 @@
 }
 
 .st-check-label input[type="checkbox"] {
-  accent-color: #7c3aed;
+  accent-color: #d1d5db;
   width: 16px;
   height: 16px;
 }

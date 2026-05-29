@@ -11,7 +11,7 @@
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.04), transparent 50%);
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.04), transparent 50%);
   z-index: 0;
 }
 
@@ -77,7 +77,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: #7c3aed;
+  color: #d1d5db;
   margin-bottom: 20px;
   width: fit-content;
 }
@@ -96,7 +96,7 @@
 .wl-hero-accent {
   display: block;
   font-size: clamp(3rem, 6vw, 5rem);
-  color: #6d28d9;
+  color: #374151;
   font-weight: 900;
   font-family: var(--font-display);
   text-transform: uppercase;
@@ -171,7 +171,7 @@
   font-size: 0.55rem;
   font-weight: 900;
   letter-spacing: 0.12em;
-  color: #6d28d9;
+  color: #374151;
   text-transform: uppercase;
 }
 
@@ -267,8 +267,8 @@
 }
 
 .wl-card:hover {
-  border-color: rgba(139, 92, 246, 0.25);
-  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px rgba(255, 255, 255, 0.08);
 }
 
 .wl-card:hover .wl-card-thumb img {
@@ -297,7 +297,7 @@
 }
 .wl-card:hover .wl-card-play {
   background: rgba(109,40,217,0.2);
-  border-color: #6d28d9;
+  border-color: #374151;
 }
 
 .wl-card-tech {
@@ -324,7 +324,7 @@
   left: 0;
   height: 2px;
   background: var(--primary);
-  box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
 }
 
 .wl-badge {
@@ -341,8 +341,8 @@
 
 .wl-badge.ongoing { background: rgba(46,204,113,0.85); color: #fff; }
 .wl-badge.publishing { background: rgba(46,204,113,0.85); color: #fff; }
-.wl-badge.completed { background: rgba(139,92,246,0.85); color: #fff; }
-.wl-badge.finished { background: rgba(139,92,246,0.85); color: #fff; }
+.wl-badge.completed { background: rgba(255,255,255,0.85); color: #fff; }
+.wl-badge.finished { background: rgba(255,255,255,0.85); color: #fff; }
 
 .wl-card-wish {
   position: absolute;
@@ -350,7 +350,7 @@
   right: 10px;
   border: 0;
   background: rgba(109,40,217,0.2);
-  color: #6d28d9;
+  color: #374151;
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -410,8 +410,8 @@
 }
 
 .wl-tag {
-  background: rgba(139,92,246,0.12);
-  color: #8b5cf6;
+  background: rgba(255,255,255,0.12);
+  color: #ffffff;
   padding: 2px 8px;
   border-radius: 6px;
   font-size: 0.6rem;
@@ -422,7 +422,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 0%, rgba(139,92,246,0.12), transparent 60%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.12), transparent 60%);
   opacity: 0;
   transition: opacity 0.4s;
 }
@@ -450,7 +450,7 @@
   padding: 12px 28px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, #8b5cf6, #8b5cf6);
+  background: linear-gradient(135deg, #ffffff, #ffffff);
   color: #fff;
   font-size: 0.85rem;
   font-weight: 700;
@@ -461,7 +461,7 @@
 
 .wl-browse-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(139,92,246,0.35);
+  box-shadow: 0 8px 24px rgba(255,255,255,0.35);
 }
 
 /* ─── Status Filter Pills ──────────────────────────── */
@@ -478,8 +478,8 @@
   gap: 5px;
   padding: 6px 14px;
   border-radius: 20px;
-  border: 1px solid rgba(139,92,246,0.1);
-  background: rgba(139,92,246,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
   color: #888;
   font-size: 12px;
   font-weight: 600;
@@ -489,17 +489,17 @@
 }
 
 .wl-status-pill:hover {
-  background: rgba(139,92,246,0.08);
+  background: rgba(255,255,255,0.08);
   color: #bbb;
-  border-color: rgba(139,92,246,0.2);
+  border-color: rgba(255,255,255,0.2);
 }
 
 .wl-status-pill.active {
-  background: rgba(139,92,246,0.15);
-  border-color: rgba(139,92,246,0.35);
-  color: #c084fc;
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.35);
+  color: #ffffff;
   font-weight: 700;
-  box-shadow: 0 0 12px rgba(139,92,246,0.1);
+  box-shadow: 0 0 12px rgba(255,255,255,0.1);
 }
 
 .wl-status-count {
@@ -507,7 +507,7 @@
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 10px;
-  background: rgba(139,92,246,0.1);
+  background: rgba(255,255,255,0.1);
   color: inherit;
 }
 

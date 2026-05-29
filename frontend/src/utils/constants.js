@@ -110,8 +110,8 @@ export const COMMENTS_INITIAL_VISIBLE = 5;
 export const COMMENTS_LOAD_MORE_COUNT = 5;
 export const COMMENTS_MAX_CHARS = 500;
 export const AVATAR_COLORS = [
-  "#7c3aed", "#3b82f6", "#10b981", "#f59e0b",
-  "#ef4444", "#ec4899", "#8b5cf6", "#14b8a6",
+  "#d1d5db", "#3b82f6", "#10b981", "#f59e0b",
+  "#ef4444", "#ffffff", "#ffffff", "#14b8a6",
 ];
 
 export const FAST_SEARCH_DEBOUNCE_MS = 250;

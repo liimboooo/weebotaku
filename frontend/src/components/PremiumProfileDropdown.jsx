@@ -28,7 +28,7 @@ export default function PremiumProfileDropdown() {
               onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
             />
           ) : null}
-          <div className="premium-avatar-fallback" style={{ display: avatar ? 'none' : 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #7c3aed, #a855f7)', borderRadius: '50%', color: '#fff', fontWeight: 700, fontSize: 14 }}>
+          <div className="premium-avatar-fallback" style={{ display: avatar ? 'none' : 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #d1d5db, #ffffff)', borderRadius: '50%', color: '#fff', fontWeight: 700, fontSize: 14 }}>
             {(username || '?').charAt(0).toUpperCase()}
           </div>
           <div className="premium-status-ring"></div>

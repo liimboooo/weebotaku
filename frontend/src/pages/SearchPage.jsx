@@ -337,7 +337,7 @@ export default function SearchPage() {
             <Search size={64} className="no-results-icon" />
             <h3>{searchError ? "Search Error" : "No results"}</h3>
             <p>{searchError || "Try a different genre or type"}</p>
-            {searchError && <button style={{ marginTop: 12, padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(139,92,246,0.2)', background: 'rgba(139,92,246,0.08)', color: '#c084fc', cursor: 'pointer', fontSize: 12, fontWeight: 700 }} onClick={() => doSearch(query, activeGenre, activeType, activeStatus)}>Retry</button>}
+            {searchError && <button style={{ marginTop: 12, padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.08)', color: '#ffffff', cursor: 'pointer', fontSize: 12, fontWeight: 700 }} onClick={() => doSearch(query, activeGenre, activeType, activeStatus)}>Retry</button>}
           </motion.div>
         ) : !hasSearched ? (
           <motion.div className="no-results" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

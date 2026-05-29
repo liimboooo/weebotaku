@@ -49,7 +49,7 @@ export default class ErrorBoundary extends React.Component {
           background: "rgba(5,5,5,0.95)",
           borderRadius: "28px",
         }}>
-          <AlertTriangle size={40} style={{ opacity: 0.4, color: "#6d28d9" }} />
+          <AlertTriangle size={40} style={{ opacity: 0.4, color: "#374151" }} />
           <h2 style={{ color: "#fff", margin: 0, fontSize: "1.1rem", fontWeight: 600 }}>{message}</h2>
           <p style={{ margin: 0, fontSize: "0.85rem", maxWidth: "400px", lineHeight: 1.5, color: "#666" }}>
             {isChunk
@@ -64,8 +64,8 @@ export default class ErrorBoundary extends React.Component {
               gap: "8px",
               padding: "10px 24px",
               borderRadius: "10px",
-              border: "1px solid #6d28d9",
-              background: "#6d28d9",
+              border: "1px solid #374151",
+              background: "#374151",
               color: "#fff",
               fontWeight: 600,
               cursor: "pointer",
@@ -74,8 +74,8 @@ export default class ErrorBoundary extends React.Component {
               marginTop: "8px",
               transition: "all .2s",
             }}
-            onMouseOver={e => { e.currentTarget.style.background = "#8b5cf6"; }}
-            onMouseOut={e => { e.currentTarget.style.background = "#6d28d9"; }}
+            onMouseOver={e => { e.currentTarget.style.background = "#ffffff"; }}
+            onMouseOut={e => { e.currentTarget.style.background = "#374151"; }}
           >
             <RefreshCw size={16} /> {isChunk ? "Reload Page" : "Try Again"}
           </button>

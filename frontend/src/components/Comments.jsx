@@ -296,7 +296,7 @@ function CommentItem({ comment, isOPCheck, isVerifiedCheck, onLike, onDislike, o
   const userColor = getUserColor(comment.user);
   const isOP = isOPCheck(comment.user);
   const badge = isOP
-    ? { label: "OP", color: "#a855f7", bg: "rgba(168,85,247,0.15)" }
+    ? { label: "OP", color: "#ffffff", bg: "rgba(255,255,255,0.15)" }
     : getRoleBadge(comment.role);
 
   useEffect(() => {

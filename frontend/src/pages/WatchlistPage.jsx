@@ -122,9 +122,9 @@ export default function WatchlistPage() {
           </motion.section>
 
           {!authService.isLoggedIn() && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 16px', margin: '0 0 16px', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 10, fontSize: 13, color: '#c4b5fd' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 16px', margin: '0 0 16px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, fontSize: 13, color: '#c4b5fd' }}>
               <span>Saved locally on this device. <strong>Sign in</strong> to sync across devices.</span>
-              <button onClick={() => navigate('/auth?next=/watchlist')} style={{ background: 'linear-gradient(135deg,#6d28d9,#7c3aed)', border: 'none', color: '#fff', padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Sign In</button>
+              <button onClick={() => navigate('/auth?next=/watchlist')} style={{ background: 'linear-gradient(135deg,#374151,#d1d5db)', border: 'none', color: '#fff', padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Sign In</button>
             </div>
           )}
 
@@ -179,7 +179,7 @@ export default function WatchlistPage() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9 }}
                         transition={{ delay: (i % 12) * 0.03, type: "spring", stiffness: 100, damping: 14 }}
-                        whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(139,92,246,0.3)", borderColor: "#8b5cf6" }}
+                        whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(255,255,255,0.3)", borderColor: "#ffffff" }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => navigate(`/anime/${anime.id}/info`)}
                         onMouseEnter={() => prefetch.onMouseEnter(anime.id)}

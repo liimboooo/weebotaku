@@ -24,7 +24,7 @@ export default function Categories({ categories }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.03 }}
-            whileHover={{ y: -3, borderColor: "rgba(139, 92, 246, 0.4)" }}
+            whileHover={{ y: -3, borderColor: "rgba(255, 255, 255, 0.4)" }}
           >
             {cat}
           </motion.button>

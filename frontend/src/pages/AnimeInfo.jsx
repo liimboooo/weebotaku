@@ -323,7 +323,7 @@ export default function AnimeInfo() {
               }}
               aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
             >
-              <Heart size={16} fill={favorited ? "#7c3aed" : "none"} />
+              <Heart size={16} fill={favorited ? "#d1d5db" : "none"} />
             </button>
           </div>
 

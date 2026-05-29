@@ -198,7 +198,7 @@ function StatsBar() {
           key={s.label}
           className="home-stat-card"
           variants={cardSlideUp}
-            whileHover={{ boxShadow: "0 16px 48px rgba(139,92,246,0.12)", transition: { type: "spring", stiffness: 300 } }}
+            whileHover={{ boxShadow: "0 16px 48px rgba(255,255,255,0.12)", transition: { type: "spring", stiffness: 300 } }}
         >
           <div className={`home-stat-icon ${s.cls}`}>
             <s.icon size={18} />
@@ -337,7 +337,7 @@ function SectionHeader({ icon: Icon, title, subtitle, action }) {
         transition={{ type: "spring", stiffness: 200, damping: 24 }}
         className="title-with-icon"
       >
-        <Icon color="#8b5cf6" size={24} />
+        <Icon color="#ffffff" size={24} />
         <div>
           <h2>{title}</h2>
           {subtitle && <p className="section-subtitle">{subtitle}</p>}

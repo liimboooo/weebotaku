@@ -10,7 +10,7 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.04), transparent 50%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.04), transparent 50%);
   z-index: 0;
 }
 
@@ -140,7 +140,7 @@
   color: #888;
 }
 
-.ad-metric svg { color: #8b5cf6; opacity: 0.7; }
+.ad-metric svg { color: #ffffff; opacity: 0.7; }
 
 .ad-metric strong {
   color: #fff;
@@ -162,7 +162,7 @@
   padding: 15px 36px;
   border: none;
   border-radius: 14px;
-  background: linear-gradient(135deg, #6d28d9, #7c3aed);
+  background: linear-gradient(135deg, #374151, #d1d5db);
   color: #fff;
   font-size: 1rem;
   font-weight: 700;
@@ -226,12 +226,12 @@
 .ad-hero-action-btn.active {
   background: rgba(109,40,217,0.15);
   border-color: rgba(109,40,217,0.4);
-  color: #7c3aed;
+  color: #d1d5db;
 }
 
 .ad-hero-action-btn.liked {
-  color: #8b5cf6;
-  border-color: rgba(139,92,246,0.4);
+  color: #ffffff;
+  border-color: rgba(255,255,255,0.4);
 }
 
 .ad-heart-burst {
@@ -248,7 +248,7 @@
   position: absolute;
   inset: -4px;
   border-radius: 12px;
-  border: 2px solid #8b5cf6;
+  border: 2px solid #ffffff;
   opacity: 0;
   pointer-events: none;
 }
@@ -263,13 +263,13 @@
 /* ═══ ERROR / RETRY ═══ */
 .ad-error-msg {
   font-size: 0.75rem;
-  color: #7c3aed;
+  color: #d1d5db;
   font-weight: 600;
   margin: 0;
   padding: 8px 14px;
   border-radius: 10px;
-  background: rgba(124, 58, 237, 0.08);
-  border: 1px solid rgba(124, 58, 237, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   text-align: center;
   backdrop-filter: blur(8px);
 }
@@ -336,7 +336,7 @@
 }
 
 .ad-status-item .value {
-  color: #7c3aed;
+  color: #d1d5db;
   font-weight: 700;
   font-size: 0.85rem;
 }
@@ -381,7 +381,7 @@
 
 .ad-rating-global { color: #ffd700; font-weight: 800; font-size: 1.1rem; }
 .ad-rating-votes { color: #555; font-size: 0.75rem; }
-.ad-rating-user { color: #7c3aed; font-weight: 700; font-size: 0.82rem; }
+.ad-rating-user { color: #d1d5db; font-weight: 700; font-size: 0.82rem; }
 
 /* ═══ GENRES ═══ */
 .ad-genres {
@@ -394,7 +394,7 @@
 .ad-genre-tag {
   background: rgba(109,40,217,0.06);
   border: 1px solid rgba(109,40,217,0.2);
-  color: #7c3aed;
+  color: #d1d5db;
   padding: 6px 16px;
   border-radius: 99px;
   font-size: 0.72rem;
@@ -421,7 +421,7 @@
 }
 
 .ad-synopsis h3 {
-  color: #7c3aed;
+  color: #d1d5db;
   font-size: 0.75rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -518,7 +518,7 @@
 }
 
 .ad-cour-name {
-  color: #7c3aed;
+  color: #d1d5db;
   font-weight: 800;
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -581,7 +581,7 @@
 .ad-episode-btn.active {
   background: rgba(109,40,217,0.1);
   border-color: rgba(109,40,217,0.4);
-  color: #7c3aed;
+  color: #d1d5db;
   box-shadow: 0 0 20px rgba(109,40,217,0.12), inset 0 0 12px rgba(109,40,217,0.05);
 }
 
@@ -686,7 +686,7 @@
 
 .ad-character-role {
   font-size: 0.6rem;
-  color: #7c3aed;
+  color: #d1d5db;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -843,7 +843,7 @@
 }
 
 .ad-error-state-text {
-  color: #7c3aed;
+  color: #d1d5db;
   font-size: 18px;
   text-align: center;
   font-weight: 600;
@@ -864,7 +864,7 @@
 .ad-error-state-btn:hover {
   background: rgba(109,40,217,0.08);
   border-color: rgba(109,40,217,0.3);
-  color: #7c3aed;
+  color: #d1d5db;
 }
 
 .ad-tab-empty {

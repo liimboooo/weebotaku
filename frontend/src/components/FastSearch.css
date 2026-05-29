@@ -24,7 +24,7 @@
 
 .fs-trigger:hover {
   background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(139, 92, 246, 0.2);
+  border-color: rgba(255, 255, 255, 0.2);
   color: var(--text-secondary);
 }
 
@@ -79,11 +79,11 @@
   max-height: 70vh;
   border-radius: var(--radius-xl);
   background: rgba(10, 10, 14, 0.97);
-  border: 1px solid rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.04),
     0 24px 80px rgba(0, 0, 0, 0.6),
-    0 0 60px rgba(139, 92, 246, 0.06);
+    0 0 60px rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -136,8 +136,8 @@
 }
 
 .fs-input-clear:hover {
-  background: rgba(139, 92, 246, 0.15);
-  color: #c084fc;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
 }
 
 .fs-input-esc {
@@ -166,12 +166,12 @@
   overscroll-behavior: contain;
   padding: 8px 0;
   scrollbar-width: thin;
-  scrollbar-color: rgba(139, 92, 246, 0.15) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 .fs-body::-webkit-scrollbar { width: 4px; }
 .fs-body::-webkit-scrollbar-track { background: transparent; }
-.fs-body::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.15); border-radius: 4px; }
+.fs-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
 
 /* ─── Groups (sections) ─── */
 .fs-group {
@@ -219,7 +219,7 @@
 
 .fs-result-item:hover,
 .fs-result-item.selected {
-  background: rgba(139, 92, 246, 0.08);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .fs-result-poster {
@@ -245,8 +245,8 @@
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  background: rgba(139, 92, 246, 0.12);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   display: grid;
   place-items: center;
 }
@@ -260,7 +260,7 @@
 .fs-result-avatar span {
   font-size: 14px;
   font-weight: 700;
-  color: #c084fc;
+  color: #ffffff;
 }
 
 .fs-result-info {
@@ -390,7 +390,7 @@
 }
 
 .fs-trending-card:hover {
-  background: rgba(139, 92, 246, 0.06);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .fs-trending-card img {
@@ -443,10 +443,10 @@
   gap: 8px;
   width: 100%;
   padding: 10px;
-  border: 1px solid rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-sm);
   background: transparent;
-  color: #c084fc;
+  color: #ffffff;
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
@@ -455,8 +455,8 @@
 }
 
 .fs-view-all:hover {
-  background: rgba(139, 92, 246, 0.08);
-  border-color: rgba(139, 92, 246, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 /* ─── Loading ─── */
@@ -497,10 +497,10 @@
   gap: 6px;
   margin-top: 4px;
   padding: 8px 16px;
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-full);
-  background: rgba(139, 92, 246, 0.06);
-  color: #c084fc;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
@@ -509,8 +509,8 @@
 }
 
 .fs-empty-action:hover {
-  background: rgba(139, 92, 246, 0.12);
-  border-color: rgba(139, 92, 246, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* ─── Idle state ─── */

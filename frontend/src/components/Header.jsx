@@ -210,7 +210,7 @@ export default function Header({ isHome = false }) {
                   <span className="spi-title">{item.name}</span>
                   <span className="spi-meta">
                     {item.rating && (
-                      <span className="spi-rating"><Star size={10} strokeWidth={0} fill="#a855f7" /> {item.rating.toFixed(1)}</span>
+                      <span className="spi-rating"><Star size={10} strokeWidth={0} fill="#ffffff" /> {item.rating.toFixed(1)}</span>
                     )}
                     {item.episodes && <span>{item.episodes} EP</span>}
                     {item.year && <span>{item.year}</span>}
