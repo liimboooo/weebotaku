@@ -87,6 +87,16 @@ export default function WatchlistPage() {
   }, [mangaList, search, sortBy]);
 
   const activeList = tab === "anime" ? filteredAnime : filteredManga;
+
+  const lastWatched = useMemo(() => {
+    if (tab !== "anime") return null;
+    const history = loadWatchHistory();
+    const wlIds = new Set(animeList.map(a => a.id));
+    const recent = history.find(h => wlIds.has(h.animeId));
+    if (!recent) return null;
+    const wlItem = animeList.find(a => a.id === recent.animeId);
+    return wlItem ? { ...wlItem, episode: recent.episode, timestamp: recent.timestamp } : null;
+  }, [animeList, tab]);
   const totalItems = animeList.length + mangaList.length;
   const totalEps = animeList.reduce((s, a) => s + (a.episodes || 0), 0);
   const totalCh = mangaList.reduce((s, m) => s + (m.ch || 0), 0);
@@ -117,15 +127,21 @@ export default function WatchlistPage() {
                 <div className="wl-metric"><strong>{totalCh}</strong><span>Chapters</span></div>
               </div>
             </div>
-            {activeList.length > 0 && (
-              <div className="wl-hero-hud">
+            {(lastWatched || activeList.length > 0) && (
+              <div
+                className="wl-hero-hud"
+                onClick={() => lastWatched ? navigate(`/anime/${lastWatched.id}?ep=${lastWatched.episode}`) : navigate(`/anime/${activeList[0].id}/info`)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="wl-hud-img">
-                  <img src={tab === "anime" ? activeList[0].img : activeList[0].cover} alt="" />
+                  <img src={lastWatched?.img || (tab === "anime" ? activeList[0]?.img : activeList[0]?.cover)} alt="" />
                 </div>
                 <div className="wl-hud-info">
-                  <span className="wl-hud-label">{tab === "anime" ? "WATCHING" : "READING"}</span>
-                  <span className="wl-hud-title">{tab === "anime" ? activeList[0].name : activeList[0].title}</span>
-                  <span className="wl-hud-rating"><Star size={12} fill="currentColor" /> {tab === "anime" ? activeList[0].rating?.toFixed(1) || "?" : activeList[0].rating?.toFixed(1) || "?"}</span>
+                  <span className="wl-hud-label">{lastWatched ? `CONTINUE EP ${lastWatched.episode}` : (tab === "anime" ? "IN YOUR LIST" : "READING")}</span>
+                  <span className="wl-hud-title">{lastWatched?.name || (tab === "anime" ? activeList[0]?.name : activeList[0]?.title)}</span>
+                  <span className="wl-hud-rating">
+                    <Star size={12} fill="currentColor" /> {(lastWatched?.rating || activeList[0]?.rating)?.toFixed?.(1) || "?"}
+                  </span>
                 </div>
               </div>
             )}
