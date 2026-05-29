@@ -74,7 +74,7 @@
 .tu-card {
   flex: 0 0 auto;
   min-width: 460px;
-  height: 220px;
+  height: 260px;
   display: flex;
   flex-direction: row;
   background: #000;
@@ -93,8 +93,8 @@
 /* ─── Cover (left, 155px) ──────────────────────────────── */
 .tu-card-cover {
   position: relative;
-  flex: 0 0 155px;
-  width: 155px;
+  flex: 0 0 175px;
+  width: 175px;
   height: 100%;
   overflow: hidden;
   background: #000;
@@ -170,12 +170,12 @@
 
 .tu-date {
   font-family: 'Space Grotesk', 'Inter', sans-serif;
-  font-size: 1.35rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #ffffff;
   letter-spacing: -0.015em;
   line-height: 1.15;
-  margin: 1px 0 2px;
+  margin: 2px 0 4px;
 }
 
 .tu-source {
@@ -238,11 +238,11 @@
   }
   .tu-card {
     min-width: 380px;
-    height: 200px;
+    height: 230px;
   }
   .tu-card-cover {
-    flex: 0 0 135px;
-    width: 135px;
+    flex: 0 0 140px;
+    width: 140px;
   }
   .tu-date {
     font-size: 1.2rem;
@@ -252,11 +252,11 @@
 @media (max-width: 480px) {
   .tu-card {
     min-width: 320px;
-    height: 190px;
+    height: 210px;
   }
   .tu-card-cover {
-    flex: 0 0 115px;
-    width: 115px;
+    flex: 0 0 120px;
+    width: 120px;
   }
   .tu-card-body {
     padding: 12px;
