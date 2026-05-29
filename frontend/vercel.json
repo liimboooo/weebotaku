@@ -2,5 +2,17 @@
   "framework": "create-react-app",
   "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "CI=false npx react-scripts build",
-  "outputDirectory": "build"
+  "outputDirectory": "build",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Set-Cookie", "value": "__vercel_live_token=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Lax" },
+        { "key": "Clear-Site-Data", "value": "\"cookies\"" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/[...catchAll]" }
+  ]
 }
