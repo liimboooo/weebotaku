@@ -51,7 +51,6 @@ export default function Header() {
   const [profileImage, setProfileImage] = useState(() => localStorage.getItem('userAvatar') || '');
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [previewOpen, setPreviewOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState(() => {
     let s;
@@ -97,9 +96,17 @@ export default function Header() {
     document.addEventListener('click', closeOnClickOutside);
     const onScroll = () => setScrollProgress(Math.min(1, window.scrollY / 120));
     window.addEventListener('scroll', onScroll, { passive: true });
+    const onEsc = (e) => {
+      if (e.key === 'Escape') {
+        setMobileOpen(false); setExploreOpen(false); setFeedsOpen(false);
+        setArenaOpen(false); setProfileOpen(false); setMoreDropdownOpen(false); setNotifOpen(false);
+      }
+    };
+    document.addEventListener('keydown', onEsc);
     return () => {
       document.removeEventListener('click', closeOnClickOutside);
       window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('keydown', onEsc);
     };
   }, []);
 
@@ -439,12 +446,6 @@ export default function Header() {
         </div>
       </div>
 
-      {previewOpen && profileImage && (
-        <div className="profile-preview-overlay" onClick={() => setPreviewOpen(false)}>
-          <button className="profile-preview-close" onClick={() => setPreviewOpen(false)}><X size={16} /></button>
-          <img src={profileImage} alt={username} className="profile-preview-img" />
-        </div>
-      )}
     </header>
   );
 }

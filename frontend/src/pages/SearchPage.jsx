@@ -29,6 +29,7 @@ export default function SearchPage() {
   const [activeStatus, setActiveStatus] = useState("All");
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchError, setSearchError] = useState("");
   const [trendingData, setTrendingData] = useState([]);
   const [trendingLoading, setTrendingLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState(() => {
@@ -66,12 +67,16 @@ export default function SearchPage() {
     if (!query.trim()) return;
     setIsLoading(true);
     setHasSearched(true);
+    setSearchError("");
     try {
       const res = await fetchSearchAnime(query, 1, { type, status });
       let filtered = res.data;
       if (genre) filtered = filtered.filter(a => a.genres.some(g => g.toLowerCase() === genre.toLowerCase()));
       setResults(filtered);
-    } catch { setResults([]); }
+    } catch {
+      setResults([]);
+      setSearchError("Search failed. Please try again.");
+    }
     setIsLoading(false);
   };
 
@@ -328,8 +333,9 @@ export default function SearchPage() {
         ) : !isLoading && hasSearched ? (
           <motion.div className="no-results" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
             <Search size={64} className="no-results-icon" />
-            <h3>No results</h3>
-            <p>Try a different genre or type</p>
+            <h3>{searchError ? "Search Error" : "No results"}</h3>
+            <p>{searchError || "Try a different genre or type"}</p>
+            {searchError && <button style={{ marginTop: 12, padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(139,92,246,0.2)', background: 'rgba(139,92,246,0.08)', color: '#c084fc', cursor: 'pointer', fontSize: 12, fontWeight: 700 }} onClick={() => doSearch(query, activeGenre, activeType, activeStatus)}>Retry</button>}
           </motion.div>
         ) : !hasSearched ? (
           <motion.div className="no-results" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

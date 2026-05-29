@@ -11,6 +11,7 @@ import AnimatedPage from '../../components/AnimatedPage';
 import Background from '../../components/Background';
 import DroppableTier from './DroppableTier';
 import TierCard from './TierCard';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 import './TierLists.css';
 
 const TIER_CONFIG = [
@@ -41,6 +42,7 @@ async function anilistTop(type) {
 }
 
 export default function TierLists() {
+  useDocumentTitle("Tier Lists");
   const navigate = useNavigate();
   const currentUser = authService.getCurrentUser();
   const isLoggedIn = authService.isLoggedIn();

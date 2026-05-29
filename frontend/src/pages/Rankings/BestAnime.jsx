@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { getAllAnime } from "../../data/animeData";
 import GenericRoutePage from "../../components/GenericRoutePage";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
 
 export default function BestAnime() {
+  useDocumentTitle("Best Anime Rankings");
   const [topAnime, setTopAnime] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import GenericRoutePage from "../../components/GenericRoutePage";
 import configService from "../../services/configService";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
 
 export default function Rules() {
+	useDocumentTitle("Community Rules");
 	const [rules, setRules] = useState([]);
 
 	useEffect(() => {

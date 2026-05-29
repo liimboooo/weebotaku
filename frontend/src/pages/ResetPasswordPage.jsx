@@ -3,9 +3,11 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import AuthImage from "../components/AuthImage";
 import authService from "../services/authService";
 import { CheckCircle, XCircle, Loader, Eye, EyeOff } from "lucide-react";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./AuthPage.css";
 
 export default function ResetPasswordPage() {
+  useDocumentTitle("Reset Password");
   const { token } = useParams();
   const navigate = useNavigate();
   const [valid, setValid] = useState(null);

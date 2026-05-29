@@ -4,6 +4,7 @@ import { ArrowLeft, Star, Calendar, Globe, Lock } from 'lucide-react';
 import * as tierlistService from '../../services/tierlistService';
 import AnimatedPage from '../../components/AnimatedPage';
 import Background from '../../components/Background';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 import './TierLists.css';
 
 const TIER_CONFIG = [
@@ -18,6 +19,7 @@ export default function TierListView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [list, setList] = useState(null);
+  useDocumentTitle(list?.name || "Tier List");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tooltip, setTooltip] = useState(null);

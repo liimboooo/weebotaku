@@ -68,7 +68,9 @@ export default function AnimeInfo() {
   const [shareOpen, setShareOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [listStatus, setListStatus] = useState("");
-  const [favorited, setFavorited] = useState(false);
+  const [favorited, setFavorited] = useState(() => {
+    try { return (JSON.parse(localStorage.getItem('animewch_liked') || '[]')).includes(Number(id)); } catch { return false; }
+  });
   const [copied, setCopied] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -294,7 +296,18 @@ export default function AnimeInfo() {
             )}
             <button
               className={`ai-fav-btn ${favorited ? "active" : ""}`}
-              onClick={() => setFavorited(f => !f)}
+              onClick={() => {
+                setFavorited(f => {
+                  const next = !f;
+                  try {
+                    const liked = JSON.parse(localStorage.getItem('animewch_liked') || '[]');
+                    if (next) { if (!liked.includes(Number(id))) liked.push(Number(id)); }
+                    else { const idx = liked.indexOf(Number(id)); if (idx > -1) liked.splice(idx, 1); }
+                    localStorage.setItem('animewch_liked', JSON.stringify(liked));
+                  } catch {}
+                  return next;
+                });
+              }}
               aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
             >
               <Heart size={16} fill={favorited ? "#7c3aed" : "none"} />

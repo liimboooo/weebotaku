@@ -192,6 +192,23 @@
   border: 1px solid rgba(255,255,255,0.04);
 }
 
+.md-desc-toggle {
+  display: inline;
+  background: none;
+  border: none;
+  color: #a78bfa;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 4px;
+  transition: color 0.2s;
+}
+
+.md-desc-toggle:hover {
+  color: #c084fc;
+}
+
 .md-actions {
   display: flex;
   gap: 10px;

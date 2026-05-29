@@ -4,9 +4,11 @@ import AnimatedPage from "../components/AnimatedPage";
 
 import Background from "../components/Background";
 import { Home, Search, BookOpen } from "lucide-react";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./NotFound.css";
 
 export default function NotFound() {
+  useDocumentTitle("Page Not Found");
   const navigate = useNavigate();
 
   return (

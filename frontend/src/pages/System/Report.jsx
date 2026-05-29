@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import GenericRoutePage from "../../components/GenericRoutePage";
 import reportService from "../../services/reportService";
+import useDocumentTitle from "../../hooks/useDocumentTitle";
 
 export default function Report() {
+	useDocumentTitle("Report an Issue");
 	const [submitted, setSubmitted] = useState(false);
 	const [sending, setSending] = useState(false);
 	const [category, setCategory] = useState("bug");

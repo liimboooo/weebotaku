@@ -30,6 +30,7 @@ export default function MangaDetail() {
   const [readerChapters, setReaderChapters] = useState([]);
   const [readerChapter, setReaderChapter] = useState(null);
   const [readerOpen, setReaderOpen] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
 
   useDocumentTitle(manga?.title || "Manga");
 
@@ -212,9 +213,20 @@ export default function MangaDetail() {
                   {manga.tags.map(t => <span key={t} className="md-tag">{t}</span>)}
                 </div>
               )}
-              {manga.description && (
-                <p className="md-desc">{manga.description.replace(/<[^>]*>/g, "").slice(0, 500)}</p>
-              )}
+              {manga.description && (() => {
+                const clean = manga.description.replace(/<[^>]*>/g, "");
+                const truncated = clean.length > 300 && !descExpanded;
+                return (
+                  <p className="md-desc">
+                    {truncated ? clean.slice(0, 300) + "..." : clean}
+                    {clean.length > 300 && (
+                      <button className="md-desc-toggle" onClick={() => setDescExpanded(e => !e)}>
+                        {descExpanded ? "Show less" : "Show more"}
+                      </button>
+                    )}
+                  </p>
+                );
+              })()}
               <div className="md-actions">
                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   className="md-btn md-btn-primary"
@@ -227,7 +239,7 @@ export default function MangaDetail() {
                     }
                     openReader(chapters[0]);
                   }}>
-                  <BookOpen size={16} /> {chLoading ? "Loading..." : chapters.length === 0 && !chLoading ? "No Chapters" : "Start Reading"}
+                  <BookOpen size={16} /> {chLoading ? "Loading..." : chapters.length === 0 ? "No Chapters" : `Start Reading Ch. ${chapters[0]?.chapter || 1}`}
                 </motion.button>
                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   className={`md-btn md-btn-secondary ${isInList ? "active" : ""}`} onClick={toggleReadlist}>

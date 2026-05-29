@@ -180,6 +180,7 @@ export default function Browse() {
   const [watchlist, setWatchlist] = useState(loadWatchlist());
   const [watchAnime, setWatchAnime] = useState(null);
   const [watchLoading, setWatchLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const sentinelRef = useRef(null);
   const loadingRef = useRef(false);
   const hasLoadedOnce = useRef(false);
@@ -203,6 +204,7 @@ export default function Browse() {
     if (replace) setLoading(true);
     else setLoadingMore(true);
     showGlobalLoading();
+    setLoadError("");
     try {
       const q = searchRef.current.trim();
       const result = q
@@ -212,8 +214,8 @@ export default function Browse() {
       setHasMore(result.pagination.hasNextPage);
       setPage(p);
       hasLoadedOnce.current = true;
-    } catch (err) {
-      console.error("Failed to load anime:", err);
+    } catch {
+      setLoadError("Failed to load anime. Please try again.");
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -466,9 +468,9 @@ export default function Browse() {
               {filteredAnime.length === 0 && !loading && (
                 <div className="br-empty">
                   <Library size={36} />
-                  <h3>{hasLoadedOnce.current ? "No matches" : "Could not load"}</h3>
-                  <p>{hasLoadedOnce.current ? "Try clearing a filter or widening your search." : "Check your connection or try refreshing the page."}</p>
-                  {!hasLoadedOnce.current && (
+                  <h3>{loadError ? "Load Error" : hasLoadedOnce.current ? "No matches" : "Could not load"}</h3>
+                  <p>{loadError || (hasLoadedOnce.current ? "Try clearing a filter or widening your search." : "Check your connection or try refreshing the page.")}</p>
+                  {(!hasLoadedOnce.current || loadError) && (
                     <button className="br-retry-btn" onClick={() => loadAnime(1, true)}>
                       Retry
                     </button>

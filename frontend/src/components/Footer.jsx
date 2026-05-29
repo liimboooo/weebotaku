@@ -6,7 +6,7 @@ import "./Footer.css";
 export default function Footer() {
   const navigate = useNavigate();
   return (
-    <footer className="footer">
+    <footer className="footer" role="contentinfo">
       <div className="footer-glow" />
       <div className="footer-inner">
         <div className="footer-top">
@@ -19,7 +19,7 @@ export default function Footer() {
             </div>
             <span>Your ultimate anime community.</span>
           </div>
-          <div className="footer-links">
+          <nav className="footer-links" aria-label="Footer navigation">
             <div className="footer-links-col">
               <span className="footer-links-title"><Film size={12} /> Browse</span>
               <button onClick={() => navigate("/browse/anime")}>Anime</button>
@@ -41,7 +41,7 @@ export default function Footer() {
               <button onClick={() => navigate("/system/rules")}>Rules</button>
               <button onClick={() => navigate("/report")}>Report</button>
             </div>
-          </div>
+          </nav>
         </div>
         <div className="footer-divider" />
         <div className="footer-bottom">

@@ -5,9 +5,11 @@ import AuthImage from "../components/AuthImage";
 import authService from "../services/authService";
 import { syncFromBackend } from "../services/storage";
 import { Mail, CheckCircle, AlertCircle } from "lucide-react";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./AuthPage.css";
 
 export default function AuthPage() {
+  useDocumentTitle("AnimeWch");
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from || "/home";

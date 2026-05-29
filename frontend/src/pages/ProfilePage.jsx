@@ -244,11 +244,15 @@ export default function ProfilePage() {
     const q = searchQuery.slice(1).trim();
     if (!q) { setUserResults([]); return; }
     let cancelled = false;
-    (async () => {
-      const users = await authService.searchUsers(q);
-      if (!cancelled) setUserResults(users);
-    })();
-    return () => { cancelled = true; };
+    const timer = setTimeout(async () => {
+      try {
+        const users = await authService.searchUsers(q);
+        if (!cancelled) setUserResults(users || []);
+      } catch {
+        if (!cancelled) setUserResults([]);
+      }
+    }, 350);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [searchQuery, isUserSearch]);
 
   const userAvatar = avatarPreview || avatar;
@@ -326,10 +330,10 @@ export default function ProfilePage() {
               {isRemoteProfile && remoteUserId && (
                 friendStatus === "pending" && friendshipId && !isRequester ? (
                   <div className="upp-follow-actions">
-                    <button className="upp-action-btn upp-action-btn--accept" onClick={async () => { await friendService.acceptRequest(friendshipId); setFriendStatus("accepted"); }}>
+                    <button className="upp-action-btn upp-action-btn--accept" onClick={async () => { try { await friendService.acceptRequest(friendshipId); setFriendStatus("accepted"); } catch { addNotification("Failed to accept request", "error"); } }}>
                       Accept
                     </button>
-                    <button className="upp-action-btn upp-action-btn--reject" onClick={async () => { await friendService.rejectRequest(friendshipId); setFriendStatus("none"); setFriendshipId(null); }}>
+                    <button className="upp-action-btn upp-action-btn--reject" onClick={async () => { try { await friendService.rejectRequest(friendshipId); setFriendStatus("none"); setFriendshipId(null); } catch { addNotification("Failed to reject request", "error"); } }}>
                       Reject
                     </button>
                   </div>
@@ -337,19 +341,21 @@ export default function ProfilePage() {
                   <button
                     className="upp-action-btn upp-action-btn--follow"
                     onClick={async () => {
-                      if (friendStatus === "none") {
-                        await friendService.sendRequest(remoteUserId);
-                        setFriendStatus("pending");
-                        setIsRequester(true);
-                      } else if (friendStatus === "pending" && isRequester) {
-                        await friendService.rejectRequest(friendshipId);
-                        setFriendStatus("none");
-                        setFriendshipId(null);
-                        setIsRequester(false);
-                      } else if (friendStatus === "accepted") {
-                        await friendService.removeFriend(remoteUserId);
-                        setFriendStatus("none");
-                      }
+                      try {
+                        if (friendStatus === "none") {
+                          await friendService.sendRequest(remoteUserId);
+                          setFriendStatus("pending");
+                          setIsRequester(true);
+                        } else if (friendStatus === "pending" && isRequester) {
+                          await friendService.rejectRequest(friendshipId);
+                          setFriendStatus("none");
+                          setFriendshipId(null);
+                          setIsRequester(false);
+                        } else if (friendStatus === "accepted") {
+                          await friendService.removeFriend(remoteUserId);
+                          setFriendStatus("none");
+                        }
+                      } catch { addNotification("Action failed. Try again.", "error"); }
                     }}
                   >
                     <UserPlus size={14} />

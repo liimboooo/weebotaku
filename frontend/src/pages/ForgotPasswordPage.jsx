@@ -1,20 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import AuthImage from "../components/AuthImage";
 import authService from "../services/authService";
 import { Mail, ArrowLeft, CheckCircle } from "lucide-react";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./AuthPage.css";
 
 export default function ForgotPasswordPage() {
+  useDocumentTitle("Forgot Password");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef(null);
+
+  useEffect(() => {
+    return () => { if (cooldownRef.current) clearInterval(cooldownRef.current); };
+  }, []);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!email.trim()) { setError("Enter your email"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError("Enter a valid email address"); return; }
     setError("");
     setLoading(true);
     try {
@@ -23,7 +31,8 @@ export default function ForgotPasswordPage() {
         setSent(true);
         let sec = 60;
         setCooldown(sec);
-        const iv = setInterval(() => { sec--; setCooldown(sec); if (sec <= 0) clearInterval(iv); }, 1000);
+        if (cooldownRef.current) clearInterval(cooldownRef.current);
+        cooldownRef.current = setInterval(() => { sec--; setCooldown(sec); if (sec <= 0) { clearInterval(cooldownRef.current); cooldownRef.current = null; } }, 1000);
       } else {
         setError(res?.message || "Something went wrong");
       }
