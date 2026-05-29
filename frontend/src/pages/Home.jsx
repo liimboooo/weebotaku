@@ -22,6 +22,8 @@ import {
   TrendingUp,
   Trophy,
   Users,
+  Volume2,
+  VolumeX,
   Zap,
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
@@ -525,6 +527,8 @@ const heroItem = {
 };
 
 function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onWatch, onDetails }) {
+  const [muted, setMuted] = useState(true);
+  const [inWatchlist, setInWatchlist] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
 
   if (!spotlight) return null;
@@ -565,26 +569,32 @@ function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onWatch
         <motion.div className="spotlight-kicker" variants={heroItem}>
           <Sparkles size={14} /> Featured
         </motion.div>
-        <motion.h1 variants={heroItem}>{spotlight.name}</motion.h1>
+        <motion.h1 className="home-hero-title" variants={heroItem}>{spotlight.name}</motion.h1>
         <motion.p variants={heroItem} className="home-hero-desc">{(spotlight.synopsis || '').replace(/<[^>]*>/g, '').slice(0, 280)}</motion.p>
-        <motion.div variants={heroItem} className="home-hero-meta">
-          {spotlight.rating && <span><Star size={12} fill="#ffd700" color="#ffd700" /> {spotlight.rating.toFixed(1)}</span>}
-          <span>{spotlight.year || "?"}</span>
-          <span>{spotlight.episodes} EP</span>
-          <span>{spotlight.status}</span>
+        <motion.div variants={heroItem} className="hero-pills">
+          {spotlight.rating && (
+            <span className="hero-pill hero-pill--match">
+              <Star size={10} fill="currentColor" /> {spotlight.rating.toFixed(1)}% Match
+            </span>
+          )}
+          <span className="hero-pill hero-pill--meta">{spotlight.episodes || '??'} EP</span>
+          <span className="hero-pill hero-pill--meta">{spotlight.year || spotlight.season || '?'}</span>
         </motion.div>
-        <motion.div variants={heroItem} className="home-hero-actions">
+        <motion.div variants={heroItem} className="hero-actions">
           {spotlight.status === "NOT_YET_RELEASED" || spotlight.status === "CANCELLED" ? (
             <span className="hero-btn-primary" style={{ opacity: 0.5, cursor: 'default' }}>
               {spotlight.status === "NOT_YET_RELEASED" ? "Coming Soon" : "Cancelled"}
             </span>
           ) : (
-            <button className="hero-btn-primary" onClick={onWatch}>
+            <button className="hero-btn-main" onClick={onWatch}>
               <Play size={16} fill="currentColor" /> Watch Now
             </button>
           )}
-          <button className="hero-btn-secondary" onClick={onDetails}>
-            <Plus size={16} /> Details
+          <button className="hero-btn-icon" onClick={() => setInWatchlist(v => !v)} aria-label="Add to watchlist">
+            <Bookmark size={16} fill={inWatchlist ? 'currentColor' : 'none'} />
+          </button>
+          <button className="hero-btn-icon" onClick={() => setMuted(v => !v)} aria-label="Toggle audio">
+            {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
           </button>
         </motion.div>
         <SpotlightQuote quote={quote} onRefresh={onQuoteRefresh} loading={quoteLoading} />
