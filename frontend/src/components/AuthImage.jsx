@@ -17,8 +17,6 @@ export default function AuthImage() {
     <div className="auth-image">
       <img src="/beta-1.jpg" alt="" aria-hidden />
       <div className="auth-image-overlay" />
-      <div className="auth-image-glow-orb auth-image-glow-orb--1" />
-      <div className="auth-image-glow-orb auth-image-glow-orb--2" />
       <div className="auth-image-brand">
         <div className="auth-image-logo-row">
           <div className="auth-image-logo-mark">

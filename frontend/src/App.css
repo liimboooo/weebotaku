@@ -535,7 +535,6 @@ html, body {
   align-items: center;
   justify-content: center;
   box-shadow: 0 0 24px var(--accent-purple-glow), 0 4px 20px rgba(0,0,0,0.3);
-  animation: glow-spread 3s ease-in-out infinite;
   flex-shrink: 0;
 }
 
@@ -591,35 +590,6 @@ html, body {
   margin-bottom: 28px;
   animation: auth-field-in 0.5s var(--ease-out) 0.15s forwards;
   opacity: 0;
-}
-
-/* ─── Auth Image — Glow Orbs ─────────────────────────────── */
-.auth-image-glow-orb {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.3;
-}
-
-.auth-image-glow-orb--1 {
-  width: 350px;
-  height: 350px;
-  background: var(--accent-purple);
-  filter: blur(100px);
-  top: -100px;
-  right: -80px;
-  animation: aurora-drift 10s ease-in-out infinite;
-}
-
-.auth-image-glow-orb--2 {
-  width: 250px;
-  height: 250px;
-  background: var(--accent-pink);
-  filter: blur(80px);
-  bottom: -60px;
-  left: -60px;
-  animation: aurora-drift 12s ease-in-out infinite reverse;
 }
 
 /* ─── Auth Image — Feature Cards Enhanced ───────────────── */
@@ -735,38 +705,6 @@ html, body {
 .auth-divider { animation-delay: 0.34s; }
 .google-wrapper { animation-delay: 0.4s; }
 .auth-toggle { animation-delay: 0.46s; }
-
-/* ─── Motivational Text (Auth BG) ────────────────────── */
-.motivational-text {
-  position: absolute;
-  top: 20%;
-  right: 5%;
-  font-size: 120px;
-  font-weight: bold;
-  color: transparent;
-  z-index: 10;
-  background-image: url('https://images.unsplash.com/photo-1732535725600-f805d8b33c9c?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8');
-  background-size: 200%;
-  background-position: 0 50%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: animate-background 5s infinite alternate linear, slideIn 0.5s ease forwards;
-  text-align: right;
-  pointer-events: none;
-  transform: translateZ(0);
-  will-change: transform, background-position;
-}
-
-@keyframes slideIn {
-  from { transform: translateX(50px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes animate-background {
-  0% { background-position: 0 50%; }
-  100% { background-position: 100% 50%; }
-}
 
 /* ═══════════════════════════════════════════════════════
    AUTH RESPONSIVE

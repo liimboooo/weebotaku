@@ -118,20 +118,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Noise Grain Overlay ─────────────────────────────── */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0.35;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
-  mix-blend-mode: overlay;
-}
-
 a {
   color: inherit;
   text-decoration: none;
@@ -306,16 +292,6 @@ button, [role="button"], input, textarea, select, a {
 @keyframes slide-in-left {
   from { opacity: 0; transform: translateX(-20px); }
   to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px var(--primary-glow); }
-  50% { box-shadow: 0 0 40px var(--primary-glow); }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -566,37 +542,12 @@ button, [role="button"], input, textarea, select, a {
   --accent-cyan-glow: rgba(6, 182, 212, 0.35);
 }
 
-/* ─── Glow Animations ──────────────────────────────────── */
-@keyframes neon-pulse {
-  0%, 100% { opacity: 0.6; filter: blur(4px); }
-  50% { opacity: 1; filter: blur(2px); }
-}
-
-@keyframes glow-spread {
-  0% { box-shadow: 0 0 5px var(--accent-purple-glow); }
-  50% { box-shadow: 0 0 20px var(--accent-purple-glow), 0 0 40px var(--accent-purple-glow); }
-  100% { box-shadow: 0 0 5px var(--accent-purple-glow); }
-}
-
-@keyframes float-delayed {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
-}
-
-@keyframes aurora-drift {
-  0% { transform: translateX(-10%) translateY(0); }
-  50% { transform: translateX(10%) translateY(-5%); }
-  100% { transform: translateX(-10%) translateY(0); }
-}
-
 /* ─── Neon Gradient Text ────────────────────────────────── */
 .text-gradient-neon {
   background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink), var(--accent-blue));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  background-size: 200% 200%;
-  animation: aurora-drift 6s ease-in-out infinite;
 }
 
 /* ─── Neon Card ──────────────────────────────────────────── */
@@ -720,34 +671,6 @@ button, [role="button"], input, textarea, select, a {
   background: linear-gradient(90deg, var(--border-subtle), transparent);
 }
 
-/* ─── Glow Orb (ambient background effect) ───────────────── */
-.glow-orb {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  filter: blur(80px);
-  opacity: 0.4;
-  animation: aurora-drift 8s ease-in-out infinite;
-}
-
-.glow-orb--purple {
-  background: var(--accent-purple);
-  width: 300px;
-  height: 300px;
-}
-
-.glow-orb--pink {
-  background: var(--accent-pink);
-  width: 200px;
-  height: 200px;
-}
-
-.glow-orb--blue {
-  background: var(--accent-blue);
-  width: 250px;
-  height: 250px;
-}
-
 /* ─── Reaction Bar (engagement UI mock) ──────────────────── */
 .reaction-bar {
   display: flex;
@@ -801,7 +724,6 @@ button, [role="button"], input, textarea, select, a {
   font-size: 11px;
   font-weight: 700;
   color: var(--accent-pink);
-  animation: neon-pulse 2s ease-in-out infinite;
 }
 
 .trending-pill::before {
@@ -869,17 +791,11 @@ img[loading="lazy"][src] {
 
 .status-dot--online {
   background: #22c55e;
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
-  animation: status-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
 }
 
 .status-dot--offline {
   background: var(--text-muted);
-}
-
-@keyframes status-pulse {
-  0%, 100% { box-shadow: 0 0 4px rgba(34, 197, 94, 0.3); }
-  50% { box-shadow: 0 0 12px rgba(34, 197, 94, 0.6); }
 }
 
 /* ─── Empty State Pattern ──────────────────────────────── */
