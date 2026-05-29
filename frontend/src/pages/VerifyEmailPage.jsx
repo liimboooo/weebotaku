@@ -56,7 +56,7 @@ export default function VerifyEmailPage() {
         )}
         {status === "error" && (
           <div style={{ textAlign: "center", padding: "2rem 0" }}>
-            <XCircle size={56} color="#ff6b6b" style={{ marginBottom: "1rem" }} />
+            <XCircle size={56} color="#ffffff" style={{ marginBottom: "1rem" }} />
             <h2 style={{ color: "#fff", fontSize: "22px", margin: "0 0 0.5rem" }}>Verification failed</h2>
             <p style={{ color: "#ffffff", marginBottom: "1.5rem" }}>{message}</p>
             <Link to="/" style={{ display: "block", color: "#ffffff", textDecoration: "none", fontWeight: 500, marginTop: "0.75rem" }}>

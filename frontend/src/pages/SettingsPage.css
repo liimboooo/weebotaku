@@ -434,8 +434,8 @@
 }
 
 .st-badge--red {
-  background: rgba(255,107,107,0.15);
-  color: #ff6b6b;
+  background: rgba(255, 255, 255,0.15);
+  color: #ffffff;
 }
 
 .st-badge--amber {
@@ -485,19 +485,19 @@
 .st-btn--cyan:hover { background: rgba(255,255,255,0.25); }
 
 .st-btn--danger {
-  background: #ff6b6b;
+  background: #ffffff;
   color: #fff;
 }
 
-.st-btn--danger:hover { background: #ef4444; }
+.st-btn--danger:hover { background: #ffffff; }
 
 .st-btn--danger-outline {
-  border-color: #ff6b6b;
-  color: #ff6b6b;
+  border-color: #ffffff;
+  color: #ffffff;
   background: transparent;
 }
 
-.st-btn--danger-outline:hover { background: rgba(255,107,107,0.1); }
+.st-btn--danger-outline:hover { background: rgba(255, 255, 255,0.1); }
 
 .st-btn--dark {
   background: rgba(255,255,255,0.06);
@@ -705,16 +705,16 @@
 /* ─── Danger Card ─── */
 
 .st-danger-card {
-  background: rgba(255,107,107,0.08);
-  border: 1px solid rgba(255,107,107,0.3);
+  background: rgba(255, 255, 255,0.08);
+  border: 1px solid rgba(255, 255, 255,0.3);
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .st-danger-card:hover {
-  border-color: #ff6b6b;
-  box-shadow: 0 4px 24px rgba(255,107,107,0.08);
+  border-color: #ffffff;
+  box-shadow: 0 4px 24px rgba(255, 255, 255,0.08);
 }
 
 .st-danger-inner {
@@ -806,7 +806,7 @@
 
 .st-pw-error {
   font-size: 12px;
-  color: #ff6b6b;
+  color: #ffffff;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -864,7 +864,7 @@
 }
 
 .st-toast--error {
-  background: #ff6b6b;
+  background: #ffffff;
   color: #fff;
 }
 
@@ -1100,7 +1100,7 @@
 .st-modal-icon {
   display: grid;
   place-items: center;
-  color: #ff6b6b;
+  color: #ffffff;
 }
 
 .st-modal-desc {

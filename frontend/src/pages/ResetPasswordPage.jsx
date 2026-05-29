@@ -48,7 +48,7 @@ export default function ResetPasswordPage() {
     if (/[0-9]/.test(pw)) s++;
     if (/[^A-Za-z0-9]/.test(pw)) s++;
     const labels = ["", "Weak", "Fair", "Good", "Strong"];
-    const colors = ["", "#ff6b6b", "#fbbf24", "#ffffff", "#4ade80"];
+    const colors = ["", "#ffffff", "#fbbf24", "#ffffff", "#4ade80"];
     return { label: labels[s], color: colors[s], width: `${s * 25}%` };
   };
 
@@ -88,7 +88,7 @@ export default function ResetPasswordPage() {
     return (
       <div className="auth-container">
         <div className="auth-form" style={{ textAlign: "center", padding: "2rem 0" }}>
-          <XCircle size={56} color="#ff6b6b" style={{ marginBottom: "1rem" }} />
+          <XCircle size={56} color="#ffffff" style={{ marginBottom: "1rem" }} />
           <h2 style={{ color: "#fff", fontSize: "22px", margin: "0 0 0.5rem" }}>Invalid or expired link</h2>
           <p style={{ color: "#ffffff", marginBottom: "1.5rem" }}>This password reset link is no longer valid.</p>
           <Link to="/auth/forgot-password" style={{ display: "block", color: "#ffffff", textDecoration: "none", fontWeight: 500 }}>

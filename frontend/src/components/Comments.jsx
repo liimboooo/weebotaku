@@ -49,7 +49,7 @@ function getUserColor(name) {
 }
 
 function getRoleBadge(role) {
-  if (role === 'admin') return { label: "ADMIN", color: "#ef4444", bg: "rgba(239,68,68,0.15)" };
+  if (role === 'admin') return { label: "ADMIN", color: "#ffffff", bg: "rgba(255, 255, 255,0.15)" };
   return null;
 }
 

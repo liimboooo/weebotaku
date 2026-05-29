@@ -120,8 +120,8 @@
 }
 
 .upp-action-btn--danger:hover {
-  background: rgba(248, 113, 113, 0.2);
-  color: #f87171;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
 .upp-action-btn--follow {
@@ -370,7 +370,7 @@
 .upp-list-status--planning  { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
 .upp-list-status--completed { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
 .upp-list-status--paused    { color: #fbbf24; background: rgba(251, 191, 36, 0.1); }
-.upp-list-status--dropped   { color: #f87171; background: rgba(248, 113, 113, 0.1); }
+.upp-list-status--dropped   { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
 
 .upp-list-rating {
   font-size: 13px;
@@ -411,8 +411,8 @@
 }
 
 .upp-list-action--delete:hover {
-  color: #f87171;
-  background: rgba(248, 113, 113, 0.12);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 /* ─── Status Menu ───────────────────────── */
@@ -535,7 +535,7 @@
 /* ─── Stats Bar ────────────────────────── */
 /* ─── Fav heart on list ────────────────── */
 .upp-list-action--fav svg {
-  color: #ef4444 !important;
+  color: #ffffff !important;
 }
 
 @media (max-width: 599px) {

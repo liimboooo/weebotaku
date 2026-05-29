@@ -17,7 +17,7 @@
   margin-bottom: 0;
   background:
     radial-gradient(ellipse at 30% 0%, rgba(255, 255, 255, 0.06), transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(180, 30, 30, 0.03), transparent 50%);
+    radial-gradient(ellipse at 80% 100%, rgba(255, 255, 255, 0.03), transparent 50%);
 }
 
 .discovery-header::after {
@@ -200,7 +200,7 @@
 
 .trending-indicator.up { color: #2ecc71; background: rgba(46, 204, 113, 0.08); }
 .trending-indicator.neutral { color: #f1c40f; background: rgba(241, 196, 15, 0.08); }
-.trending-indicator.down { color: #e74c3c; background: rgba(231, 76, 60, 0.08); }
+.trending-indicator.down { color: #ffffff; background: rgba(255, 255, 255, 0.08); }
 
 /* ═══ GENRE FILTER ═══ */
 .genre-filter {
@@ -316,7 +316,7 @@
   gap: 6px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #ff8a8a;
+  color: #ffffff;
   padding: 7px 14px;
   border-radius: 999px;
   cursor: pointer;

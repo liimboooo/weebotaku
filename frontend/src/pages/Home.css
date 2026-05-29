@@ -498,7 +498,7 @@
 .home-stat-icon.bookmark { background: rgba(255, 255, 255, 0.08); color: #ffffff; }
 .home-stat-icon.eye { background: rgba(52, 211, 153, 0.08); color: #34d399; }
 .home-stat-icon.level { background: rgba(255, 255, 255, 0.08); color: #ffffff; }
-.home-stat-icon.streak { background: rgba(249, 115, 22, 0.08); color: #f97316; }
+.home-stat-icon.streak { background: rgba(234, 179, 8, 0.08); color: #eab308; }
 
 .home-stat-info {
   display: flex;

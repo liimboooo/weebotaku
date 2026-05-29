@@ -356,7 +356,7 @@
 }
 
 .awc-options-item:hover { background: rgba(255,255,255,0.12); color: #ffffff; }
-.awc-options-item-danger:hover { background: rgba(239,68,68,0.08); color: #ef4444; }
+.awc-options-item-danger:hover { background: rgba(255, 255, 255,0.08); color: #ffffff; }
 
 /* ─── EDIT ─── */
 .awc-edit-wrap {
@@ -637,11 +637,11 @@
 .awc-dialog-btn:first-child:hover { background: rgba(255,255,255,0.08); color: #ffffff; }
 
 .awc-dialog-btn-danger {
-  background: rgba(239,68,68,0.08);
-  color: #ef4444;
+  background: rgba(255, 255, 255,0.08);
+  color: #ffffff;
 }
 
-.awc-dialog-btn-danger:hover { background: rgba(239,68,68,0.15); }
+.awc-dialog-btn-danger:hover { background: rgba(255, 255, 255,0.15); }
 
 /* ─── MISC ─── */
 .awc-copied-hint {

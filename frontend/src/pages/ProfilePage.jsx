@@ -424,7 +424,7 @@ export default function ProfilePage() {
                                 aria-label="Toggle favorite"
                                 title={favorites.find(f => f.animeId === item.id) ? "Remove from favorites" : "Add to favorites"}
                               >
-                                <Heart size={14} fill={favorites.find(f => f.animeId === item.id) ? "#ef4444" : "none"} color={favorites.find(f => f.animeId === item.id) ? "#ef4444" : "#000000"} />
+                                <Heart size={14} fill={favorites.find(f => f.animeId === item.id) ? "#ffffff" : "none"} color={favorites.find(f => f.animeId === item.id) ? "#ffffff" : "#000000"} />
                               </button>
                               <button
                                 className="upp-list-action upp-list-action--delete"

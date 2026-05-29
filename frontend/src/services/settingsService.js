@@ -99,7 +99,7 @@ const settingsService = {
     if (/[A-Z]/.test(password)) score++;
     if (/[0-9]/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
-    if (score <= 1) return { label: "Weak", color: "#ff6b6b", width: "25%" };
+    if (score <= 1) return { label: "Weak", color: "#ffffff", width: "25%" };
     if (score <= 2) return { label: "Fair", color: "#fbbf24", width: "50%" };
     if (score <= 4) return { label: "Good", color: "#4ade80", width: "75%" };
     return { label: "Strong", color: "#22c55e", width: "100%" };

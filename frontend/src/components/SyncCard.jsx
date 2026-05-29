@@ -33,7 +33,7 @@ export default function SyncCard({ service, status, username, lastSynced, loadin
                 </div>
               )}
               {syncStatus === "failed" && (
-                <div style={{ fontSize: 12, color: "#ff6b6b" }}>Sync failed</div>
+                <div style={{ fontSize: 12, color: "#ffffff" }}>Sync failed</div>
               )}
             </>
           ) : (

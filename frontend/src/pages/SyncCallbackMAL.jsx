@@ -57,7 +57,7 @@ export default function SyncCallbackMAL() {
         )}
         {status === "error" && (
           <>
-            <XCircle size={56} color="#ff6b6b" style={{ marginBottom: "1rem" }} />
+            <XCircle size={56} color="#ffffff" style={{ marginBottom: "1rem" }} />
             <h2 style={{ color: "#fff", fontSize: "22px", margin: "0 0 0.5rem" }}>Connection failed</h2>
             <p style={{ color: "#ffffff", marginBottom: "1.5rem" }}>{message}</p>
             <button className="auth-submit" onClick={() => navigate("/settings?page=integrations", { replace: true })}>

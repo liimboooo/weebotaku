@@ -24,7 +24,7 @@ const SECTIONS = [
     cols: 3,
     cards: [
       { key: "account",       icon: User,     label: "Account",           desc: "Manage profile, email, bio",               color: "#ffffff" },
-      { key: "privacy",       icon: Shield,   label: "Privacy & Security",desc: "2FA, password, privacy",                   color: "#ff6b6b" },
+      { key: "privacy",       icon: Shield,   label: "Privacy & Security",desc: "2FA, password, privacy",                   color: "#ffffff" },
       { key: "notifications", icon: Bell,     label: "Notifications",     desc: "Email, push, alerts",                      color: "#fbbf24" },
     ],
   },
