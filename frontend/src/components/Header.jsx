@@ -12,7 +12,6 @@ import './Header.css';
 
 export default function Header() {
   const navigate = useNavigate();
-  const location = useLocation();
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
