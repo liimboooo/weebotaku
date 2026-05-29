@@ -45,7 +45,12 @@ export default function AnimeDetail() {
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
   const [epSearch, setEpSearch] = useState("");
-  const [language, setLanguage] = useState("sub");
+  const [language, setLanguage] = useState(() => {
+    const s = loadSettings();
+    if (s.defaultDubbed === "dubbed") return "dub";
+    if (s.defaultDubbed === "subbed") return "sub";
+    return localStorage.getItem("animewch_last_language") || "sub";
+  });
   const [langKey, setLangKey] = useState(0);
   const [recommendations, setRecommendations] = useState([]);
   const [visibleCount, setVisibleCount] = useState(50);
@@ -860,8 +865,8 @@ export default function AnimeDetail() {
 
             {servers.length > 0 && (
               <div className="watch-lang-toggle">
-                <button className={`watch-lang-btn ${language === 'sub' ? 'active' : ''}`} onClick={() => setLanguage('sub')} disabled={!servers.some(s => s.type === 'sub')}>SUB</button>
-                <button className={`watch-lang-btn ${language === 'dub' ? 'active' : ''}`} onClick={() => setLanguage('dub')} disabled={!servers.some(s => s.type === 'dub')}>DUB</button>
+                <button className={`watch-lang-btn ${language === 'sub' ? 'active' : ''}`} onClick={() => { setLanguage('sub'); try { localStorage.setItem('animewch_last_language', 'sub'); } catch {} }} disabled={!servers.some(s => s.type === 'sub')}>SUB</button>
+                <button className={`watch-lang-btn ${language === 'dub' ? 'active' : ''}`} onClick={() => { setLanguage('dub'); try { localStorage.setItem('animewch_last_language', 'dub'); } catch {} }} disabled={!servers.some(s => s.type === 'dub')}>DUB</button>
               </div>
             )}
 
