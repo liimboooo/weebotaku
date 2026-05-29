@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, useNavig
 import { syncFromBackend } from "./services/storage";
 import ScrollToTop from "./components/ScrollToTop";
 import Sidebar from "./components/Sidebar";
+import Header from "./components/Header";
 import ToastContainer from "./components/Toast";
 import { LoadingProvider } from "./components/LoadingProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -74,6 +75,7 @@ function AppLayout() {
   return (
     <>
       <ScrollToTop />
+      {!isAuthPage && <Header />}
       {!isAuthPage && <Sidebar />}
       <div className="app-main">
       <ToastContainer />
