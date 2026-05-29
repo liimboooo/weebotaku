@@ -107,7 +107,7 @@ export default function ResetPasswordPage() {
           <CheckCircle size={56} color="#4ade80" style={{ marginBottom: "1rem" }} />
           <h2 style={{ color: "#fff", fontSize: "22px", margin: "0 0 0.5rem" }}>Password updated!</h2>
           <p style={{ color: "#888", marginBottom: "1.5rem" }}>Your password has been reset successfully.</p>
-          <button className="auth-submit" onClick={() => navigate("/")} style={{ width: "100%" }}>
+          <button className="auth-submit" onClick={() => navigate("/auth")} style={{ width: "100%" }}>
             Login with new password
           </button>
         </div>

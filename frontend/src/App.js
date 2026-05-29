@@ -91,7 +91,7 @@ function RouteShell({ children }) {
 function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const isAuthPage = location.pathname === "/" || location.pathname.startsWith("/auth/sync/");
+  const isAuthPage = location.pathname === "/auth" || location.pathname.startsWith("/auth/sync/");
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -99,7 +99,7 @@ function AppLayout() {
   }, [token]);
 
   useEffect(() => {
-    const onAuthLogout = () => navigate('/', { replace: true });
+    const onAuthLogout = () => navigate('/home', { replace: true });
     window.addEventListener('auth-logout', onAuthLogout);
     return () => window.removeEventListener('auth-logout', onAuthLogout);
   }, [navigate]);
@@ -120,7 +120,8 @@ function AppLayout() {
       <ToastContainer />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={token ? <Navigate to="/home" replace /> : <AuthPage />} />
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/auth" element={token ? <Navigate to="/home" replace /> : <AuthPage />} />
           <Route path="/auth/verify-email/:token" element={<RouteShell><VerifyEmailPage /></RouteShell>} />
           <Route path="/auth/forgot-password" element={<RouteShell><ForgotPasswordPage /></RouteShell>} />
           <Route path="/auth/reset-password/:token" element={<RouteShell><ResetPasswordPage /></RouteShell>} />
@@ -147,10 +148,10 @@ function AppLayout() {
           <Route path="/manga/:id" element={<RouteShell><MangaDetail /></RouteShell>} />
           <Route path="/search" element={<RouteShell><SearchPage /></RouteShell>} />
           <Route path="/news" element={<RouteShell><News /></RouteShell>} />
-          <Route path="/watchlist" element={<RouteShell><ProtectedRoute><WatchlistPage /></ProtectedRoute></RouteShell>} />
+          <Route path="/watchlist" element={<RouteShell><WatchlistPage /></RouteShell>} />
           <Route path="/profile" element={<RouteShell><ProtectedRoute><ProfilePage /></ProtectedRoute></RouteShell>} />
           <Route path="/profile/:username" element={<RouteShell><ProfilePage /></RouteShell>} />
-          <Route path="/history" element={<RouteShell><ProtectedRoute><HistoryPage /></ProtectedRoute></RouteShell>} />
+          <Route path="/history" element={<RouteShell><HistoryPage /></RouteShell>} />
           <Route path="/friends" element={<RouteShell><ProtectedRoute><FriendsPage /></ProtectedRoute></RouteShell>} />
           <Route path="/leaderboard" element={<RouteShell><LeaderboardPage /></RouteShell>} />
           <Route path="/following" element={<Navigate to="/home" replace />} />

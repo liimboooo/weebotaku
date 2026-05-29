@@ -432,7 +432,7 @@ export default function Header() {
                   <button className="profile-action-card" onClick={() => navigateTo('/profile')}><Settings size={16} /> <span>Profile</span></button>
                   <button className="profile-action-card" onClick={() => navigateTo('/watchlist')}><Bookmark size={16} /> <span>Watchlist</span></button>
                   <button className="profile-action-card" onClick={() => navigateTo('/settings')}><Settings size={16} /> <span>Settings</span></button>
-                  <button className="profile-action-card profile-action-card--danger" onClick={async () => { await authService.logout(); navigateTo('/'); }}>
+                  <button className="profile-action-card profile-action-card--danger" onClick={async () => { await authService.logout(); navigateTo('/home'); }}>
                     <LogOut size={16} /> <span>Sign Out</span>
                   </button>
                 </div>
@@ -440,7 +440,7 @@ export default function Header() {
             )}
           </div>
           </>) : (
-            <button className="header-login-btn" onClick={() => navigateTo('/')}>
+            <button className="header-login-btn" onClick={() => navigateTo('/auth')}>
               Log In
             </button>
           )}

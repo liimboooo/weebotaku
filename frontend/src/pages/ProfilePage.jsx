@@ -374,7 +374,7 @@ export default function ProfilePage() {
                 </button>
               )}
               {isOwnProfile && (
-                <button className="upp-action-btn upp-action-btn--danger" onClick={async () => { await authService.logout(); navigate("/"); }}>
+                <button className="upp-action-btn upp-action-btn--danger" onClick={async () => { await authService.logout(); navigate("/home"); }}>
                   <LogOut size={14} /> Logout
                 </button>
               )}

@@ -6,6 +6,7 @@ import { Clock, Trash2, Play, X, Compass, Sparkles, Film } from "lucide-react";
 import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
 import { loadWatchHistory, clearWatchHistory as clearStorageHistory, removeFromWatchHistory } from "../services/storage";
+import authService from "../services/authService";
 import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./HistoryPage.css";
@@ -113,6 +114,13 @@ export default function HistoryPage() {
               </div>
             )}
           </motion.section>
+
+          {!authService.isLoggedIn() && history.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 16px', margin: '0 0 16px', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 10, fontSize: 13, color: '#c4b5fd' }}>
+              <span>History saved locally. <strong>Sign in</strong> to access it from any device.</span>
+              <button onClick={() => navigate('/auth?next=/history')} style={{ background: 'linear-gradient(135deg,#6d28d9,#7c3aed)', border: 'none', color: '#fff', padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Sign In</button>
+            </div>
+          )}
 
           {history.length > 0 && (
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 20 }}>

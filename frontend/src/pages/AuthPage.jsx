@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import AuthForm from "../components/AuthForm";
 import AuthImage from "../components/AuthImage";
 import authService from "../services/authService";
@@ -12,7 +12,8 @@ export default function AuthPage() {
   useDocumentTitle("AnimeWch");
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from || "/home";
+  const [searchParams] = useSearchParams();
+  const from = searchParams.get("next") || location.state?.from || "/home";
   const [mode, setMode] = useState("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");

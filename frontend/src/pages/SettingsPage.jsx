@@ -189,7 +189,7 @@ export default function SettingsPage() {
 
   const handleLogout = async () => {
     await authService.logout();
-    navigate("/");
+    navigate("/home");
   };
 
   const handleSyncMAL = async () => {
