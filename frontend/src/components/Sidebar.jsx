@@ -1,20 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bookmark, Clock, Film, Home, LogOut, Settings, Sparkles, User } from 'lucide-react';
+import { Bookmark, Clock, Film, Home, LogOut, Settings, User } from 'lucide-react';
 import authService from '../services/authService';
 import './Sidebar.css';
 
 const TOP_ITEMS = [
-  { icon: Home, label: 'Home', path: '/home', accent: 'purple' },
-  { icon: Film, label: 'Browse', path: '/browse/anime', accent: 'pink' },
+  { icon: Home, label: 'Home', path: '/home' },
+  { icon: Film, label: 'Browse', path: '/browse/anime' },
 ];
 
 const BOTTOM_ITEMS = [
-  { icon: User, label: 'Profile', path: '/profile', auth: true, accent: 'cyan' },
-  { icon: Clock, label: 'History', path: '/history', accent: 'purple' },
-  { icon: Bookmark, label: 'Watchlist', path: '/watchlist', accent: 'pink' },
-  { icon: Settings, label: 'Settings', path: '/settings', accent: 'blue' },
+  { icon: User, label: 'Profile', path: '/profile', auth: true },
+  { icon: Clock, label: 'History', path: '/history' },
+  { icon: Bookmark, label: 'Watchlist', path: '/watchlist' },
+  { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
 export default function Sidebar() {
@@ -56,22 +56,13 @@ export default function Sidebar() {
       </AnimatePresence>
 
       <aside className={`sd-drawer${open ? ' open' : ''}`}>
-        <div className="sd-ambient sd-ambient--top" />
-        <div className="sd-ambient sd-ambient--bottom" />
-
         <div className="sd-header">
           <button className="sd-brand" onClick={() => go('/home')}>
-            <span className="sd-brand-mark">
-              <Sparkles size={14} strokeWidth={2.5} />
-            </span>
-            <span className="sd-brand-text">
-              Anime<span className="brand-dim">Wch</span>
-            </span>
+            <span className="sd-brand-dot" />
+            <span className="sd-brand-text">AnimeWch</span>
           </button>
-          <span className="sd-brand-badge">PREMIUM</span>
         </div>
 
-        <div className="sd-section-label">Discover</div>
         <nav className="sd-nav">
           {TOP_ITEMS.map(item => {
             const Icon = item.icon;
@@ -79,22 +70,18 @@ export default function Sidebar() {
             return (
               <button
                 key={item.path}
-                className={`sd-item sd-item--${item.accent}${active ? ' active' : ''}`}
+                className={`sd-item${active ? ' active' : ''}`}
                 onClick={() => go(item.path)}
               >
-                <span className="sd-item-indicator" />
-                <span className="sd-item-icon-wrap">
-                  <Icon size={17} strokeWidth={2.1} />
-                </span>
-                <span className="sd-item-label">{item.label}</span>
+                <Icon size={16} strokeWidth={1.75} />
+                <span>{item.label}</span>
               </button>
             );
           })}
         </nav>
 
-        <div className="sd-divider" />
+        <div className="sd-rule" />
 
-        <div className="sd-section-label">Library</div>
         <div className="sd-bottom">
           {BOTTOM_ITEMS.map(item => {
             const Icon = item.icon;
@@ -103,38 +90,27 @@ export default function Sidebar() {
             return (
               <button
                 key={item.path}
-                className={`sd-item sd-item--${item.accent}${active ? ' active' : ''}`}
+                className={`sd-item${active ? ' active' : ''}`}
                 onClick={() => go(item.path)}
               >
-                <span className="sd-item-indicator" />
-                <span className="sd-item-icon-wrap">
-                  <Icon size={17} strokeWidth={2.1} />
-                </span>
-                <span className="sd-item-label">{item.label}</span>
+                <Icon size={16} strokeWidth={1.75} />
+                <span>{item.label}</span>
               </button>
             );
           })}
 
           {isLoggedIn && (
             <>
-              <div className="sd-divider sd-divider--tight" />
+              <div className="sd-rule" />
               <button
                 className="sd-item sd-item--danger"
                 onClick={async () => { await authService.logout(); setOpen(false); navigate('/home'); }}
               >
-                <span className="sd-item-indicator" />
-                <span className="sd-item-icon-wrap">
-                  <LogOut size={17} strokeWidth={2.1} />
-                </span>
-                <span className="sd-item-label">Sign Out</span>
+                <LogOut size={16} strokeWidth={1.75} />
+                <span>Sign out</span>
               </button>
             </>
           )}
-
-          <div className="sd-footer">
-            <span className="sd-footer-dot" />
-            <span className="sd-footer-text">v2.0 · All systems normal</span>
-          </div>
         </div>
       </aside>
     </>

@@ -1,18 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Search, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Menu, Search } from 'lucide-react';
 import './Header.css';
 
 export default function Header() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [scrolled, setScrolled] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -39,44 +37,31 @@ export default function Header() {
     }
   };
 
-  const isHome = location.pathname === '/home' || location.pathname === '/';
-
   return (
     <nav className={`top-nav${scrolled ? ' is-scrolled' : ''}`}>
       <div className="top-nav-bg" />
-      <div className="top-nav-accent-line" />
 
       <div className="top-nav-left">
         <button className="top-nav-hamburger" onClick={toggleSidebar} aria-label="Toggle navigation">
-          <span className="hamburger-glow" />
-          <Menu size={18} strokeWidth={2.2} />
+          <Menu size={17} strokeWidth={1.75} />
         </button>
-
+        <span className="top-nav-divider" />
         <button className="top-nav-brand" onClick={() => navigate('/home')} aria-label="Home">
-          <span className="brand-mark">
-            <span className="brand-mark-inner">
-              <Sparkles size={12} strokeWidth={2.5} />
-            </span>
-          </span>
-          <span className="brand-text">
-            Anime<span className="brand-highlight">Wch</span>
-          </span>
+          <span className="brand-dot" />
+          <span className="brand-text">AnimeWch</span>
         </button>
       </div>
 
       <div className="top-nav-right">
-        <div className={`top-nav-search${searchFocused ? ' is-focused' : ''}`}>
-          <div className="search-glow" />
-          <Search size={14} className="top-nav-search-icon" strokeWidth={2.2} />
+        <div className="top-nav-search">
+          <Search size={13} className="top-nav-search-icon" strokeWidth={1.75} />
           <input
             ref={inputRef}
             type="text"
-            placeholder={isHome ? 'Search anime, characters...' : 'Search anime...'}
+            placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearch}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
           />
           <span className="search-kbd">⌘K</span>
         </div>
