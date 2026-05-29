@@ -47,7 +47,6 @@ async function exchangeCode(code, codeVerifier) {
     code,
     code_verifier: codeVerifier,
     grant_type: 'authorization_code',
-    redirect_uri: MAL_REDIRECT_URI,
   });
   const res = await fetch(MAL_TOKEN_URL, {
     method: 'POST',
