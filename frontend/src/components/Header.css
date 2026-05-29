@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════
-   TOP NAV — Absolute, Transparent, Premium
+   TOP NAV — Fixed, Scroll-Aware Background
    ═══════════════════════════════════════════════════════ */
 
 .top-nav {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -12,7 +12,6 @@
   align-items: center;
   justify-content: space-between;
   padding: 24px 32px;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), transparent);
   pointer-events: none;
 }
 
@@ -20,8 +19,30 @@
   pointer-events: auto;
 }
 
+/* ─── Scroll background (fades in) ────────────────────── */
+.top-nav-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 5, 8, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: opacity 0.05s linear;
+}
+
+.top-nav-bg-border {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  transition: opacity 0.1s ease;
+}
+
 /* ─── Left ────────────────────────────────────────────── */
 .top-nav-left {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -70,6 +91,8 @@
 
 /* ─── Right / Search ──────────────────────────────────── */
 .top-nav-right {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
 }

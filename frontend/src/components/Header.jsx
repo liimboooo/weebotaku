@@ -1,35 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Gift, LogOut, Menu, Search, Volume2, VolumeX, Bookmark } from 'lucide-react';
-import authService from '../services/authService';
-import { loadWatchHistory } from '../services/storage';
-import { formatTimeAgo } from '../utils/helpers';
-import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications, fetchServerNotifications, seedBroadcastNotifications, handleSocketNotification, startPolling, stopPolling } from '../services/notificationService';
-import { connectSocket, disconnectSocket } from '../services/socket';
-import { fetchAggregatedNews } from '../services/newsAggregator';
+import { Menu, Search } from 'lucide-react';
 import './Header.css';
 
 export default function Header() {
   const navigate = useNavigate();
-  const [scrolled, setScrolled] = useState(false);
-
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [notifications, setNotifications] = useState(() => {
-    let s; try { s = JSON.parse(localStorage.getItem('animewch_settings')); } catch {}
-    return getNotifications(s);
-  });
-  const [unreadCount, setUnreadCount] = useState(() => {
-    let s; try { s = JSON.parse(localStorage.getItem('animewch_settings')); } catch {}
-    return getUnreadCount(s);
-  });
-  const [profileImage, setProfileImage] = useState(() => localStorage.getItem('userAvatar') || '');
-  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
-  const username = localStorage.getItem('username') || 'Guest';
-  const [episodesWatched, setEpisodesWatched] = useState(() => loadWatchHistory().length);
-  const hasUnclaimedRewards = localStorage.getItem('userUnclaimedRewards') === 'true';
-  const [muted, setMuted] = useState(true);
+  const [bgOpacity, setBgOpacity] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const onScroll = () => {
+      const opacity = Math.min(1, window.scrollY / 100);
+      setBgOpacity(opacity);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const toggleSidebar = () => window.dispatchEvent(new CustomEvent('sidebar-toggle'));
 
@@ -42,6 +29,8 @@ export default function Header() {
 
   return (
     <nav className="top-nav">
+      <div className="top-nav-bg" style={{ opacity: bgOpacity }} />
+      <div className="top-nav-bg-border" style={{ opacity: Math.min(1, bgOpacity * 2) }} />
       <div className="top-nav-left">
         <button className="top-nav-hamburger" onClick={toggleSidebar} aria-label="Toggle navigation">
           <Menu size={20} />

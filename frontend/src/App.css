@@ -18,6 +18,7 @@ html, body {
 /* ─── Route Content Shell ─────────────────────────────── */
 .app-main {
   min-height: 100vh;
+  padding-top: 80px;
 }
 
 .route-content {
