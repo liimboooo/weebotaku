@@ -5,7 +5,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ArrowLeft, BookOpen, Heart, ChevronDown, Loader } from "lucide-react";
 import { getMangaById, getMangaChapters, searchAndGetManga, searchMangaNato, getMangaNatoChapters, getMangaNatoPages, searchToonily, getToonilyChapters, getToonilyPages, searchBato, getBatoChapters, getBatoPages } from "../services/mangaApi";
-import { loadReadlist, addToReadlist, removeFromReadlist } from "../services/storage";
+import { loadReadlist, addToReadlist, removeFromReadlist, getMangaProgress } from "../services/storage";
 import { addNotification } from "../services/notificationService";
 import MangaReader from "./Feeds/MangaReader";
 import ErrorBoundary from "../components/ErrorBoundary";
@@ -227,19 +227,30 @@ export default function MangaDetail() {
                 );
               })()}
               <div className="md-actions">
-                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                  className="md-btn md-btn-primary"
-                  disabled={chLoading}
-                  onClick={() => {
-                    if (chLoading) return;
-                    if (chapters.length === 0) {
-                      addNotification({ title: "No Chapters", body: "No readable chapters found for this manga.", type: "error" });
-                      return;
-                    }
-                    openReader(chapters[0]);
-                  }}>
-                  <BookOpen size={16} /> {chLoading ? "Loading..." : chapters.length === 0 ? "No Chapters" : `Start Reading Ch. ${chapters[0]?.chapter || 1}`}
-                </motion.button>
+                {(() => {
+                  const progress = getMangaProgress(manga.id || id);
+                  const progressCh = typeof progress === "object" ? progress.ch : progress;
+                  const resumeCh = progressCh
+                    ? chapters.find(c => parseFloat(c.chapter) === parseFloat(progressCh)) || chapters.find(c => parseFloat(c.chapter) >= parseFloat(progressCh))
+                    : null;
+                  const startCh = resumeCh || chapters[0];
+                  const isResume = resumeCh && progressCh && parseFloat(progressCh) > 1;
+                  return (
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                      className="md-btn md-btn-primary"
+                      disabled={chLoading}
+                      onClick={() => {
+                        if (chLoading) return;
+                        if (chapters.length === 0) {
+                          addNotification({ title: "No Chapters", body: "No readable chapters found for this manga.", type: "error" });
+                          return;
+                        }
+                        openReader(startCh);
+                      }}>
+                      <BookOpen size={16} /> {chLoading ? "Loading..." : chapters.length === 0 ? "No Chapters" : isResume ? `Continue Ch. ${startCh?.chapter || progressCh}` : `Start Reading Ch. ${chapters[0]?.chapter || 1}`}
+                    </motion.button>
+                  );
+                })()}
                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   className={`md-btn md-btn-secondary ${isInList ? "active" : ""}`} onClick={toggleReadlist}>
                   <Heart size={16} fill={isInList ? "currentColor" : "none"} />
@@ -257,22 +268,36 @@ export default function MangaDetail() {
               <div className="md-ch-empty"><p>No chapters available.</p></div>
             ) : (
               <div className="md-ch-list">
-                {displayedCh.map((ch, i) => (
-                  <motion.button key={ch.id} className="md-ch-item"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.02 }}
-                    onClick={() => openReader(ch)}>
-                    <div className="md-ch-left">
-                      <span className="md-ch-num">Ch. {ch.chapter}</span>
-                      {ch.title && <span className="md-ch-title">{ch.title}</span>}
-                    </div>
-                    <div className="md-ch-right">
-                      {ch.group && <span className="md-ch-group">{ch.group}</span>}
-                      <span className="md-ch-pages">{ch.pages}p</span>
-                    </div>
-                  </motion.button>
-                ))}
+                {(() => {
+                  const progress = getMangaProgress(manga.id || id);
+                  const progressCh = typeof progress === "object" ? progress.ch : progress;
+                  const progressNum = parseFloat(progressCh) || 0;
+                  return displayedCh.map((ch, i) => {
+                    const chNum = parseFloat(ch.chapter) || 0;
+                    const isRead = progressNum > 0 && chNum < progressNum;
+                    const isCurrent = progressNum > 0 && chNum === progressNum;
+                    return (
+                      <motion.button key={ch.id} className="md-ch-item"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.02 }}
+                        onClick={() => openReader(ch)}
+                        style={isCurrent ? { borderLeftColor: '#8b5cf6', background: 'rgba(139,92,246,0.08)' } : isRead ? { opacity: 0.55 } : undefined}
+                      >
+                        <div className="md-ch-left">
+                          <span className="md-ch-num">Ch. {ch.chapter}</span>
+                          {ch.title && <span className="md-ch-title">{ch.title}</span>}
+                          {isCurrent && <span style={{ fontSize: '0.62rem', color: '#a78bfa', fontWeight: 700, marginLeft: 8, padding: '2px 8px', background: 'rgba(139,92,246,0.15)', borderRadius: 99, letterSpacing: '0.05em' }}>READING</span>}
+                          {isRead && <span style={{ fontSize: '0.62rem', color: '#666', marginLeft: 8 }}>✓ Read</span>}
+                        </div>
+                        <div className="md-ch-right">
+                          {ch.group && <span className="md-ch-group">{ch.group}</span>}
+                          <span className="md-ch-pages">{ch.pages}p</span>
+                        </div>
+                      </motion.button>
+                    );
+                  });
+                })()}
               </div>
             )}
             {hasMoreCh && (

@@ -684,6 +684,12 @@ export default function AnimeDetail() {
     );
   }, [episodes, epSearch]);
 
+  const watchedEpisodes = useMemo(() => {
+    if (!anime?.anilistId) return new Set();
+    const history = loadWatchHistory();
+    return new Set(history.filter(h => h.animeId === anime.anilistId).map(h => h.episode));
+  }, [anime?.anilistId, episodes]);
+
   const metadataItems = useMemo(() => {
     const items = [];
     if (anime) {
@@ -901,10 +907,14 @@ export default function AnimeDetail() {
                 <>
                   {filteredEpisodes.slice(0, visibleCount).map((ep, i) => {
                     const realIdx = episodes.indexOf(ep);
+                    const isWatched = watchedEpisodes.has(ep.episode) && realIdx !== epIndex;
                     return (
-                      <button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}>
+                      <button key={ep.id || realIdx} data-ep={realIdx} className={`watch-ep-item ${realIdx === epIndex ? "active" : ""}`} onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }} style={isWatched ? { opacity: 0.55 } : undefined}>
                         <div className="watch-ep-info">
-                          <span className="watch-ep-name">Episode {ep.episode}</span>
+                          <span className="watch-ep-name">
+                            Episode {ep.episode}
+                            {isWatched && <span style={{ color: '#a78bfa', marginLeft: 6, fontSize: '0.7rem' }} title="Watched">✓</span>}
+                          </span>
                           {ep.title && <span className="watch-ep-title">{ep.title}</span>}
                           <span className="watch-ep-date">{ep.airDate ? new Date(ep.airDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" }) : ep.aired ? "Aired" : "Upcoming"}</span>
                         </div>
