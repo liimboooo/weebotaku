@@ -250,7 +250,7 @@ export default function AnimeInfo() {
         <span>/</span>
         <Link to="/browse/anime">Anime</Link>
         <span>/</span>
-        <span style={{ color: "#888" }}>{anime.name}</span>
+        <span style={{ color: "#ffffff" }}>{anime.name}</span>
       </div>
 
       {/* â”€â”€â”€ HERO â”€â”€â”€ */}
@@ -323,7 +323,7 @@ export default function AnimeInfo() {
               }}
               aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
             >
-              <Heart size={16} fill={favorited ? "#d1d5db" : "none"} />
+              <Heart size={16} fill={favorited ? "#ffffff" : "none"} />
             </button>
           </div>
 

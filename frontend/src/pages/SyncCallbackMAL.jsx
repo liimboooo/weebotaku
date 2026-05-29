@@ -43,23 +43,23 @@ export default function SyncCallbackMAL() {
       <div className="auth-form" style={{ textAlign: "center", padding: "3rem 0" }}>
         {status === "loading" && (
           <>
-            <Loader size={40} className="auth-spinner" style={{ color: "#667eea", marginBottom: "1rem" }} />
-            <p style={{ color: "#888" }}>Connecting to MyAnimeList...</p>
+            <Loader size={40} className="auth-spinner" style={{ color: "#ffffff", marginBottom: "1rem" }} />
+            <p style={{ color: "#ffffff" }}>Connecting to MyAnimeList...</p>
           </>
         )}
         {status === "success" && (
           <>
             <CheckCircle size={56} color="#4ade80" style={{ marginBottom: "1rem" }} />
             <h2 style={{ color: "#fff", fontSize: "22px", margin: "0 0 0.5rem" }}>MAL connected!</h2>
-            <p style={{ color: "#888", marginBottom: "0.5rem" }}>{message}</p>
-            <p style={{ color: "#666", fontSize: "13px" }}>Redirecting to settings...</p>
+            <p style={{ color: "#ffffff", marginBottom: "0.5rem" }}>{message}</p>
+            <p style={{ color: "#ffffff", fontSize: "13px" }}>Redirecting to settings...</p>
           </>
         )}
         {status === "error" && (
           <>
             <XCircle size={56} color="#ff6b6b" style={{ marginBottom: "1rem" }} />
             <h2 style={{ color: "#fff", fontSize: "22px", margin: "0 0 0.5rem" }}>Connection failed</h2>
-            <p style={{ color: "#888", marginBottom: "1.5rem" }}>{message}</p>
+            <p style={{ color: "#ffffff", marginBottom: "1.5rem" }}>{message}</p>
             <button className="auth-submit" onClick={() => navigate("/settings?page=integrations", { replace: true })}>
               Back to settings
             </button>

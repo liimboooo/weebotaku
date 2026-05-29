@@ -122,9 +122,9 @@ export default function WatchlistPage() {
           </motion.section>
 
           {!authService.isLoggedIn() && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 16px', margin: '0 0 16px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, fontSize: 13, color: '#c4b5fd' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 16px', margin: '0 0 16px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, fontSize: 13, color: '#ffffff' }}>
               <span>Saved locally on this device. <strong>Sign in</strong> to sync across devices.</span>
-              <button onClick={() => navigate('/auth?next=/watchlist')} style={{ background: 'linear-gradient(135deg,#374151,#d1d5db)', border: 'none', color: '#fff', padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Sign In</button>
+              <button onClick={() => navigate('/auth?next=/watchlist')} style={{ background: 'linear-gradient(135deg,#000000,#ffffff)', border: 'none', color: '#fff', padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Sign In</button>
             </div>
           )}
 
@@ -137,10 +137,10 @@ export default function WatchlistPage() {
                 aria-label="Sort by"
                 style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none', cursor: 'pointer', appearance: 'none' }}
               >
-                <option value="recent" style={{ background: '#1a1a1f' }}>Recently Added</option>
-                <option value="title" style={{ background: '#1a1a1f' }}>Title A–Z</option>
-                <option value="rating" style={{ background: '#1a1a1f' }}>Highest Rated</option>
-                <option value="progress" style={{ background: '#1a1a1f' }}>Most Progress</option>
+                <option value="recent" style={{ background: '#000000' }}>Recently Added</option>
+                <option value="title" style={{ background: '#000000' }}>Title A–Z</option>
+                <option value="rating" style={{ background: '#000000' }}>Highest Rated</option>
+                <option value="progress" style={{ background: '#000000' }}>Most Progress</option>
               </select>
             </div>
             <div className="wl-search-wrap" style={{ position: 'relative' }}>

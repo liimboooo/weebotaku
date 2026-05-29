@@ -40,7 +40,7 @@
   width: 12px; height: 12px;
   border-radius: 50%;
   background: #22c55e;
-  border: 2px solid #0a0a0a;
+  border: 2px solid #000000;
 }
 
 .premium-profile-info {
@@ -68,7 +68,7 @@
   top: calc(100% + 8px);
   right: 0;
   width: 280px;
-  background: rgba(15, 15, 15, 0.98);
+  background: rgba(0, 0, 0, 0.98);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
@@ -103,7 +103,7 @@
   width: 16px; height: 16px;
   border-radius: 50%;
   background: #22c55e;
-  border: 3px solid #0f0f0f;
+  border: 3px solid #000000;
 }
 
 .premium-profile-details {
@@ -226,7 +226,7 @@
 }
 
 .premium-logout-btn:hover {
-  color: #e5e7eb;
+  color: #ffffff;
 }
 
 .premium-logout-icon {

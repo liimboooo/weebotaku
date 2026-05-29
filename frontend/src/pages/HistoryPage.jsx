@@ -114,9 +114,9 @@ export default function HistoryPage() {
           </motion.section>
 
           {!authService.isLoggedIn() && history.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 16px', margin: '0 0 16px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, fontSize: 13, color: '#c4b5fd' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 16px', margin: '0 0 16px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, fontSize: 13, color: '#ffffff' }}>
               <span>History saved locally. <strong>Sign in</strong> to access it from any device.</span>
-              <button onClick={() => navigate('/auth?next=/history')} style={{ background: 'linear-gradient(135deg,#374151,#d1d5db)', border: 'none', color: '#fff', padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Sign In</button>
+              <button onClick={() => navigate('/auth?next=/history')} style={{ background: 'linear-gradient(135deg,#000000,#ffffff)', border: 'none', color: '#fff', padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Sign In</button>
             </div>
           )}
 

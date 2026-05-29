@@ -40,15 +40,15 @@ export default function VerifyEmailPage() {
       <div className="auth-form">
         {status === "loading" && (
           <div style={{ textAlign: "center", padding: "3rem 0" }}>
-            <Loader size={40} className="auth-spinner" style={{ color: "#667eea", marginBottom: "1rem" }} />
-            <p style={{ color: "#888" }}>Verifying your email...</p>
+            <Loader size={40} className="auth-spinner" style={{ color: "#ffffff", marginBottom: "1rem" }} />
+            <p style={{ color: "#ffffff" }}>Verifying your email...</p>
           </div>
         )}
         {status === "success" && (
           <div style={{ textAlign: "center", padding: "2rem 0" }}>
             <CheckCircle size={56} color="#4ade80" style={{ marginBottom: "1rem" }} />
             <h2 style={{ color: "#fff", fontSize: "22px", margin: "0 0 0.5rem" }}>Email verified!</h2>
-            <p style={{ color: "#888", marginBottom: "1.5rem" }}>{message}</p>
+            <p style={{ color: "#ffffff", marginBottom: "1.5rem" }}>{message}</p>
             <button className="auth-submit" onClick={() => navigate("/auth")} style={{ width: "100%" }}>
               Login now
             </button>
@@ -58,8 +58,8 @@ export default function VerifyEmailPage() {
           <div style={{ textAlign: "center", padding: "2rem 0" }}>
             <XCircle size={56} color="#ff6b6b" style={{ marginBottom: "1rem" }} />
             <h2 style={{ color: "#fff", fontSize: "22px", margin: "0 0 0.5rem" }}>Verification failed</h2>
-            <p style={{ color: "#888", marginBottom: "1.5rem" }}>{message}</p>
-            <Link to="/" style={{ display: "block", color: "#667eea", textDecoration: "none", fontWeight: 500, marginTop: "0.75rem" }}>
+            <p style={{ color: "#ffffff", marginBottom: "1.5rem" }}>{message}</p>
+            <Link to="/" style={{ display: "block", color: "#ffffff", textDecoration: "none", fontWeight: 500, marginTop: "0.75rem" }}>
               Back to login
             </Link>
           </div>

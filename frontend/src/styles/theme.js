@@ -1,20 +1,20 @@
 export const colors = {
   primary: '#ffffff',
-  primaryHover: '#e5e7eb',
-  primaryMuted: '#d1d5db',
+  primaryHover: '#ffffff',
+  primaryMuted: '#ffffff',
   primaryGlow: 'rgba(255, 255, 255, 0.4)',
   primarySurface: 'rgba(255, 255, 255, 0.08)',
   primaryBorder: 'rgba(255, 255, 255, 0.2)',
 
-  bgDeep: '#030304',
-  bgBase: '#080809',
-  bgElevated: '#0e0e10',
-  bgSurface: '#141416',
+  bgDeep: '#000000',
+  bgBase: '#000000',
+  bgElevated: '#000000',
+  bgSurface: '#000000',
 
-  textPrimary: '#f0f0f2',
-  textSecondary: '#a0a0ab',
-  textTertiary: '#5c5c6b',
-  textMuted: '#3a3a46',
+  textPrimary: '#ffffff',
+  textSecondary: '#ffffff',
+  textTertiary: '#ffffff',
+  textMuted: '#000000',
 };
 
 export const easing = {

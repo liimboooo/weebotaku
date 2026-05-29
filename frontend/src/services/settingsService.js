@@ -4,7 +4,7 @@ const SETTINGS_KEY = "animewch_settings";
 const SYNC_KEY = "animewch_sync";
 
 const DEFAULTS = {
-  darkMode: "auto", fontSize: "Medium", accentColor: "#667eea",
+  darkMode: "auto", fontSize: "Medium", accentColor: "#ffffff",
   autoNext: true, skipIntro: false, skipOutro: false, showSubtitles: true,
   disableAds: false, showComments: true, hideNsfw: true, showMatureWarnings: true,
   showEpisodeProgress: true, showRatingsCards: true,

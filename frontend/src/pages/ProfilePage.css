@@ -1,19 +1,19 @@
 /* ════════════════════════════════════════════
    ProfilePage — Purple Theme · Rounded Everywhere
-   Background: #0a0a0a  |  Accent: #d1d5db
+   Background: #000000  |  Accent: #ffffff
    ════════════════════════════════════════════ */
 
 .upp {
   min-height: 100vh;
   padding-top: 72px;
-  background: #0a0a0a;
+  background: #000000;
   color: #fff;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
 }
 
 /* ─── Top Section ───────────────────────── */
 .upp-top {
-  background: #0a0a0a;
+  background: #000000;
   width: 100%;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
@@ -50,7 +50,7 @@
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.06);
-  border: 3px solid #d1d5db;
+  border: 3px solid #ffffff;
   transition: border-color 0.2s ease;
 }
 
@@ -63,7 +63,7 @@
 .upp-avatar-initial {
   font-size: 38px;
   font-weight: 700;
-  color: #d1d5db;
+  color: #ffffff;
 }
 
 .upp-username {
@@ -76,7 +76,7 @@
 
 .upp-joined {
   font-size: 13px;
-  color: #888;
+  color: #ffffff;
   font-weight: 400;
   display: flex;
   align-items: center;
@@ -85,7 +85,7 @@
 }
 
 .upp-joined svg {
-  color: #888;
+  color: #ffffff;
   flex-shrink: 0;
 }
 
@@ -105,7 +105,7 @@
   padding: 7px 14px;
   border: none;
   background: rgba(255, 255, 255, 0.1);
-  color: #888;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -125,7 +125,7 @@
 }
 
 .upp-action-btn--follow {
-  color: #d1d5db;
+  color: #ffffff;
 }
 
 /* ─── Stats (Right) ─────────────────────── */
@@ -162,7 +162,7 @@
 
 .upp-stat-label {
   font-size: 12px;
-  color: #888;
+  color: #ffffff;
   font-weight: 400;
   letter-spacing: 0.5px;
 }
@@ -201,7 +201,7 @@
 .upp-watchlist-count {
   font-size: 14px;
   font-weight: 400;
-  color: #888;
+  color: #ffffff;
 }
 
 .upp-search-box {
@@ -213,15 +213,15 @@
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: #d1d5db;
+  color: #ffffff;
   pointer-events: none;
 }
 
 .upp-search-input {
   padding: 8px 14px 8px 36px;
   width: 200px;
-  border: 1px solid #d1d5db;
-  background: #111111;
+  border: 1px solid #ffffff;
+  background: #000000;
   color: #fff;
   font-size: 13px;
   outline: none;
@@ -231,11 +231,11 @@
 }
 
 .upp-search-input::placeholder {
-  color: #666;
+  color: #ffffff;
 }
 
 .upp-search-input:focus {
-  border-color: #374151;
+  border-color: #000000;
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
 }
 
@@ -255,7 +255,7 @@
   padding: 10px 16px;
   border: none;
   background: transparent;
-  color: #888;
+  color: #ffffff;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -266,12 +266,12 @@
 }
 
 .upp-tab:hover {
-  color: #bbb;
+  color: #ffffff;
   background: rgba(255, 255, 255, 0.08);
 }
 
 .upp-tab.active {
-  background: #d1d5db;
+  background: #ffffff;
   color: #fff;
   font-weight: 500;
 }
@@ -282,7 +282,7 @@
 
 .upp-tab-count {
   font-size: 13px;
-  color: #666;
+  color: #ffffff;
 }
 
 .upp-tab svg {
@@ -353,7 +353,7 @@
 
 .upp-list-meta {
   font-size: 12px;
-  color: #666;
+  color: #ffffff;
 }
 
 .upp-list-status {
@@ -367,14 +367,14 @@
 }
 
 .upp-list-status--watching  { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
-.upp-list-status--planning  { color: #d1d5db; background: rgba(255, 255, 255, 0.1); }
+.upp-list-status--planning  { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
 .upp-list-status--completed { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
 .upp-list-status--paused    { color: #fbbf24; background: rgba(251, 191, 36, 0.1); }
 .upp-list-status--dropped   { color: #f87171; background: rgba(248, 113, 113, 0.1); }
 
 .upp-list-rating {
   font-size: 13px;
-  color: #888;
+  color: #ffffff;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -383,7 +383,7 @@
 }
 
 .upp-list-rating-empty {
-  color: #333;
+  color: #000000;
 }
 
 .upp-list-actions {
@@ -396,7 +396,7 @@
 .upp-list-action {
   background: none;
   border: none;
-  color: #555;
+  color: #000000;
   cursor: pointer;
   padding: 5px;
   display: flex;
@@ -420,7 +420,7 @@
   position: absolute;
   right: 0;
   top: 100%;
-  background: #111111;
+  background: #000000;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   padding: 4px;
@@ -436,7 +436,7 @@
   padding: 8px 12px;
   border: none;
   background: none;
-  color: #888;
+  color: #ffffff;
   font-size: 13px;
   font-weight: 400;
   cursor: pointer;
@@ -452,7 +452,7 @@
 }
 
 .upp-status-opt.current {
-  color: #d1d5db;
+  color: #ffffff;
   font-weight: 500;
 }
 
@@ -487,7 +487,7 @@
 
 .upp-empty-msg {
   font-size: 14px;
-  color: #888;
+  color: #ffffff;
   margin: 0 0 1.5rem;
   max-width: 320px;
   line-height: 1.5;
@@ -499,7 +499,7 @@
   gap: 7px;
   padding: 10px 24px;
   border: none;
-  background: #d1d5db;
+  background: #ffffff;
   color: #fff;
   font-size: 14px;
   font-weight: 500;
@@ -510,7 +510,7 @@
 }
 
 .upp-browse-btn:hover {
-  background: #374151;
+  background: #000000;
 }
 
 /* ─── Social Links ─────────────────────── */
@@ -522,13 +522,13 @@
 }
 
 .upp-social-link {
-  color: #888;
+  color: #ffffff;
   transition: color 0.2s ease, transform 0.2s ease;
   display: flex;
 }
 
 .upp-social-link:hover {
-  color: #d1d5db;
+  color: #ffffff;
   transform: scale(1.15);
 }
 
@@ -612,7 +612,7 @@
 }
 
 .upp-modal {
-  background: #141414;
+  background: #000000;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
   width: 100%;
@@ -640,7 +640,7 @@
   border-radius: 10px;
   border: none;
   background: rgba(255, 255, 255, 0.06);
-  color: #888;
+  color: #ffffff;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -781,8 +781,8 @@
 }
 
 .upp-modal {
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
+  background: #000000;
+  border: 1px solid #000000;
   border-radius: 16px;
   padding: 2rem;
   max-width: 420px;
@@ -797,7 +797,7 @@
 }
 
 .upp-modal-desc {
-  color: #999;
+  color: #ffffff;
   font-size: 0.9rem;
   margin: 0 0 1.25rem;
   line-height: 1.5;
@@ -810,7 +810,7 @@
 .upp-field label {
   display: block;
   font-size: 0.8rem;
-  color: #aaa;
+  color: #ffffff;
   margin-bottom: 0.4rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -820,8 +820,8 @@
 .upp-input {
   width: 100%;
   padding: 0.65rem 0.85rem;
-  background: #0a0a0a;
-  border: 1px solid #2a2a2a;
+  background: #000000;
+  border: 1px solid #000000;
   border-radius: 10px;
   color: #fff;
   font-size: 0.95rem;
@@ -831,7 +831,7 @@
 }
 
 .upp-input:focus {
-  border-color: #d1d5db;
+  border-color: #ffffff;
 }
 
 .upp-modal-foot {
@@ -842,8 +842,8 @@
 
 .upp-btn-ghost {
   background: transparent;
-  border: 1px solid #2a2a2a;
-  color: #ccc;
+  border: 1px solid #000000;
+  color: #ffffff;
   padding: 0.55rem 1.2rem;
   border-radius: 10px;
   cursor: pointer;
@@ -852,11 +852,11 @@
 }
 
 .upp-btn-ghost:hover {
-  background: #252525;
+  background: #000000;
 }
 
 .upp-btn-primary {
-  background: #d1d5db;
+  background: #ffffff;
   border: none;
   color: #fff;
   padding: 0.55rem 1.4rem;
@@ -868,7 +868,7 @@
 }
 
 .upp-btn-primary:hover {
-  background: #374151;
+  background: #000000;
 }
 
 .upp-btn-primary:disabled {

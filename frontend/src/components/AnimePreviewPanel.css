@@ -196,7 +196,7 @@
 .preview-panel-fade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(8,8,9,0.85) 0%, rgba(8,8,9,0.4) 30%, transparent 55%);
+  background: linear-gradient(90deg, rgba(0, 0, 0,0.85) 0%, rgba(0, 0, 0,0.4) 30%, transparent 55%);
   pointer-events: none;
 }
 

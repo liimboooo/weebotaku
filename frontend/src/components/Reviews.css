@@ -78,7 +78,7 @@
 
 .reviews-empty {
   text-align: center;
-  color: #666;
+  color: #ffffff;
   padding: 30px;
   font-size: 14px;
 }
@@ -125,12 +125,12 @@
 
 .review-head span {
   font-size: 11px;
-  color: #666;
+  color: #ffffff;
 }
 
 .review-body p {
   margin: 0;
   font-size: 13px;
-  color: #ccc;
+  color: #ffffff;
   line-height: 1.5;
 }

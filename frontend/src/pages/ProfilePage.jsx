@@ -339,7 +339,7 @@ export default function ProfilePage() {
                           {u.avatar ? (
                             <img src={u.avatar} alt={u.username} style={{ borderRadius: "50%" }} />
                           ) : (
-                            <div className="upp-list-img-placeholder" style={{ borderRadius: "50%", background: "#333", display: "flex", alignItems: "center", justifyContent: "center", color: "#999", fontSize: 18 }}>
+                            <div className="upp-list-img-placeholder" style={{ borderRadius: "50%", background: "#000000", display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff", fontSize: 18 }}>
                               {u.username?.charAt(0).toUpperCase()}
                             </div>
                           )}
@@ -404,7 +404,7 @@ export default function ProfilePage() {
                           </span>
                           <div className="upp-list-rating">
                             {userRating ? (
-                              <><Star size={12} fill="#d1d5db" color="#d1d5db" /> {userRating}</>
+                              <><Star size={12} fill="#ffffff" color="#ffffff" /> {userRating}</>
                             ) : (
                               <span className="upp-list-rating-empty">--</span>
                             )}
@@ -424,7 +424,7 @@ export default function ProfilePage() {
                                 aria-label="Toggle favorite"
                                 title={favorites.find(f => f.animeId === item.id) ? "Remove from favorites" : "Add to favorites"}
                               >
-                                <Heart size={14} fill={favorites.find(f => f.animeId === item.id) ? "#ef4444" : "none"} color={favorites.find(f => f.animeId === item.id) ? "#ef4444" : "#555"} />
+                                <Heart size={14} fill={favorites.find(f => f.animeId === item.id) ? "#ef4444" : "none"} color={favorites.find(f => f.animeId === item.id) ? "#ef4444" : "#000000"} />
                               </button>
                               <button
                                 className="upp-list-action upp-list-action--delete"

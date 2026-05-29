@@ -44,14 +44,14 @@ export default class ErrorBoundary extends React.Component {
           minHeight: this.props.minHeight || "300px",
           gap: "16px",
           padding: "40px",
-          color: "#888",
+          color: "#ffffff",
           textAlign: "center",
-          background: "rgba(5,5,5,0.95)",
+          background: "rgba(0,0,0,0.95)",
           borderRadius: "28px",
         }}>
-          <AlertTriangle size={40} style={{ opacity: 0.4, color: "#374151" }} />
+          <AlertTriangle size={40} style={{ opacity: 0.4, color: "#000000" }} />
           <h2 style={{ color: "#fff", margin: 0, fontSize: "1.1rem", fontWeight: 600 }}>{message}</h2>
-          <p style={{ margin: 0, fontSize: "0.85rem", maxWidth: "400px", lineHeight: 1.5, color: "#666" }}>
+          <p style={{ margin: 0, fontSize: "0.85rem", maxWidth: "400px", lineHeight: 1.5, color: "#ffffff" }}>
             {isChunk
               ? "The app was updated. Please reload to get the latest version."
               : (this.state.error?.message || "An unexpected error occurred")}
@@ -64,8 +64,8 @@ export default class ErrorBoundary extends React.Component {
               gap: "8px",
               padding: "10px 24px",
               borderRadius: "10px",
-              border: "1px solid #374151",
-              background: "#374151",
+              border: "1px solid #000000",
+              background: "#000000",
               color: "#fff",
               fontWeight: 600,
               cursor: "pointer",
@@ -75,7 +75,7 @@ export default class ErrorBoundary extends React.Component {
               transition: "all .2s",
             }}
             onMouseOver={e => { e.currentTarget.style.background = "#ffffff"; }}
-            onMouseOut={e => { e.currentTarget.style.background = "#374151"; }}
+            onMouseOut={e => { e.currentTarget.style.background = "#000000"; }}
           >
             <RefreshCw size={16} /> {isChunk ? "Reload Page" : "Try Again"}
           </button>

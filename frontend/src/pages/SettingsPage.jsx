@@ -23,7 +23,7 @@ const SECTIONS = [
     subtitle: null,
     cols: 3,
     cards: [
-      { key: "account",       icon: User,     label: "Account",           desc: "Manage profile, email, bio",               color: "#667eea" },
+      { key: "account",       icon: User,     label: "Account",           desc: "Manage profile, email, bio",               color: "#ffffff" },
       { key: "privacy",       icon: Shield,   label: "Privacy & Security",desc: "2FA, password, privacy",                   color: "#ff6b6b" },
       { key: "notifications", icon: Bell,     label: "Notifications",     desc: "Email, push, alerts",                      color: "#fbbf24" },
     ],
@@ -33,7 +33,7 @@ const SECTIONS = [
     subtitle: null,
     cols: 1,
     cards: [
-      { key: "preferences",   icon: Settings, label: "Preferences",       desc: "Theme, display, playback",                 color: "#00d4ff" },
+      { key: "preferences",   icon: Settings, label: "Preferences",       desc: "Theme, display, playback",                 color: "#ffffff" },
     ],
   },
   {
@@ -57,8 +57,8 @@ const cardItem = { initial: { opacity: 0, y: 24 }, animate: { opacity: 1, y: 0, 
 
 const FONT_SIZES = ["Small", "Medium", "Large", "Extra Large"];
 const THEME_ACCENTS = [
-  { label: "Purple", value: "#667eea" },
-  { label: "Cyan", value: "#00d4ff" },
+  { label: "Purple", value: "#ffffff" },
+  { label: "Cyan", value: "#ffffff" },
   { label: "Green", value: "#4ade80" },
   { label: "Pink", value: "#f472b6" },
 ];

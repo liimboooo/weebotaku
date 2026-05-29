@@ -714,7 +714,7 @@ export default function AnimeDetail() {
     return (
       <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
         <div style={{ width: 40, height: 40, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.08)", borderTopColor: "#ffffff", animation: "watch-spin 0.8s linear infinite" }} />
-        <p style={{ color: "#5c5c6b", fontSize: 13 }}>Loading anime...</p>
+        <p style={{ color: "#ffffff", fontSize: 13 }}>Loading anime...</p>
       </div>
     );
   }
@@ -722,7 +722,7 @@ export default function AnimeDetail() {
   if (!anime || animeError) {
     return (
       <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
-        <p style={{ color: "#a0a0ab", fontSize: 14 }}>{animeError || "Anime not found"}</p>
+        <p style={{ color: "#ffffff", fontSize: 14 }}>{animeError || "Anime not found"}</p>
         <button onClick={() => navigate(-1)} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#ffffff", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>Go back</button>
       </div>
     );
@@ -731,7 +731,7 @@ export default function AnimeDetail() {
   return (
     <div style={{ width: "100%", minHeight: "100vh", background: "#000", display: "flex" }}>
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, background: "repeating-linear-gradient(180deg, rgba(255,255,255,0.008) 0, rgba(255,255,255,0.008) 1px, transparent 1px, transparent 3px), radial-gradient(circle at 80% 0%, rgba(255,255,255,0.08), transparent 50%), radial-gradient(circle at 20% 100%, rgba(255,255,255,0.03), transparent 40%)" }} />
-      <div style={{ position: "relative", zIndex: 1, width: "100%", minHeight: "100vh", display: "flex", flexDirection: "column", background: "#050508" }}>
+      <div style={{ position: "relative", zIndex: 1, width: "100%", minHeight: "100vh", display: "flex", flexDirection: "column", background: "#000000" }}>
         <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
 
           {/* ─── CENTER: PLAYER ─── */}
@@ -836,10 +836,10 @@ export default function AnimeDetail() {
                   onClick={() => setShowShortcutsHelp(false)}
                   style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 24 }}
                 >
-                  <div onClick={e => e.stopPropagation()} style={{ background: 'rgba(20,20,28,0.95)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 14, padding: '24px 28px', maxWidth: 480, width: '100%', color: '#fff' }}>
+                  <div onClick={e => e.stopPropagation()} style={{ background: 'rgba(0,0,0,0.95)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 14, padding: '24px 28px', maxWidth: 480, width: '100%', color: '#fff' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
                       <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, letterSpacing: '0.02em' }}>Keyboard Shortcuts</h3>
-                      <button onClick={() => setShowShortcutsHelp(false)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', padding: 4 }}>✕</button>
+                      <button onClick={() => setShowShortcutsHelp(false)} style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', padding: 4 }}>✕</button>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px', fontSize: '0.82rem' }}>
                       {[
@@ -856,7 +856,7 @@ export default function AnimeDetail() {
                       ].map(([k, v]) => (
                         <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 6 }}>
                           <kbd style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 5, padding: '2px 7px', fontFamily: 'monospace', fontSize: '0.72rem', color: '#ffffff' }}>{k}</kbd>
-                          <span style={{ color: '#bbb' }}>{v}</span>
+                          <span style={{ color: '#ffffff' }}>{v}</span>
                         </div>
                       ))}
                     </div>
@@ -920,7 +920,7 @@ export default function AnimeDetail() {
                         <div className="watch-ep-info">
                           <span className="watch-ep-name">
                             Episode {ep.episode}
-                            {isWatched && <span style={{ color: '#e5e7eb', marginLeft: 6, fontSize: '0.7rem' }} title="Watched">✓</span>}
+                            {isWatched && <span style={{ color: '#ffffff', marginLeft: 6, fontSize: '0.7rem' }} title="Watched">✓</span>}
                           </span>
                           {ep.title && <span className="watch-ep-title">{ep.title}</span>}
                           <span className="watch-ep-date">{ep.airDate ? new Date(ep.airDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" }) : ep.aired ? "Aired" : "Upcoming"}</span>

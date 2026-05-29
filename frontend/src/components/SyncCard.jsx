@@ -2,8 +2,8 @@ import { RefreshCw, ExternalLink, Plug, Unplug, Loader } from "lucide-react";
 import { formatTimeAgo } from "../utils/helpers";
 
 const LOGOS = {
-  mal: { name: "MyAnimeList", bg: "#2e51a2", initials: "MAL" },
-  anilist: { name: "AniList", bg: "linear-gradient(135deg, #02a9ff, #00d4ff)", initials: "AL" },
+  mal: { name: "MyAnimeList", bg: "#ffffff", initials: "MAL" },
+  anilist: { name: "AniList", bg: "linear-gradient(135deg, #ffffff, #ffffff)", initials: "AL" },
 };
 
 export default function SyncCard({ service, status, username, lastSynced, loading, onConnect, onDisconnect, onSync }) {
@@ -25,7 +25,7 @@ export default function SyncCard({ service, status, username, lastSynced, loadin
             <>
               {username && <div style={{ fontSize: 13, color: "#4ade80" }}>@{username}</div>}
               {syncStatus === "synced" && timeAgo && (
-                <div style={{ fontSize: 12, color: "#666" }}>Synced {timeAgo}</div>
+                <div style={{ fontSize: 12, color: "#ffffff" }}>Synced {timeAgo}</div>
               )}
               {syncStatus === "syncing" && (
                 <div style={{ fontSize: 12, color: "#fbbf24", display: "flex", alignItems: "center", gap: 4 }}>
@@ -37,7 +37,7 @@ export default function SyncCard({ service, status, username, lastSynced, loadin
               )}
             </>
           ) : (
-            <div style={{ fontSize: 13, color: "#888" }}>Not connected</div>
+            <div style={{ fontSize: 13, color: "#ffffff" }}>Not connected</div>
           )}
         </div>
       </div>

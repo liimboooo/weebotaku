@@ -25,7 +25,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #050508;
+  background: #000000;
   box-shadow: inset 0 0 80px rgba(255,255,255,0.03);
 }
 
@@ -53,10 +53,10 @@
 
 .watch-left-col::-webkit-scrollbar { width: 3px; }
 .watch-left-col::-webkit-scrollbar-track { background: transparent; }
-.watch-left-col::-webkit-scrollbar-thumb { background: #1a1a1e; border-radius: 2px; }
+.watch-left-col::-webkit-scrollbar-thumb { background: #000000; border-radius: 2px; }
 
 .watch-info-card {
-  background: rgba(10,10,14,0.8);
+  background: rgba(0, 0, 0,0.8);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   border: 1px solid rgba(255,255,255,0.08);
@@ -79,7 +79,7 @@
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.15);
   background: rgba(0,0,0,0.6);
-  color: #a0a0ab;
+  color: #ffffff;
   cursor: pointer;
   display: grid;
   place-items: center;
@@ -99,7 +99,7 @@
   overflow: hidden;
   aspect-ratio: 3/4;
   max-height: 240px;
-  background: #0e0e10;
+  background: #000000;
 }
 
 .watch-poster {
@@ -116,7 +116,7 @@
   display: grid;
   place-items: center;
   background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-  color: #3a3a46;
+  color: #000000;
 }
 
 .watch-poster-glow {
@@ -132,7 +132,7 @@
 .watch-info-title {
   font-size: 15px;
   font-weight: 800;
-  color: #f0f0f2;
+  color: #ffffff;
   margin: 0;
   line-height: 1.25;
   font-family: "Space Grotesk", sans-serif;
@@ -140,7 +140,7 @@
 
 .watch-info-jp {
   font-size: 10px;
-  color: #5c5c6b;
+  color: #ffffff;
   margin: -4px 0 0;
   font-weight: 500;
 }
@@ -157,7 +157,7 @@
   gap: 3px;
   font-size: 9px;
   font-weight: 800;
-  color: #a0a0ab;
+  color: #ffffff;
   padding: 2px 7px;
   border-radius: 5px;
   background: rgba(255,255,255,0.03);
@@ -175,7 +175,7 @@
 .watch-info-synopsis {
   font-size: 10px;
   line-height: 1.6;
-  color: #5c5c6b;
+  color: #ffffff;
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -200,7 +200,7 @@
 .watch-meta-label {
   font-size: 9px;
   font-weight: 800;
-  color: #5c5c6b;
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   min-width: 44px;
@@ -210,7 +210,7 @@
 .watch-meta-value {
   font-size: 10px;
   font-weight: 600;
-  color: #a0a0ab;
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -228,7 +228,7 @@
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.03);
-  color: #5c5c6b;
+  color: #ffffff;
   cursor: pointer;
   display: grid;
   place-items: center;
@@ -267,7 +267,7 @@
   gap: 5px;
   background: none;
   border: none;
-  color: #888;
+  color: #ffffff;
   cursor: pointer;
   font-size: 11px;
   font-weight: 700;
@@ -291,7 +291,7 @@
 
 .watch-topbar-ep {
   font-size: 11px;
-  color: #5c5c6b;
+  color: #ffffff;
   font-weight: 600;
   font-family: "Space Grotesk", sans-serif;
 }
@@ -310,7 +310,7 @@
   border-radius: 7px;
   border: 1px solid rgba(255,255,255,0.06);
   background: rgba(255,255,255,0.02);
-  color: #666;
+  color: #ffffff;
   cursor: pointer;
   font-size: 10px;
   font-family: inherit;
@@ -327,7 +327,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #333;
+  background: #000000;
   transition: all 0.2s;
 }
 
@@ -345,7 +345,7 @@
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.06);
   background: rgba(255,255,255,0.02);
-  color: #666;
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -385,7 +385,7 @@
 
 .watch-scroll-area::-webkit-scrollbar { width: 4px; }
 .watch-scroll-area::-webkit-scrollbar-track { background: transparent; }
-.watch-scroll-area::-webkit-scrollbar-thumb { background: #1a1a1e; border-radius: 3px; }
+.watch-scroll-area::-webkit-scrollbar-thumb { background: #000000; border-radius: 3px; }
 .watch-scroll-area::-webkit-scrollbar-thumb:hover { background: #ffffff; box-shadow: 0 0 8px rgba(255,255,255,0.2); }
 
 .watch-frame {
@@ -403,12 +403,12 @@ video.watch-frame {
 }
 
 video.watch-frame::-webkit-media-controls-panel {
-  background: linear-gradient(transparent, rgba(10,10,14,0.9));
+  background: linear-gradient(transparent, rgba(0, 0, 0,0.9));
 }
 
 video.watch-frame::-webkit-media-controls-current-time-display,
 video.watch-frame::-webkit-media-controls-time-remaining-display {
-  color: #e2e2e8;
+  color: #ffffff;
   font-family: "Inter", sans-serif;
   font-size: 11px;
 }
@@ -526,7 +526,7 @@ video.watch-frame:fullscreen {
   border-radius: 7px;
   border: 1px solid rgba(255,255,255,0.05);
   background: rgba(255,255,255,0.02);
-  color: #666;
+  color: #ffffff;
   cursor: pointer;
   font-size: 10px;
   font-weight: 700;
@@ -536,7 +536,7 @@ video.watch-frame:fullscreen {
 
 .watch-action-btn:hover {
   background: rgba(255,255,255,0.06);
-  color: #999;
+  color: #ffffff;
   border-color: rgba(255,255,255,0.1);
 }
 
@@ -570,12 +570,12 @@ video.watch-frame:fullscreen {
 .watch-info-bar-ep {
   font-size: 13px;
   font-weight: 800;
-  color: #c0c0cc;
+  color: #ffffff;
   font-family: "Space Grotesk", sans-serif;
 }
 
 .watch-info-bar-total {
-  color: #5c5c6b;
+  color: #ffffff;
   font-weight: 500;
   font-size: 10px;
 }
@@ -601,7 +601,7 @@ video.watch-frame:fullscreen {
   border-radius: 7px;
   border: none;
   background: transparent;
-  color: #5c5c6b;
+  color: #ffffff;
   cursor: pointer;
   font-size: 10px;
   font-weight: 800;
@@ -611,7 +611,7 @@ video.watch-frame:fullscreen {
 }
 
 .watch-lang-btn:hover {
-  color: #aaa;
+  color: #ffffff;
 }
 
 .watch-lang-btn.active {
@@ -630,7 +630,7 @@ video.watch-frame:fullscreen {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #5c5c6b;
+  color: #ffffff;
   flex-shrink: 0;
   font-family: "Space Grotesk", sans-serif;
 }
@@ -644,14 +644,14 @@ video.watch-frame:fullscreen {
 
 .watch-servers-list::-webkit-scrollbar { height: 2px; }
 .watch-servers-list::-webkit-scrollbar-track { background: transparent; }
-.watch-servers-list::-webkit-scrollbar-thumb { background: #1a1a1e; border-radius: 2px; }
+.watch-servers-list::-webkit-scrollbar-thumb { background: #000000; border-radius: 2px; }
 
 .watch-server-chip {
   padding: 3px 10px;
   border-radius: 7px;
   border: 1px solid rgba(255,255,255,0.03);
   background: rgba(255,255,255,0.02);
-  color: #5c5c6b;
+  color: #ffffff;
   cursor: pointer;
   font-size: 10px;
   font-weight: 700;
@@ -662,12 +662,12 @@ video.watch-frame:fullscreen {
 
 .watch-server-chip:hover {
   background: rgba(255,255,255,0.06);
-  color: #999;
+  color: #ffffff;
   border-color: rgba(255,255,255,0.1);
 }
 
 .watch-server-chip.active {
-  background: linear-gradient(135deg, #ffffff, #d1d5db);
+  background: linear-gradient(135deg, #ffffff, #ffffff);
   border-color: #ffffff;
   color: #fff;
   font-weight: 800;
@@ -683,7 +683,7 @@ video.watch-frame:fullscreen {
   display: flex;
   flex-direction: column;
   border-left: 1px solid rgba(255,255,255,0.06);
-  background: rgba(8,8,12,0.6);
+  background: rgba(0, 0, 0,0.6);
   backdrop-filter: blur(12px);
   padding: 10px 10px 4px;
   height: 100vh;
@@ -699,7 +699,7 @@ video.watch-frame:fullscreen {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #888;
+  color: #ffffff;
   flex-shrink: 0;
   font-family: "Space Grotesk", sans-serif;
 }
@@ -708,7 +708,7 @@ video.watch-frame:fullscreen {
   margin-left: auto;
   font-size: 9px;
   font-weight: 800;
-  color: #5c5c6b;
+  color: #ffffff;
   background: rgba(255,255,255,0.04);
   padding: 2px 7px;
   border-radius: 7px;
@@ -743,7 +743,7 @@ video.watch-frame:fullscreen {
   border-radius: 8px;
   background: none;
   border: none;
-  color: #888;
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;
@@ -753,7 +753,7 @@ video.watch-frame:fullscreen {
 
 .watch-rec-item:hover {
   background: rgba(255,255,255,0.04);
-  color: #bbb;
+  color: #ffffff;
 }
 
 .watch-rec-thumb {
@@ -762,7 +762,7 @@ video.watch-frame:fullscreen {
   border-radius: 5px;
   overflow: hidden;
   flex-shrink: 0;
-  background: #0e0e10;
+  background: #000000;
   border: 1px solid rgba(255,255,255,0.04);
 }
 
@@ -797,7 +797,7 @@ video.watch-frame:fullscreen {
   left: 9px;
   top: 50%;
   transform: translateY(-50%);
-  color: #5c5c6b;
+  color: #ffffff;
   pointer-events: none;
 }
 
@@ -807,7 +807,7 @@ video.watch-frame:fullscreen {
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.06);
   background: rgba(255,255,255,0.02);
-  color: #d0d0d6;
+  color: #ffffff;
   font-size: 11px;
   font-family: inherit;
   outline: none;
@@ -816,7 +816,7 @@ video.watch-frame:fullscreen {
 }
 
 .watch-search-input::placeholder {
-  color: #5c5c6b;
+  color: #ffffff;
 }
 
 .watch-search-input:focus {
@@ -835,7 +835,7 @@ video.watch-frame:fullscreen {
   border-radius: 50%;
   border: none;
   background: rgba(255,255,255,0.04);
-  color: #5c5c6b;
+  color: #ffffff;
   cursor: pointer;
   display: grid;
   place-items: center;
@@ -871,7 +871,7 @@ video.watch-frame:fullscreen {
   border-radius: 10px;
   background: rgba(255,255,255,0.01);
   border: 1px solid rgba(255,255,255,0.04);
-  color: #888;
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
@@ -882,7 +882,7 @@ video.watch-frame:fullscreen {
 
 .watch-ep-item:hover {
   background: rgba(255,255,255,0.05);
-  color: #bbb;
+  color: #ffffff;
   border-color: rgba(255,255,255,0.1);
   transform: translateX(2px);
 }
@@ -912,7 +912,7 @@ video.watch-frame:fullscreen {
 
 .watch-ep-title {
   font-size: 10px;
-  color: #5c5c6b;
+  color: #ffffff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -920,7 +920,7 @@ video.watch-frame:fullscreen {
 
 .watch-ep-date {
   font-size: 9px;
-  color: #444;
+  color: #000000;
   font-weight: 600;
 }
 
@@ -966,7 +966,7 @@ video.watch-frame:fullscreen {
 
 .watch-muted {
   font-size: 12px;
-  color: #5c5c6b;
+  color: #ffffff;
   font-family: "Inter", sans-serif;
 }
 
@@ -988,7 +988,7 @@ video.watch-frame:fullscreen {
 
 .watch-err-text {
   font-size: 12px;
-  color: #a0a0ab;
+  color: #ffffff;
   font-family: "Inter", sans-serif;
 }
 
@@ -998,7 +998,7 @@ video.watch-frame:fullscreen {
   gap: 5px;
   border: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.03);
-  color: #aaa;
+  color: #ffffff;
   padding: 6px 14px;
   border-radius: 8px;
   cursor: pointer;
@@ -1031,7 +1031,7 @@ video.watch-frame:fullscreen {
 .watch-section {
   margin-top: 20px;
   padding: 20px 20px;
-  background: rgba(10,10,14,0.6);
+  background: rgba(0, 0, 0,0.6);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 14px;
@@ -1061,7 +1061,7 @@ video.watch-frame:fullscreen {
 .watch-section-head > span {
   font-size: 12px;
   font-weight: 800;
-  color: #a0a0ab;
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-family: "Space Grotesk", sans-serif;
@@ -1073,7 +1073,7 @@ video.watch-frame:fullscreen {
   gap: 6px;
   font-size: 11px;
   font-weight: 800;
-  color: #a0a0ab;
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-family: "Space Grotesk", sans-serif;
@@ -1115,7 +1115,7 @@ video.watch-frame:fullscreen {
   gap: 3px;
   background: none;
   border: none;
-  color: #5c5c6b;
+  color: #ffffff;
   font-size: 10px;
   font-weight: 700;
   cursor: pointer;
@@ -1129,7 +1129,7 @@ video.watch-frame:fullscreen {
 
 .watch-section-sub {
   font-size: 9px;
-  color: #5c5c6b;
+  color: #ffffff;
   font-weight: 600;
   text-transform: none;
   letter-spacing: normal;
@@ -1150,7 +1150,7 @@ video.watch-frame:fullscreen {
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.06);
   background: rgba(255,255,255,0.02);
-  color: #666;
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.15s;
   font-family: inherit;
@@ -1159,7 +1159,7 @@ video.watch-frame:fullscreen {
 .watch-reaction-btn:hover {
   background: rgba(255,255,255,0.06);
   border-color: rgba(255,255,255,0.12);
-  color: #999;
+  color: #ffffff;
 }
 
 .watch-reaction-btn.active {
@@ -1182,7 +1182,7 @@ video.watch-frame:fullscreen {
 .watch-reaction-count {
   font-size: 9px;
   font-weight: 800;
-  color: #5c5c6b;
+  color: #ffffff;
   font-family: "IBM Plex Mono", monospace;
 }
 
@@ -1200,7 +1200,7 @@ video.watch-frame:fullscreen {
 
 .watch-rec-scroll::-webkit-scrollbar { height: 4px; }
 .watch-rec-scroll::-webkit-scrollbar-track { background: transparent; }
-.watch-rec-scroll::-webkit-scrollbar-thumb { background: #1a1a1e; border-radius: 2px; }
+.watch-rec-scroll::-webkit-scrollbar-thumb { background: #000000; border-radius: 2px; }
 .watch-rec-scroll::-webkit-scrollbar-thumb:hover { background: #ffffff; }
 
 .watch-rec-track {
@@ -1230,7 +1230,7 @@ video.watch-frame:fullscreen {
   position: relative;
   aspect-ratio: 16/9;
   overflow: hidden;
-  background: #0e0e10;
+  background: #000000;
 }
 
 .watch-rec-img-wrap img {
@@ -1268,7 +1268,7 @@ video.watch-frame:fullscreen {
 .watch-rec-name {
   font-size: 12px;
   font-weight: 700;
-  color: #d0d0d6;
+  color: #ffffff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1279,7 +1279,7 @@ video.watch-frame:fullscreen {
   align-items: center;
   gap: 8px;
   font-size: 10px;
-  color: #5c5c6b;
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -1291,7 +1291,7 @@ video.watch-frame:fullscreen {
 }
 
 .watch-rec-eps {
-  color: #5c5c6b;
+  color: #ffffff;
 }
 
 .watch-rec-status {
@@ -1313,7 +1313,7 @@ video.watch-frame:fullscreen {
 
 .watch-char-scroll::-webkit-scrollbar { height: 3px; }
 .watch-char-scroll::-webkit-scrollbar-track { background: transparent; }
-.watch-char-scroll::-webkit-scrollbar-thumb { background: #1a1a1e; border-radius: 2px; }
+.watch-char-scroll::-webkit-scrollbar-thumb { background: #000000; border-radius: 2px; }
 .watch-char-scroll::-webkit-scrollbar-thumb:hover { background: #ffffff; }
 
 .watch-char-track {
@@ -1344,7 +1344,7 @@ video.watch-frame:fullscreen {
   position: relative;
   aspect-ratio: 3/4;
   overflow: hidden;
-  background: #0e0e10;
+  background: #000000;
 }
 
 .watch-char-img-wrap img {
@@ -1364,13 +1364,13 @@ video.watch-frame:fullscreen {
   display: grid;
   place-items: center;
   background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent);
-  color: #3a3a46;
+  color: #000000;
 }
 
 .watch-char-name {
   font-size: 10px;
   font-weight: 700;
-  color: #c0c0c6;
+  color: #ffffff;
   padding: 4px 6px 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1380,7 +1380,7 @@ video.watch-frame:fullscreen {
 .watch-char-role {
   font-size: 8px;
   font-weight: 600;
-  color: #5c5c6b;
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding: 0 6px;
@@ -1408,7 +1408,7 @@ video.watch-frame:fullscreen {
   border-radius: 8px;
   border: 1px dashed rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.04);
-  color: #e5e7eb;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -1555,7 +1555,7 @@ video.watch-frame:fullscreen {
   gap: 12px;
   padding: 32px 48px;
   border-radius: 16px;
-  background: rgba(10,10,14,0.95);
+  background: rgba(0, 0, 0,0.95);
   border: 1px solid rgba(255,255,255,0.15);
   box-shadow: 0 0 60px rgba(255,255,255,0.08);
 }
@@ -1563,7 +1563,7 @@ video.watch-frame:fullscreen {
 .auto-next-label {
   font-size: 13px;
   font-weight: 600;
-  color: #a0a0ab;
+  color: #ffffff;
   margin: 0;
   font-family: "Inter", sans-serif;
 }
@@ -1590,7 +1590,7 @@ video.watch-frame:fullscreen {
   padding: 10px 24px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, #ffffff, #d1d5db);
+  background: linear-gradient(135deg, #ffffff, #ffffff);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -1610,7 +1610,7 @@ video.watch-frame:fullscreen {
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.1);
   background: rgba(255,255,255,0.05);
-  color: #a0a0ab;
+  color: #ffffff;
   font-size: 13px;
   font-weight: 600;
   font-family: "Inter", sans-serif;
@@ -1639,7 +1639,7 @@ video.watch-frame:fullscreen {
   border: 1px solid rgba(255,255,255,0.15);
   background: rgba(0,0,0,0.6);
   backdrop-filter: blur(8px);
-  color: #e2e2e8;
+  color: #ffffff;
   font-size: 11px;
   font-weight: 700;
   font-family: "Space Grotesk", sans-serif;
@@ -1666,7 +1666,7 @@ video.watch-frame:fullscreen {
   gap: 1px;
   padding: 4px;
   border-radius: 10px;
-  background: rgba(10,10,14,0.95);
+  background: rgba(0, 0, 0,0.95);
   border: 1px solid rgba(255,255,255,0.15);
   backdrop-filter: blur(16px);
   box-shadow: 0 8px 32px rgba(0,0,0,0.5);
@@ -1679,7 +1679,7 @@ video.watch-frame:fullscreen {
   border-radius: 6px;
   border: none;
   background: transparent;
-  color: #a0a0ab;
+  color: #ffffff;
   font-size: 12px;
   font-weight: 600;
   font-family: "Space Grotesk", sans-serif;
