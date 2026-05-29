@@ -20,7 +20,6 @@ function getAuthUrl() {
     client_id: MAL_CLIENT_ID,
     code_challenge: codeChallenge,
     redirect_uri: MAL_REDIRECT_URI,
-    scope: 'read',
   });
   return { url: `${MAL_AUTH_URL}?${params.toString()}`, codeVerifier };
 }
@@ -33,7 +32,6 @@ function getConnectUrl() {
     code_challenge: codeChallenge,
     redirect_uri: MAL_REDIRECT_URI,
     state: 'connect',
-    scope: 'read',
   });
   return { url: `${MAL_AUTH_URL}?${params.toString()}`, codeVerifier };
 }
