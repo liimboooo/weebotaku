@@ -1,13 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Search } from 'lucide-react';
+import { Menu, Search, Star, TrendingUp } from 'lucide-react';
+import { fetchSearchAnime } from '../services/anilistApi';
 import './Header.css';
 
 export default function Header() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showPopout, setShowPopout] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const inputRef = useRef(null);
+  const popoutRef = useRef(null);
+  const debounceRef = useRef(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -27,14 +32,47 @@ export default function Header() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  useEffect(() => {
+    const onClick = (e) => {
+      if (popoutRef.current && !popoutRef.current.contains(e.target) && e.target !== inputRef.current) {
+        setShowPopout(false);
+      }
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, []);
+
   const toggleSidebar = () => window.dispatchEvent(new CustomEvent('sidebar-toggle'));
 
-  const handleSearch = (e) => {
-    if (e.key === 'Enter' && searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+  const doSearch = (q) => {
+    if (q.trim()) {
+      navigate(`/search?q=${encodeURIComponent(q.trim())}`);
       setSearchQuery('');
+      setShowPopout(false);
       inputRef.current?.blur();
     }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') doSearch(searchQuery);
+    if (e.key === 'Escape') setShowPopout(false);
+  };
+
+  const handleChange = (val) => {
+    setSearchQuery(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!val.trim()) { setSearchResults([]); setShowPopout(false); return; }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetchSearchAnime(val, 1);
+        setSearchResults(res.data.slice(0, 8));
+        setShowPopout(true);
+      } catch { setSearchResults([]); }
+    }, 300);
+  };
+
+  const handleFocus = () => {
+    if (searchResults.length > 0) setShowPopout(true);
   };
 
   return (
@@ -60,11 +98,45 @@ export default function Header() {
             type="text"
             placeholder="Search"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleSearch}
+            onChange={(e) => handleChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={handleFocus}
           />
           <span className="search-kbd">⌘K</span>
         </div>
+
+        {showPopout && searchResults.length > 0 && (
+          <div className="search-popout" ref={popoutRef}>
+            <div className="search-popout-header">
+              <TrendingUp size={12} strokeWidth={2} />
+              <span>Results</span>
+            </div>
+            {searchResults.map((item) => (
+              <button
+                key={item.id}
+                className="search-popout-item"
+                onClick={() => { navigate(`/anime/${item.id}?ep=1`); setShowPopout(false); setSearchQuery(''); inputRef.current?.blur(); }}
+              >
+                <div className="spi-img">
+                  <img src={item.img} alt={item.name} />
+                </div>
+                <div className="spi-info">
+                  <span className="spi-title">{item.name}</span>
+                  <span className="spi-meta">
+                    {item.rating && (
+                      <span className="spi-rating"><Star size={10} strokeWidth={0} fill="#a855f7" /> {item.rating.toFixed(1)}</span>
+                    )}
+                    {item.episodes && <span>{item.episodes} EP</span>}
+                    {item.year && <span>{item.year}</span>}
+                  </span>
+                </div>
+              </button>
+            ))}
+            <button className="search-popout-footer" onClick={() => doSearch(searchQuery)}>
+              View all results →
+            </button>
+          </div>
+        )}
       </div>
     </nav>
   );
