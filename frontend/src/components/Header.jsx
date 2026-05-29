@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Gift, LogOut } from 'lucide-react';
+import { Bell, Gift, LogOut, Menu } from 'lucide-react';
 import authService from '../services/authService';
 import { loadWatchHistory } from '../services/storage';
 import { formatTimeAgo } from '../utils/helpers';
 import { getNotifications, getUnreadCount, markRead, markAllRead, clearNotifications, fetchServerNotifications, seedBroadcastNotifications, handleSocketNotification, startPolling, stopPolling } from '../services/notificationService';
 import { connectSocket, disconnectSocket } from '../services/socket';
 import { fetchAggregatedNews } from '../services/newsAggregator';
-import FastSearch from './FastSearch';
 import './Header.css';
 
 export default function Header() {
@@ -15,6 +14,7 @@ export default function Header() {
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
+  const [scrolled, setScrolled] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifications, setNotifications] = useState(() => {
@@ -30,6 +30,12 @@ export default function Header() {
   const username = localStorage.getItem('username') || 'Guest';
   const [episodesWatched, setEpisodesWatched] = useState(() => loadWatchHistory().length);
   const hasUnclaimedRewards = localStorage.getItem('userUnclaimedRewards') === 'true';
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 0);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     const close = (e) => {
@@ -87,32 +93,27 @@ export default function Header() {
   }, []);
 
   const navigateTo = (path) => { navigate(path); setNotifOpen(false); setProfileOpen(false); };
+  const toggleSidebar = () => window.dispatchEvent(new CustomEvent('sidebar-toggle'));
 
   return (
-    <header className="header">
+    <header className={`header${scrolled ? ' scrolled' : ''}`}>
       <div className="header-bg" />
 
-      {/* ─── Left: Brand ─── */}
       <div className="header-left">
-        <button className="header-brand" onClick={() => navigateTo('/home')} aria-label="Re:ANIME home">
-          <span className="brand-re">Re:</span>
-          <span className="brand-anime">ANIME</span>
-          <span className="brand-bolt">⚡</span>
-          <span className="brand-star">✦</span>
+        <button className="header-hamburger" onClick={toggleSidebar} aria-label="Toggle sidebar">
+          <Menu size={20} />
         </button>
-        <span className="header-tagline">REWATCH. RELIVE. RE:EXPERIENCE.</span>
+        <button className="header-brand" onClick={() => navigateTo('/home')} aria-label="AnimeWch home">
+          <span className="brand-logo-icon">
+            <img src="/logo.png" alt="AnimeWch" />
+          </span>
+          <span className="brand-text">AnimeWch</span>
+        </button>
       </div>
 
-      {/* ─── Center: Search ─── */}
-      <div className="header-center">
-        <FastSearch />
-      </div>
-
-      {/* ─── Right: Actions ─── */}
       <div className="header-right">
         {authService.isLoggedIn() ? (
           <>
-            {/* Notifications */}
             <div className="header-notif-wrap" ref={notifRef}>
               <button className="header-icon-btn" onClick={() => setNotifOpen(v => !v)} aria-label="Notifications" aria-expanded={notifOpen}>
                 <Bell size={18} />
@@ -153,7 +154,6 @@ export default function Header() {
               )}
             </div>
 
-            {/* Profile */}
             <div className="header-profile-wrap" ref={profileRef}>
               <button className="header-avatar-btn" onClick={() => setProfileOpen(v => !v)} aria-expanded={profileOpen} aria-haspopup="true">
                 <span className="header-avatar-shell">

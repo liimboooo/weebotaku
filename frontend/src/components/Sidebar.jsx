@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bookmark, Film, Home, Settings, Clock } from 'lucide-react';
@@ -19,9 +19,14 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
+    const onToggle = () => setMobileOpen(v => !v);
+    window.addEventListener('sidebar-toggle', onToggle);
     const onEsc = (e) => { if (e.key === 'Escape') setMobileOpen(false); };
     document.addEventListener('keydown', onEsc);
-    return () => document.removeEventListener('keydown', onEsc);
+    return () => {
+      window.removeEventListener('sidebar-toggle', onToggle);
+      document.removeEventListener('keydown', onEsc);
+    };
   }, []);
 
   const navigateTo = (p) => { navigate(p); setMobileOpen(false); };
@@ -55,12 +60,6 @@ export default function Sidebar() {
           })}
         </nav>
       </aside>
-
-      <button className="sidebar-toggle" onClick={() => setMobileOpen(v => !v)} aria-label="Toggle navigation">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          {mobileOpen ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></> : <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>}
-        </svg>
-      </button>
     </>
   );
 }

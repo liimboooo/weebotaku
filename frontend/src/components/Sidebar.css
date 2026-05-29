@@ -99,33 +99,6 @@
   -webkit-backdrop-filter: blur(8px);
 }
 
-/* ─── Mobile Toggle ───────────────────────────────────── */
-.sidebar-toggle {
-  display: none;
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 999;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(5, 5, 8, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  color: var(--text-primary);
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  transition: all 0.2s ease;
-}
-
-.sidebar-toggle:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(10, 255, 107, 0.2);
-}
-
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
@@ -158,7 +131,4 @@
     height: 24px;
   }
 
-  .sidebar-toggle {
-    display: flex;
-  }
 }
