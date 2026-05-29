@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Loader, Play, Star, Tv, Calendar, Clock, Monitor, Search, Film,
-  X
+  X, SkipForward, FastForward
 } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
 import Hls from "hls.js";
@@ -15,6 +15,11 @@ import { getSocket, joinAnimeRoom, leaveAnimeRoom } from "../services/socket";
 import Comments from "../components/Comments";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./Feeds/AnimeWatch.css";
+
+const SETTINGS_KEY = "animewch_settings";
+function loadSettings() {
+  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"); } catch { return {}; }
+}
 
 export default function AnimeDetail() {
   const { id } = useParams();
@@ -50,8 +55,15 @@ export default function AnimeDetail() {
   const [seekTo, setSeekTo] = useState(null);
   const [sourceLookupDone, setSourceLookupDone] = useState(false);
   const [streamMode, setStreamMode] = useState("iframe");
+  const [introOutro, setIntroOutro] = useState({ intro: null, outro: null });
+  const [showSkipIntro, setShowSkipIntro] = useState(false);
+  const [showSkipOutro, setShowSkipOutro] = useState(false);
+  const [autoNextCountdown, setAutoNextCountdown] = useState(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState(() => loadSettings().playbackSpeed || 1);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const hlsVideoRef = useRef(null);
   const hlsInstanceRef = useRef(null);
+  const autoNextTimerRef = useRef(null);
 
   const handleSeek = useCallback((seconds) => {
     setSeekTo(seconds);
@@ -317,6 +329,11 @@ export default function AnimeDetail() {
     if (!episode) return;
     let cancelled = false;
     addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img);
+    setIntroOutro({ intro: null, outro: null });
+    setShowSkipIntro(false);
+    setShowSkipOutro(false);
+    setAutoNextCountdown(null);
+    if (autoNextTimerRef.current) { clearInterval(autoNextTimerRef.current); autoNextTimerRef.current = null; }
     (async () => {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
@@ -333,6 +350,13 @@ export default function AnimeDetail() {
           const miruroSub = miruroSubRes.status === 'fulfilled' ? miruroSubRes.value : null;
           const miruroDub = miruroDubRes.status === 'fulfilled' ? miruroDubRes.value : null;
 
+          if (miruroSub?.intro || miruroSub?.outro || miruroDub?.intro || miruroDub?.outro) {
+            setIntroOutro({
+              intro: miruroSub?.intro || miruroDub?.intro || null,
+              outro: miruroSub?.outro || miruroDub?.outro || null,
+            });
+          }
+
           if (miruroSub?.stream?.url) {
             hlsServers.push({ label: 'Sub (HLS)', url: miruroSub.stream.url, type: 'sub' });
           }
@@ -346,6 +370,12 @@ export default function AnimeDetail() {
               if (cancelled) return;
               if (direct?.stream?.url) {
                 hlsServers.push({ label: 'Sub (HLS)', url: direct.stream.url, type: 'sub' });
+              }
+              if (direct?.intro || direct?.outro) {
+                setIntroOutro(prev => ({
+                  intro: prev.intro || direct.intro,
+                  outro: prev.outro || direct.outro,
+                }));
               }
             } catch {}
           }
@@ -421,18 +451,124 @@ export default function AnimeDetail() {
       }, { once: true });
     }
 
-    const onTimeUpdate = () => { savedPositionRef.current = video.currentTime; };
+    if (playbackSpeed !== 1) video.playbackRate = playbackSpeed;
+
+    const autoSkippedIntro = { done: false };
+    const autoSkippedOutro = { done: false };
+    const onTimeUpdate = () => {
+      const t = video.currentTime;
+      const dur = video.duration;
+      savedPositionRef.current = t;
+      const settings = loadSettings();
+
+      if (introOutro.intro && t >= introOutro.intro.start && t < introOutro.intro.end) {
+        if (settings.skipIntro && !autoSkippedIntro.done) {
+          autoSkippedIntro.done = true;
+          video.currentTime = introOutro.intro.end;
+          return;
+        }
+        setShowSkipIntro(true);
+      } else {
+        setShowSkipIntro(false);
+        if (introOutro.intro && t >= introOutro.intro.end) autoSkippedIntro.done = true;
+      }
+
+      if (introOutro.outro && t >= introOutro.outro.start && t < introOutro.outro.end) {
+        if (settings.skipOutro && !autoSkippedOutro.done) {
+          autoSkippedOutro.done = true;
+          video.currentTime = introOutro.outro.end;
+          return;
+        }
+        setShowSkipOutro(true);
+      } else {
+        setShowSkipOutro(false);
+        if (introOutro.outro && t >= introOutro.outro.end) autoSkippedOutro.done = true;
+      }
+
+      if (dur && t > 5 && t % 15 < 1) {
+        addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img, t);
+      }
+    };
+
+    const onEnded = () => {
+      addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img, video.duration || 0);
+      const settings = loadSettings();
+      if (settings.autoNext !== false && epIndex < episodes.length - 1) {
+        setAutoNextCountdown(5);
+        let count = 5;
+        autoNextTimerRef.current = setInterval(() => {
+          count--;
+          setAutoNextCountdown(count);
+          if (count <= 0) {
+            clearInterval(autoNextTimerRef.current);
+            autoNextTimerRef.current = null;
+            setAutoNextCountdown(null);
+            setEpIndex(i => i + 1);
+            setSelectedEp(episodes[epIndex + 1]?.episode || (epIndex + 2));
+          }
+        }, 1000);
+      }
+    };
+
     video.addEventListener("timeupdate", onTimeUpdate);
+    video.addEventListener("ended", onEnded);
 
     return () => {
       video.removeEventListener("timeupdate", onTimeUpdate);
+      video.removeEventListener("ended", onEnded);
+      if (autoNextTimerRef.current) { clearInterval(autoNextTimerRef.current); autoNextTimerRef.current = null; }
       if (hlsInstanceRef.current) { hlsInstanceRef.current.destroy(); hlsInstanceRef.current = null; }
     };
   }, [streamMode, streamUrl]);
 
   useEffect(() => {
-    savedPositionRef.current = 0;
-  }, [episode]);
+    if (!episode) { savedPositionRef.current = 0; return; }
+    const history = loadWatchHistory();
+    const found = history.find(h => h.animeId === parseInt(id) && h.episode === episode.episode);
+    savedPositionRef.current = (found?.position && found.position > 5) ? found.position : 0;
+  }, [episode, id]);
+
+  const handleSkipIntro = useCallback(() => {
+    const video = hlsVideoRef.current;
+    if (video && introOutro.intro) {
+      video.currentTime = introOutro.intro.end;
+      setShowSkipIntro(false);
+    }
+  }, [introOutro.intro]);
+
+  const handleSkipOutro = useCallback(() => {
+    const settings = loadSettings();
+    if (settings.autoNext !== false && epIndex < episodes.length - 1) {
+      setEpIndex(i => i + 1);
+      setSelectedEp(episodes[epIndex + 1]?.episode || (epIndex + 2));
+    } else {
+      const video = hlsVideoRef.current;
+      if (video && introOutro.outro) {
+        video.currentTime = introOutro.outro.end;
+        setShowSkipOutro(false);
+      }
+    }
+  }, [introOutro.outro, epIndex, episodes]);
+
+  const cancelAutoNext = useCallback(() => {
+    if (autoNextTimerRef.current) {
+      clearInterval(autoNextTimerRef.current);
+      autoNextTimerRef.current = null;
+    }
+    setAutoNextCountdown(null);
+  }, []);
+
+  const handleSpeedChange = useCallback((speed) => {
+    setPlaybackSpeed(speed);
+    setShowSpeedMenu(false);
+    const video = hlsVideoRef.current;
+    if (video) video.playbackRate = speed;
+    try {
+      const s = loadSettings();
+      s.playbackSpeed = speed;
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    } catch {}
+  }, []);
 
   useEffect(() => {
     if (streamMode !== "hls") return;
@@ -448,6 +584,7 @@ export default function AnimeDetail() {
         case 'ArrowDown': e.preventDefault(); video.volume = Math.max(0, video.volume - 0.1); break;
         case 'f': e.preventDefault(); document.fullscreenElement ? document.exitFullscreen() : video.requestFullscreen?.(); break;
         case 'm': e.preventDefault(); video.muted = !video.muted; break;
+        case 'n': e.preventDefault(); if (epIndex < episodes.length - 1) { setEpIndex(i => i + 1); setSelectedEp(episodes[epIndex + 1]?.episode || (epIndex + 2)); } break;
         default: break;
       }
     };
@@ -606,6 +743,49 @@ export default function AnimeDetail() {
               )}
               {!loading && !error && !streamLoading && !streamUrl && episode && (
                 <div className="watch-center"><p className="watch-muted">Preparing stream...</p></div>
+              )}
+
+              {streamMode === "hls" && showSkipIntro && (
+                <button className="skip-btn skip-intro" onClick={handleSkipIntro}>
+                  <SkipForward size={14} /> Skip Intro
+                </button>
+              )}
+              {streamMode === "hls" && showSkipOutro && (
+                <button className="skip-btn skip-outro" onClick={handleSkipOutro}>
+                  <SkipForward size={14} /> {epIndex < episodes.length - 1 ? "Next Episode" : "Skip Outro"}
+                </button>
+              )}
+
+              {autoNextCountdown !== null && (
+                <div className="auto-next-overlay">
+                  <div className="auto-next-card">
+                    <p className="auto-next-label">Next episode in</p>
+                    <div className="auto-next-timer">{autoNextCountdown}</div>
+                    <div className="auto-next-actions">
+                      <button className="auto-next-play" onClick={() => { cancelAutoNext(); setEpIndex(i => i + 1); setSelectedEp(episodes[epIndex + 1]?.episode || (epIndex + 2)); }}>
+                        <Play size={14} /> Play Now
+                      </button>
+                      <button className="auto-next-cancel" onClick={cancelAutoNext}>Cancel</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {streamMode === "hls" && !loading && !error && streamUrl && !streamLoading && (
+                <div className="speed-control">
+                  <button className="speed-btn" onClick={() => setShowSpeedMenu(p => !p)}>
+                    {playbackSpeed}x
+                  </button>
+                  {showSpeedMenu && (
+                    <div className="speed-menu">
+                      {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(s => (
+                        <button key={s} className={`speed-option ${playbackSpeed === s ? "active" : ""}`} onClick={() => handleSpeedChange(s)}>
+                          {s}x
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 

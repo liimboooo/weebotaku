@@ -15,6 +15,7 @@ export default function WatchlistPage() {
   const [animeList, setAnimeList] = useState([]);
   const [mangaList, setMangaList] = useState([]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
 
   const refresh = () => {
     setAnimeList(loadWatchlist());
@@ -54,10 +55,16 @@ export default function WatchlistPage() {
   };
 
   const filteredAnime = useMemo(() => {
-    if (!search) return animeList;
-    const q = search.toLowerCase();
-    return animeList.filter(a => (a.name || '').toLowerCase().includes(q));
-  }, [animeList, search]);
+    let list = animeList;
+    if (statusFilter !== "All") {
+      list = list.filter(a => (a.listStatus || "Watch Later") === statusFilter);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(a => (a.name || '').toLowerCase().includes(q));
+    }
+    return list;
+  }, [animeList, search, statusFilter]);
 
   const filteredManga = useMemo(() => {
     if (!search) return mangaList;
@@ -130,6 +137,16 @@ export default function WatchlistPage() {
               {search && <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><X size={14} /></button>}
             </div>
           </div>
+
+          {tab === "anime" && (
+            <div className="wl-status-filters">
+              {["All", "Watch Later", "Watching", "Completed", "On Hold", "Dropped"].map(s => (
+                <button key={s} className={`wl-status-pill ${statusFilter === s ? "active" : ""}`} onClick={() => setStatusFilter(s)}>
+                  {s}{s !== "All" && <span className="wl-status-count">{animeList.filter(a => s === "Watch Later" ? (!a.listStatus || a.listStatus === s) : a.listStatus === s).length}</span>}
+                </button>
+              ))}
+            </div>
+          )}
 
           <AnimatePresence mode="wait">
             {tab === "anime" ? (

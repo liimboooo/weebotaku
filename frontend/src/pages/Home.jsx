@@ -316,8 +316,13 @@ function ContinueWatchingRow() {
             </div>
             <div className="cw-card-body">
               <h3 className="cw-card-title">{item.name}</h3>
+              {item.episodes > 0 && (
+                <div className="cw-card-bar">
+                  <div className="cw-card-fill" style={{ width: `${Math.min(100, Math.round((item.episode / item.episodes) * 100))}%` }} />
+                </div>
+              )}
               <div className="cw-card-footer">
-                <span className="cw-card-progress">Ep {item.episode || 0}</span>
+                <span className="cw-card-progress">Ep {item.episode}{item.episodes ? ` / ${item.episodes}` : ''}</span>
                 {item.timestamp && <span className="cw-card-time">{formatTimeAgo(item.timestamp)}</span>}
               </div>
             </div>

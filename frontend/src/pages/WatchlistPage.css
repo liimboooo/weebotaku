@@ -464,6 +464,53 @@
   box-shadow: 0 8px 24px rgba(139,92,246,0.35);
 }
 
+/* ─── Status Filter Pills ──────────────────────────── */
+.wl-status-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.wl-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(139,92,246,0.1);
+  background: rgba(139,92,246,0.04);
+  color: #888;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.wl-status-pill:hover {
+  background: rgba(139,92,246,0.08);
+  color: #bbb;
+  border-color: rgba(139,92,246,0.2);
+}
+
+.wl-status-pill.active {
+  background: rgba(139,92,246,0.15);
+  border-color: rgba(139,92,246,0.35);
+  color: #c084fc;
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(139,92,246,0.1);
+}
+
+.wl-status-count {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(139,92,246,0.1);
+  color: inherit;
+}
+
 @media (max-width: 768px) {
   .wl-shell { padding: 20px 12px; }
   .wl-hero { max-height: 400px; }
@@ -472,4 +519,6 @@
   .wl-tabs { width: 100%; }
   .wl-tab { flex: 1; justify-content: center; }
   .wl-hero-hud { display: none; }
+  .wl-status-filters { gap: 4px; }
+  .wl-status-pill { padding: 5px 10px; font-size: 11px; }
 }
