@@ -1,6 +1,14 @@
 import React from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
+function isChunkLoadError(error) {
+  if (!error) return false;
+  return (
+    error.name === "ChunkLoadError" ||
+    /Loading chunk \d+ failed/i.test(error.message)
+  );
+}
+
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -12,6 +20,10 @@ export default class ErrorBoundary extends React.Component {
   }
 
   handleReset = () => {
+    if (isChunkLoadError(this.state.error)) {
+      window.location.reload();
+      return;
+    }
     this.setState({ hasError: false, error: null });
     if (this.props.onReset) {
       this.props.onReset();
@@ -20,7 +32,8 @@ export default class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      const message = this.props.fallbackMessage || "Something went wrong";
+      const isChunk = isChunkLoadError(this.state.error);
+      const message = this.props.fallbackMessage || (isChunk ? "New version deployed" : "Something went wrong");
 
       return (
         <div style={{
@@ -39,7 +52,9 @@ export default class ErrorBoundary extends React.Component {
           <AlertTriangle size={40} style={{ opacity: 0.4, color: "#6d28d9" }} />
           <h2 style={{ color: "#fff", margin: 0, fontSize: "1.1rem", fontWeight: 600 }}>{message}</h2>
           <p style={{ margin: 0, fontSize: "0.85rem", maxWidth: "400px", lineHeight: 1.5, color: "#666" }}>
-            {this.state.error?.message || "An unexpected error occurred"}
+            {isChunk
+              ? "The app was updated. Please reload to get the latest version."
+              : (this.state.error?.message || "An unexpected error occurred")}
           </p>
           <button
             onClick={this.handleReset}
@@ -62,7 +77,7 @@ export default class ErrorBoundary extends React.Component {
             onMouseOver={e => { e.currentTarget.style.background = "#8b5cf6"; }}
             onMouseOut={e => { e.currentTarget.style.background = "#6d28d9"; }}
           >
-            <RefreshCw size={16} /> Try Again
+            <RefreshCw size={16} /> {isChunk ? "Reload Page" : "Try Again"}
           </button>
         </div>
       );
