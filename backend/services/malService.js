@@ -10,8 +10,7 @@ const MAL_AUTH_URL = 'https://myanimelist.net/v1/oauth2/authorize';
 
 function generateCodeChallenge() {
   const codeVerifier = crypto.randomBytes(32).toString('base64url');
-  const challenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
-  return { codeVerifier, codeChallenge: challenge };
+  return { codeVerifier, codeChallenge: codeVerifier };
 }
 
 function getAuthUrl() {
@@ -20,7 +19,6 @@ function getAuthUrl() {
     response_type: 'code',
     client_id: MAL_CLIENT_ID,
     code_challenge: codeChallenge,
-    code_challenge_method: 'S256',
     redirect_uri: MAL_REDIRECT_URI,
   });
   return { url: `${MAL_AUTH_URL}?${params.toString()}`, codeVerifier };
@@ -32,7 +30,6 @@ function getConnectUrl() {
     response_type: 'code',
     client_id: MAL_CLIENT_ID,
     code_challenge: codeChallenge,
-    code_challenge_method: 'S256',
     redirect_uri: MAL_REDIRECT_URI,
     state: 'connect',
   });
