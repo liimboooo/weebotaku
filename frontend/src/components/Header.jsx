@@ -31,6 +31,7 @@ export default function Header({ isHome = false }) {
   const [showSearchPopout, setShowSearchPopout] = useState(false);
   const [showNotifPopout, setShowNotifPopout] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(authService.isLoggedIn());
   const [notifs, setNotifs] = useState([]);
   const [unread, setUnread] = useState(0);
@@ -47,8 +48,38 @@ export default function Header({ isHome = false }) {
   }, []);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
+    let lastY = window.scrollY;
+    let ticking = false;
+    const SHOW_THRESHOLD = 8;
+    const HIDE_THRESHOLD = 80;
+
+    const update = () => {
+      const y = window.scrollY;
+      setScrolled(y > SHOW_THRESHOLD);
+
+      // Always show near the top
+      if (y <= HIDE_THRESHOLD) {
+        setHidden(false);
+      } else if (y > lastY + 4) {
+        // Scrolling down past threshold → hide
+        setHidden(true);
+      } else if (y < lastY - 4) {
+        // Scrolling up → show
+        setHidden(false);
+      }
+
+      lastY = y;
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(update);
+        ticking = true;
+      }
+    };
+
+    update();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -155,7 +186,7 @@ export default function Header({ isHome = false }) {
   };
 
   return (
-    <nav className={`top-nav${scrolled ? ' is-scrolled' : ''}${isHome ? ' is-home' : ' is-subpage'}`}>
+    <nav className={`top-nav${scrolled ? ' is-scrolled' : ''}${isHome ? ' is-home' : ' is-subpage'}${hidden ? ' is-hidden' : ''}`}>
       <div className="top-nav-bg" />
 
       <div className="top-nav-left">

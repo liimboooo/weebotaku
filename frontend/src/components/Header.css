@@ -14,6 +14,7 @@
 }
 
 .top-nav {
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -24,13 +25,15 @@
   justify-content: space-between;
   padding: 0 28px;
   pointer-events: none;
+  transform: translateY(0);
+  transition: transform 0.3s var(--ease-out);
+  will-change: transform;
 }
 
-/* Home: absolute so it scrolls away with the hero */
-.top-nav.is-home { position: absolute; }
-
-/* Subpages: fixed so it stays as a persistent glass bar */
-.top-nav.is-subpage { position: fixed; }
+/* Hide when scrolling down — slides off-screen */
+.top-nav.is-hidden {
+  transform: translateY(-100%);
+}
 
 .top-nav * {
   pointer-events: auto;
