@@ -12,7 +12,6 @@ import {
   Globe,
   Menu,
   Settings,
-  Trophy,
   Users,
   X,
 } from 'lucide-react';
@@ -208,11 +207,6 @@ export default function Header() {
             <button className={`nav-link ${path === '/friends' ? 'active' : ''}`} onClick={() => navigateTo('/friends')}>
               <Users size={16} />
               <span>Friends</span>
-            </button>
-
-            <button className={`nav-link ${path === '/leaderboard' ? 'active' : ''}`} onClick={() => navigateTo('/leaderboard')}>
-              <Trophy size={16} />
-              <span>Leaderboard</span>
             </button>
 
             <button className={`nav-link ${path === '/settings' ? 'active' : ''}`} onClick={() => navigateTo('/settings')}>

@@ -28,7 +28,6 @@ const MangaVault = lazy(() => import("./pages/MangaVault"));
 const MangaDetail = lazy(() => import("./pages/MangaDetail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const FriendsPage = lazy(() => import("./pages/Friends/FriendsPage"));
-const LeaderboardPage = lazy(() => import("./pages/Leaderboard/LeaderboardPage"));
 
 const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
@@ -102,7 +101,6 @@ function AppLayout() {
           <Route path="/profile/:username" element={<RouteShell><ProfilePage /></RouteShell>} />
           <Route path="/history" element={<RouteShell><HistoryPage /></RouteShell>} />
           <Route path="/friends" element={<RouteShell><ProtectedRoute><FriendsPage /></ProtectedRoute></RouteShell>} />
-          <Route path="/leaderboard" element={<RouteShell><LeaderboardPage /></RouteShell>} />
           <Route path="*" element={<RouteShell><NotFound /></RouteShell>} />
         </Routes>
       </AnimatePresence>
