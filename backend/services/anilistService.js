@@ -75,19 +75,19 @@ async function getUserInfo(accessToken) {
   if (!res.ok) throw new Error('Failed to fetch AniList user info');
   const json = await res.json();
   if (json.errors) throw new Error(json.errors[0]?.message || 'AniList error');
-  return { username: json.data.Viewer.name, avatar: json.data.Viewer.avatar?.large || '' };
+  return { id: json.data.Viewer.id, username: json.data.Viewer.name, avatar: json.data.Viewer.avatar?.large || '' };
 }
 
-async function fetchAnimeList(accessToken) {
+async function fetchAnimeList(accessToken, userId) {
   let allAnime = [];
   let hasNext = true;
   let page = 1;
 
   while (hasNext && page <= 10) {
-    const query = `query($page:Int) {
+    const query = `query($page:Int, $userId:Int) {
       Page(page:$page,perPage:50) {
         pageInfo { hasNextPage }
-        mediaList(userName:"__self__",type:ANIME) {
+        mediaList(userId:$userId,type:ANIME) {
           media {
             id idMal title { romaji english }
             coverImage { large }
@@ -103,7 +103,7 @@ async function fetchAnimeList(accessToken) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ query, variables: { page } }),
+      body: JSON.stringify({ query, variables: { page, userId } }),
     });
     if (!res.ok) {
       if (res.status === 401) throw new Error('AniList token expired');
@@ -141,8 +141,8 @@ function mapAniListStatus(status) {
   return map[status] || 'Watch Later';
 }
 
-async function manualSync(accessToken) {
-  return fetchAnimeList(accessToken);
+async function manualSync(accessToken, userId) {
+  return fetchAnimeList(accessToken, userId);
 }
 
 module.exports = {

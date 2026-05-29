@@ -959,7 +959,7 @@ exports.aniListCallback = async (req, res) => {
 
     const tokenData = await anilistService.exchangeCode(code);
     const userInfo = await anilistService.getUserInfo(tokenData.accessToken);
-    const list = await anilistService.fetchAnimeList(tokenData.accessToken);
+    const list = await anilistService.fetchAnimeList(tokenData.accessToken, userInfo.id);
 
     const existing = await Sync.findOne({ userId: req.user.id, service: 'anilist' });
     if (existing) {
@@ -1042,7 +1042,8 @@ exports.syncAniList = async (req, res) => {
       await sync.save();
     }
 
-    const list = await anilistService.fetchAnimeList(accessToken);
+    const userInfo = await anilistService.getUserInfo(accessToken);
+    const list = await anilistService.fetchAnimeList(accessToken, userInfo.id);
 
     const user = await User.findById(req.user.id);
     const { watchlist, addedCount, updatedCount } = mergeIntoWatchlist(user.watchlist, list);
