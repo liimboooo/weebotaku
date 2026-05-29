@@ -21,46 +21,39 @@ module.exports = (req, res) => {
     if (req.headers[h]) opts.headers[h] = req.headers[h];
   }
 
+  // Handle POST/PUT/PATCH body
+  const hasBody = req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS';
+  let bodyToSend = null;
+
+  if (hasBody) {
+    if (req.body != null) {
+      bodyToSend = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    }
+    opts.headers['transfer-encoding'] = 'chunked';
+  }
+
   return new Promise((resolve) => {
     const pref = https.request(opts, (pres) => {
-      let body = '';
-      pres.on('data', c => body += c);
+      const chunks = [];
+      pres.on('data', c => chunks.push(c));
       pres.on('end', () => {
+        const body = Buffer.concat(chunks).toString();
         res.status(pres.statusCode).send(body);
         resolve();
       });
     });
-    pref.on('error', () => {
+    pref.on('error', (err) => {
       res.status(502).json({ success: false, message: 'Backend unreachable' });
       resolve();
     });
-    pref.on('timeout', () => {
-      pref.destroy();
-      res.status(504).json({ success: false, message: 'Backend timeout' });
-      resolve();
-    });
 
-    if (req.body != null) {
-      const s = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
-      pref.setHeader('Content-Length', Buffer.byteLength(s));
-      pref.write(s);
+    if (bodyToSend) {
+      pref.write(bodyToSend);
       pref.end();
-      return;
+    } else if (hasBody) {
+      req.pipe(pref);
+    } else {
+      pref.end();
     }
-
-    if (req.headers['content-length'] && req.headers['content-length'] !== '0') {
-      let raw = '';
-      req.on('data', c => raw += c);
-      req.on('end', () => {
-        if (raw) {
-          pref.setHeader('Content-Length', Buffer.byteLength(raw));
-          pref.write(raw);
-        }
-        pref.end();
-      });
-      return;
-    }
-
-    pref.end();
   });
 };
