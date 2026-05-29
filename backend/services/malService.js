@@ -20,6 +20,7 @@ function getAuthUrl() {
     client_id: MAL_CLIENT_ID,
     code_challenge: codeChallenge,
     redirect_uri: MAL_REDIRECT_URI,
+    scope: 'read',
   });
   return { url: `${MAL_AUTH_URL}?${params.toString()}`, codeVerifier };
 }
@@ -32,6 +33,7 @@ function getConnectUrl() {
     code_challenge: codeChallenge,
     redirect_uri: MAL_REDIRECT_URI,
     state: 'connect',
+    scope: 'read',
   });
   return { url: `${MAL_AUTH_URL}?${params.toString()}`, codeVerifier };
 }
@@ -64,10 +66,13 @@ async function exchangeCode(code, codeVerifier) {
 }
 
 async function getUserInfo(accessToken) {
-  const res = await fetch('https://api.myanimelist.net/v2/users/@self', {
-    headers: { Authorization: `Bearer ${accessToken}` },
+  const res = await fetch('https://api.myanimelist.net/v2/users/@self?fields=id,name,picture', {
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
   });
-  if (!res.ok) throw new Error('Failed to fetch MAL user info');
+  if (!res.ok) {
+    const err = await res.text().catch(() => '');
+    throw new Error(`Failed to fetch MAL user info (${res.status}): ${err}`);
+  }
   const data = await res.json();
   return { username: data.name, avatar: data.picture };
 }
