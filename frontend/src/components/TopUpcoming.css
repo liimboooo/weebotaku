@@ -1,0 +1,250 @@
+/* ═══════════════════════════════════════════════════════
+   TOP UPCOMING — Horizontal-scroll anime card row
+   ═══════════════════════════════════════════════════════ */
+
+.tu-section {
+  background: #0d0d0d;
+  padding: 32px 40px;
+  border-radius: 16px;
+  margin: 24px 0;
+}
+
+/* ─── Header row ──────────────────────────────────────── */
+.tu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.tu-title {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+
+.tu-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.18s ease;
+  flex-shrink: 0;
+}
+
+.tu-arrow:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.tu-arrow:active {
+  transform: scale(0.94);
+}
+
+/* ─── Scroll container ─────────────────────────────────── */
+.tu-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+  scroll-snap-type: x proximity;
+}
+
+.tu-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Card ────────────────────────────────────────────── */
+.tu-card {
+  flex: 0 0 480px;
+  display: flex;
+  background: #1a1a1a;
+  border-radius: 12px;
+  overflow: hidden;
+  scroll-snap-align: start;
+  transition: transform 0.25s ease, filter 0.25s ease, box-shadow 0.25s ease;
+  cursor: pointer;
+}
+
+.tu-card:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.08);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+}
+
+/* ─── Cover (left) ─────────────────────────────────────── */
+.tu-card-cover {
+  position: relative;
+  flex: 0 0 160px;
+  height: 220px;
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+.tu-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tu-cover-overlay {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 10px 12px 12px;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.96) 0%,
+    rgba(0, 0, 0, 0.7) 60%,
+    transparent 100%
+  );
+}
+
+.tu-cover-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.25;
+  margin: 0 0 5px;
+  letter-spacing: -0.005em;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tu-studio {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: block;
+}
+
+/* ─── Body (right) ─────────────────────────────────────── */
+.tu-card-body {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tu-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.tu-date {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
+
+.tu-source {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+}
+
+.tu-desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.55;
+  margin: 0 0 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─── Tag pills ───────────────────────────────────────── */
+.tu-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.tu-tag {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+/* Per-genre color */
+.tu-tag--comedy    { background: #e91e8c; }
+.tu-tag--ecchi     { background: #ff1493; }
+.tu-tag--romance   { background: #f43f5e; }
+.tu-tag--action    { background: #e53935; }
+.tu-tag--adventure { background: #ff5722; }
+.tu-tag--fantasy   { background: #1565c0; }
+.tu-tag--drama     { background: #6366f1; }
+.tu-tag--mystery   { background: #7c3aed; }
+.tu-tag--sports    { background: #16a34a; }
+.tu-tag--horror    { background: #b91c1c; }
+.tu-tag--scifi,
+.tu-tag--sci-fi    { background: #0891b2; }
+
+/* ─── Responsive ──────────────────────────────────────── */
+@media (max-width: 768px) {
+  .tu-section {
+    padding: 24px 16px;
+    border-radius: 12px;
+  }
+  .tu-card {
+    flex: 0 0 360px;
+  }
+  .tu-card-cover {
+    flex: 0 0 130px;
+    height: 200px;
+  }
+  .tu-date {
+    font-size: 17px;
+  }
+  .tu-cover-title {
+    font-size: 11.5px;
+    -webkit-line-clamp: 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .tu-card {
+    flex: 0 0 320px;
+  }
+  .tu-card-cover {
+    flex: 0 0 110px;
+    height: 180px;
+  }
+}

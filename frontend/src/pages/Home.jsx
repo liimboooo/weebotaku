@@ -29,6 +29,7 @@ import {
 import AnimatedPage from "../components/AnimatedPage";
 import Skeleton from "../components/Skeleton";
 import Categories from "../components/Categories";
+import TopUpcoming from "../components/TopUpcoming";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
 import { loadWatchlist, loadWatchHistory, loadRatings } from "../services/storage";
@@ -678,6 +679,8 @@ export default function Home() {
         <GenreBar genres={categories} />
 
         <ContinueWatchingRow />
+
+        <TopUpcoming />
 
         {topTen.length > 0 && (
           <TopTenRow animeList={topTen} />
