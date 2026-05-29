@@ -5,12 +5,14 @@ import { Heart, BookOpen, Search, Star, Play, Sparkles, X, ArrowUpDown } from "l
 import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
 import { loadWatchlist, removeFromWatchlist, loadReadlist, removeFromReadlist, loadWatchHistory, getMangaProgress as getMangaProgressFromStorage } from "../services/storage";
+import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./WatchlistPage.css";
 
 export default function WatchlistPage() {
   useDocumentTitle("My Library");
   const navigate = useNavigate();
+  const prefetch = usePrefetchAnime();
   const [tab, setTab] = useState("anime");
   const [animeList, setAnimeList] = useState([]);
   const [mangaList, setMangaList] = useState([]);
@@ -194,6 +196,8 @@ export default function WatchlistPage() {
                           whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(139,92,246,0.3)", borderColor: "#8b5cf6" }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => navigate(`/anime/${anime.id}/info`)}
+                          onMouseEnter={() => prefetch.onMouseEnter(anime.id)}
+                          onMouseLeave={prefetch.onMouseLeave}
                         >
                           <div className="wl-card-thumb">
                             <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />

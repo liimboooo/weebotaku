@@ -25,6 +25,7 @@ import AnimatedPage from "../components/AnimatedPage";
 import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchTopAnime, fetchSearchAnime, fetchAnimeGenres } from "../services/anilistApi";
+import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import { loadWatchlist, addToWatchlist, removeFromWatchlist, loadWatchHistory } from "../services/storage";
 import { addNotification } from "../services/notificationService";
 import { findStreamingSource } from "../services/animeApi";
@@ -158,6 +159,7 @@ export default function Browse() {
   useDocumentTitle("Browse Anime");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const prefetch = usePrefetchAnime();
 
   const [allAnime, setAllAnime] = useState([]);
   const [heroAnime, setHeroAnime] = useState(null);
@@ -447,6 +449,8 @@ export default function Browse() {
                       exit={{ opacity: 0, scale: 0.96 }}
                       transition={{ duration: 0.2 }}
                       onClick={() => navigate(`/anime/${anime.id}/info`)}
+                      onMouseEnter={() => prefetch.onMouseEnter(anime.id)}
+                      onMouseLeave={prefetch.onMouseLeave}
                     >
                       <AnimeCard
                         anime={anime}

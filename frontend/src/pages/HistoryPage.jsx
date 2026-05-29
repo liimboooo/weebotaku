@@ -6,6 +6,7 @@ import { Clock, Trash2, Play, X, Compass, Sparkles, Film } from "lucide-react";
 import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
 import { loadWatchHistory, clearWatchHistory as clearStorageHistory, removeFromWatchHistory } from "../services/storage";
+import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./HistoryPage.css";
 
@@ -37,6 +38,7 @@ function groupByDate(items) {
 export default function HistoryPage() {
   useDocumentTitle("Watch History");
   const navigate = useNavigate();
+  const prefetch = usePrefetchAnime();
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
@@ -147,6 +149,8 @@ export default function HistoryPage() {
                           exit={{ opacity: 0, scale: 0.95 }}
                           transition={{ delay: (i % 12) * 0.03, type: "spring", stiffness: 120, damping: 16 }}
                           onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode || 1}`)}
+                          onMouseEnter={() => prefetch.onMouseEnter(item.animeId)}
+                          onMouseLeave={prefetch.onMouseLeave}
                         >
                           <div className="hp-card-thumb">
                             <img src={item.img || item.animeImg || ""} alt="" loading="lazy" decoding="async" />

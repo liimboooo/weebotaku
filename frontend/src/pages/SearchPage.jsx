@@ -11,6 +11,7 @@ import Skeleton from "../components/Skeleton";
 import Loader from "../components/Loader";
 import Background from "../components/Background";
 import { fetchSearchAnime, fetchTopAnime, fetchAnimeGenres } from "../services/anilistApi";
+import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import { addToWatchlist, removeFromWatchlist, loadWatchlist } from "../services/storage";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./SearchPage.css";
@@ -20,6 +21,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function SearchPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const prefetch = usePrefetchAnime();
   useDocumentTitle(searchParams.get("q") ? `Search: ${searchParams.get("q")}` : "Search");
   const [query, setQuery] = useState(searchParams.get("q") || "");
   const [results, setResults] = useState([]);
@@ -283,6 +285,8 @@ export default function SearchPage() {
                     transition={{ type: "spring", stiffness: 100, damping: 12 }}
                     whileHover={{ y: -8 }}
                     onClick={() => navigate(`/anime/${anime.id}/info`)}
+                    onMouseEnter={() => prefetch.onMouseEnter(anime.id)}
+                    onMouseLeave={prefetch.onMouseLeave}
                   >
                     <div className="sr-card-thumb">
                       <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" onError={e => { e.target.style.display = 'none'; }} />

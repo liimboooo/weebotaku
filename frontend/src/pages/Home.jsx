@@ -32,6 +32,7 @@ import Background from "../components/Background";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
 import { loadWatchlist, loadWatchHistory, loadRatings } from "../services/storage";
+import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import { formatTimeAgo } from "../utils/helpers";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./Home.css";
@@ -237,6 +238,7 @@ function SpotlightQuote({ quote, onRefresh, loading }) {
 
 function ContinueWatchingRow() {
   const navigate = useNavigate();
+  const prefetch = usePrefetchAnime();
   const [items, setItems] = useState([]);
 
   useEffect(() => {
@@ -296,6 +298,8 @@ function ContinueWatchingRow() {
             key={`${item.animeId}-${item.episode}`}
             className="cw-card"
             onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode}`)}
+            onMouseEnter={() => prefetch.onMouseEnter(item.animeId)}
+            onMouseLeave={prefetch.onMouseLeave}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             whileHover={{ y: -4, transition: { type: "spring", stiffness: 300 } }}
