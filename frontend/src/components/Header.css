@@ -1,17 +1,18 @@
 /* ═══════════════════════════════════════════════════════
-   TOP NAV — Fixed, Scroll-Aware Background
+   TOP NAV — Absolute, Black Glass, Consistent Height
    ═══════════════════════════════════════════════════════ */
 
 .top-nav {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
   z-index: 50;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 32px;
+  padding: 0 32px;
   pointer-events: none;
 }
 
@@ -19,24 +20,13 @@
   pointer-events: auto;
 }
 
-/* ─── Scroll background (fades in) ────────────────────── */
 .top-nav-bg {
   position: absolute;
   inset: 0;
-  background: rgba(5, 5, 8, 0.95);
+  background: rgba(5, 5, 8, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  transition: opacity 0.05s linear;
-}
-
-.top-nav-bg-border {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.06);
-  transition: opacity 0.1s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 /* ─── Left ────────────────────────────────────────────── */
@@ -139,7 +129,8 @@
 /* ─── Responsive ──────────────────────────────────────── */
 @media (max-width: 768px) {
   .top-nav {
-    padding: 16px 16px;
+    height: 64px;
+    padding: 0 16px;
   }
   .top-nav-search {
     width: 180px;

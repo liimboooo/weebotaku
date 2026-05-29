@@ -5,6 +5,7 @@
 
 .upp {
   min-height: 100vh;
+  padding-top: 72px;
   background: #0a0a0a;
   color: #fff;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;

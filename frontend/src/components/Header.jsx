@@ -1,22 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, Search } from 'lucide-react';
 import './Header.css';
 
 export default function Header() {
   const navigate = useNavigate();
-  const [bgOpacity, setBgOpacity] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    const onScroll = () => {
-      const opacity = Math.min(1, window.scrollY / 100);
-      setBgOpacity(opacity);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   const toggleSidebar = () => window.dispatchEvent(new CustomEvent('sidebar-toggle'));
 
@@ -29,8 +18,7 @@ export default function Header() {
 
   return (
     <nav className="top-nav">
-      <div className="top-nav-bg" style={{ opacity: bgOpacity }} />
-      <div className="top-nav-bg-border" style={{ opacity: Math.min(1, bgOpacity * 2) }} />
+      <div className="top-nav-bg" />
       <div className="top-nav-left">
         <button className="top-nav-hamburger" onClick={toggleSidebar} aria-label="Toggle navigation">
           <Menu size={20} />
