@@ -110,6 +110,13 @@ export default function Header() {
             <div className="search-popout-header">
               <TrendingUp size={12} strokeWidth={2} />
               <span>Results</span>
+              <button
+                className="search-popout-esc"
+                onClick={() => { setShowPopout(false); inputRef.current?.blur(); }}
+                aria-label="Close"
+              >
+                Esc
+              </button>
             </div>
             {searchResults.map((item) => (
               <button
@@ -133,7 +140,9 @@ export default function Header() {
               </button>
             ))}
             <button className="search-popout-footer" onClick={() => doSearch(searchQuery)}>
-              View all results →
+              <Search size={12} strokeWidth={2} />
+              <span>View all results for "{searchQuery}"</span>
+              <span className="search-popout-footer-arrow">→</span>
             </button>
           </div>
         )}
