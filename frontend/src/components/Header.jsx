@@ -1,18 +1,50 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Search, Star, TrendingUp } from 'lucide-react';
+import { Bell, BellOff, LogIn, Menu, Search, Star, TrendingUp } from 'lucide-react';
 import { fetchSearchAnime } from '../services/anilistApi';
+import authService from '../services/authService';
+import {
+  getNotifications,
+  getUnreadCount,
+  markRead,
+  markAllRead,
+} from '../services/notificationService';
 import './Header.css';
+
+function formatTime(ts) {
+  const diff = Date.now() - ts;
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return 'just now';
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(ts).toLocaleDateString();
+}
 
 export default function Header() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [showPopout, setShowPopout] = useState(false);
+  const [showSearchPopout, setShowSearchPopout] = useState(false);
+  const [showNotifPopout, setShowNotifPopout] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(authService.isLoggedIn());
+  const [notifs, setNotifs] = useState([]);
+  const [unread, setUnread] = useState(0);
+
   const inputRef = useRef(null);
-  const popoutRef = useRef(null);
+  const searchPopoutRef = useRef(null);
+  const notifPopoutRef = useRef(null);
+  const notifBtnRef = useRef(null);
   const debounceRef = useRef(null);
+
+  const refreshNotifs = useCallback(() => {
+    setNotifs(getNotifications());
+    setUnread(getUnreadCount());
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -27,6 +59,10 @@ export default function Header() {
         e.preventDefault();
         inputRef.current?.focus();
       }
+      if (e.key === 'Escape') {
+        setShowSearchPopout(false);
+        setShowNotifPopout(false);
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -34,13 +70,40 @@ export default function Header() {
 
   useEffect(() => {
     const onClick = (e) => {
-      if (popoutRef.current && !popoutRef.current.contains(e.target) && e.target !== inputRef.current) {
-        setShowPopout(false);
+      if (
+        searchPopoutRef.current &&
+        !searchPopoutRef.current.contains(e.target) &&
+        e.target !== inputRef.current
+      ) {
+        setShowSearchPopout(false);
+      }
+      if (
+        notifPopoutRef.current &&
+        !notifPopoutRef.current.contains(e.target) &&
+        notifBtnRef.current &&
+        !notifBtnRef.current.contains(e.target)
+      ) {
+        setShowNotifPopout(false);
       }
     };
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
+
+  useEffect(() => {
+    refreshNotifs();
+    const onUpdate = () => refreshNotifs();
+    const onLogout = () => setIsLoggedIn(false);
+    const onLogin = () => setIsLoggedIn(authService.isLoggedIn());
+    window.addEventListener('notification-added', onUpdate);
+    window.addEventListener('auth-logout', onLogout);
+    window.addEventListener('auth-login', onLogin);
+    return () => {
+      window.removeEventListener('notification-added', onUpdate);
+      window.removeEventListener('auth-logout', onLogout);
+      window.removeEventListener('auth-login', onLogin);
+    };
+  }, [refreshNotifs]);
 
   const toggleSidebar = () => window.dispatchEvent(new CustomEvent('sidebar-toggle'));
 
@@ -48,31 +111,47 @@ export default function Header() {
     if (q.trim()) {
       navigate(`/search?q=${encodeURIComponent(q.trim())}`);
       setSearchQuery('');
-      setShowPopout(false);
+      setShowSearchPopout(false);
       inputRef.current?.blur();
     }
   };
 
-  const handleKeyDown = (e) => {
+  const handleSearchKey = (e) => {
     if (e.key === 'Enter') doSearch(searchQuery);
-    if (e.key === 'Escape') setShowPopout(false);
   };
 
-  const handleChange = (val) => {
+  const handleSearchChange = (val) => {
     setSearchQuery(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!val.trim()) { setSearchResults([]); setShowPopout(false); return; }
+    if (!val.trim()) { setSearchResults([]); setShowSearchPopout(false); return; }
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await fetchSearchAnime(val, 1);
         setSearchResults(res.data.slice(0, 8));
-        setShowPopout(true);
+        setShowSearchPopout(true);
       } catch { setSearchResults([]); }
     }, 300);
   };
 
-  const handleFocus = () => {
-    if (searchResults.length > 0) setShowPopout(true);
+  const handleSearchFocus = () => {
+    if (searchResults.length > 0) setShowSearchPopout(true);
+  };
+
+  const toggleNotifPopout = () => {
+    setShowNotifPopout(v => !v);
+    setShowSearchPopout(false);
+  };
+
+  const handleNotifClick = async (n) => {
+    if (!n.read) await markRead(n.id);
+    setShowNotifPopout(false);
+    if (n.link) navigate(n.link);
+    refreshNotifs();
+  };
+
+  const handleMarkAllRead = async () => {
+    await markAllRead();
+    refreshNotifs();
   };
 
   return (
@@ -98,21 +177,21 @@ export default function Header() {
             type="text"
             placeholder="Search"
             value={searchQuery}
-            onChange={(e) => handleChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={handleFocus}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onKeyDown={handleSearchKey}
+            onFocus={handleSearchFocus}
           />
           <span className="search-kbd">⌘K</span>
         </div>
 
-        {showPopout && searchResults.length > 0 && (
-          <div className="search-popout" ref={popoutRef}>
+        {showSearchPopout && searchResults.length > 0 && (
+          <div className="search-popout" ref={searchPopoutRef}>
             <div className="search-popout-header">
               <TrendingUp size={12} strokeWidth={2} />
               <span>Results</span>
               <button
                 className="search-popout-esc"
-                onClick={() => { setShowPopout(false); inputRef.current?.blur(); }}
+                onClick={() => { setShowSearchPopout(false); inputRef.current?.blur(); }}
                 aria-label="Close"
               >
                 Esc
@@ -122,7 +201,7 @@ export default function Header() {
               <button
                 key={item.id}
                 className="search-popout-item"
-                onClick={() => { navigate(`/anime/${item.id}?ep=1`); setShowPopout(false); setSearchQuery(''); inputRef.current?.blur(); }}
+                onClick={() => { navigate(`/anime/${item.id}?ep=1`); setShowSearchPopout(false); setSearchQuery(''); inputRef.current?.blur(); }}
               >
                 <div className="spi-img">
                   <img src={item.img} alt={item.name} />
@@ -144,6 +223,85 @@ export default function Header() {
               <span>View all results for "{searchQuery}"</span>
               <span className="search-popout-footer-arrow">→</span>
             </button>
+          </div>
+        )}
+
+        {/* Login CTA OR Notification bell */}
+        {!isLoggedIn ? (
+          <button className="top-nav-signin" onClick={() => navigate('/auth')}>
+            <LogIn size={13} strokeWidth={2} />
+            <span>Sign in</span>
+          </button>
+        ) : (
+          <div className="top-nav-notif-wrap">
+            <button
+              ref={notifBtnRef}
+              className={`top-nav-notif${showNotifPopout ? ' is-open' : ''}`}
+              onClick={toggleNotifPopout}
+              aria-label="Notifications"
+            >
+              <Bell size={15} strokeWidth={1.75} />
+              {unread > 0 && (
+                <span className="notif-badge">{unread > 9 ? '9+' : unread}</span>
+              )}
+            </button>
+
+            {showNotifPopout && (
+              <div className="notif-popout" ref={notifPopoutRef}>
+                <div className="notif-popout-header">
+                  <span className="notif-popout-title">
+                    Notifications
+                    {unread > 0 && <span className="notif-popout-count">{unread}</span>}
+                  </span>
+                  {notifs.length > 0 && unread > 0 && (
+                    <button className="notif-mark-all" onClick={handleMarkAllRead}>
+                      Mark all read
+                    </button>
+                  )}
+                  <button
+                    className="search-popout-esc"
+                    onClick={() => setShowNotifPopout(false)}
+                    aria-label="Close"
+                  >
+                    Esc
+                  </button>
+                </div>
+
+                <div className="notif-popout-list">
+                  {notifs.length === 0 ? (
+                    <div className="notif-empty">
+                      <BellOff size={18} strokeWidth={1.5} />
+                      <span>You're all caught up</span>
+                      <small>New notifications will show up here.</small>
+                    </div>
+                  ) : (
+                    notifs.slice(0, 8).map((n) => (
+                      <button
+                        key={n.id}
+                        className={`notif-item${n.read ? '' : ' is-unread'}`}
+                        onClick={() => handleNotifClick(n)}
+                      >
+                        <span className="notif-dot" />
+                        <div className="notif-info">
+                          <span className="notif-title">{n.title}</span>
+                          {n.body && <span className="notif-body">{n.body}</span>}
+                          <span className="notif-time">{formatTime(n.time)}</span>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+
+                <button
+                  className="search-popout-footer"
+                  onClick={() => { setShowNotifPopout(false); navigate('/settings'); }}
+                >
+                  <Bell size={12} strokeWidth={2} />
+                  <span>Notification settings</span>
+                  <span className="search-popout-footer-arrow">→</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
