@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Trash2, Play, X, Compass, Sparkles, Film } from "lucide-react";
 
-import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
 import { loadWatchHistory, clearWatchHistory as clearStorageHistory, removeFromWatchHistory } from "../services/storage";
 import authService from "../services/authService";
@@ -70,7 +69,6 @@ export default function HistoryPage() {
   return (
     <AnimatedPage>
       <div className="hp">
-        <Background />
         <div className="hp-bg-ornament" />
 
         <main className="hp-shell">

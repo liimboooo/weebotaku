@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Loader from "../components/Loader";
-import Background from "../components/Background";
 import { fetchTopAnime, fetchSearchAnime, fetchAnimeGenres } from "../services/anilistApi";
 import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import { loadWatchlist, addToWatchlist, removeFromWatchlist, loadWatchHistory } from "../services/storage";
@@ -338,7 +337,6 @@ export default function Browse() {
   return (
     <AnimatedPage>
       <div className="br">
-        <Background />
         <div className="br-bg-ornament" />
 
         <main className="br-shell">

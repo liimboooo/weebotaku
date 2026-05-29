@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Search, Star, Play, Sparkles, X, ArrowUpDown } from "lucide-react";
-import Background from "../components/Background";
 import AnimatedPage from "../components/AnimatedPage";
 import { loadWatchlist, removeFromWatchlist, loadWatchHistory } from "../services/storage";
 import authService from "../services/authService";
@@ -81,7 +80,6 @@ export default function WatchlistPage() {
   return (
     <AnimatedPage>
       <div className="wl">
-        <Background />
         <div className="wl-bg-ornament" />
 
         <main className="wl-shell">

@@ -9,7 +9,6 @@ import { useGSAP } from "@gsap/react";
 import AnimatedPage from "../components/AnimatedPage";
 import Skeleton from "../components/Skeleton";
 import Loader from "../components/Loader";
-import Background from "../components/Background";
 import { fetchSearchAnime, fetchTopAnime, fetchAnimeGenres } from "../services/anilistApi";
 import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import { addToWatchlist, removeFromWatchlist, loadWatchlist } from "../services/storage";
@@ -148,7 +147,6 @@ export default function SearchPage() {
   return (
     <AnimatedPage>
       <div className="search-page">
-        <Background />
 
         <div className="discovery-header">
           <div className="search-page-input-wrap">

@@ -29,7 +29,6 @@ import {
 import AnimatedPage from "../components/AnimatedPage";
 import Skeleton from "../components/Skeleton";
 import Categories from "../components/Categories";
-import Background from "../components/Background";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
 import { loadWatchlist, loadWatchHistory, loadRatings } from "../services/storage";
@@ -645,7 +644,6 @@ export default function Home() {
     return (
       <AnimatedPage>
         <div className="home-container">
-          <Background />
           <div className="home-loading">
             {[1, 2, 3].map(i => (
               <div key={i} className="home-loading-section">
@@ -675,8 +673,6 @@ export default function Home() {
       />
 
       <div className="home-container">
-        <Background />
-
         <StatsBar />
 
         <GenreBar genres={categories} />
