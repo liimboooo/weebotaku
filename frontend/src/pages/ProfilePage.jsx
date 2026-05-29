@@ -3,15 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { removeFromWatchlist, updateListStatus } from "../services/storage";
 import authService from "../services/authService";
-import friendService from "../services/friendService";
-import * as roomService from "../services/roomService";
-import { addNotification } from "../services/notificationService";
 import { setPolledRemoteUserId } from "../services/socket";
 import AnimatedPage from "../components/AnimatedPage";
 import {
   Bookmark, Eye, Clock, CheckCircle, Pause, XCircle,
-  Share2, UserPlus, Plus, Star, Edit3, Trash2,
-  Calendar, LogOut, Search, Settings, Play,
+  Share2, Plus, Star, Edit3, Trash2,
+  Calendar, LogOut, Search, Settings,
   Heart, Film, BookOpen, Globe, MessageCircle,
 } from "lucide-react";
 import useDocumentTitle from "../hooks/useDocumentTitle";
@@ -59,12 +56,6 @@ export default function ProfilePage() {
   const [socialLinks, setSocialLinks] = useState({});
   const [userResults, setUserResults] = useState([]);
   const [remoteUserId, setRemoteUserId] = useState(null);
-  const [friendStatus, setFriendStatus] = useState("none");
-  const [friendshipId, setFriendshipId] = useState(null);
-  const [isRequester, setIsRequester] = useState(false);
-  const [showWatchModal, setShowWatchModal] = useState(false);
-  const [watchRoomName, setWatchRoomName] = useState("");
-  const [creatingRoom, setCreatingRoom] = useState(false);
 
   const loadProfileData = useCallback(async () => {
     if (isRemoteProfile) return;
@@ -112,13 +103,6 @@ export default function ProfilePage() {
             const uid = u.id || u._id;
             setRemoteUserId(uid);
             setPolledRemoteUserId(uid);
-            friendService.getFriendshipStatus(uid).then(r => {
-              if (r?.data) {
-                setFriendStatus(r.data.status);
-                setFriendshipId(r.data.friendshipId || null);
-                setIsRequester(!!r.data.isRequester);
-              }
-            }).catch(() => {});
             if (u.watchlist) {
               setWatchlist(u.watchlist.map(item => ({
                 id: item.animeId, name: item.name, img: item.img,
@@ -155,40 +139,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!isRemoteProfile || !remoteUserId) return;
-
-    const recheck = () => {
-      friendService.getFriendshipStatus(remoteUserId).then(r => {
-        if (r?.data) {
-          setFriendStatus(r.data.status);
-          setFriendshipId(r.data.friendshipId || null);
-          setIsRequester(!!r.data.isRequester);
-        }
-      }).catch(() => {});
-    };
-
-    const onNotif = (e) => {
-      const n = e.detail;
-      if (!n?.type || !n?.fromUser) return;
-      if ((n.type === 'friend_accepted' || n.type === 'friend_request') && String(n.fromUser) === String(remoteUserId)) {
-        recheck();
-      }
-    };
-
-    const onFStatus = (e) => {
-      const data = e.detail;
-      if (data?.userId && String(data.userId) === String(remoteUserId)) {
-        setFriendStatus(data.status);
-        setFriendshipId(data.friendshipId);
-      }
-    };
-
-    window.addEventListener('server-notification', onNotif);
-    window.addEventListener('friend-status-changed', onFStatus);
-    return () => {
-      setPolledRemoteUserId(null);
-      window.removeEventListener('server-notification', onNotif);
-      window.removeEventListener('friend-status-changed', onFStatus);
-    };
+    return () => { setPolledRemoteUserId(null); };
   }, [remoteUserId, isRemoteProfile]);
 
   const handleRemove = (animeId, e) => {
@@ -327,47 +278,6 @@ export default function ProfilePage() {
               <button className="upp-action-btn" onClick={() => { if (navigator.share) navigator.share({ title: username, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
                 <Share2 size={14} /> Share
               </button>
-              {isRemoteProfile && remoteUserId && (
-                friendStatus === "pending" && friendshipId && !isRequester ? (
-                  <div className="upp-follow-actions">
-                    <button className="upp-action-btn upp-action-btn--accept" onClick={async () => { try { await friendService.acceptRequest(friendshipId); setFriendStatus("accepted"); } catch { addNotification("Failed to accept request", "error"); } }}>
-                      Accept
-                    </button>
-                    <button className="upp-action-btn upp-action-btn--reject" onClick={async () => { try { await friendService.rejectRequest(friendshipId); setFriendStatus("none"); setFriendshipId(null); } catch { addNotification("Failed to reject request", "error"); } }}>
-                      Reject
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    className="upp-action-btn upp-action-btn--follow"
-                    onClick={async () => {
-                      try {
-                        if (friendStatus === "none") {
-                          await friendService.sendRequest(remoteUserId);
-                          setFriendStatus("pending");
-                          setIsRequester(true);
-                        } else if (friendStatus === "pending" && isRequester) {
-                          await friendService.rejectRequest(friendshipId);
-                          setFriendStatus("none");
-                          setFriendshipId(null);
-                          setIsRequester(false);
-                        } else if (friendStatus === "accepted") {
-                          await friendService.removeFriend(remoteUserId);
-                          setFriendStatus("none");
-                        }
-                      } catch { addNotification("Action failed. Try again.", "error"); }
-                    }}
-                  >
-                    <UserPlus size={14} />
-                    {friendStatus === "none" ? "Follow" : friendStatus === "pending" ? "Requested" : "Friends"}
-                  </button>
-                )
-              )}
-              {isRemoteProfile && remoteUserId && friendStatus === "accepted" && (
-                <button className="upp-action-btn" onClick={() => { setWatchRoomName(`${username}'s Watch`); setShowWatchModal(true); }}>
-                  <Play size={14} /> Watch Together
-                </button>
-              )}
               {isOwnProfile && (
                 <button className="upp-action-btn" onClick={() => navigate("/settings")}>
                   <Settings size={14} /> Settings
@@ -380,55 +290,6 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
-
-          {/* ── Watch Together Modal ── */}
-          {showWatchModal && (
-            <div className="upp-modal-overlay" onClick={() => setShowWatchModal(false)}>
-              <div className="upp-modal" onClick={e => e.stopPropagation()}>
-                <h3 className="upp-modal-title">Watch Together</h3>
-                <p className="upp-modal-desc">A private room will be created and <strong>{username}</strong> will be notified.</p>
-                <div className="upp-field">
-                  <label>Room Name</label>
-                  <input
-                    className="upp-input"
-                    value={watchRoomName}
-                    onChange={e => setWatchRoomName(e.target.value)}
-                    placeholder="My Watch Party"
-                    autoFocus
-                    maxLength={100}
-                  />
-                </div>
-                <div className="upp-modal-foot">
-                  <button className="upp-btn-ghost" onClick={() => setShowWatchModal(false)}>Cancel</button>
-                  <button
-                    className="upp-btn-primary"
-                    disabled={!watchRoomName.trim() || creatingRoom}
-                    onClick={async () => {
-                      setCreatingRoom(true);
-                      try {
-                        const res = await roomService.createRoom({
-                          name: watchRoomName.trim(),
-                          privacy: 'encrypted',
-                          inviteUserIds: [remoteUserId],
-                        });
-                        if (res.success) {
-                          setShowWatchModal(false);
-                          navigate(`/watch-together?room=${res.data._id}`);
-                        } else {
-                          addNotification({ title: "Room Error", body: res.message || "Failed to create room", type: "error" });
-                        }
-                      } catch {
-                        addNotification({ title: "Room Error", body: "Failed to create room. Try again.", type: "error" });
-                      }
-                      setCreatingRoom(false);
-                    }}
-                  >
-                    {creatingRoom ? "Creating..." : "Create & Invite"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* ── WATCHLIST ── */}
           <div className="upp-watchlist-section">

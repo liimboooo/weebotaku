@@ -24,10 +24,7 @@ const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage"));
 const Browse = lazy(() => import("./pages/Browse"));
-const MangaVault = lazy(() => import("./pages/MangaVault"));
-const MangaDetail = lazy(() => import("./pages/MangaDetail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const FriendsPage = lazy(() => import("./pages/Friends/FriendsPage"));
 
 const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
@@ -90,17 +87,14 @@ function AppLayout() {
           <Route path="/auth/sync/anilist/callback" element={<Suspense fallback={null}><SyncCallbackAniList /></Suspense>} />
           <Route path="/home" element={<RouteShell><Home /></RouteShell>} />
           <Route path="/browse/anime" element={<RouteShell><Browse /></RouteShell>} />
-          <Route path="/browse/manga" element={<RouteShell><MangaVault /></RouteShell>} />
           <Route path="/settings" element={<RouteShell><SettingsPage /></RouteShell>} />
           <Route path="/anime/:id" element={<RouteShell><AnimeDetail /></RouteShell>} />
           <Route path="/anime/:id/info" element={<RouteShell><AnimeInfo /></RouteShell>} />
-          <Route path="/manga/:id" element={<RouteShell><MangaDetail /></RouteShell>} />
           <Route path="/search" element={<RouteShell><SearchPage /></RouteShell>} />
           <Route path="/watchlist" element={<RouteShell><WatchlistPage /></RouteShell>} />
           <Route path="/profile" element={<RouteShell><ProtectedRoute><ProfilePage /></ProtectedRoute></RouteShell>} />
           <Route path="/profile/:username" element={<RouteShell><ProfilePage /></RouteShell>} />
           <Route path="/history" element={<RouteShell><HistoryPage /></RouteShell>} />
-          <Route path="/friends" element={<RouteShell><ProtectedRoute><FriendsPage /></ProtectedRoute></RouteShell>} />
           <Route path="*" element={<RouteShell><NotFound /></RouteShell>} />
         </Routes>
       </AnimatePresence>

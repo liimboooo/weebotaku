@@ -2,34 +2,22 @@ const Review = require('../models/Review');
 const Notification = require('../models/Notification');
 const { emitNotification } = require('./notifyHelper');
 
-// @route   POST /api/reviews
-// @access  Private
 exports.createReview = async (req, res) => {
   try {
-    const { animeId, mangaId, rating, title, content, isSpoiler } = req.body;
+    const { animeId, rating, title, content, isSpoiler } = req.body;
 
-    if (!rating || !title || !content) {
-      return res.status(400).json({ success: false, message: 'Please provide rating, title, and content' });
+    if (!animeId || !rating || !title || !content) {
+      return res.status(400).json({ success: false, message: 'Please provide animeId, rating, title, and content' });
     }
 
-    if (!animeId && !mangaId) {
-      return res.status(400).json({ success: false, message: 'Please provide animeId or mangaId' });
-    }
-
-    // Check for existing review
-    const query = { user: req.user.id };
-    if (animeId) query.animeId = animeId;
-    if (mangaId) query.mangaId = mangaId;
-
-    const existing = await Review.findOne(query);
+    const existing = await Review.findOne({ user: req.user.id, animeId });
     if (existing) {
       return res.status(400).json({ success: false, message: 'You already reviewed this' });
     }
 
     const review = await Review.create({
       user: req.user.id,
-      animeId: animeId || null,
-      mangaId: mangaId || null,
+      animeId,
       rating,
       title,
       content,
@@ -48,8 +36,6 @@ exports.createReview = async (req, res) => {
   }
 };
 
-// @route   GET /api/reviews/:type/:id
-// @access  Public
 exports.getReviews = async (req, res) => {
   try {
     const { type, id } = req.params;
@@ -58,7 +44,7 @@ exports.getReviews = async (req, res) => {
     const skip = (page - 1) * limit;
     const sort = req.query.sort || 'recent';
 
-    const query = type === 'anime' ? { animeId: parseInt(id) } : { mangaId: id };
+    const query = { animeId: parseInt(id) };
 
     let sortObj;
     switch (sort) {
@@ -92,8 +78,6 @@ exports.getReviews = async (req, res) => {
   }
 };
 
-// @route   PUT /api/reviews/:id
-// @access  Private
 exports.updateReview = async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);
@@ -119,8 +103,6 @@ exports.updateReview = async (req, res) => {
   }
 };
 
-// @route   POST /api/reviews/:id/helpful
-// @access  Private
 exports.markHelpful = async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);
@@ -143,8 +125,6 @@ exports.markHelpful = async (req, res) => {
   }
 };
 
-// @route   POST /api/reviews/:id/reply
-// @access  Private
 exports.addReply = async (req, res) => {
   try {
     const { content } = req.body;
@@ -169,8 +149,6 @@ exports.addReply = async (req, res) => {
   }
 };
 
-// @route   POST /api/reviews/:id/like
-// @access  Private
 exports.likeReview = async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);
@@ -194,7 +172,7 @@ exports.likeReview = async (req, res) => {
         type: 'review_like',
         title: `${req.user.username} liked your review`,
         body: review.title || review.content?.slice(0, 100) || '',
-        link: review.animeId ? `/anime/${review.animeId}/info` : `/manga/${review.mangaId}/info`,
+        link: `/anime/${review.animeId}/info`,
         fromUser: req.user.id,
       });
       emitNotification(review.user, notif);
@@ -207,8 +185,6 @@ exports.likeReview = async (req, res) => {
   }
 };
 
-// @route   DELETE /api/reviews/:id
-// @access  Private
 exports.deleteReview = async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);

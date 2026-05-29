@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AnimatedPage from "../components/AnimatedPage";
 
 import Background from "../components/Background";
-import { Home, Search, BookOpen, Play, ArrowLeft } from "lucide-react";
+import { Home, Search, Play, ArrowLeft } from "lucide-react";
 import { loadWatchHistory } from "../services/storage";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./NotFound.css";
@@ -46,9 +46,6 @@ export default function NotFound() {
             </button>
             <button className="nf-btn" onClick={() => navigate("/browse/anime")}>
               <Search size={16} /> Browse Anime
-            </button>
-            <button className="nf-btn" onClick={() => navigate("/browse/manga")}>
-              <BookOpen size={16} /> Browse Manga
             </button>
           </div>
         </div>

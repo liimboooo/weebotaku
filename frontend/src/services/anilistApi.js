@@ -96,25 +96,6 @@ function mapAnime(a) {
   };
 }
 
-function mapManga(m) {
-  const author = m.staff?.edges?.find(e => e.role === "Story & Art" || e.role === "Story")?.node?.name?.full || m.staff?.edges?.[0]?.node?.name?.full || "Unknown";
-  return {
-    id: m.id,
-    title: m.title?.english || m.title?.romaji || "",
-    author,
-    cover: m.coverImage?.extraLarge || m.coverImage?.large || "",
-    demo: "Unknown",
-    status: statusLabel(m.status),
-    ch: m.chapters || 0,
-    volumes: m.volumes || 0,
-    last: Math.floor((m.chapters || 0) * 0.8) || 0,
-    rating: (m.averageScore || 0) / 10,
-    genres: m.genres || [],
-    desc: m.description || "",
-    progress: 0,
-  };
-}
-
 function getCurrentSeason() {
   const m = new Date().getMonth();
   if (m >= 0 && m <= 2) return "winter";
@@ -210,20 +191,6 @@ export async function fetchAnimeRecommendations(id) {
         };
       });
   } catch { return []; }
-}
-
-const MANGA_FIELDS = `id title { romaji english } coverImage { large extraLarge } averageScore chapters volumes genres description status staff(perPage:3) { edges { node { name { full } } role } }`;
-
-export async function fetchTopManga(page = 1) {
-  const q = `query($page:Int){Page(page:$page,perPage:25){pageInfo{hasNextPage}media(sort:TRENDING_DESC,type:MANGA){${MANGA_FIELDS}}}}`;
-  const data = await gql(q, { page: Math.min(page, 50) });
-  return { data: (data?.Page?.media || []).map(mapManga), pagination: { hasNextPage: data?.Page?.pageInfo?.hasNextPage || false, currentPage: page } };
-}
-
-export async function fetchSearchManga(query, page = 1) {
-  const q = `query($page:Int,$search:String){Page(page:$page,perPage:25){pageInfo{hasNextPage}media(search:$search,type:MANGA,sort:SEARCH_MATCH){${MANGA_FIELDS}}}}`;
-  const data = await gql(q, { page: Math.min(page, 50), search: query });
-  return { data: (data?.Page?.media || []).map(mapManga), pagination: { hasNextPage: data?.Page?.pageInfo?.hasNextPage || false, currentPage: page } };
 }
 
 export async function fetchAiringSchedule({ anilistId, malId } = {}) {

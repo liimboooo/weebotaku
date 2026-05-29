@@ -7,12 +7,10 @@ import {
   ChevronDown,
   Film,
   Gift,
-  BookOpen,
   LogOut,
   Globe,
   Menu,
   Settings,
-  Users,
   X,
 } from 'lucide-react';
 import authService from '../services/authService';
@@ -192,22 +190,9 @@ export default function Header() {
                       <span className="explore-item-description">All anime, filters & tags</span>
                     </div>
                   </motion.button>
-                  <motion.button className="explore-item" onClick={() => navigateTo('/browse/manga')}
-                    initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-                    <span className="explore-item-icon"><BookOpen size={16} /></span>
-                    <div>
-                      <span className="explore-item-label">Browse Manga</span>
-                      <span className="explore-item-description">Manga vault & chapters</span>
-                    </div>
-                  </motion.button>
                 </motion.div>
               )}
             </div>
-
-            <button className={`nav-link ${path === '/friends' ? 'active' : ''}`} onClick={() => navigateTo('/friends')}>
-              <Users size={16} />
-              <span>Friends</span>
-            </button>
 
             <button className={`nav-link ${path === '/settings' ? 'active' : ''}`} onClick={() => navigateTo('/settings')}>
               <Settings size={16} />

@@ -1,10 +1,9 @@
 import api from './api';
 
 class ReviewService {
-  async createReview(animeId, mangaId, rating, title, content, isSpoiler = false) {
+  async createReview(animeId, rating, title, content, isSpoiler = false) {
     return api.post('/reviews', {
       animeId,
-      mangaId,
       rating,
       title,
       content,

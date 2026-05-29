@@ -23,7 +23,6 @@ export default function Footer() {
             <div className="footer-links-col">
               <span className="footer-links-title"><Film size={12} /> Browse</span>
               <button onClick={() => navigate("/browse/anime")}>Anime</button>
-              <button onClick={() => navigate("/browse/manga")}>Manga</button>
             </div>
             <div className="footer-links-col">
               <span className="footer-links-title"><Users size={12} /> Community</span>

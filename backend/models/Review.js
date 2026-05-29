@@ -8,11 +8,7 @@ const ReviewSchema = new mongoose.Schema({
   },
   animeId: {
     type: Number,
-    default: null,
-  },
-  mangaId: {
-    type: String,
-    default: null,
+    required: [true, 'Please provide an anime ID'],
   },
   rating: {
     type: Number,
@@ -50,9 +46,7 @@ const ReviewSchema = new mongoose.Schema({
   }],
 }, { timestamps: true });
 
-ReviewSchema.index({ user: 1, animeId: 1 }, { unique: true, sparse: true });
-ReviewSchema.index({ user: 1, mangaId: 1 }, { unique: true, sparse: true });
+ReviewSchema.index({ user: 1, animeId: 1 }, { unique: true });
 ReviewSchema.index({ animeId: 1, createdAt: -1 });
-ReviewSchema.index({ mangaId: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Review', ReviewSchema);

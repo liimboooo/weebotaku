@@ -57,7 +57,7 @@ app.use('/api/auth/password/forgot', authLimiter);
 // ─── Routes ──────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/anime', require('./routes/anime'));
-app.use('/api/manga', require('./routes/manga'));
+
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/news', require('./routes/news'));
 app.use('/api/tierlists', require('./routes/tierlists'));
@@ -67,7 +67,7 @@ app.use('/api/comments', require('./routes/comments'));
 app.use('/api/scrape', require('./routes/scrape'));
 app.use('/api/config', require('./routes/config'));
 app.use('/api/badges', require('./routes/badges'));
-app.use('/api/friends', require('./routes/friends'));
+
 app.use('/api/leaderboard', require('./routes/leaderboard'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/stream', require('./routes/stream'));

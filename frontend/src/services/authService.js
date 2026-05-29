@@ -26,21 +26,6 @@ function storeUserData(user) {
     localStorage.setItem(STORAGE_KEYS.WATCHLIST, JSON.stringify(mapped));
   }
 
-  if (user.readlist) {
-    const mapped = user.readlist.map(item => ({
-      id: item.mangaId,
-      title: item.title,
-      cover: item.cover,
-      author: item.author,
-      rating: item.rating,
-      ch: item.ch,
-      status: item.status,
-      demo: item.demo,
-      type: 'manga',
-    }));
-    localStorage.setItem(STORAGE_KEYS.MANGA_READ_LIST, JSON.stringify(mapped));
-  }
-
   if (user.watchHistory) {
     const mapped = user.watchHistory.map(item => ({
       animeId: item.animeId,
@@ -60,9 +45,6 @@ function storeUserData(user) {
     localStorage.setItem(STORAGE_KEYS.LIKED_ANIME, JSON.stringify(user.likedAnime));
   }
 
-  if (user.mangaProgress) {
-    localStorage.setItem(STORAGE_KEYS.MANGA_PROGRESS, JSON.stringify(user.mangaProgress));
-  }
 }
 
 class AuthService {

@@ -85,76 +85,6 @@ export function updateListStatus(animeId, listStatus) {
   }
 }
 
-// â”€â”€â”€ Readlist (Manga) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-export function loadReadlist() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.MANGA_READ_LIST) || "[]");
-  } catch { return []; }
-}
-
-export function saveReadlist(list) {
-  localStorage.setItem(STORAGE_KEYS.MANGA_READ_LIST, JSON.stringify(list));
-}
-
-export function addToReadlist(item) {
-  const current = loadReadlist();
-  if (current.some(i => i.id === item.id)) return current;
-  const entry = { ...item, type: "manga" };
-  const next = [...current, entry];
-  saveReadlist(next);
-
-  if (isLoggedIn()) {
-    api.post(`/manga/${item.id}/list`, {
-      title: item.title,
-      cover: item.cover,
-      author: item.author,
-      rating: item.rating,
-      ch: item.ch,
-      status: item.status,
-      demo: item.demo,
-    }).catch(() => {});
-  }
-
-  return next;
-}
-
-export function removeFromReadlist(id) {
-  const current = loadReadlist();
-  const next = current.filter(i => i.id !== id);
-  saveReadlist(next);
-
-  if (isLoggedIn()) {
-    api.delete(`/manga/${id}/list`).catch(() => {});
-  }
-
-  return next;
-}
-
-export function isInReadlist(id) {
-  return loadReadlist().some(i => i.id === id);
-}
-
-// â”€â”€â”€ Manga Progress â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-export function getMangaProgress(mangaId) {
-  try {
-    const progress = JSON.parse(localStorage.getItem(STORAGE_KEYS.MANGA_PROGRESS) || "{}");
-    return progress[mangaId] || 0;
-  } catch { return 0; }
-}
-
-export function setMangaProgress(mangaId, chapter, extra) {
-  let progress;
-  try { progress = JSON.parse(localStorage.getItem(STORAGE_KEYS.MANGA_PROGRESS) || "{}"); } catch { progress = {}; }
-  progress[mangaId] = extra ? { ch: chapter, ...extra } : chapter;
-  localStorage.setItem(STORAGE_KEYS.MANGA_PROGRESS, JSON.stringify(progress));
-
-  if (isLoggedIn()) {
-    api.put('/auth/manga-progress', { mangaId, chapter }).catch(() => {});
-  }
-}
-
 // â”€â”€â”€ Watch History â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function loadWatchHistory() {
@@ -286,22 +216,6 @@ export async function syncFromBackend() {
       saveWatchlist(mapped);
     }
 
-    // Readlist
-    if (u.readlist && u.readlist.length > 0) {
-      const mapped = u.readlist.map(item => ({
-        id: item.mangaId,
-        title: item.title,
-        cover: item.cover,
-        author: item.author,
-        rating: item.rating,
-        ch: item.ch,
-        status: item.status,
-        demo: item.demo,
-        type: 'manga',
-      }));
-      saveReadlist(mapped);
-    }
-
     // Watch history
     if (u.watchHistory && u.watchHistory.length > 0) {
       const mapped = u.watchHistory.map(item => ({
@@ -323,11 +237,6 @@ export async function syncFromBackend() {
     // Liked
     if (u.likedAnime) {
       localStorage.setItem(STORAGE_KEYS.LIKED_ANIME, JSON.stringify(u.likedAnime));
-    }
-
-    // Manga progress
-    if (u.mangaProgress && Object.keys(u.mangaProgress).length > 0) {
-      localStorage.setItem(STORAGE_KEYS.MANGA_PROGRESS, JSON.stringify(u.mangaProgress));
     }
 
     window.dispatchEvent(new CustomEvent(STORAGE_KEYS.PROFILE_DATA_CHANGED));

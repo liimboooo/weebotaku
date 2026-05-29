@@ -54,12 +54,6 @@ export const STATUS_BUCKET_OPTIONS = [
   { value: "Finished", label: "Finished" },
 ];
 
-/** MangaVault page statuses. */
-export const MANGA_STATUSES = ["Ongoing", "Completed", "Hiatus"];
-
-/** Manga demographics. */
-export const MANGA_DEMOGRAPHICS = ["Shonen", "Seinen", "Shojo", "Josei"];
-
 /** Watchlist / list status options. */
 export const LIST_OPTIONS = ["Watch Later", "Watching", "Completed", "On Hold", "Dropped"];
 
@@ -77,9 +71,7 @@ export const STORAGE_KEYS = {
   SOCIAL_LINKS: "socialLinks",
   WATCHLIST: "watchlist",
   ANIME_WATCHLIST: "animewatchlist",
-  MANGA_READ_LIST: "mangareadlist",
   WATCH_HISTORY: "watchHistory",
-  MANGA_PROGRESS: "mangaProgress",
   USER_RATINGS: "userRatings",
   LIKED_ANIME: "likedAnime",
   RECENT_SEARCHES: "recentSearches",

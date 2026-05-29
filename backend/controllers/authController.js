@@ -220,25 +220,6 @@ exports.updateProfile = async (req, res) => {
 };
 
 
-// @route   PUT /api/auth/manga-progress
-exports.updateMangaProgress = async (req, res) => {
-  try {
-    const { mangaId, chapter } = req.body;
-    if (!mangaId) {
-      return res.status(400).json({ success: false, message: 'mangaId required' });
-    }
-
-    const user = await User.findById(req.user.id);
-    user.mangaProgress.set(mangaId, chapter);
-    await user.save();
-
-    res.json({ success: true, mangaProgress: Object.fromEntries(user.mangaProgress) });
-  } catch (error) {
-    console.error('UpdateMangaProgress error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
-
 // @route   PUT /api/auth/list-status
 exports.updateListStatus = async (req, res) => {
   try {
