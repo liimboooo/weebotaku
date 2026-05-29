@@ -140,7 +140,6 @@
   border-radius: 50%;
   background: var(--accent);
   flex-shrink: 0;
-  box-shadow: 0 0 10px var(--accent-glow);
 }
 
 .brand-text {
@@ -407,21 +406,20 @@
   padding: 7px 14px;
   font-size: 12.5px;
   font-weight: 600;
-  color: #000000;
-  background: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
   border-radius: 8px;
   cursor: pointer;
   letter-spacing: -0.005em;
   font-family: var(--font-body);
   transition: all 0.18s var(--ease-out);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .top-nav-signin:hover {
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 .top-nav-signin:active {
@@ -483,7 +481,6 @@
   justify-content: center;
   font-family: var(--font-mono);
   letter-spacing: -0.02em;
-  box-shadow: 0 2px 8px var(--accent-glow);
 }
 
 /* ═══════════════════════════════════════════════════════

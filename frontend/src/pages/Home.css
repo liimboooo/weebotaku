@@ -25,14 +25,7 @@
 }
 
 .home-container::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse at 15% 5%, rgba(255, 255, 255, 0.06), transparent 35%),
-    radial-gradient(ellipse at 85% 5%, rgba(255, 255, 255, 0.02), transparent 25%);
-  opacity: 1;
+  display: none;
 }
 
 /* ─── Loading Skeletons ──────────────────────────────── */

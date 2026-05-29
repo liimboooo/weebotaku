@@ -7,14 +7,7 @@
 }
 
 .watch-bg-ornament {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    repeating-linear-gradient(180deg, rgba(255,255,255,0.008) 0, rgba(255,255,255,0.008) 1px, transparent 1px, transparent 3px),
-    radial-gradient(circle at 80% 0%, rgba(255,255,255,0.08), transparent 50%),
-    radial-gradient(circle at 20% 100%, rgba(255,255,255,0.03), transparent 40%);
-  z-index: 0;
+  display: none;
 }
 
 .watch-shell {
