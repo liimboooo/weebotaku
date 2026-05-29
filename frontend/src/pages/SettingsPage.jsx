@@ -513,7 +513,7 @@ export default function SettingsPage() {
               <span className={`st-badge ${profile.emailVerified ? "st-badge--green" : "st-badge--red"}`}>
                 {profile.emailVerified ? "Verified" : "Unverified"}
               </span>
-              {profile.emailVerified && <span className="st-verify-date">Verified on May 25, 2026</span>}
+              {profile.emailVerified && <span className="st-verify-date">Verified</span>}
             </div>
           </>
         ))}

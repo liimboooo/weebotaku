@@ -479,9 +479,9 @@ export default function AnimeInfo() {
               <h2 className="ai-section-title">Studios</h2>
               <div className="ai-studio-scroll">
                 {anime.studios.map(s => (
-                  <button key={s} className="ai-studio-btn" title={`View ${s} page`}>
+                  <Link key={s} className="ai-studio-btn" to={`/browse/anime?studio=${encodeURIComponent(s)}`} title={`View ${s} page`}>
                     <ExternalLink size={12} /> {s}
-                  </button>
+                  </Link>
                 ))}
               </div>
             </div>
