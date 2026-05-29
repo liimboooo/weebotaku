@@ -2,13 +2,18 @@ const https = require('https');
 
 const PROXY_TIMEOUT = 25000;
 
-function readBody(req) {
+function getBody(req) {
   return new Promise((resolve) => {
-    if (req.body) return resolve(req.body);
+    if (req.body !== undefined && req.body !== null) {
+      const b = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+      return resolve(b);
+    }
+    if (req.readableEnded || req._readableState?.ended) {
+      return resolve('');
+    }
     let raw = '';
     req.on('data', chunk => { raw += chunk; });
     req.on('end', () => resolve(raw));
-    setTimeout(() => resolve(raw), 5000);
   });
 }
 
@@ -43,7 +48,9 @@ module.exports = async (req, res) => {
     }
   }
 
-  const body = await readBody(req);
+  const body = await getBody(req);
+
+  const needBody = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
 
   return new Promise((resolve) => {
     const proxyReq = https.request(options, (proxyRes) => {
@@ -62,11 +69,7 @@ module.exports = async (req, res) => {
             res.setHeader(h, proxyRes.headers[h]);
           }
         }
-        if (resBody) {
-          res.send(resBody);
-        } else {
-          res.end();
-        }
+        res.send(resBody);
         resolve();
       });
     });
@@ -87,13 +90,9 @@ module.exports = async (req, res) => {
       resolve();
     });
 
-    if (!['GET', 'HEAD'].includes(req.method)) {
-      if (body) {
-        proxyReq.setHeader('Content-Length', Buffer.byteLength(body));
-        proxyReq.write(body);
-      } else {
-        proxyReq.setHeader('Content-Length', 0);
-      }
+    if (needBody && body) {
+      proxyReq.setHeader('Content-Length', Buffer.byteLength(body));
+      proxyReq.write(body);
     }
 
     proxyReq.end();
