@@ -1,4 +1,4 @@
-﻿import { statusLabel } from "../utils/constants";
+import { statusLabel } from "../utils/constants";
 const CACHE_TTL = 10 * 60 * 1000;
 const CACHE_MAX = 100;
 const cache = new Map();
@@ -219,7 +219,7 @@ export async function getSchedule() {
   if (cached) return cached;
   try {
     const q = `query{Page(page:1,perPage:50){media(status:RELEASING,sort:POPULARITY_DESC,type:ANIME){${FIELDS}}}}`;
-    const data = await gql(q);
+    await gql(q);
     const results = { "Monday": [], "Tuesday": [], "Wednesday": [], "Thursday": [], "Friday": [], "Saturday": [], "Sunday": [] };
     // AniList doesn't have airing day directly on media, return empty schedule
     setCache("schedule", results);

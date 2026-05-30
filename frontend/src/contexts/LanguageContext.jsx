@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import en from "../locales/en";
 import ar from "../locales/ar";
 import { STORAGE_KEYS } from "../utils/constants";

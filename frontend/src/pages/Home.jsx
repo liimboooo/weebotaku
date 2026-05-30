@@ -1,5 +1,5 @@
 // Home page - main landing page for AnimeWch
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -14,7 +14,6 @@ import {
   Heart,
   Layers,
   Play,
-  Plus,
   RefreshCw,
   Sparkles,
   Star,

@@ -1,4 +1,4 @@
-﻿const REANIME_BASE = process.env.REACT_APP_REANIME_BASE_URL || "https://reanime.to";
+const REANIME_BASE = process.env.REACT_APP_REANIME_BASE_URL || "https://reanime.to";
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 const FETCH_TIMEOUT = 5000;
 
@@ -31,7 +31,7 @@ const titleVariants = (title) => {
 
 const CF_WORKER = "https://anime-proxy.mohamedlimam80000.workers.dev/?url=";
 const FALLBACK_PROXIES = (process.env.REACT_APP_FALLBACK_PROXIES || "").split(",").filter(Boolean);
-const BACKEND_PROXY = `${API_BASE}/scrape/fetch?url=`;
+
 
 const ssCache = new Map();
 const failCache = new Map();

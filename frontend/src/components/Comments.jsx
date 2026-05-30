@@ -512,21 +512,7 @@ function addReplyDeep(list, parentId, reply) {
   });
 }
 
-function toggleLikeDeep(list, id, dir) {
-  return list.map(cm => {
-    if (cm.id === id) return { ...cm, likes: (cm.likes || 0) + dir };
-    if (cm.replies?.length) return { ...cm, replies: toggleLikeDeep(cm.replies, id, dir) };
-    return cm;
-  });
-}
 
-function toggleDislikeDeep(list, id, dir) {
-  return list.map(cm => {
-    if (cm.id === id) return { ...cm, dislikes: (cm.dislikes || 0) + dir };
-    if (cm.replies?.length) return { ...cm, replies: toggleDislikeDeep(cm.replies, id, dir) };
-    return cm;
-  });
-}
 
 function editCommentDeep(list, id, newText) {
   return list.map(cm => {

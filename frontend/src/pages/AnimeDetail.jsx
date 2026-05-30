@@ -2,11 +2,11 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Loader, Play, Star, Tv, Calendar, Clock, Monitor, Search, Film,
-  X, SkipForward, FastForward
+  X, SkipForward
 } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
 import Hls from "hls.js";
-import { findStreamingSource, getEpisodes, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream, getMiruroEpisodes } from "../services/animeApi";
+import { findStreamingSource, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream, getMiruroEpisodes } from "../services/animeApi";
 import { fetchAnimeRecommendations } from "../services/anilistApi";
 import { loadWatchHistory, addToWatchHistory } from "../services/storage";
 import usePrefetchAnime from "../hooks/usePrefetchAnime";
@@ -201,8 +201,6 @@ export default function AnimeDetail() {
 
   const anime = apiAnime;
   useDocumentTitle(anime ? `${anime.name} - Ep ${selectedEp}` : "Loading...");
-  const totalEps = anime?.episodes ?? 12;
-
   useEffect(() => {
     const epFromUrl = searchParams.get("ep");
     if (epFromUrl) { setSelectedEp(Number(epFromUrl)); return; }
@@ -646,7 +644,7 @@ export default function AnimeDetail() {
 
   const langServers = () => servers.filter(s => s.type === language);
 
-  const switchServer = (idx) => {
+  const switchServerFn = (idx) => {
     const srv = langServers()[idx];
     if (srv) {
       setServerIndex(idx);
@@ -697,7 +695,7 @@ export default function AnimeDetail() {
     return new Set(history.filter(h => h.animeId === anime.anilistId).map(h => h.episode));
   }, [anime?.anilistId, episodes]);
 
-  const metadataItems = useMemo(() => {
+  const metadataItemsFn = useMemo(() => {
     const items = [];
     if (anime) {
       if (anime.year) items.push({ label: "Year", value: anime.year, icon: Calendar });

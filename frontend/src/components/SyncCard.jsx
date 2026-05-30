@@ -1,4 +1,4 @@
-import { RefreshCw, ExternalLink, Plug, Unplug, Loader } from "lucide-react";
+import { RefreshCw, Plug, Unplug, Loader } from "lucide-react";
 import { formatTimeAgo } from "../utils/helpers";
 
 const LOGOS = {

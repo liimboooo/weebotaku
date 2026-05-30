@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   Play, Plus, Share2, Heart, Star, ChevronLeft, ChevronRight,
@@ -10,7 +10,6 @@ import { statusLabel, LIST_OPTIONS } from "../utils/constants";
 import { formatDate, formatTimeAgo } from "../utils/helpers";
 import { loadWatchlist, addToWatchlist, removeFromWatchlist, updateListStatus, loadWatchHistory } from "../services/storage";
 import usePrefetchAnime from "../hooks/usePrefetchAnime";
-import authService from "../services/authService";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./AnimeInfo.css";
 

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Shared constants for the animewch app.
  *
  * All status mappings, filter options, storage keys, and other

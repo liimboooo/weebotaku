@@ -1,7 +1,6 @@
-﻿import { statusLabel, STATUS_MAP, FORMAT_MAP, LS_CACHE_PREFIX } from "../utils/constants";
+import { statusLabel, STATUS_MAP, FORMAT_MAP, LS_CACHE_PREFIX } from "../utils/constants";
 
 const CACHE_TTL = 2 * 60 * 1000;
-const DETAIL_CACHE_TTL = 10 * 60 * 1000;
 const CACHE_MAX = 100;
 const cache = new Map();
 const LS_PREFIX = LS_CACHE_PREFIX;

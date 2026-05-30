@@ -10,8 +10,6 @@ export default function SyncCallbackMAL() {
   const navigate = useNavigate();
   const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("");
-  const [imported, setImported] = useState(0);
-
   useEffect(() => {
     const code = searchParams.get("code");
     if (!code) { setStatus("error"); setMessage("No authorization code received"); return; }
@@ -24,7 +22,6 @@ export default function SyncCallbackMAL() {
         const res = await authService.syncMALCallback(code, codeVerifier);
         if (res?.success) {
           setStatus("success");
-          setImported(res.imported || 0);
           setMessage(`Connected to MAL! Synced ${res.imported || 0} titles.`);
           setTimeout(() => navigate("/settings?page=integrations", { replace: true }), 2500);
         } else {

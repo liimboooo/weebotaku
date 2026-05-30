@@ -2,13 +2,13 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
-  Loader, Play,
+  Loader,
   Star, Monitor, Search, Calendar, Clock, Tv, Film,
   X
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Hls from "hls.js";
-import { getEpisodes, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream } from "../../services/animeApi";
+import { getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream } from "../../services/animeApi";
 import { fetchAnimeRecommendations } from "../../services/anilistApi";
 import { addToWatchHistory } from "../../services/storage";
 import Comments from "../../components/Comments";
@@ -346,7 +346,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     }
   }, [filteredEpisodes.length]);
 
-  const switchServer = (idx) => {
+  const switchServerFn = (idx) => {
     const srv = filteredServers[idx];
     if (srv) {
       setServerIndex(idx);
@@ -380,7 +380,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     }
   }, [serverIndex, filteredServers, makeStreamUrl, streamMode]);
 
-  const metadataItems = useMemo(() => {
+  const metadataItemsFn = useMemo(() => {
     const items = [];
     if (detail) {
       if (detail.year) items.push({ label: "Year", value: detail.year, icon: Calendar });

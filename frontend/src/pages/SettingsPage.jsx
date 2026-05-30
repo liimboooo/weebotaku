@@ -12,7 +12,7 @@ import {
   Eye, EyeOff, LogOut, Sun, Moon, Monitor,
   CheckCircle, X, Trash2,
   AlertTriangle,
-  ChevronLeft, RefreshCw, ArrowRight, Mail,
+  ChevronLeft, ArrowRight,
 } from "lucide-react";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./SettingsPage.css";
@@ -101,11 +101,6 @@ export default function SettingsPage() {
     })();
   }, []);
 
-  const [syncStates, setSyncStates] = useState({
-    malSyncing: false, aniSyncing: false,
-    malLastSync: syncInit.current.malLastSync,
-    aniLastSync: syncInit.current.aniLastSync,
-  });
   const [syncStatus, setSyncStatus] = useState({ mal: { connected: false }, anilist: { connected: false } });
   const [syncLoading, setSyncLoading] = useState({ mal: false, anilist: false });
 
