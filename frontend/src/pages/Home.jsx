@@ -23,6 +23,7 @@ import {
   Users,
   Volume2,
   VolumeX,
+  X,
   Zap,
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
@@ -32,9 +33,8 @@ import TopUpcoming from "../components/TopUpcoming";
 import Footer from "../components/Footer";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
-import { loadWatchlist, loadWatchHistory, loadRatings } from "../services/storage";
+import { loadWatchlist, loadWatchHistory, loadRatings, removeFromWatchHistory } from "../services/storage";
 import usePrefetchAnime from "../hooks/usePrefetchAnime";
-import { formatTimeAgo } from "../utils/helpers";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./Home.css";
 
@@ -237,10 +237,25 @@ function SpotlightQuote({ quote, onRefresh, loading }) {
 }
 
 
+// Seconds -> "m:ss" (e.g. 112 -> "1:52")
+function formatClock(totalSeconds) {
+  const s = Math.max(0, Math.floor(totalSeconds || 0));
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
 function ContinueWatchingRow() {
   const navigate = useNavigate();
   const prefetch = usePrefetchAnime();
   const [items, setItems] = useState([]);
+
+  const handleRemove = (item) => {
+    removeFromWatchHistory(item.timestamp);
+    setItems((prev) =>
+      prev.filter((i) => !(i.animeId === item.animeId && i.episode === item.episode))
+    );
+  };
 
   useEffect(() => {
     const stored = loadWatchHistory();
@@ -292,37 +307,58 @@ function ContinueWatchingRow() {
 
   return (
     <section className="home-section">
-      <SectionHeader icon={Clock} title="Continue Watching" subtitle="Pick up where you left off" />
+      <div className="cw-header">
+        <h2 className="cw-header-title">Continue Watching</h2>
+        <button className="cw-see-all" onClick={() => navigate("/history")}>
+          See All →
+        </button>
+      </div>
       <div className="cw-scroll">
-        {items.map((item) => (
-          <motion.div
-            key={`${item.animeId}-${item.episode}`}
-            className="cw-card"
-            onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode}`)}
-            onMouseEnter={() => prefetch.onMouseEnter(item.animeId)}
-            onMouseLeave={prefetch.onMouseLeave}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            whileHover={{ y: -4, transition: { type: "spring", stiffness: 300 } }}
-          >
-            <div className="cw-card-img">
-              <img src={item.img} alt={item.name} loading="lazy" decoding="async" />
-              <div className="cw-card-ep">EP {item.episode}</div>
-            </div>
-            <div className="cw-card-body">
-              <h3 className="cw-card-title">{item.name}</h3>
-              {item.episodes > 0 && (
-                <div className="cw-card-bar">
-                  <div className="cw-card-fill" style={{ width: `${Math.min(100, Math.round((item.episode / item.episodes) * 100))}%` }} />
+        {items.map((item) => {
+          const total = item.duration || 24 * 60; // fallback: 24:00
+          const current = Math.min(item.position || 0, total);
+          const pct = total ? Math.min(100, (current / total) * 100) : 0;
+          return (
+            <div
+              key={`${item.animeId}-${item.episode}`}
+              className="cw-card"
+              onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode}`)}
+              onMouseEnter={() => prefetch.onMouseEnter(item.animeId)}
+              onMouseLeave={prefetch.onMouseLeave}
+            >
+              <div className="cw-card-img">
+                <img src={item.img} alt={item.name} loading="lazy" decoding="async" />
+                <span className="cw-card-ep">EP {item.episode}</span>
+                <button
+                  className="cw-card-close"
+                  aria-label="Remove from Continue Watching"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemove(item);
+                  }}
+                >
+                  <X size={14} />
+                </button>
+                <div className="cw-card-overlay">
+                  <span className="cw-card-play">
+                    <Play size={18} fill="#fff" />
+                  </span>
                 </div>
-              )}
-              <div className="cw-card-footer">
-                <span className="cw-card-progress">Ep {item.episode}{item.episodes ? ` / ${item.episodes}` : ''}</span>
-                {item.timestamp && <span className="cw-card-time">{formatTimeAgo(item.timestamp)}</span>}
+                <div className="cw-card-fade" />
+              </div>
+              <div className="cw-card-body">
+                <div className="cw-card-time">
+                  <span className="cw-card-current">{formatClock(current)}</span>
+                  <span className="cw-card-sep">/</span>
+                  <span className="cw-card-total">{formatClock(total)}</span>
+                </div>
+                <div className="cw-card-bar">
+                  <div className="cw-card-fill" style={{ width: `${pct}%` }} />
+                </div>
               </div>
             </div>
-          </motion.div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

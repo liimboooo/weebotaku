@@ -592,45 +592,63 @@
   color: var(--text-primary);
 }
 
-/* ─── Continue Watching (horizontal scroll) ─────────── */
+/* ─── Continue Watching (horizontal carousel) ───────── */
+.cw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.cw-header-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.cw-see-all {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+  transition: color 0.2s ease;
+}
+
+.cw-see-all:hover {
+  color: #ffffff;
+}
+
 .cw-scroll {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   overflow-x: auto;
-  padding-bottom: 8px;
-  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.15) transparent;
+  /* hide scrollbar completely */
+  scrollbar-width: none;
+  /* right-edge fade-out to hint more cards */
+  -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+  mask-image: linear-gradient(to right, black 80%, transparent 100%);
 }
 
 .cw-scroll::-webkit-scrollbar {
-  height: 4px;
-}
-
-.cw-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.cw-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.2);
-  border-radius: 4px;
+  display: none;
 }
 
 .cw-card {
-  flex: 0 0 220px;
-  scroll-snap-align: start;
+  flex: 0 0 210px;
+  width: 210px;
   cursor: pointer;
-  border-radius: 14px;
+  border-radius: 10px;
   overflow: hidden;
-  background: linear-gradient(135deg, #000000, #000000);
-  border: 1px solid rgba(255,255,255,0.12);
-  transition: all 0.25s ease;
-}
-
-.cw-card:hover {
-  border-color: rgba(255,255,255,0.35);
-  box-shadow: 0 8px 32px rgba(255,255,255,0.08);
+  background: #141414;
+  /* no scale / lift on hover — cards stay still */
 }
 
 .cw-card-img {
@@ -645,75 +663,139 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.35s ease;
+  transition: filter 0.2s ease;
 }
 
 .cw-card:hover .cw-card-img img {
-  transform: scale(1.08);
+  filter: brightness(0.4);
 }
 
+/* episode badge — top-left */
 .cw-card-ep {
   position: absolute;
-  bottom: 8px;
+  top: 8px;
   left: 8px;
-  padding: 3px 10px;
+  z-index: 2;
+  padding: 3px 9px;
   border-radius: 20px;
-  background: rgba(0,0,0,0.55);
-  border: 1px solid rgba(255,255,255,0.15);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.3px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* soft gradient fade at bottom of thumbnail */
+.cw-card-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 48px;
+  background: linear-gradient(to top, #141414, transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* play overlay — fades in on hover */
+.cw-card-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 20px; /* nudge play button slightly below center */
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.cw-card:hover .cw-card-overlay {
+  opacity: 1;
+}
+
+.cw-card-play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  background: transparent;
+  color: #ffffff;
+}
+
+/* close (X) button — top-right, fades in on hover */
+.cw-card-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.cw-card:hover .cw-card-close {
+  opacity: 1;
+}
+
+.cw-card-close:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .cw-card-body {
   padding: 10px 12px 12px;
 }
 
-.cw-card-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #ffffff;
-  margin: 0 0 8px;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* time row: current / total */
+.cw-card-time {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 8px;
+  font-size: 12px;
 }
 
+.cw-card-current {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.cw-card-sep,
+.cw-card-total {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* thin progress bar */
 .cw-card-bar {
-  height: 4px;
-  border-radius: 4px;
-  background: rgba(255,255,255,0.06);
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
   overflow: hidden;
-  margin-bottom: 8px;
 }
 
 .cw-card-fill {
   height: 100%;
-  border-radius: 4px;
-  background: linear-gradient(90deg, #ffffff, #ffffff);
+  border-radius: 2px;
+  background: #ffffff;
   transition: width 0.4s ease;
-}
-
-.cw-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.cw-card-progress {
-  font-size: 11px;
-  color: #ffffff;
-  font-weight: 500;
-}
-
-.cw-card-time {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.65);
 }
 
 /* ─── CTA Banner ─────────────────────────────────────── */
