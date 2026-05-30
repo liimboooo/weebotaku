@@ -12,7 +12,5 @@
       ]
     }
   ],
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/[...catchAll]" }
-  ]
+  "rewrites": []
 }

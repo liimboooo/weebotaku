@@ -558,6 +558,47 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* ─── Category Tabs ──────────────────────────────────── */
+.notif-categories {
+  display: flex;
+  gap: 4px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+}
+
+.notif-categories::-webkit-scrollbar {
+  display: none;
+}
+
+.notif-cat {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.notif-cat:hover {
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.notif-cat.is-active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  font-weight: 600;
+}
+
 /* ─── List ────────────────────────────────────────────── */
 .notif-popout-list {
   overflow-y: auto;

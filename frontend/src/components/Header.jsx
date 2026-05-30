@@ -7,6 +7,9 @@ import authService from '../services/authService';
 import {
   getNotifications,
   getUnreadCount,
+  getCategoryKeys,
+  getCategoryLabel,
+  getNotificationsByCategory,
   markRead,
   markAllRead,
 } from '../services/notificationService';
@@ -37,6 +40,9 @@ export default function Header({ isHome = false }) {
   const [isLoggedIn, setIsLoggedIn] = useState(authService.isLoggedIn());
   const [notifs, setNotifs] = useState([]);
   const [unread, setUnread] = useState(0);
+  const [notifCategory, setNotifCategory] = useState('All');
+  const notifCatKeys = getCategoryKeys();
+  const filteredNotifs = getNotificationsByCategory(notifs, notifCategory);
 
   const inputRef = useRef(null);
   const searchPopoutRef = useRef(null);
@@ -181,6 +187,7 @@ export default function Header({ isHome = false }) {
     setShowNotifPopout(v => !v);
     setShowSearchPopout(false);
     setShowSpotlight(false);
+    setNotifCategory('All');
   };
 
   const handleNotifClick = async (n) => {
@@ -309,15 +316,27 @@ export default function Header({ isHome = false }) {
                     </button>
                   </div>
 
+                  <div className="notif-categories">
+                    {notifCatKeys.map(key => (
+                      <button
+                        key={key}
+                        className={`notif-cat${notifCategory === key ? ' is-active' : ''}`}
+                        onClick={() => setNotifCategory(key)}
+                      >
+                        {getCategoryLabel(key)}
+                      </button>
+                    ))}
+                  </div>
+
                   <div className="notif-popout-list">
-                    {notifs.length === 0 ? (
+                    {filteredNotifs.length === 0 ? (
                       <div className="notif-empty">
                         <BellOff size={18} strokeWidth={1.5} />
                         <span>You're all caught up</span>
                         <small>New notifications will show up here.</small>
                       </div>
                     ) : (
-                      notifs.slice(0, 8).map((n) => (
+                      filteredNotifs.slice(0, 8).map((n) => (
                         <button
                           key={n.id}
                           className={`notif-item${n.read ? '' : ' is-unread'}`}
