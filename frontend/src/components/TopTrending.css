@@ -5,7 +5,6 @@
 /* Component Wrapper */
 .trending-sidebar {
   width: 100%;
-  max-width: 410px;
   background-color: #0c0c0e;
   padding: 20px;
   border-radius: 24px;
@@ -13,6 +12,10 @@
   box-sizing: border-box;
   font-family: system-ui, -apple-system, sans-serif;
   user-select: none;
+
+  /* shrink to content height so widgets can stack beneath it */
+  height: fit-content;
+  align-self: flex-start;
 }
 
 /* Header & Segmented Tabs Control */

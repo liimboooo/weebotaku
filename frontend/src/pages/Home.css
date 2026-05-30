@@ -28,29 +28,38 @@
   display: none;
 }
 
-/* ─── Layout: Top Trending rail floats top-right; feed reflows full
-   width once it passes the card (float + BFC, not a fixed 2-col grid) ─── */
-.home-grid {
+/* ─── Layout: flex two-column. Left feed + right sidebar column that
+   stacks widgets; the trending card is fit-content so it never blocks
+   the vertical space beneath it. ─── */
+.main-layout-container {
+  display: flex;
+  align-items: flex-start; /* columns size to content, no vertical stretch */
+  gap: 24px;
   width: 100%;
 }
 
-/* feed establishes a block formatting context so it shrinks beside the
-   floated rail at the top, then expands to full width below it */
-.home-feed {
-  display: flow-root;
+/* left feed — flex item; min-width:0 lets inner carousels scroll */
+.main-content-left {
+  flex: 1;
   min-width: 0;
 }
 
-.home-trending-rail {
-  margin-bottom: 28px;
+/* right sidebar column — fixed width, stacks the trending card + widgets */
+.sidebar-column-right {
+  width: 410px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-@media (min-width: 1024px) {
-  .home-trending-rail {
-    float: right;
-    width: 34%;
-    max-width: 400px;
-    margin: 0 0 24px 28px; /* gap from the feed on the left */
+/* collapse to a single column on tablet/mobile */
+@media (max-width: 1023px) {
+  .main-layout-container {
+    flex-direction: column;
+  }
+  .sidebar-column-right {
+    width: 100%;
   }
 }
 

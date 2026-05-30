@@ -715,11 +715,8 @@ export default function Home() {
       />
 
       <div className="home-container">
-       <div className="home-grid">
-        <aside className="home-trending-rail">
-          <TopTrending />
-        </aside>
-        <div className="home-feed">
+       <div className="main-layout-container">
+        <div className="main-content-left">
         <StatsBar />
 
         <GenreBar genres={categories} />
@@ -835,6 +832,10 @@ export default function Home() {
             </button>
           </div>
         </motion.div>
+        </div>
+
+        <div className="sidebar-column-right">
+          <TopTrending />
         </div>
        </div>
       </div>
