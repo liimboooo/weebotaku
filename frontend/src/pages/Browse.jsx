@@ -115,41 +115,48 @@ function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchLoading }) {
   const [imgErr, setImgErr] = useState(false);
   return (
     <>
-      <div className="br-card-thumb">
-        {imgErr ? <div className="br-card-img-fallback">{anime.name?.[0] || "?"}</div> : <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" onError={() => setImgErr(true)} />}
-        <div className="br-card-overlay">
-          <button className="br-card-play" onClick={(e) => { e.stopPropagation(); onWatch(anime); }} disabled={watchLoading}>
-            <Play size={20} fill="currentColor" />
+      <div className="br-poster">
+        {imgErr
+          ? <div className="br-poster-fallback">{anime.name?.[0] || "?"}</div>
+          : <img className="br-poster-img" src={anime.img} alt={anime.name} loading="lazy" decoding="async" onError={() => setImgErr(true)} />}
+
+        <button
+          className={`br-poster-wish ${inWishlist ? "active" : ""}`}
+          onClick={(e) => { e.stopPropagation(); onWishlist(anime.id); }}
+          aria-label={inWishlist ? "Remove from watchlist" : "Add to watchlist"}
+        >
+          <Bookmark size={14} fill={inWishlist ? "currentColor" : "none"} />
+        </button>
+
+        <div className="br-poster-hover">
+          {anime.rating > 0 && (
+            <span className="br-poster-rating"><Star size={11} fill="currentColor" /> {anime.rating.toFixed(1)}</span>
+          )}
+          <button
+            className="br-poster-play"
+            onClick={(e) => { e.stopPropagation(); onWatch(anime); }}
+            disabled={watchLoading}
+            aria-label={`Play ${anime.name}`}
+          >
+            <Play size={18} fill="currentColor" />
           </button>
-          <div className="br-card-tech">
-            <span>{anime.episodes} eps</span>
-            <span>{anime.type || "TV"}</span>
-          </div>
         </div>
-        <div className="br-card-badge">
-          {anime.status === "Ongoing" ? <Zap size={10} /> : null}
-          {anime.status || "Unknown"}
-        </div>
-        <div className="br-card-progress" style={{ width: `${Math.round((anime.readProgress || 0) * 100)}%` }} />
+
+        {anime.readProgress > 0 && (
+          <div className="br-poster-progress" style={{ width: `${Math.round((anime.readProgress || 0) * 100)}%` }} />
+        )}
       </div>
-      <div className="br-card-body">
-        <div className="br-card-head">
-          <div>
-            <h3>{anime.name}</h3>
-            <span className="br-card-studio">{anime.studio}</span>
-          </div>
-          <button className={`br-wish-btn ${inWishlist ? "active" : ""}`} onClick={(e) => { e.stopPropagation(); onWishlist(anime.id); }}>
-            <Bookmark size={14} fill={inWishlist ? "currentColor" : "none"} />
-          </button>
+
+      <div className="br-cap">
+        <div className="br-cap-top">
+          <span className="br-cap-type">{anime.type || "TV"}</span>
+          {anime.year ? <span className="br-cap-year">{anime.year}</span> : null}
         </div>
-        <p className="br-card-desc">{anime.synopsis}</p>
-        <div className="br-card-foot">
-          <span className="br-card-rating"><Star size={11} fill="currentColor" /> {anime.rating?.toFixed(1)}</span>
-          <span className="br-card-ch"><Play size={11} /> {anime.episodes} eps</span>
-          {anime.genres?.[0] && <span className="br-card-tag">{anime.genres[0]}</span>}
-        </div>
+        <h3 className="br-cap-title">
+          {anime.status === "Ongoing" && <span className="br-cap-dot" aria-hidden="true" />}
+          {anime.name}
+        </h3>
       </div>
-      <div className="br-card-glow" />
     </>
   );
 }
