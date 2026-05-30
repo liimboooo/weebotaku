@@ -70,6 +70,23 @@ export async function gql(query, variables = {}, retries = 2) {
   throw lastErr || new Error('AniList request failed');
 }
 
+// Daily airing schedule: all episodes airing within [startUnix, endUnix) (unix seconds)
+export async function fetchDailySchedule(startUnix, endUnix) {
+  const q = `query($start:Int,$end:Int){Page(page:1,perPage:50){airingSchedules(airingAt_greater:$start,airingAt_lesser:$end,sort:TIME){id airingAt episode media{id title{romaji english} format coverImage{large}}}}}`;
+  const data = await gql(q, { start: startUnix - 1, end: endUnix });
+  return (data?.Page?.airingSchedules || [])
+    .filter(s => s.media)
+    .map(s => ({
+      id: s.id,
+      airingAt: s.airingAt,
+      episode: s.episode,
+      animeId: s.media.id,
+      name: s.media.title?.english || s.media.title?.romaji || "",
+      format: s.media.format || "TV",
+      img: s.media.coverImage?.large || "",
+    }));
+}
+
 
 function mapAnime(a) {
   return {

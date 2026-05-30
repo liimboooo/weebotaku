@@ -31,6 +31,7 @@ import Skeleton from "../components/Skeleton";
 import Categories from "../components/Categories";
 import TopUpcoming from "../components/TopUpcoming";
 import TopTrending from "../components/TopTrending";
+import Schedule from "../components/Schedule";
 import Footer from "../components/Footer";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
@@ -729,6 +730,7 @@ export default function Home() {
           </div>
           <aside className="trending-rail">
             <TopTrending />
+            <Schedule />
           </aside>
         </div>
 
