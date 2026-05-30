@@ -31,14 +31,16 @@
 /* ─── Layout: short Top Trending card floats top-right; the feed flows
    beside it and then expands full-width UNDERNEATH it (so sections like
    "Trending Now" / "Season Highlights" sit under the card). ─── */
+/* outer wrapper establishes a BFC ONLY to contain the float (clearfix) so it
+   can't leak onto the footer; the feed itself stays normal flow */
 .home-layout {
   width: 100%;
+  display: flow-root;
 }
 
-/* feed is a block formatting context: it shrinks next to the floated card
-   at the top, then reclaims full width below the (short) card */
+/* feed is NOT a BFC: its top sections sit beside the floated card, and
+   sections below the (short) card reclaim full width and wrap underneath it */
 .home-feed {
-  display: flow-root;
   min-width: 0;
 }
 
