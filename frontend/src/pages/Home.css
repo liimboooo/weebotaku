@@ -624,6 +624,18 @@
   color: #ffffff;
 }
 
+/* right-edge fade-out to hint more cards.
+   Mask lives on a NON-scrolling wrapper: applying it to the scroller itself
+   makes the gradient resolve against the full scroll width (fade off-screen). */
+.cw-scroll-wrap {
+  -webkit-mask-image: linear-gradient(to right, #000 80%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 80%, transparent 100%);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
 .cw-scroll {
   display: flex;
   gap: 10px;
@@ -632,9 +644,6 @@
   -webkit-overflow-scrolling: touch;
   /* hide scrollbar completely */
   scrollbar-width: none;
-  /* right-edge fade-out to hint more cards */
-  -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
-  mask-image: linear-gradient(to right, black 80%, transparent 100%);
 }
 
 .cw-scroll::-webkit-scrollbar {

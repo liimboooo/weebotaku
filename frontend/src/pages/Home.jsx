@@ -313,7 +313,8 @@ function ContinueWatchingRow() {
           See All →
         </button>
       </div>
-      <div className="cw-scroll">
+      <div className="cw-scroll-wrap">
+       <div className="cw-scroll">
         {items.map((item) => {
           const total = item.duration || 24 * 60; // fallback: 24:00
           const current = Math.min(item.position || 0, total);
@@ -359,6 +360,7 @@ function ContinueWatchingRow() {
             </div>
           );
         })}
+       </div>
       </div>
     </section>
   );
