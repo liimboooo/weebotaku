@@ -107,7 +107,7 @@
   inset: 0;
   background-size: cover;
   background-position: center;
-  opacity: 0.05;
+  opacity: 0.12;
   mix-blend-mode: luminosity;
   transform: scale(1.05);
   transition: all 0.5s ease-out;
@@ -115,7 +115,7 @@
 }
 .trending-card:hover .card-bg-artwork {
   transform: scale(1);
-  opacity: 0.14;
+  opacity: 0.4;
   mix-blend-mode: normal;
 }
 .card-gradient-mask {
@@ -124,8 +124,8 @@
   background: linear-gradient(
     to right,
     #0c0c0e 0%,
-    rgba(12, 12, 14, 0.8) 80%,
-    transparent 100%
+    rgba(12, 12, 14, 0.75) 45%,
+    transparent 95%
   );
   z-index: 1;
 }
@@ -171,10 +171,11 @@
   color: transparent;
   -webkit-text-stroke: 1.5px var(--rank-color);
   opacity: 0.22;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 .trending-card:hover .rank-outline-huge {
-  transform: scale(1.03);
+  transform: scale(1.35);
+  opacity: 0.35;
 }
 .rank-solid-mini {
   font-size: 22px;
