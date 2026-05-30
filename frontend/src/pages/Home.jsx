@@ -836,9 +836,9 @@ export default function Home() {
 
         <div className="sidebar-column-right">
           <TopTrending />
-          {/* TEMP: confirms widgets stack cleanly beneath the trending card */}
-          <div style={{ background: "#111", padding: 20, borderRadius: 16, color: "white" }}>
-            Test Widget Below
+          {/* TEMP diagnostic: should sit directly under the trending card */}
+          <div style={{ background: "red", padding: 20, color: "white", zIndex: 999 }}>
+            TEST BOX HERE
           </div>
         </div>
        </div>

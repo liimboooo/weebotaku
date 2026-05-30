@@ -44,15 +44,27 @@
   min-width: 0;
 }
 
-/* right sidebar column — fixed width, stacks the trending card + widgets */
+/* right sidebar column — bulletproof: force shrink-to-content, never stretch */
 .sidebar-column-right {
-  width: 410px;
+  width: 410px !important;
+  min-width: 410px !important;
+  height: max-content !important;   /* force shrink to content */
+  min-height: 0 !important;         /* break any inherited min-height */
+  align-self: start !important;     /* force top align (flexbox) */
+  justify-self: start !important;   /* force top align (grid) */
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
   flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  align-self: flex-start;  /* never stretch to the row's full height */
-  height: fit-content;     /* wrap only the stacked widgets */
+}
+
+/* stop the card itself from growing to fill the column */
+.sidebar-column-right .trending-sidebar {
+  width: 100% !important;
+  height: auto !important;
+  max-height: max-content !important;
+  flex-grow: 0 !important;
+  flex-shrink: 0 !important;
 }
 
 /* collapse to a single column on tablet/mobile */
@@ -61,7 +73,8 @@
     flex-direction: column;
   }
   .sidebar-column-right {
-    width: 100%;
+    width: 100% !important;
+    min-width: 0 !important;
   }
 }
 
