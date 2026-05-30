@@ -1,29 +1,20 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { useLoading } from "../components/LoadingProvider";
 import {
-  Activity,
   Bookmark,
-  Building2,
-  Calendar,
-  ChevronDown,
-  Film,
-  Hash,
-  List,
-  Grid3x3,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   Library,
   Play,
   Search,
-  Sparkles,
   Star,
-  Tag,
-  X,
-  Zap,
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import Loader from "../components/Loader";
-import { fetchTopAnime, fetchSearchAnime, fetchAnimeGenres } from "../services/anilistApi";
+import { fetchBrowseAnime, fetchAnimeGenres, fetchAnimeTags } from "../services/anilistApi";
 import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import { loadWatchlist, addToWatchlist, removeFromWatchlist, loadWatchHistory } from "../services/storage";
 import { addNotification } from "../services/notificationService";
@@ -32,83 +23,35 @@ import AnimeWatch from "./Feeds/AnimeWatch";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./Browse.css";
 
-const sortOptions = [
-  { value: "popularity", label: "Popularity" },
-  { value: "score", label: "Score" },
-  { value: "recent", label: "Recently Added" },
+const SORTS = [
+  { v: "POPULARITY_DESC", l: "Popularity" },
+  { v: "SCORE_DESC", l: "Score" },
+  { v: "TRENDING_DESC", l: "Trending" },
+  { v: "START_DATE_DESC", l: "Newest" },
+  { v: "FAVOURITES_DESC", l: "Favorites" },
+  { v: "TITLE_ROMAJI", l: "Title A–Z" },
 ];
-
-const formatOptions = ["TV", "Movie", "OVA"];
-const statusOptions = [
-  { value: "Airing", label: "Airing" },
-  { value: "Finished", label: "Finished" },
+const FORMATS = [
+  { v: "TV", l: "TV" }, { v: "TV_SHORT", l: "TV Short" }, { v: "MOVIE", l: "Movie" },
+  { v: "SPECIAL", l: "Special" }, { v: "OVA", l: "OVA" }, { v: "ONA", l: "ONA" }, { v: "MUSIC", l: "Music" },
 ];
-
-function getAnimeFormat(anime) {
-  return anime?.type || "TV";
-}
-
-function getAnimeStatusBucket(anime) {
-  return anime?.status === "Ongoing" ? "Airing" : "Finished";
-}
-
-function getAnimeSeasonLabel(anime) {
-  return anime?.season || "Unknown";
-}
-
-function FilterDropdown({ label, icon: Icon, items, active, children, searchable }) {
-  const [open, setOpen] = useState(false);
-  const [q, setQ] = useState("");
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  useEffect(() => {
-    if (!open) setQ("");
-  }, [open]);
-
-  const filtered = searchable && q
-    ? items.filter(i => typeof i === "string" && i.toLowerCase().includes(q.toLowerCase()))
-    : items;
-
-  return (
-    <div className="br-drop" ref={ref}>
-      <button className={`br-drop-btn ${active.length > 0 ? "has-active" : ""}`} onClick={() => setOpen(!open)}>
-        <Icon size={14} />
-        {label}
-        {active.length > 0 && <span className="br-drop-count">{active.length}</span>}
-        <ChevronDown size={12} className={`br-drop-chevron ${open ? "open" : ""}`} />
-      </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            className="br-drop-panel"
-            initial={{ opacity: 0, y: -6, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.96 }}
-            transition={{ duration: 0.15 }}
-          >
-            {searchable && (
-              <div className="br-drop-search">
-                <Search size={12} />
-                <input value={q} onChange={e => setQ(e.target.value)} placeholder={`Search ${label.toLowerCase()}...`} autoFocus />
-                {q && <button className="br-drop-search-clear" onClick={() => setQ("")}><X size={12} /></button>}
-              </div>
-            )}
-            <div className="br-drop-items">
-              {filtered.map((item) => typeof children === "function" ? children(item) : item)}
-            </div>
-            {filtered.length === 0 && <div className="br-drop-empty">No matches</div>}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+const STATUSES = [
+  { v: "RELEASING", l: "Airing" }, { v: "FINISHED", l: "Finished" },
+  { v: "NOT_YET_RELEASED", l: "Upcoming" }, { v: "CANCELLED", l: "Cancelled" }, { v: "HIATUS", l: "Hiatus" },
+];
+const SEASONS = [
+  { v: "WINTER", l: "Winter" }, { v: "SPRING", l: "Spring" }, { v: "SUMMER", l: "Summer" }, { v: "FALL", l: "Fall" },
+];
+const COUNTRIES = [
+  { v: "JP", l: "Japan" }, { v: "KR", l: "South Korea" }, { v: "CN", l: "China" }, { v: "TW", l: "Taiwan" },
+];
+const SOURCES = [
+  { v: "ORIGINAL", l: "Original" }, { v: "MANGA", l: "Manga" }, { v: "LIGHT_NOVEL", l: "Light Novel" },
+  { v: "VISUAL_NOVEL", l: "Visual Novel" }, { v: "VIDEO_GAME", l: "Video Game" }, { v: "NOVEL", l: "Novel" },
+  { v: "WEB_NOVEL", l: "Web Novel" }, { v: "OTHER", l: "Other" },
+];
+const CUR_YEAR = new Date().getFullYear() + 1;
+const YEARS = Array.from({ length: CUR_YEAR - 1960 + 1 }, (_, i) => CUR_YEAR - i);
 
 function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchLoading }) {
   const inWishlist = wishlist.some(i => i.id === anime.id);
@@ -166,127 +109,68 @@ export default function Browse() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const prefetch = usePrefetchAnime();
+  const gridRef = useRef(null);
 
-  const [allAnime, setAllAnime] = useState([]);
-  const [heroAnime, setHeroAnime] = useState(null);
-  const { showLoading: showGlobalLoading, hideLoading: hideGlobalLoading } = useLoading();
   const [genres, setGenres] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [tags, setTags] = useState([]);
 
-  const [activeGenres, setActiveGenres] = useState(() => searchParams.get("genre") ? [searchParams.get("genre")] : []);
-  const [activeFormats, setActiveFormats] = useState([]);
-  const [activeStatuses, setActiveStatuses] = useState([]);
-  const [activeSeasons, setActiveSeasons] = useState([]);
-  const [activeYears, setActiveYears] = useState(() => searchParams.get("year") ? [searchParams.get("year")] : []);
-  const [activeStudios, setActiveStudios] = useState(() => searchParams.get("studio") ? [searchParams.get("studio")] : []);
-  const [sortBy, setSortBy] = useState("popularity");
-  const [view, setView] = useState("grid");
+  // filter state (seeded from URL for deep-links)
+  const [search, setSearch] = useState(searchParams.get("q") || "");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchParams.get("q") || "");
+  const [genre, setGenre] = useState(searchParams.get("genre") || "");
+  const [format, setFormat] = useState(searchParams.get("format") || "");
+  const [year, setYear] = useState(searchParams.get("year") || "");
+  const [season, setSeason] = useState(searchParams.get("season") || "");
+  const [status, setStatus] = useState(searchParams.get("status") || "");
+  const [tag, setTag] = useState(searchParams.get("tag") || "");
+  const [country, setCountry] = useState(searchParams.get("country") || "");
+  const [source, setSource] = useState(searchParams.get("source") || "");
+  const [sort, setSort] = useState(searchParams.get("sort") || "POPULARITY_DESC");
+  const [page, setPage] = useState(1);
+
+  const [items, setItems] = useState([]);
+  const [pageInfo, setPageInfo] = useState({ total: 0, currentPage: 1, lastPage: 1, hasNextPage: false });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const [watchlist, setWatchlist] = useState(loadWatchlist());
   const [watchAnime, setWatchAnime] = useState(null);
   const [watchLoading, setWatchLoading] = useState(false);
-  const [loadError, setLoadError] = useState("");
-  const sentinelRef = useRef(null);
-  const loadingRef = useRef(false);
-  const hasLoadedOnce = useRef(false);
 
   useEffect(() => {
     fetchAnimeGenres().then(setGenres).catch(() => {});
-    fetchTopAnime(1).then(r => setHeroAnime(r.data[0])).catch(() => {});
+    fetchAnimeTags().then(setTags).catch(() => {});
   }, []);
 
+  // debounce search box
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 400);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+    const t = setTimeout(() => setDebouncedSearch(search), 450);
+    return () => clearTimeout(t);
+  }, [search]);
 
-  const searchRef = useRef("");
-  searchRef.current = debouncedSearch;
+  // reset to page 1 whenever a filter / search changes
+  useEffect(() => { setPage(1); }, [debouncedSearch, genre, format, year, season, status, tag, country, source, sort]);
 
-  const loadAnime = useCallback(async (p, replace = false) => {
-    if (loadingRef.current) return;
-    loadingRef.current = true;
-    if (replace) setLoading(true);
-    else setLoadingMore(true);
-    showGlobalLoading();
-    setLoadError("");
-    try {
-      const q = searchRef.current.trim();
-      const result = q
-        ? await fetchSearchAnime(q, p)
-        : await fetchTopAnime(p);
-      setAllAnime(prev => replace ? result.data : [...prev, ...result.data]);
-      setHasMore(result.pagination.hasNextPage);
-      setPage(p);
-      hasLoadedOnce.current = true;
-    } catch {
-      setLoadError("Failed to load anime. Please try again.");
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-      loadingRef.current = false;
-      hideGlobalLoading();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+  // fetch on any filter or page change
   useEffect(() => {
-    setAllAnime([]);
-    setPage(1);
-    setHasMore(true);
-    loadAnime(1, true);
-  }, [debouncedSearch, loadAnime]);
-
-  const allStudios = useMemo(() =>
-    Array.from(new Set(allAnime.map(a => a.studio).filter(Boolean))).sort(),
-    [allAnime]
-  );
-
-  const allSeasons = useMemo(() =>
-    Array.from(new Set(allAnime.map(a => getAnimeSeasonLabel(a)).filter(s => s !== "Unknown"))).sort(),
-    [allAnime]
-  );
-
-  const allYears = useMemo(() =>
-    Array.from(new Set(allAnime.map(a => a.year).filter(Boolean))).sort((a, b) => b - a),
-    [allAnime]
-  );
-
-  const filteredAnime = useMemo(() => {
-    return allAnime
-      .filter(anime => {
-        if (activeGenres.length && !activeGenres.some(g => anime.genres.includes(g))) return false;
-        if (activeFormats.length && !activeFormats.includes(getAnimeFormat(anime))) return false;
-        if (activeStatuses.length && !activeStatuses.includes(getAnimeStatusBucket(anime))) return false;
-        if (activeSeasons.length && !activeSeasons.includes(getAnimeSeasonLabel(anime))) return false;
-        if (activeYears.length && !activeYears.includes(String(anime.year))) return false;
-        if (activeStudios.length && !activeStudios.includes(anime.studio)) return false;
-        return true;
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+    fetchBrowseAnime({ search: debouncedSearch, genre, tag, format, year, season, status, country, source, sort, page })
+      .then((res) => {
+        if (cancelled) return;
+        setItems(res.data);
+        setPageInfo(res.pageInfo);
       })
-      .sort((l, r) => {
-        if (sortBy === "score") return (r.rating || 0) - (l.rating || 0);
-        if (sortBy === "recent") return (r.id || 0) - (l.id || 0);
-        return (r.votes || 0) - (l.votes || 0);
-      });
-  }, [allAnime, activeFormats, activeGenres, activeSeasons, activeStatuses, activeStudios, activeYears, sortBy]);
+      .catch(() => { if (!cancelled) { setItems([]); setError("Failed to load anime. Please try again."); } })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [debouncedSearch, genre, tag, format, year, season, status, country, source, sort, page]);
 
+  // scroll up to the grid when the page changes
   useEffect(() => {
-    if (!sentinelRef.current || !hasMore || loadingRef.current) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          loadAnime(page + 1);
-        }
-      },
-      { rootMargin: "400px" }
-    );
-    observer.observe(sentinelRef.current);
-    return () => observer.disconnect();
-  }, [hasMore, loadingMore, loading, loadAnime, page]);
+    if (gridRef.current) gridRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [page]);
 
   const openWatch = async (anime) => {
     setWatchLoading(true);
@@ -297,7 +181,7 @@ export default function Browse() {
       const found = history.find(h => h.animeId === anime.id);
       setWatchAnime({ ...src, _name: anime.name, _episodes: anime.episodes || 12, startEp: found?.episode || 1 });
       addNotification({ title: "Now Playing", body: anime.name, type: "watch" });
-    } catch (e) {
+    } catch {
       addNotification({ title: "Stream Error", body: "Failed to find streaming source.", type: "error" });
     } finally {
       setWatchLoading(false);
@@ -310,184 +194,147 @@ export default function Browse() {
         addNotification({ title: "Removed from Watchlist", type: "save" });
         return removeFromWatchlist(id);
       }
-      const anime = allAnime.find(a => a.id === id);
+      const anime = items.find(a => a.id === id);
       if (!anime) return p;
       const item = { id: anime.id, name: anime.name, img: anime.img, rating: anime.rating, episodes: anime.episodes, year: anime.year, genres: anime.genres, status: anime.status };
       addNotification({ title: "Added to Watchlist", body: anime.name, type: "save" });
       return addToWatchlist(item);
     });
   };
-  const toggleValue = (setter, value) => setter(c => c.includes(value) ? c.filter(i => i !== value) : [...c, value]);
 
-  const activeCount = activeGenres.length + activeFormats.length + activeStatuses.length + activeSeasons.length + activeYears.length + activeStudios.length;
+  const resetAll = useCallback(() => {
+    setSearch(""); setGenre(""); setFormat(""); setYear(""); setSeason("");
+    setStatus(""); setTag(""); setCountry(""); setSource(""); setSort("POPULARITY_DESC");
+  }, []);
 
-  const selectedPills = [
-    ...activeGenres.map(v => ({ key: `g:${v}`, label: v, remove: () => setActiveGenres(c => c.filter(i => i !== v)) })),
-    ...activeFormats.map(v => ({ key: `f:${v}`, label: v, remove: () => setActiveFormats(c => c.filter(i => i !== v)) })),
-    ...activeStatuses.map(v => ({ key: `s:${v}`, label: v, remove: () => setActiveStatuses(c => c.filter(i => i !== v)) })),
-    ...activeSeasons.map(v => ({ key: `se:${v}`, label: v, remove: () => setActiveSeasons(c => c.filter(i => i !== v)) })),
-    ...activeYears.map(v => ({ key: `y:${v}`, label: v, remove: () => setActiveYears(c => c.filter(i => i !== v)) })),
-    ...activeStudios.map(v => ({ key: `st:${v}`, label: v, remove: () => setActiveStudios(c => c.filter(i => i !== v)) })),
-  ];
-
-  const topAnime = heroAnime;
-
-  const totalEpisodes = useMemo(() =>
-    filteredAnime.reduce((s, a) => s + (a.episodes || 0), 0),
-    [filteredAnime]
-  );
-
-  const renderChip = (value, active, onClick) => (
-    <button key={value} type="button" className={`br-chip ${active ? "active" : ""}`} onClick={onClick}>{value}</button>
-  );
+  const activeCount = [genre, format, year, season, status, tag, country, source].filter(Boolean).length + (debouncedSearch ? 1 : 0);
+  const lastPage = Math.max(1, pageInfo.lastPage || 1);
 
   return (
     <AnimatedPage>
       <div className="br">
         <div className="br-bg-ornament" />
-
         <main className="br-shell">
-          <motion.section className="br-hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="br-hero-bg" style={topAnime?.img ? { backgroundImage: `url(${topAnime.img})` } : {}}>
-              {topAnime?.trailerUrl && (
-                <iframe
-                  className="br-hero-video"
-                  src={`${topAnime.trailerUrl}${topAnime.trailerUrl.includes('?') ? '&' : '?'}autoplay=1&mute=1&controls=0&loop=1&playlist=${topAnime.trailerUrl.split('/').pop().split('?')[0]}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0`}
-                  title={topAnime.name}
-                  allow="autoplay; encrypted-media; fullscreen"
-                  loading="lazy"
-                />
+          {/* ── Filter grid ── */}
+          <div className="br-filterbar">
+            <div className="br-field br-field--search">
+              <label className="br-field-label">Search</label>
+              <div className="br-search">
+                <Search size={15} />
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search anime..." />
+              </div>
+            </div>
+
+            <Field label="Genres">
+              <Select value={genre} onChange={setGenre}>
+                <option value="">Any</option>
+                {genres.map(g => <option key={g} value={g}>{g}</option>)}
+              </Select>
+            </Field>
+            <Field label="Format">
+              <Select value={format} onChange={setFormat}>
+                <option value="">Any</option>
+                {FORMATS.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+              </Select>
+            </Field>
+            <Field label="Year">
+              <Select value={year} onChange={setYear}>
+                <option value="">Any</option>
+                {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+              </Select>
+            </Field>
+            <Field label="Sort">
+              <Select value={sort} onChange={setSort}>
+                {SORTS.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+              </Select>
+            </Field>
+
+            <Field label="Season">
+              <Select value={season} onChange={setSeason}>
+                <option value="">Any</option>
+                {SEASONS.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+              </Select>
+            </Field>
+            <Field label="Airing Status">
+              <Select value={status} onChange={setStatus}>
+                <option value="">Any</option>
+                {STATUSES.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+              </Select>
+            </Field>
+            <Field label="Tags">
+              <Select value={tag} onChange={setTag}>
+                <option value="">Any</option>
+                {tags.map(t => <option key={t} value={t}>{t}</option>)}
+              </Select>
+            </Field>
+            <Field label="Country of Origin">
+              <Select value={country} onChange={setCountry}>
+                <option value="">Any</option>
+                {COUNTRIES.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+              </Select>
+            </Field>
+            <Field label="Source">
+              <Select value={source} onChange={setSource}>
+                <option value="">Any</option>
+                {SOURCES.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+              </Select>
+            </Field>
+          </div>
+
+          {/* ── Results + pagination ── */}
+          <div className="br-resbar" ref={gridRef}>
+            <div className="br-resbar-left">
+              <span className="br-rescount">{(pageInfo.total || 0).toLocaleString()} Results</span>
+              {activeCount > 0 && (
+                <button className="br-clear" onClick={resetAll}>Clear filters</button>
               )}
             </div>
-            <div className="br-hero-gradient" />
-            <div className="br-hero-content">
-              <span className="br-eyebrow"><Sparkles size={14} /> ANIME COLLECTION</span>
-              <h1>
-                <span className="br-hero-main">EXPLORE</span>
-                <span className="br-hero-accent">ANIME</span>
-              </h1>
-              <p className="br-hero-desc">
-                Discover thousands of anime across every genre. Track your watchlist, find your next favorite series, and dive into the community.
-              </p>
-              <div className="br-hero-metrics">
-                <div className="br-metric"><strong>{allAnime.length}</strong><span>Loaded</span></div>
-                <div className="br-metric"><strong>{totalEpisodes}</strong><span>Episodes</span></div>
-                <div className="br-metric"><strong>{genres.length}</strong><span>Genres</span></div>
-              </div>
-            </div>
-            <div className="br-hero-hud">
-              {topAnime?.img && <div className="br-hud-img"><img src={topAnime.img} alt={topAnime.name} /></div>}
-              <div className="br-hud-info">
-                <span className="br-hud-label">TOP RATED</span>
-                <span className="br-hud-title">{topAnime?.name || "Loading..."}</span>
-                <span className="br-hud-rating"><Star size={12} fill="currentColor" /> {topAnime?.rating?.toFixed(1) || "?"}</span>
-              </div>
-            </div>
-          </motion.section>
-
-          <div className="br-controls">
-            <div className="br-search">
-              <Search size={15} />
-              <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search anime..." />
-            </div>
-            <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
-              {sortOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-            <div className="br-view-toggle">
-              <button className={view === "grid" ? "active" : ""} onClick={() => setView("grid")}><Grid3x3 size={14} /></button>
-              <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}><List size={14} /></button>
+            <div className="br-pager">
+              <button disabled={page <= 1} onClick={() => setPage(1)} aria-label="First page"><ChevronsLeft size={16} /></button>
+              <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} aria-label="Previous page"><ChevronLeft size={16} /></button>
+              <span className="br-page-cur">{page}</span>
+              <button disabled={!pageInfo.hasNextPage} onClick={() => setPage(p => p + 1)} aria-label="Next page"><ChevronRight size={16} /></button>
+              <button disabled={page >= lastPage} onClick={() => setPage(lastPage)} aria-label="Last page"><ChevronsRight size={16} /></button>
             </div>
           </div>
 
-          <div className="br-filters">
-            <FilterDropdown label="Genres" icon={Tag} items={genres} active={activeGenres} searchable>
-              {(item) => renderChip(item, activeGenres.includes(item), () => toggleValue(setActiveGenres, item))}
-            </FilterDropdown>
-            <FilterDropdown label="Format" icon={Film} items={formatOptions} active={activeFormats}>
-              {(item) => renderChip(item, activeFormats.includes(item), () => toggleValue(setActiveFormats, item))}
-            </FilterDropdown>
-            <FilterDropdown label="Status" icon={Activity} items={statusOptions.map(s => s.value)} active={activeStatuses}>
-              {(item) => renderChip(item, activeStatuses.includes(item), () => toggleValue(setActiveStatuses, item))}
-            </FilterDropdown>
-            <FilterDropdown label="Season" icon={Calendar} items={allSeasons} active={activeSeasons}>
-              {(item) => renderChip(item, activeSeasons.includes(item), () => toggleValue(setActiveSeasons, item))}
-            </FilterDropdown>
-            <FilterDropdown label="Year" icon={Hash} items={allYears} active={activeYears}>
-              {(item) => renderChip(String(item), activeYears.includes(String(item)), () => toggleValue(setActiveYears, String(item)))}
-            </FilterDropdown>
-            <FilterDropdown label="Studio" icon={Building2} items={allStudios} active={activeStudios}>
-              {(item) => renderChip(item, activeStudios.includes(item), () => toggleValue(setActiveStudios, item))}
-            </FilterDropdown>
-          </div>
-
-          <div className="br-summary">
-            <span>{filteredAnime.length} results</span>
-            <span><Bookmark size={12} /> {watchlist.length} in watchlist</span>
-            {activeCount > 0 && <span>{activeCount} active</span>}
-          </div>
-
-          {selectedPills.length > 0 && (
-            <div className="br-active-pills">
-              {selectedPills.map(p => (
-                <button key={p.key} type="button" className="br-active-pill" onClick={p.remove}>
-                  {p.label} <span className="br-active-pill-x"><X size={10} /></span>
-                </button>
-              ))}
-              <button type="button" className="br-active-pill br-active-pill-clear" onClick={() => { setActiveGenres([]); setActiveFormats([]); setActiveStatuses([]); setActiveSeasons([]); setActiveYears([]); setActiveStudios([]); }}>
-                Clear all
-              </button>
-            </div>
-          )}
-
+          {/* ── Grid ── */}
           {loading ? (
             <Loader text="Loading anime..." />
+          ) : items.length === 0 ? (
+            <div className="br-empty">
+              <Library size={36} />
+              <h3>{error ? "Load Error" : "No matches"}</h3>
+              <p>{error || "Try clearing a filter or widening your search."}</p>
+              {error
+                ? <button className="br-retry-btn" onClick={() => setPage(p => p)}>Retry</button>
+                : activeCount > 0 && <button className="br-retry-btn" onClick={resetAll}>Clear filters</button>}
+            </div>
           ) : (
-            <>
-              <div className={`br-grid ${view === "list" ? "br-list" : ""}`}>
-                <AnimatePresence>
-                  {filteredAnime.map((anime, i) => (
-                    <motion.article
-                      key={anime.id}
-                      className="br-card"
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.96 }}
-                      transition={{ duration: 0.2 }}
-                      onClick={() => navigate(`/anime/${anime.id}/info`)}
-                      onMouseEnter={() => prefetch.onMouseEnter(anime.id)}
-                      onMouseLeave={prefetch.onMouseLeave}
-                    >
-                      <AnimeCard
-                        anime={anime}
-                        wishlist={watchlist}
-                        onWishlist={toggleWishlist}
-                        onWatch={openWatch}
-                        watchLoading={watchLoading}
-                      />
-                    </motion.article>
-                  ))}
-                </AnimatePresence>
-              </div>
-
-              {loadingMore && (
-                <Loader text="Loading more..." />
-              )}
-
-              {hasMore && !loadingMore && <div ref={sentinelRef} className="br-sentinel" />}
-
-              {filteredAnime.length === 0 && !loading && (
-                <div className="br-empty">
-                  <Library size={36} />
-                  <h3>{loadError ? "Load Error" : hasLoadedOnce.current ? "No matches" : "Could not load"}</h3>
-                  <p>{loadError || (hasLoadedOnce.current ? "Try clearing a filter or widening your search." : "Check your connection or try refreshing the page.")}</p>
-                  {(!hasLoadedOnce.current || loadError) && (
-                    <button className="br-retry-btn" onClick={() => loadAnime(1, true)}>
-                      Retry
-                    </button>
-                  )}
-                </div>
-              )}
-            </>
+            <div className="br-grid">
+              <AnimatePresence mode="popLayout">
+                {items.map((anime) => (
+                  <motion.article
+                    key={anime.id}
+                    className="br-card"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={() => navigate(`/anime/${anime.id}/info`)}
+                    onMouseEnter={() => prefetch.onMouseEnter(anime.id)}
+                    onMouseLeave={prefetch.onMouseLeave}
+                  >
+                    <AnimeCard
+                      anime={anime}
+                      wishlist={watchlist}
+                      onWishlist={toggleWishlist}
+                      onWatch={openWatch}
+                      watchLoading={watchLoading}
+                    />
+                  </motion.article>
+                ))}
+              </AnimatePresence>
+            </div>
           )}
         </main>
 
@@ -502,5 +349,25 @@ export default function Browse() {
         )}
       </div>
     </AnimatedPage>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <div className="br-field">
+      <label className="br-field-label">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function Select({ value, onChange, children }) {
+  return (
+    <div className="br-select-wrap">
+      <select className="br-select" value={value} onChange={e => onChange(e.target.value)}>
+        {children}
+      </select>
+      <ChevronRight size={14} className="br-select-arrow" />
+    </div>
   );
 }

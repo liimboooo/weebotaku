@@ -143,6 +143,43 @@ export async function fetchTopAnime(page = 1, filter = "") {
   return { data: (data?.Page?.media || []).map(mapAnime), pagination: { hasNextPage: data?.Page?.pageInfo?.hasNextPage || false, currentPage: page } };
 }
 
+// Server-side filtered browse with pagination + total count
+export async function fetchBrowseAnime(opts = {}) {
+  const {
+    search, genre, tag, format, year, season, status, country, source,
+    sort = "POPULARITY_DESC", page = 1,
+  } = opts;
+  const vars = {
+    page: Math.max(1, Math.min(page, 5000)),
+    search: search && search.trim() ? search.trim() : null,
+    genres: genre ? [genre] : null,
+    tags: tag ? [tag] : null,
+    format: format || null,
+    year: year ? Number(year) : null,
+    season: season || null,
+    status: status || null,
+    country: country || null,
+    source: source || null,
+    sort: [search && search.trim() ? "SEARCH_MATCH" : sort],
+  };
+  const q = `query($page:Int,$search:String,$genres:[String],$tags:[String],$format:MediaFormat,$year:Int,$season:MediaSeason,$status:MediaStatus,$country:CountryCode,$source:MediaSource,$sort:[MediaSort]){Page(page:$page,perPage:30){pageInfo{total currentPage lastPage hasNextPage} media(type:ANIME,search:$search,genre_in:$genres,tag_in:$tags,format:$format,seasonYear:$year,season:$season,status:$status,countryOfOrigin:$country,source:$source,sort:$sort){${ANIME_FIELDS}}}}`;
+  const data = await gql(q, vars);
+  return {
+    data: (data?.Page?.media || []).map(mapAnime),
+    pageInfo: data?.Page?.pageInfo || { total: 0, currentPage: page, lastPage: 1, hasNextPage: false },
+  };
+}
+
+export async function fetchAnimeTags() {
+  try {
+    const data = await gql(`query{MediaTagCollection{name isAdult isGeneralSpoiler}}`);
+    return (data?.MediaTagCollection || [])
+      .filter(t => !t.isAdult && !t.isGeneralSpoiler)
+      .map(t => t.name)
+      .sort();
+  } catch { return []; }
+}
+
 export async function fetchSeasonalAnime(year, season) {
   const y = year || new Date().getFullYear();
   const s = (season || getCurrentSeason()).toUpperCase();

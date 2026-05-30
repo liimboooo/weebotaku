@@ -408,7 +408,7 @@ function SeasonGrid({ animeList }) {
   if (!animeList?.length) return null;
   return (
     <section className="home-section">
-      <SectionHeader icon={Sparkles} title="Season Highlights" subtitle="Top picks this season" action={() => navigate("/browse/anime")} />
+      <SectionHeader icon={Sparkles} title="Season Highlights" subtitle="Top picks this season" action={() => navigate("/browse/anime?sort=SCORE_DESC")} />
       <motion.div
         className="upcoming-grid"
         variants={staggerContainer}
@@ -458,7 +458,7 @@ function GenreBar({ genres }) {
         {genres.slice(0, 14).map(g => {
           const Icon = genreIcons[g] || Film;
           return (
-            <button key={g} className="genre-bar-chip" onClick={() => navigate(`/browse/anime`)}>
+            <button key={g} className="genre-bar-chip" onClick={() => navigate(`/browse/anime?genre=${encodeURIComponent(g)}`)}>
               <Icon size={14} />
               <span>{g}</span>
             </button>
@@ -474,7 +474,7 @@ function UpcomingSection({ animeList }) {
   if (!animeList?.length) return null;
   return (
     <section className="home-section">
-      <SectionHeader icon={Calendar} title="Coming Soon" subtitle="Upcoming anime to watch out for" action={() => navigate("/browse/anime")} />
+      <SectionHeader icon={Calendar} title="Coming Soon" subtitle="Upcoming anime to watch out for" action={() => navigate("/browse/anime?status=NOT_YET_RELEASED")} />
       <motion.div
         className="upcoming-grid"
         variants={staggerContainer}
@@ -702,7 +702,7 @@ export default function Home() {
               icon={Flame}
               title="Most Popular"
               subtitle="All-time fan favorites everyone's watching"
-              action={() => navigate("/browse/anime")}
+              action={() => navigate("/browse/anime?sort=POPULARITY_DESC")}
             />
             <div className="upcoming-grid">
               {popularList.map((anime) => (
