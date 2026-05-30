@@ -18,7 +18,6 @@ import {
   Sparkles,
   Star,
   Sword,
-  TrendingUp,
   Trophy,
   Users,
   Volume2,
@@ -629,7 +628,7 @@ function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onWatch
 export default function Home() {
   useDocumentTitle("Home");
   const navigate = useNavigate();
-  const { spotlight, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending } = useAnimeData();
+  const { spotlight, seasonPicks, upcomingList, popularList, categories, loading } = useAnimeData();
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
 
@@ -688,40 +687,6 @@ export default function Home() {
         <ContinueWatchingRow />
 
         <TopUpcoming />
-
-        {trendingList.length > 0 && (
-          <section className="home-section">
-            <SectionHeader
-              icon={TrendingUp}
-              title="Trending Now"
-              subtitle="Most watched anime this week"
-              action={refreshTrending}
-            />
-            <div className="upcoming-grid">
-              {trendingList.map((anime) => (
-                <div
-                  key={anime.id}
-                  className="upcoming-card"
-                  onClick={() => navigate(`/anime/${anime.id}/info`)}
-                >
-                  <div className="upcoming-card-img">
-                    <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
-                    <div className="upcoming-card-badge">
-                      {anime.rating && <><Star size={10} fill="#ffffff" color="#ffffff" /> {anime.rating?.toFixed(1)}</>}
-                    </div>
-                  </div>
-                  <div className="upcoming-card-body">
-                    <h3>{anime.name}</h3>
-                    <div className="upcoming-card-meta">
-                      {anime.genres?.[0] && <span className="upcoming-card-tag">{anime.genres[0]}</span>}
-                      <span className="upcoming-card-type">{anime.status || "TV"}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
         {seasonPicks.length > 0 && (
           <SeasonGrid animeList={seasonPicks} />
