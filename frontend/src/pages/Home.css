@@ -28,91 +28,29 @@
   display: none;
 }
 
-/* ─── Layout: flex two-column. Left feed + right sidebar column that
-   stacks widgets; the trending card is fit-content so it never blocks
-   the vertical space beneath it. ─── */
-.main-layout-container {
-  display: flex;
-  align-items: flex-start; /* columns size to content, no vertical stretch */
-  gap: 24px;
+/* ─── Layout: short Top Trending card floats top-right; the feed flows
+   beside it and then expands full-width UNDERNEATH it (so sections like
+   "Trending Now" / "Season Highlights" sit under the card). ─── */
+.home-layout {
   width: 100%;
 }
 
-/* left feed — flex item; min-width:0 lets inner carousels scroll */
-.main-content-left {
-  flex: 1;
+/* feed is a block formatting context: it shrinks next to the floated card
+   at the top, then reclaims full width below the (short) card */
+.home-feed {
+  display: flow-root;
   min-width: 0;
 }
 
-/* right sidebar column — bulletproof: force shrink-to-content, never stretch */
-.sidebar-column-right {
-  width: 410px !important;
-  min-width: 410px !important;
-  height: max-content !important;   /* force shrink to content */
-  min-height: 0 !important;         /* break any inherited min-height */
-  align-self: start !important;     /* force top align (flexbox) */
-  justify-self: start !important;   /* force top align (grid) */
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 20px !important;
-  flex-shrink: 0;
+.trending-rail {
+  margin-bottom: 24px;
 }
 
-/* stop the card itself from growing to fill the column */
-.sidebar-column-right .trending-sidebar {
-  width: 100% !important;
-  height: auto !important;
-  max-height: max-content !important;
-  flex-grow: 0 !important;
-  flex-shrink: 0 !important;
-}
-
-/* generic stacked sidebar widget (sits under the trending card) */
-.sidebar-widget {
-  background-color: #0c0c0e;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 24px;
-  padding: 20px;
-  box-sizing: border-box;
-}
-.sidebar-widget-title {
-  margin: 0 0 14px;
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-.sidebar-genre-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.sidebar-genre-chip {
-  padding: 7px 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  color: #a1a1aa;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-}
-.sidebar-genre-chip:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.12);
-}
-
-/* collapse to a single column on tablet/mobile */
-@media (max-width: 1023px) {
-  .main-layout-container {
-    flex-direction: column;
-  }
-  .sidebar-column-right {
-    width: 100% !important;
-    min-width: 0 !important;
+@media (min-width: 1024px) {
+  .trending-rail {
+    float: right;
+    width: 360px;
+    margin: 0 0 20px 28px; /* gap between card and the feed on its left */
   }
 }
 

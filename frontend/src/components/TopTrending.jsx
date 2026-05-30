@@ -13,7 +13,7 @@ const TABS = [
   { key: "MONTH", filter: "" },
 ];
 
-const LIMIT = 10;
+const LIMIT = 5;
 
 export default function TopTrending() {
   const navigate = useNavigate();

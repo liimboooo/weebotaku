@@ -715,8 +715,11 @@ export default function Home() {
       />
 
       <div className="home-container">
-       <div className="main-layout-container">
-        <div className="main-content-left">
+       <div className="home-layout">
+        <aside className="trending-rail">
+          <TopTrending />
+        </aside>
+        <div className="home-feed">
         <StatsBar />
 
         <GenreBar genres={categories} />
@@ -832,27 +835,6 @@ export default function Home() {
             </button>
           </div>
         </motion.div>
-        </div>
-
-        <div className="sidebar-column-right">
-          <TopTrending />
-
-          {categories.length > 0 && (
-            <div className="sidebar-widget">
-              <h3 className="sidebar-widget-title">Browse by Genre</h3>
-              <div className="sidebar-genre-chips">
-                {categories.slice(0, 12).map((g) => (
-                  <button
-                    key={g}
-                    className="sidebar-genre-chip"
-                    onClick={() => navigate("/browse/anime")}
-                  >
-                    {g}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
        </div>
       </div>
