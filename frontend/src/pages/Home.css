@@ -28,30 +28,18 @@
   display: none;
 }
 
-/* ─── Layout: flex top row (Continue Watching + Top Upcoming beside the
-   Top Trending card), then full-width sections below. No float. ─── */
+/* ─── Layout: 2-column. Whole feed flows down the left; the rail
+   (Top Trending + Schedule) sits on the right and sticks while scrolling.
+   No mid-page gap. ─── */
 .home-layout {
-  width: 100%;
-}
-.home-feed {
-  min-width: 0;
-}
-
-/* top row: first sections on the left + Top Trending card on the right;
-   everything after this row is full-width (no float, so no title/card gaps) */
-.home-feed-top {
   display: flex;
   align-items: flex-start;
   gap: 32px;
-  margin-bottom: 24px;
+  width: 100%;
 }
-.home-feed-top-main {
+.home-feed {
   flex: 1;
   min-width: 0;
-}
-/* align the first section's top with the card (drop its top margin) */
-.home-feed-top-main > :first-child {
-  margin-top: 0;
 }
 .trending-rail {
   width: 440px;
@@ -59,15 +47,19 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  align-self: flex-start;
+  position: sticky;
+  top: 88px; /* clears the fixed header while scrolling */
 }
 
 /* stack on tablet/mobile */
 @media (max-width: 1023px) {
-  .home-feed-top {
+  .home-layout {
     flex-direction: column;
   }
   .trending-rail {
     width: 100%;
+    position: static;
   }
 }
 

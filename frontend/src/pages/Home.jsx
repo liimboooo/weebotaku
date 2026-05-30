@@ -722,17 +722,9 @@ export default function Home() {
 
         <GenreBar genres={categories} />
 
-        <div className="home-feed-top">
-          <div className="home-feed-top-main">
-            <ContinueWatchingRow />
+        <ContinueWatchingRow />
 
-            <TopUpcoming />
-          </div>
-          <aside className="trending-rail">
-            <TopTrending />
-            <Schedule />
-          </aside>
-        </div>
+        <TopUpcoming />
 
         {topTen.length > 0 && (
           <TopTenRow animeList={topTen} />
@@ -842,6 +834,11 @@ export default function Home() {
           </div>
         </motion.div>
         </div>
+
+        <aside className="trending-rail">
+          <TopTrending />
+          <Schedule />
+        </aside>
        </div>
       </div>
 
