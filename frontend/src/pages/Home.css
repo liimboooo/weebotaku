@@ -28,6 +28,40 @@
   display: none;
 }
 
+/* ─── 12-col layout: main feed (8) + Top Trending rail (4) ─── */
+.home-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* single column on mobile/tablet */
+  gap: 32px;
+  align-items: start;
+  width: 100%;
+}
+
+/* left feed column — min-width:0 lets inner carousels overflow/scroll */
+.home-feed {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .home-grid {
+    /* 8/12 + 4/12 of the 12-column grid */
+    grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+  }
+}
+
+/* right sidebar — sticky beneath the fixed header */
+.home-trending-rail {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1024px) {
+  .home-trending-rail {
+    position: sticky;
+    top: 96px; /* ~top-24, clears the fixed header */
+  }
+}
+
 /* ─── Loading Skeletons ──────────────────────────────── */
 .home-loading {
   padding: 120px 0;

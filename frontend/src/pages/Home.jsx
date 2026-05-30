@@ -30,6 +30,7 @@ import AnimatedPage from "../components/AnimatedPage";
 import Skeleton from "../components/Skeleton";
 import Categories from "../components/Categories";
 import TopUpcoming from "../components/TopUpcoming";
+import TopTrending from "../components/TopTrending";
 import Footer from "../components/Footer";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
@@ -714,6 +715,8 @@ export default function Home() {
       />
 
       <div className="home-container">
+       <div className="home-grid">
+        <div className="home-feed">
         <StatsBar />
 
         <GenreBar genres={categories} />
@@ -829,6 +832,12 @@ export default function Home() {
             </button>
           </div>
         </motion.div>
+        </div>
+
+        <aside className="home-trending-rail">
+          <TopTrending />
+        </aside>
+       </div>
       </div>
 
       <Footer />
