@@ -31,28 +31,41 @@
 /* ─── Layout: short Top Trending card floats top-right; the feed flows
    beside it and then expands full-width UNDERNEATH it (so sections like
    "Trending Now" / "Season Highlights" sit under the card). ─── */
-/* outer wrapper establishes a BFC ONLY to contain the float (clearfix) so it
-   can't leak onto the footer; the feed itself stays normal flow */
 .home-layout {
   width: 100%;
-  display: flow-root;
 }
-
-/* feed is NOT a BFC: its top sections sit beside the floated card, and
-   sections below the (short) card reclaim full width and wrap underneath it */
 .home-feed {
   min-width: 0;
 }
 
-.trending-rail {
+/* top row: first sections on the left + Top Trending card on the right;
+   everything after this row is full-width (no float, so no title/card gaps) */
+.home-feed-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
   margin-bottom: 24px;
 }
+.home-feed-top-main {
+  flex: 1;
+  min-width: 0;
+}
+/* align the first section's top with the card (drop its top margin) */
+.home-feed-top-main > :first-child {
+  margin-top: 0;
+}
+.trending-rail {
+  width: 440px;
+  flex-shrink: 0;
+}
 
-@media (min-width: 1024px) {
+/* stack on tablet/mobile */
+@media (max-width: 1023px) {
+  .home-feed-top {
+    flex-direction: column;
+  }
   .trending-rail {
-    float: right;
-    width: 440px;
-    margin: 0 0 20px 32px; /* gap between card and the feed on its left */
+    width: 100%;
   }
 }
 

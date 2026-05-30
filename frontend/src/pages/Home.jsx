@@ -716,17 +716,21 @@ export default function Home() {
 
       <div className="home-container">
        <div className="home-layout">
-        <aside className="trending-rail">
-          <TopTrending />
-        </aside>
         <div className="home-feed">
         <StatsBar />
 
         <GenreBar genres={categories} />
 
-        <ContinueWatchingRow />
+        <div className="home-feed-top">
+          <div className="home-feed-top-main">
+            <ContinueWatchingRow />
 
-        <TopUpcoming />
+            <TopUpcoming />
+          </div>
+          <aside className="trending-rail">
+            <TopTrending />
+          </aside>
+        </div>
 
         {topTen.length > 0 && (
           <TopTenRow animeList={topTen} />
