@@ -11,9 +11,9 @@ import {
   Play,
   Search,
   Star,
+  X,
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
-import Loader from "../components/Loader";
 import { fetchBrowseAnime, fetchAnimeGenres, fetchAnimeTags } from "../services/anilistApi";
 import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import { loadWatchlist, addToWatchlist, removeFromWatchlist, loadWatchHistory } from "../services/storage";
@@ -210,11 +210,40 @@ export default function Browse() {
   const activeCount = [genre, format, year, season, status, tag, country, source].filter(Boolean).length + (debouncedSearch ? 1 : 0);
   const lastPage = Math.max(1, pageInfo.lastPage || 1);
 
+  // active filters as removable chips
+  const sortLabel = SORTS.find(o => o.v === sort)?.l;
+  const fmtLabel = FORMATS.find(o => o.v === format)?.l;
+  const seasonLabel = SEASONS.find(o => o.v === season)?.l;
+  const statusLabel = STATUSES.find(o => o.v === status)?.l;
+  const countryLabel = COUNTRIES.find(o => o.v === country)?.l;
+  const sourceLabel = SOURCES.find(o => o.v === source)?.l;
+  const activePills = [
+    debouncedSearch && { key: "q", label: `"${debouncedSearch}"`, clear: () => setSearch("") },
+    genre && { key: "genre", label: genre, clear: () => setGenre("") },
+    fmtLabel && { key: "format", label: fmtLabel, clear: () => setFormat("") },
+    year && { key: "year", label: year, clear: () => setYear("") },
+    seasonLabel && { key: "season", label: seasonLabel, clear: () => setSeason("") },
+    statusLabel && { key: "status", label: statusLabel, clear: () => setStatus("") },
+    tag && { key: "tag", label: tag, clear: () => setTag("") },
+    countryLabel && { key: "country", label: countryLabel, clear: () => setCountry("") },
+    sourceLabel && { key: "source", label: sourceLabel, clear: () => setSource("") },
+  ].filter(Boolean);
+
   return (
     <AnimatedPage>
       <div className="br">
         <div className="br-bg-ornament" />
         <main className="br-shell">
+          {/* ── Page header ── */}
+          <header className="br-head">
+            <div className="br-head-text">
+              <span className="br-head-eyebrow">Discover</span>
+              <h1 className="br-head-title">Browse Anime</h1>
+              <p className="br-head-sub">Filter by genre, season, studio and more — find your next watch.</p>
+            </div>
+            {sortLabel && <span className="br-head-sort">Sorted by <strong>{sortLabel}</strong></span>}
+          </header>
+
           {/* ── Filter grid ── */}
           <div className="br-filterbar">
             <div className="br-field br-field--search">
@@ -298,9 +327,30 @@ export default function Browse() {
             </div>
           </div>
 
+          {/* ── Active filter chips ── */}
+          {activePills.length > 0 && (
+            <div className="br-chips">
+              {activePills.map(p => (
+                <button key={p.key} className="br-chip" onClick={p.clear}>
+                  {p.label}
+                  <X size={12} />
+                </button>
+              ))}
+              <button className="br-chip br-chip--clear" onClick={resetAll}>Clear all</button>
+            </div>
+          )}
+
           {/* ── Grid ── */}
           {loading ? (
-            <Loader text="Loading anime..." />
+            <div className="br-grid">
+              {Array.from({ length: 18 }).map((_, i) => (
+                <div className="br-skel" key={i}>
+                  <div className="br-skel-poster" />
+                  <div className="br-skel-line" />
+                  <div className="br-skel-line br-skel-line--short" />
+                </div>
+              ))}
+            </div>
           ) : items.length === 0 ? (
             <div className="br-empty">
               <Library size={36} />

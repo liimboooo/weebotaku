@@ -149,20 +149,34 @@ export async function fetchBrowseAnime(opts = {}) {
     search, genre, tag, format, year, season, status, country, source,
     sort = "POPULARITY_DESC", page = 1,
   } = opts;
+  const hasSearch = !!(search && search.trim());
+
+  // Build variables + media-field args dynamically. AniList treats the mere
+  // PRESENCE of `search` (even when null) as an active empty-search filter that
+  // matches nothing, so we only include it when there is an actual term.
   const vars = {
     page: Math.max(1, Math.min(page, 5000)),
-    search: search && search.trim() ? search.trim() : null,
-    genres: genre ? [genre] : null,
-    tags: tag ? [tag] : null,
-    format: format || null,
-    year: year ? Number(year) : null,
-    season: season || null,
-    status: status || null,
-    country: country || null,
-    source: source || null,
-    sort: [search && search.trim() ? "SEARCH_MATCH" : sort],
+    sort: [hasSearch ? "SEARCH_MATCH" : sort],
   };
-  const q = `query($page:Int,$search:String,$genres:[String],$tags:[String],$format:MediaFormat,$year:Int,$season:MediaSeason,$status:MediaStatus,$country:CountryCode,$source:MediaSource,$sort:[MediaSort]){Page(page:$page,perPage:30){pageInfo{total currentPage lastPage hasNextPage} media(type:ANIME,search:$search,genre_in:$genres,tag_in:$tags,format:$format,seasonYear:$year,season:$season,status:$status,countryOfOrigin:$country,source:$source,sort:$sort){${ANIME_FIELDS}}}}`;
+  const paramDefs = ["$page:Int", "$sort:[MediaSort]"];
+  const mediaArgs = ["type:ANIME", "sort:$sort"];
+  const add = (def, arg, key, value) => {
+    paramDefs.push(def);
+    mediaArgs.push(arg);
+    vars[key] = value;
+  };
+
+  if (hasSearch) add("$search:String", "search:$search", "search", search.trim());
+  if (genre) add("$genres:[String]", "genre_in:$genres", "genres", [genre]);
+  if (tag) add("$tags:[String]", "tag_in:$tags", "tags", [tag]);
+  if (format) add("$format:MediaFormat", "format:$format", "format", format);
+  if (year) add("$year:Int", "seasonYear:$year", "year", Number(year));
+  if (season) add("$season:MediaSeason", "season:$season", "season", season);
+  if (status) add("$status:MediaStatus", "status:$status", "status", status);
+  if (country) add("$country:CountryCode", "countryOfOrigin:$country", "country", country);
+  if (source) add("$source:MediaSource", "source:$source", "source", source);
+
+  const q = `query(${paramDefs.join(",")}){Page(page:$page,perPage:30){pageInfo{total currentPage lastPage hasNextPage} media(${mediaArgs.join(",")}){${ANIME_FIELDS}}}}`;
   const data = await gql(q, vars);
   return {
     data: (data?.Page?.media || []).map(mapAnime),

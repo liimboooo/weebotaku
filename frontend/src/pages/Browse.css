@@ -29,13 +29,86 @@
   padding: 28px 40px 80px;
 }
 
+/* ─── PAGE HEADER ────────────────────────────────────── */
+.br-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 26px;
+}
+.br-head-eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.br-head-title {
+  font-family: var(--font-display, sans-serif);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  background: linear-gradient(120deg, #fff 30%, rgba(255,255,255,0.55));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.br-head-sub {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 460px;
+}
+.br-head-sort {
+  flex-shrink: 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-default);
+}
+.br-head-sort strong { color: #fff; font-weight: 700; }
+
 /* ─── FILTER GRID (labeled, AniList-style) ───────────── */
 .br-filterbar {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 16px 18px;
-  margin-bottom: 28px;
+  margin-bottom: 22px;
+  padding: 22px;
+  border-radius: var(--radius-lg, 18px);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border-default);
 }
+
+/* search box base (icon + input layout) */
+.br-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 14px;
+  border: 1px solid var(--border-default);
+  color: var(--text-muted);
+  transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+}
+.br-search:focus-within { border-color: var(--border-active); background: #18181c; }
+.br-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  background: none;
+  outline: none;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+}
+.br-search input::placeholder { color: var(--text-muted); }
 .br-field {
   display: flex;
   flex-direction: column;
@@ -563,6 +636,59 @@
   text-underline-offset: 2px;
 }
 .br-active-pill-clear:hover { color: #fff; }
+
+/* ─── ACTIVE FILTER CHIPS ──────────────────────────── */
+.br-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+.br-chips .br-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+}
+.br-chips .br-chip svg { opacity: 0.55; transition: opacity var(--duration-fast) var(--ease-out); }
+.br-chips .br-chip:hover svg { opacity: 1; }
+.br-chip--clear {
+  background: none;
+  border-color: transparent;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.br-chip--clear:hover { background: none; color: #fff; }
+
+/* ─── SKELETON LOADING ─────────────────────────────── */
+.br-skel { display: flex; flex-direction: column; }
+.br-skel-poster {
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-md);
+  background: #131316;
+  position: relative;
+  overflow: hidden;
+}
+.br-skel-line {
+  height: 11px;
+  margin-top: 10px;
+  border-radius: 4px;
+  background: #131316;
+  position: relative;
+  overflow: hidden;
+}
+.br-skel-line--short { width: 55%; margin-top: 7px; }
+.br-skel-poster::after,
+.br-skel-line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  transform: translateX(-100%);
+  animation: br-shimmer 1.4s infinite;
+}
+@keyframes br-shimmer { 100% { transform: translateX(100%); } }
 
 /* ─── GRID — poster + caption-below cards (AniList style) ─ */
 .br-grid {
