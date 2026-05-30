@@ -51,6 +51,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  align-self: flex-start;  /* never stretch to the row's full height */
+  height: fit-content;     /* wrap only the stacked widgets */
 }
 
 /* collapse to a single column on tablet/mobile */
