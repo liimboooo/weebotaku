@@ -79,44 +79,50 @@ export default function TopTrending() {
         <ol className="tt-list">
           {loading
             ? Array.from({ length: LIMIT }).map((_, i) => (
-                <li className="tt-row tt-row--skeleton" key={`sk-${i}`}>
-                  <div className="tt-left">
-                    <span className={`tt-rank tt-rank--${i < 3 ? i + 1 : "n"}`}>{i + 1}</span>
-                    <div className="tt-thumb tt-shimmer" />
-                    <div className="tt-meta">
-                      <div className="tt-skel-line tt-shimmer" />
-                      <div className="tt-skel-line tt-skel-line--sm tt-shimmer" />
-                    </div>
+                <li className={`tt-row tt-row--skeleton tt-row--${i < 3 ? i + 1 : "n"}`} key={`sk-${i}`}>
+                  <span className="tt-rank" aria-hidden="true">{i + 1}</span>
+                  <div className="tt-meta">
+                    <div className="tt-skel-line tt-shimmer" />
+                    <div className="tt-skel-line tt-skel-line--sm tt-shimmer" />
                   </div>
                 </li>
               ))
             : items.map((anime, i) => (
                 <li
-                  className="tt-row"
+                  className={`tt-row tt-row--${i < 3 ? i + 1 : "n"}`}
                   key={anime.id}
                   onClick={() => navigate(`/anime/${anime.id}/info`)}
                   onMouseEnter={() => prefetch.onMouseEnter(anime.id)}
                   onMouseLeave={prefetch.onMouseLeave}
                 >
-                  <div className="tt-left">
-                    <span className={`tt-rank tt-rank--${i < 3 ? i + 1 : "n"}`} aria-hidden="true">
-                      {i + 1}
-                    </span>
-                    <div className="tt-thumb">
-                      <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
-                    </div>
-                    <div className="tt-meta">
-                      <h3 className="tt-name">{anime.name}</h3>
-                      <div className="tt-sub">
-                        {anime.rating > 0 && (
-                          <span className="tt-score">
-                            <Star size={11} fill="currentColor" /> {anime.rating.toFixed(1)}
-                          </span>
-                        )}
-                        {anime.genres?.[0] && <span className="tt-genre">{anime.genres[0]}</span>}
-                      </div>
+                  {/* left-edge accent line */}
+                  <span className="tt-accent" aria-hidden="true" />
+                  {/* grayscale -> color backdrop */}
+                  <div
+                    className="tt-bg"
+                    style={{ backgroundImage: `url(${anime.img})` }}
+                    aria-hidden="true"
+                  />
+                  {/* left-to-right dark shade so text/number stay readable */}
+                  <div className="tt-shade" aria-hidden="true" />
+
+                  {/* giant outline rank number */}
+                  <span className="tt-rank" aria-hidden="true">
+                    {i + 1}
+                  </span>
+
+                  <div className="tt-meta">
+                    <h3 className="tt-name">{anime.name}</h3>
+                    <div className="tt-sub">
+                      {anime.rating > 0 && (
+                        <span className="tt-score">
+                          <Star size={11} fill="currentColor" /> {anime.rating.toFixed(1)}
+                        </span>
+                      )}
+                      {anime.genres?.[0] && <span className="tt-genre">{anime.genres[0]}</span>}
                     </div>
                   </div>
+
                   <button
                     className="tt-play"
                     aria-label={`Play ${anime.name}`}
@@ -125,7 +131,7 @@ export default function TopTrending() {
                       navigate(`/anime/${anime.id}?ep=1`);
                     }}
                   >
-                    <Play size={14} fill="#000" />
+                    <Play size={15} fill="#000" />
                   </button>
                 </li>
               ))}
