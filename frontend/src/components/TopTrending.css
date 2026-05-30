@@ -7,37 +7,11 @@
   border-radius: var(--radius-xl, 20px);
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
   background: rgba(0, 0, 0, 0.5);
-  overflow: hidden;
-  isolation: isolate;
-}
-
-/* mix-blend background artwork from the #1 title */
-.tt-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-size: cover;
-  background-position: center top;
-  filter: blur(28px) saturate(1.2);
-  opacity: 0.18;
-  mix-blend-mode: luminosity;
-  transform: scale(1.2);
-  pointer-events: none;
-}
-.tt-panel::after {
-  /* darken so list text stays readable over the artwork */
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.85));
-  pointer-events: none;
+  /* no full-card artwork bleed — clean dark surface, distinct row posters */
 }
 
 .tt-inner {
-  position: relative;
-  z-index: 1;
-  padding: 16px 14px;
+  padding: 16px 12px;
 }
 
 /* ─── Header ─────────────────────────────────────────── */
@@ -99,46 +73,77 @@
   flex-direction: column;
 }
 
+/* row: flex items-center justify-between py-2.5 px-3 rounded-xl */
 .tt-row {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 80px;
-  padding: 8px 8px 8px 4px;
-  border-radius: 10px;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
   cursor: pointer;
-  overflow: hidden;
   transition: background 0.2s ease;
 }
 .tt-row:not(.tt-row--skeleton):hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-.tt-row + .tt-row {
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
 }
 
-/* giant outline ranking number, sits behind the text block */
+/* left alignment container: rank + thumb + info (max-w-[80%]) */
+.tt-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 80%;
+  min-width: 0;
+}
+
+/* massive extra-bold outline rank digit (text-4xl/5xl, w-12, centered) */
 .tt-rank {
   flex-shrink: 0;
-  width: 34px;
+  width: 48px;
   text-align: center;
-  font-size: 3rem; /* ~text-5xl */
+  font-size: 2.25rem; /* text-4xl */
   font-weight: 900;
   line-height: 1;
+  letter-spacing: -0.05em; /* tracking-tighter */
   color: transparent;
-  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.25);
+  -webkit-text-stroke: 1.5px #4b5563;
   font-variant-numeric: tabular-nums;
   user-select: none;
 }
+.tt-rank--1 {
+  -webkit-text-stroke: 1.5px #4ade80; /* neon green */
+  opacity: 0.8;
+}
+.tt-rank--2 {
+  -webkit-text-stroke: 1.5px #f87171; /* crimson/orange */
+  opacity: 0.8;
+}
+.tt-rank--3 {
+  -webkit-text-stroke: 1.5px #c084fc; /* deep purple */
+  opacity: 0.8;
+}
+.tt-rank--n {
+  -webkit-text-stroke: 1.5px #4b5563; /* muted dark grey */
+  opacity: 0.4;
+}
+@media (min-width: 1280px) {
+  .tt-rank {
+    font-size: 3rem; /* md:text-5xl */
+  }
+}
 
+/* standalone vertical poster thumbnail (w-11 h-14) */
 .tt-thumb {
   flex-shrink: 0;
-  width: 46px;
-  height: 64px;
+  width: 44px;
+  height: 56px;
   border-radius: 8px;
   overflow: hidden;
-  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #18181b; /* zinc-900 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 .tt-thumb img {
   width: 100%;
@@ -146,35 +151,44 @@
   object-fit: cover;
 }
 
+/* text details column: flex-col gap-0.5 truncate */
 .tt-meta {
-  flex: 1;
-  min-width: 0; /* allow truncation inside the narrow sidebar */
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 .tt-name {
-  margin: 0 0 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #ffffff;
+  margin: 0;
+  font-size: 14px; /* text-sm */
+  font-weight: 700;
+  color: #e4e4e7; /* zinc-200 */
   line-height: 1.3;
-  /* strict single-line truncation so titles never break the sidebar */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 160px;
+  transition: color 0.2s ease;
+}
+.tt-row:hover .tt-name {
+  color: #ffffff;
 }
 .tt-sub {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
-  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+  font-size: 12px; /* text-xs */
+  font-weight: 500;
+  color: #a1a1aa; /* zinc-400 */
+  min-width: 0;
 }
 .tt-score {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  color: #ffffff;
-  font-weight: 600;
+  flex-shrink: 0;
+}
+.tt-score svg {
+  color: #facc15; /* yellow star */
 }
 .tt-genre {
   overflow: hidden;
@@ -182,7 +196,7 @@
   white-space: nowrap;
 }
 
-/* hover play button — slides in from the right, compact (p-2) */
+/* far-right hover-reveal play button (bg-white text-black p-2 rounded-full) */
 .tt-play {
   flex-shrink: 0;
   display: flex;
@@ -196,13 +210,14 @@
   background: #ffffff;
   color: #000;
   cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
   opacity: 0;
-  transform: translateX(8px);
+  transform: scale(0.95);
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .tt-row:hover .tt-play {
   opacity: 1;
-  transform: translateX(0);
+  transform: scale(1);
 }
 
 /* ─── Skeleton shimmer ───────────────────────────────── */
@@ -241,17 +256,4 @@
 .tt-skel-line--sm {
   width: 45%;
   margin-bottom: 0;
-}
-
-/* responsive tweaks for the larger end of the sidebar */
-@media (min-width: 1280px) {
-  .tt-name {
-    max-width: 200px;
-  }
-}
-
-@media (max-width: 1023px) {
-  .tt-name {
-    max-width: none;
-  }
 }

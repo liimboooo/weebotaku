@@ -53,19 +53,8 @@ export default function TopTrending() {
     };
   }, [tab]);
 
-  const hero = items[0];
-
   return (
     <section className="tt-panel" aria-label="Top Trending">
-      {/* mix-blend background artwork from the #1 title */}
-      {hero?.img && (
-        <div
-          className="tt-bg"
-          style={{ backgroundImage: `url(${hero.img})` }}
-          aria-hidden="true"
-        />
-      )}
-
       <div className="tt-inner">
         <header className="tt-header">
           <h2 className="tt-title">
@@ -91,11 +80,13 @@ export default function TopTrending() {
           {loading
             ? Array.from({ length: LIMIT }).map((_, i) => (
                 <li className="tt-row tt-row--skeleton" key={`sk-${i}`}>
-                  <span className="tt-rank">{i + 1}</span>
-                  <div className="tt-thumb tt-shimmer" />
-                  <div className="tt-meta">
-                    <div className="tt-skel-line tt-shimmer" />
-                    <div className="tt-skel-line tt-skel-line--sm tt-shimmer" />
+                  <div className="tt-left">
+                    <span className={`tt-rank tt-rank--${i < 3 ? i + 1 : "n"}`}>{i + 1}</span>
+                    <div className="tt-thumb tt-shimmer" />
+                    <div className="tt-meta">
+                      <div className="tt-skel-line tt-shimmer" />
+                      <div className="tt-skel-line tt-skel-line--sm tt-shimmer" />
+                    </div>
                   </div>
                 </li>
               ))
@@ -107,21 +98,23 @@ export default function TopTrending() {
                   onMouseEnter={() => prefetch.onMouseEnter(anime.id)}
                   onMouseLeave={prefetch.onMouseLeave}
                 >
-                  <span className="tt-rank" aria-hidden="true">
-                    {i + 1}
-                  </span>
-                  <div className="tt-thumb">
-                    <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
-                  </div>
-                  <div className="tt-meta">
-                    <h3 className="tt-name">{anime.name}</h3>
-                    <div className="tt-sub">
-                      {anime.rating > 0 && (
-                        <span className="tt-score">
-                          <Star size={11} fill="currentColor" /> {anime.rating.toFixed(1)}
-                        </span>
-                      )}
-                      {anime.genres?.[0] && <span className="tt-genre">{anime.genres[0]}</span>}
+                  <div className="tt-left">
+                    <span className={`tt-rank tt-rank--${i < 3 ? i + 1 : "n"}`} aria-hidden="true">
+                      {i + 1}
+                    </span>
+                    <div className="tt-thumb">
+                      <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
+                    </div>
+                    <div className="tt-meta">
+                      <h3 className="tt-name">{anime.name}</h3>
+                      <div className="tt-sub">
+                        {anime.rating > 0 && (
+                          <span className="tt-score">
+                            <Star size={11} fill="currentColor" /> {anime.rating.toFixed(1)}
+                          </span>
+                        )}
+                        {anime.genres?.[0] && <span className="tt-genre">{anime.genres[0]}</span>}
+                      </div>
                     </div>
                   </div>
                   <button
