@@ -15,15 +15,6 @@ const TABS = [
 
 const LIMIT = 10;
 
-function RankNumber({ n }) {
-  return (
-    <div className="tt-rank">
-      <span className="tt-rank-bg" aria-hidden="true">{n}</span>
-      <span className="tt-rank-fg">{n}</span>
-    </div>
-  );
-}
-
 export default function TopTrending() {
   const navigate = useNavigate();
   const prefetch = usePrefetchAnime();
@@ -62,104 +53,108 @@ export default function TopTrending() {
     };
   }, [tab]);
 
-  const rankClass = (i) => `tt-row--${i < 3 ? i + 1 : "n"}`;
+  // only top 3 get a themed rank-N class; 4+ fall back to the muted default
+  const cardClass = (i) => `trending-card${i < 3 ? ` rank-${i + 1}` : ""}`;
 
   return (
-    <section className="tt-panel" aria-label="Top Trending">
-      <div className="tt-inner">
-        <header className="tt-header">
-          <h2 className="tt-title">Top Trending</h2>
-          <div className="tt-tabs" role="tablist" aria-label="Trending range">
-            {TABS.map((t) => (
-              <button
-                key={t.key}
-                role="tab"
-                aria-selected={tab === t.key}
-                className={`tt-tab${tab === t.key ? " tt-tab--active" : ""}`}
-                onClick={() => setTab(t.key)}
-              >
-                {t.key}
-              </button>
-            ))}
-          </div>
-        </header>
-
-        <ol className="tt-list">
-          {loading
-            ? Array.from({ length: LIMIT }).map((_, i) => (
-                <li className={`tt-row tt-row--skeleton ${rankClass(i)}`} key={`sk-${i}`}>
-                  <div className="tt-content">
-                    <RankNumber n={i + 1} />
-                    <div className="tt-meta">
-                      <div className="tt-skel-line tt-shimmer" />
-                      <div className="tt-skel-line tt-skel-line--sm tt-shimmer" />
-                    </div>
-                  </div>
-                </li>
-              ))
-            : items.map((anime, i) => (
-                <li
-                  className={`tt-row ${rankClass(i)}`}
-                  key={anime.id}
-                  onClick={() => navigate(`/anime/${anime.id}/info`)}
-                  onMouseEnter={() => prefetch.onMouseEnter(anime.id)}
-                  onMouseLeave={prefetch.onMouseLeave}
-                >
-                  {/* left-edge accent line */}
-                  <span className="tt-accent" aria-hidden="true" />
-                  {/* grayscale -> color backdrop */}
-                  <div
-                    className="tt-bg"
-                    style={{ backgroundImage: `url(${anime.img})` }}
-                    aria-hidden="true"
-                  />
-                  {/* left-to-right dark gradient mask */}
-                  <div className="tt-shade" aria-hidden="true" />
-
-                  <div className="tt-content">
-                    <RankNumber n={i + 1} />
-                    <div className="tt-meta">
-                      <h3 className="tt-name">{anime.name}</h3>
-                      <div className="tt-sub">
-                        {anime.rating > 0 && (
-                          <span className="tt-score">
-                            <Star size={12} fill="currentColor" /> {anime.rating.toFixed(1)}
-                          </span>
-                        )}
-                        {anime.type && <span className="tt-type">{anime.type}</span>}
-                        {anime.episodes > 0 && (
-                          <span className="tt-pill">
-                            <span className="tt-pill-item">
-                              <Layers size={11} /> {anime.episodes}
-                            </span>
-                            <span className="tt-pill-div">/</span>
-                            <span className="tt-pill-item">
-                              <Mic size={11} /> SUB
-                            </span>
-                            <span className="tt-pill-div">/</span>
-                            <span className="tt-pill-item">
-                              <MessageSquare size={11} /> DUB
-                            </span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    className="tt-play"
-                    aria-label={`Play ${anime.name}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/anime/${anime.id}?ep=1`);
-                    }}
-                  >
-                    <Play size={15} fill="currentColor" />
-                  </button>
-                </li>
-              ))}
-        </ol>
+    <div className="trending-sidebar">
+      <div className="sidebar-header">
+        <h2 className="sidebar-title">Top Trending</h2>
+        <div className="tabs-container" role="tablist" aria-label="Trending range">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={tab === t.key}
+              className={`tab-btn${tab === t.key ? " active" : ""}`}
+              onClick={() => setTab(t.key)}
+            >
+              {t.key}
+            </button>
+          ))}
+        </div>
       </div>
-    </section>
+
+      <div className="standings-stack">
+        {loading
+          ? Array.from({ length: LIMIT }).map((_, i) => (
+              <div className={`${cardClass(i)} trending-card--skeleton`} key={`sk-${i}`}>
+                <div className="info-cluster">
+                  <div className="rank-wrapper">
+                    <span className="rank-outline-huge">{i + 1}</span>
+                    <span className="rank-solid-mini">{i + 1}</span>
+                  </div>
+                  <div className="meta-text-block">
+                    <div className="skel-line shimmer" />
+                    <div className="skel-line skel-line--sm shimmer" />
+                  </div>
+                </div>
+              </div>
+            ))
+          : items.map((anime, i) => (
+              <div
+                className={cardClass(i)}
+                key={anime.id}
+                onClick={() => navigate(`/anime/${anime.id}/info`)}
+                onMouseEnter={() => prefetch.onMouseEnter(anime.id)}
+                onMouseLeave={prefetch.onMouseLeave}
+              >
+                <div
+                  className="card-bg-artwork"
+                  style={{ backgroundImage: `url('${anime.img}')` }}
+                  aria-hidden="true"
+                />
+                <div className="card-gradient-mask" aria-hidden="true" />
+                <div className="left-accent-strip" aria-hidden="true" />
+
+                <div className="info-cluster">
+                  <div className="rank-wrapper">
+                    <span className="rank-outline-huge" aria-hidden="true">
+                      {i + 1}
+                    </span>
+                    <span className="rank-solid-mini">{i + 1}</span>
+                  </div>
+                  <div className="meta-text-block">
+                    <h3 className="anime-title">{anime.name}</h3>
+                    <div className="sub-meta-row">
+                      {anime.rating > 0 && (
+                        <div className="rating-block">
+                          <Star size={12} fill="currentColor" /> {anime.rating.toFixed(1)}
+                        </div>
+                      )}
+                      {anime.type && <span className="type-label">{anime.type}</span>}
+                      {anime.episodes > 0 && (
+                        <div className="stats-capsule">
+                          <div className="stat-item">
+                            <Layers size={11} /> {anime.episodes}
+                          </div>
+                          <span className="stats-divider">/</span>
+                          <div className="stat-item">
+                            <Mic size={11} /> {anime.episodes}
+                          </div>
+                          <span className="stats-divider">/</span>
+                          <div className="stat-item">
+                            <MessageSquare size={11} /> {anime.episodes}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  className="glass-play-btn"
+                  aria-label={`Play ${anime.name}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/anime/${anime.id}?ep=1`);
+                  }}
+                >
+                  <Play size={16} fill="currentColor" className="play-icon-adjust" />
+                </button>
+              </div>
+            ))}
+      </div>
+    </div>
   );
 }

@@ -1,327 +1,306 @@
 /* ═══════════════════════════════════════════════════════
-   TOP TRENDING — premium sidebar ranking feed
+   TOP TRENDING — vanilla CSS sidebar ranking feed
    ═══════════════════════════════════════════════════════ */
-.tt-panel {
+
+/* Component Wrapper */
+.trending-sidebar {
   width: 100%;
-  background: #0a0a0c;
-  border-radius: 24px; /* rounded-3xl */
-  border: 1px solid rgba(255, 255, 255, 0.02);
+  max-width: 410px;
+  background-color: #0c0c0e;
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.01);
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  user-select: none;
 }
 
-.tt-inner {
-  padding: 24px; /* p-6 */
-}
-
-/* ─── Header (title + tabs, justify-between) ─────────── */
-.tt-header {
+/* Header & Segmented Tabs Control */
+.sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
-.tt-title {
-  margin: 0;
-  font-size: 20px; /* text-xl */
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.sidebar-title {
   color: #ffffff;
+  font-size: 21px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 0;
 }
-
-/* tab switcher pill */
-.tt-tabs {
+.tabs-container {
   display: flex;
-  gap: 2px;
+  background-color: #131316;
+  border: 1px solid rgba(255, 255, 255, 0.03);
   padding: 4px;
-  flex-shrink: 0;
-  background: #121214;
-  border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 12px;
 }
-.tt-tab {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
+.tab-btn {
   background: transparent;
-  color: #71717a; /* zinc-500 */
+  border: none;
+  color: #71717a;
   font-family: inherit;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  padding: 8px 14px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
-.tt-tab:hover {
-  color: #d4d4d8; /* zinc-300 */
+.tab-btn:hover {
+  color: #d4d4d8;
 }
-/* CRITICAL: active tab is dark grey, NOT inverted white */
-.tt-tab--active {
-  background: #222226;
+.tab-btn.active {
+  background-color: #222227;
   color: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
-/* ─── List ───────────────────────────────────────────── */
-.tt-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* Standings Stack List */
+.standings-stack {
   display: flex;
   flex-direction: column;
-  gap: 14px; /* gap-3.5 */
+  gap: 12px;
 }
 
-/* ─── Row card ───────────────────────────────────────── */
-.tt-row {
+/* Main Trending Card Base Row */
+.trending-card {
   position: relative;
   overflow: hidden;
   width: 100%;
-  height: 88px;
+  height: 90px;
+  background-color: rgba(17, 17, 20, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px 0 20px; /* pl-5 pr-4 */
-  border-radius: 16px; /* rounded-2xl */
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  background: rgba(15, 15, 18, 0.6); /* #0f0f12/60 */
+  padding: 0 16px;
   cursor: pointer;
-  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-}
-.tt-row:not(.tt-row--skeleton):hover {
-  background: rgba(20, 20, 25, 0.8); /* #141419/80 */
-  border-color: rgba(255, 255, 255, 0.08);
+  box-sizing: border-box;
+  /* muted default theme for rank 4+ */
+  --rank-color: #3f3f46;
+  --rank-glow: rgba(255, 255, 255, 0.05);
+  transition: background-color 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+    border-color 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+    box-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* ─── Left-edge accent line ──────────────────────────── */
-.tt-accent {
+/* Dynamic Rank Color Injectors via CSS Variables */
+.trending-card.rank-1 { --rank-color: #4ade80; --rank-glow: rgba(74, 222, 128, 0.18); }
+.trending-card.rank-2 { --rank-color: #f97316; --rank-glow: rgba(249, 115, 22, 0.18); }
+.trending-card.rank-3 { --rank-color: #a855f7; --rank-glow: rgba(168, 85, 247, 0.18); }
+
+/* Core Micro-Animations on Card Hover */
+.trending-card:not(.trending-card--skeleton):hover {
+  background-color: rgba(22, 22, 28, 0.8);
+  border-color: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 16px 0 40px -15px var(--rank-glow);
+}
+
+/* Ambient Background Backdrop Poster */
+.card-bg-artwork {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.05;
+  mix-blend-mode: luminosity;
+  transform: scale(1.05);
+  transition: all 0.5s ease-out;
+  z-index: 0;
+}
+.trending-card:hover .card-bg-artwork {
+  transform: scale(1);
+  opacity: 0.14;
+  mix-blend-mode: normal;
+}
+.card-gradient-mask {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    #0c0c0e 0%,
+    rgba(12, 12, 14, 0.8) 80%,
+    transparent 100%
+  );
+  z-index: 1;
+}
+
+/* Left Accent Indicator Strip */
+.left-accent-strip {
   position: absolute;
   left: 0;
-  top: 12px;
-  bottom: 12px;
+  top: 15px;
+  bottom: 15px;
   width: 3.5px;
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 4px 4px 0;
+  background-color: var(--rank-color);
   opacity: 0;
   transform: scaleY(0.5);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  z-index: 5;
+  transition: all 0.3s ease-out;
+  z-index: 2;
 }
-.tt-row:hover .tt-accent {
+.trending-card:hover .left-accent-strip {
   opacity: 1;
   transform: scaleY(1);
 }
 
-/* ─── Grayscale -> color backdrop ────────────────────── */
-.tt-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-size: cover;
-  background-position: center;
-  opacity: 0.06;
-  filter: grayscale(1);
-  mix-blend-mode: luminosity;
-  transform: scale(1.05);
-  transition: opacity 0.5s ease, filter 0.5s ease, transform 0.5s ease;
-  pointer-events: none;
-}
-.tt-row:hover .tt-bg {
-  opacity: 0.15;
-  filter: none;
-  mix-blend-mode: normal;
-  transform: scale(1);
-}
-
-/* strict gradient mask over the backdrop */
-.tt-shade {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: linear-gradient(
-    to right,
-    #0f0f12 0%,
-    rgba(15, 15, 18, 0.9) 50%,
-    transparent 100%
-  );
-  pointer-events: none;
-}
-
-/* ─── Content (rank + meta) ──────────────────────────── */
-.tt-content {
+/* Double-Layer Orthographic Rank Layout System */
+.rank-wrapper {
   position: relative;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  gap: 20px; /* gap-5 */
-  max-width: 85%;
-  min-width: 0;
-}
-
-/* ─── Double-layer rank number ───────────────────────── */
-.tt-rank {
-  position: relative;
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  user-select: none;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  z-index: 2;
 }
-.tt-rank-bg {
-  position: absolute;
-  font-size: 3rem; /* text-5xl */
+.rank-outline-huge {
+  font-size: 52px;
   font-weight: 900;
   font-style: italic;
+  letter-spacing: -0.04em;
   line-height: 1;
-  letter-spacing: -0.05em;
+  position: absolute;
+  left: 0;
   color: transparent;
-  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.15);
+  -webkit-text-stroke: 1.5px var(--rank-color);
+  opacity: 0.22;
   transition: transform 0.3s ease;
 }
-.tt-row:hover .tt-rank-bg {
-  transform: scale(1.05);
+.trending-card:hover .rank-outline-huge {
+  transform: scale(1.03);
 }
-.tt-rank-fg {
-  position: absolute;
-  font-size: 1.25rem; /* text-xl */
+.rank-solid-mini {
+  font-size: 22px;
   font-weight: 900;
   font-style: italic;
   color: #ffffff;
-  transform: translate(8px, 6px); /* translate-x-2 translate-y-1.5 */
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  position: absolute;
+  left: 18px;
+  top: 14px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.9));
 }
 
-/* ─── Meta details ───────────────────────────────────── */
-.tt-meta {
+/* Info Structure & Tech Capsules */
+.info-cluster {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 2;
+  width: 100%;
+  max-width: 82%;
+  overflow: hidden;
+}
+.meta-text-block {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+  gap: 8px;
+  overflow: hidden;
+  white-space: nowrap;
 }
-.tt-name {
-  margin: 0;
-  font-size: 15px;
+.anime-title {
+  color: #e4e4e7;
+  font-size: 15.5px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: #e4e4e7; /* zinc-200 */
-  white-space: nowrap;
+  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding-right: 8px;
   transition: color 0.2s ease;
 }
-.tt-row:hover .tt-name {
+.trending-card:hover .anime-title {
   color: #ffffff;
 }
-.tt-sub {
+.sub-meta-row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 10px; /* gap-2.5 */
+  gap: 12px;
   font-size: 12px;
-  min-width: 0;
 }
-.tt-score {
-  display: inline-flex;
+.rating-block {
+  display: flex;
   align-items: center;
   gap: 4px;
-  color: #eab308; /* yellow-500 */
+  color: #eab308;
+  font-weight: 800;
+}
+.type-label {
+  color: #71717a;
   font-weight: 700;
-}
-.tt-type {
-  color: #71717a; /* zinc-500 */
-  font-weight: 600;
   font-size: 11px;
-  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
-
-/* sub/dub counter pill */
-.tt-pill {
-  display: inline-flex;
+.stats-capsule {
+  display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  background-color: rgba(23, 23, 28, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   padding: 2px 8px;
   border-radius: 6px;
-  background: rgba(22, 22, 26, 0.9); /* #16161a/90 */
-  border: 1px solid rgba(255, 255, 255, 0.04);
   font-size: 11px;
-  font-weight: 500;
-  color: #a1a1aa; /* zinc-400 */
+  color: #a1a1aa;
+  font-weight: 600;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.2);
 }
-.tt-pill-item {
-  display: inline-flex;
+.stats-divider {
+  color: rgba(255, 255, 255, 0.1);
+}
+.stat-item {
+  display: flex;
   align-items: center;
   gap: 4px;
 }
-.tt-pill-div {
-  color: #3f3f46; /* zinc-700 */
-}
 
-/* ─── Glassmorphic play button ───────────────────────── */
-.tt-play {
-  position: relative;
-  z-index: 10;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border-radius: 50%;
+/* Translucent Glassmorphic Play Trigger */
+.glass-play-btn {
+  opacity: 0;
+  transform: translateX(16px) scale(0.9);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   background: rgba(255, 255, 255, 0.1);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px;
+  border-radius: 50%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 2;
   color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   cursor: pointer;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  opacity: 0;
-  transform: translateX(12px) scale(0.9);
-  transition: opacity 0.3s ease, transform 0.3s ease, background 0.2s ease,
-    color 0.2s ease;
 }
-.tt-row:hover .tt-play {
+.trending-card:hover .glass-play-btn {
   opacity: 1;
   transform: translateX(0) scale(1);
 }
-.tt-play:hover {
+.glass-play-btn:hover {
   background: #ffffff;
   color: #000000;
+  transform: scale(1.05);
+}
+.play-icon-adjust {
+  transform: translateX(0.5px);
 }
 
-/* ─── Per-rank theming (accent + stroke + hover glow) ── */
-.tt-row--1 .tt-accent { background: #4ade80; }
-.tt-row--1 .tt-rank-bg { -webkit-text-stroke-color: rgba(74, 222, 128, 0.25); }
-.tt-row--1:not(.tt-row--skeleton):hover {
-  box-shadow: inset 12px 0 30px -10px rgba(74, 222, 128, 0.15);
-}
-
-.tt-row--2 .tt-accent { background: #f97316; }
-.tt-row--2 .tt-rank-bg { -webkit-text-stroke-color: rgba(249, 115, 22, 0.25); }
-.tt-row--2:not(.tt-row--skeleton):hover {
-  box-shadow: inset 12px 0 30px -10px rgba(249, 115, 22, 0.15);
-}
-
-.tt-row--3 .tt-accent { background: #a855f7; }
-.tt-row--3 .tt-rank-bg { -webkit-text-stroke-color: rgba(168, 85, 247, 0.25); }
-.tt-row--3:not(.tt-row--skeleton):hover {
-  box-shadow: inset 12px 0 30px -10px rgba(168, 85, 247, 0.15);
-}
-
-.tt-row--n .tt-accent { background: #3f3f46; }
-.tt-row--n .tt-rank-bg { -webkit-text-stroke-color: rgba(255, 255, 255, 0.1); }
-
-/* ─── Skeleton shimmer ───────────────────────────────── */
-.tt-row--skeleton {
+/* ─── Skeleton shimmer (loading state) ───────────────── */
+.trending-card--skeleton {
   cursor: default;
 }
-.tt-shimmer {
+.shimmer {
   position: relative;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.06);
 }
-.tt-shimmer::after {
+.shimmer::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -339,13 +318,11 @@
     transform: translateX(100%);
   }
 }
-.tt-skel-line {
+.skel-line {
   height: 12px;
-  width: 70%;
+  width: 150px;
   border-radius: 4px;
-  margin-bottom: 8px;
 }
-.tt-skel-line--sm {
-  width: 40%;
-  margin-bottom: 0;
+.skel-line--sm {
+  width: 90px;
 }
