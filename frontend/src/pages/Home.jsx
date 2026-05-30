@@ -386,14 +386,16 @@ function SectionHeader({ icon: Icon, title, subtitle, action }) {
         <motion.button
           className="section-action"
           onClick={action}
+          aria-label="Browse all"
+          title="Browse all"
           initial={{ opacity: 0, x: 20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ type: "spring", stiffness: 180, damping: 22, delay: 0.1 }}
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.96 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.94 }}
         >
-          View all <ChevronRight size={14} />
+          <ChevronRight size={18} />
         </motion.button>
       )}
     </div>
