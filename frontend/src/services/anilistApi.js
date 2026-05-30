@@ -143,6 +143,35 @@ export async function fetchTopAnime(page = 1, filter = "") {
   return { data: (data?.Page?.media || []).map(mapAnime), pagination: { hasNextPage: data?.Page?.pageInfo?.hasNextPage || false, currentPage: page } };
 }
 
+// All home-page lists in ONE request (aliased) — avoids the rate-limit
+// 429s that happen when 7 parallel AniList calls are fired at once, which
+// made sections like "Most Popular" / "Coming Soon" intermittently vanish.
+export async function fetchHomeBundle() {
+  const season = getCurrentSeason().toUpperCase();
+  const year = new Date().getFullYear();
+  const q = `query($season:MediaSeason,$year:Int){
+    airing:Page(page:1,perPage:25){media(type:ANIME,sort:TRENDING_DESC){${ANIME_FIELDS}}}
+    highRated:Page(page:1,perPage:25){media(type:ANIME,sort:SCORE_DESC){${ANIME_FIELDS}}}
+    trending:Page(page:1,perPage:25){media(type:ANIME,sort:TRENDING_DESC){${ANIME_FIELDS}}}
+    seasonal:Page(page:1,perPage:25){media(type:ANIME,season:$season,seasonYear:$year,sort:SCORE_DESC){${ANIME_FIELDS}}}
+    upcoming:Page(page:1,perPage:25){media(type:ANIME,sort:TRENDING_DESC,status:NOT_YET_RELEASED){${ANIME_FIELDS}}}
+    popular:Page(page:1,perPage:25){media(type:ANIME,sort:POPULARITY_DESC){${ANIME_FIELDS}}}
+    genres:GenreCollection
+  }`;
+  const data = await gql(q, { season, year });
+  const list = (k) => (data?.[k]?.media || []).map(mapAnime);
+  const fallbackGenres = ["Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Mystery", "Romance", "Sci-Fi", "Slice of Life", "Sports", "Thriller"];
+  return {
+    airing: list("airing"),
+    highRated: list("highRated"),
+    trending: list("trending"),
+    seasonal: list("seasonal"),
+    upcoming: list("upcoming"),
+    popular: list("popular"),
+    genres: data?.genres?.length ? data.genres : fallbackGenres,
+  };
+}
+
 // Server-side filtered browse with pagination + total count
 export async function fetchBrowseAnime(opts = {}) {
   const {

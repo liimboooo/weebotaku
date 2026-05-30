@@ -32,7 +32,7 @@ import TopUpcoming from "../components/TopUpcoming";
 import TopTrending from "../components/TopTrending";
 import Schedule from "../components/Schedule";
 import Footer from "../components/Footer";
-import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
+import { fetchHomeBundle, fetchTopAnime, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
 import { loadWatchlist, loadWatchHistory, loadRatings, removeFromWatchHistory } from "../services/storage";
 import usePrefetchAnime from "../hooks/usePrefetchAnime";
@@ -54,56 +54,29 @@ function useAnimeData() {
   useEffect(() => {
     async function load() {
       try {
-        const [topAir, highRated, seasonal, genres, upcoming, popular, trending] = await Promise.allSettled([
-          fetchTopAnime(1, "airing"),
-          fetchTopAnime(1, ""),
-          fetchSeasonalAnime(),
-          fetchAnimeGenres(),
-          fetchTopAnime(1, "upcoming"),
-          fetchTopAnime(1, "bypopularity"),
-          fetchTopAnime(1, "trending"),
-        ]);
+        // Single aliased request for every list — avoids the parallel
+        // rate-limit 429s that made sections intermittently disappear.
+        const bundle = await fetchHomeBundle();
 
-        if (topAir.status === "fulfilled" && topAir.value.data.length > 0) {
-          const queue = topAir.value.data.slice(0, 5);
+        if (bundle.airing.length > 0) {
+          const queue = bundle.airing.slice(0, 5);
           setSpotlightQueue(queue);
           setSpotlight(queue[0]);
         }
 
         const usedIds = new Set();
+        const take = (arr, n) => {
+          const out = arr.filter(a => !usedIds.has(a.id)).slice(0, n);
+          out.forEach(a => usedIds.add(a.id));
+          return out;
+        };
 
-        if (highRated.status === "fulfilled") {
-          const list = highRated.value.data.slice(0, 10);
-          list.forEach(a => usedIds.add(a.id));
-          setTopTen(list);
-        }
-
-        if (trending.status === "fulfilled") {
-          const list = trending.value.data.filter(a => !usedIds.has(a.id)).slice(0, 15);
-          list.forEach(a => usedIds.add(a.id));
-          setTrendingList(list);
-        }
-
-        if (seasonal.status === "fulfilled") {
-          const list = seasonal.value.data.filter(a => !usedIds.has(a.id)).slice(0, 20);
-          list.forEach(a => usedIds.add(a.id));
-          setSeasonPicks(list);
-        }
-
-        if (genres.status === "fulfilled") {
-          setCategories(genres.value);
-        }
-
-        if (upcoming.status === "fulfilled") {
-          const list = upcoming.value.data.filter(a => !usedIds.has(a.id)).slice(0, 12);
-          list.forEach(a => usedIds.add(a.id));
-          setUpcomingList(list);
-        }
-
-        if (popular.status === "fulfilled") {
-          const list = popular.value.data.filter(a => !usedIds.has(a.id)).slice(0, 20);
-          setPopularList(list);
-        }
+        setTopTen(take(bundle.highRated, 10));
+        setTrendingList(take(bundle.trending, 15));
+        setSeasonPicks(take(bundle.seasonal, 20));
+        setCategories(bundle.genres);
+        setUpcomingList(take(bundle.upcoming, 12));
+        setPopularList(take(bundle.popular, 20));
       } catch {}
       setLoading(false);
     }
