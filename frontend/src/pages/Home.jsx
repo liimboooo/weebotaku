@@ -445,47 +445,6 @@ function SeasonGrid({ animeList }) {
   );
 }
 
-function TopTenRow({ animeList }) {
-  const navigate = useNavigate();
-  if (!animeList?.length) return null;
-  return (
-    <section className="home-section">
-      <SectionHeader icon={Crown} title="Top 10 Anime" subtitle="Highest rated of all time" />
-      <motion.div
-        className="upcoming-grid"
-        variants={staggerContainer}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-40px" }}
-      >
-        {animeList.map((anime) => (
-          <motion.div
-            key={anime.id}
-            className="upcoming-card"
-            onClick={() => navigate(`/anime/${anime.id}/info`)}
-            variants={cardSlideUp}
-            whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
-          >
-            <div className="upcoming-card-img">
-              <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
-              <div className="upcoming-card-badge">
-                {anime.rating && <><Star size={10} fill="#ffffff" color="#ffffff" /> {anime.rating?.toFixed(1)}</>}
-              </div>
-            </div>
-            <div className="upcoming-card-body">
-              <h3>{anime.name}</h3>
-              <div className="upcoming-card-meta">
-                {anime.genres?.[0] && <span className="upcoming-card-tag">{anime.genres[0]}</span>}
-                <span className="upcoming-card-type">{anime.status || "TV"}</span>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
-    </section>
-  );
-}
-
 function GenreBar({ genres }) {
   const navigate = useNavigate();
   if (!genres?.length) return null;
@@ -670,7 +629,7 @@ function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onWatch
 export default function Home() {
   useDocumentTitle("Home");
   const navigate = useNavigate();
-  const { spotlight, topTen, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending } = useAnimeData();
+  const { spotlight, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending } = useAnimeData();
   const [quote, setQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
 
@@ -729,10 +688,6 @@ export default function Home() {
         <ContinueWatchingRow />
 
         <TopUpcoming />
-
-        {topTen.length > 0 && (
-          <TopTenRow animeList={topTen} />
-        )}
 
         {trendingList.length > 0 && (
           <section className="home-section">
