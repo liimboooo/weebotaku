@@ -212,8 +212,8 @@ export default function Header({ isHome = false }) {
         </div>
 
         <div className="top-nav-right">
-          <div className="top-nav-search">
-            <Search size={13} className="top-nav-search-icon" strokeWidth={1.75} onClick={handleSpotlightOpen} style={{ cursor: 'pointer' }} />
+          <div className="top-nav-search" onClick={handleSpotlightOpen} style={{ cursor: 'pointer' }}>
+            <Search size={13} className="top-nav-search-icon" strokeWidth={1.75} />
             <input
               ref={inputRef}
               type="text"
