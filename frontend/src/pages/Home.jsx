@@ -717,6 +717,10 @@ export default function Home() {
 
       <div className="home-container">
        <div className="home-layout">
+        <aside className="trending-rail">
+          <TopTrending />
+          <Schedule />
+        </aside>
         <div className="home-feed">
         <StatsBar />
 
@@ -834,11 +838,6 @@ export default function Home() {
           </div>
         </motion.div>
         </div>
-
-        <aside className="trending-rail">
-          <TopTrending />
-          <Schedule />
-        </aside>
        </div>
       </div>
 

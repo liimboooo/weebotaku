@@ -28,38 +28,28 @@
   display: none;
 }
 
-/* ─── Layout: 2-column. Whole feed flows down the left; the rail
-   (Top Trending + Schedule) sits on the right and sticks while scrolling.
-   No mid-page gap. ─── */
+/* ─── Layout: rail floats top-right; the feed wraps beside it and then
+   spans full-width UNDERNEATH it, covering the right side (no empty gap,
+   no left gap). Outer wrapper contains the float; feed stays normal flow. ─── */
 .home-layout {
-  display: flex;
-  align-items: flex-start;
-  gap: 32px;
   width: 100%;
+  display: flow-root; /* contain the float so it can't reach the footer */
 }
 .home-feed {
-  flex: 1;
   min-width: 0;
 }
 .trending-rail {
-  width: 440px;
-  flex-shrink: 0;
+  margin-bottom: 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  align-self: flex-start;
-  position: sticky;
-  top: 88px; /* clears the fixed header while scrolling */
 }
 
-/* stack on tablet/mobile */
-@media (max-width: 1023px) {
-  .home-layout {
-    flex-direction: column;
-  }
+@media (min-width: 1024px) {
   .trending-rail {
-    width: 100%;
-    position: static;
+    float: right;
+    width: 440px;
+    margin: 0 0 24px 28px; /* gap from the feed on its left */
   }
 }
 
