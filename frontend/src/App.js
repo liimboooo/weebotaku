@@ -3,7 +3,6 @@ import AuthPage from "./pages/AuthPage";
 import './App.css';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
 import { syncFromBackend } from "./services/storage";
-import ScrollToTop from "./components/ScrollToTop";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import ToastContainer from "./components/Toast";
@@ -76,7 +75,6 @@ function AppLayout() {
 
   return (
     <>
-      <ScrollToTop />
       {!isAuthPage && <Header isHome={isHome} />}
       {!isAuthPage && <Sidebar />}
       <div className={`app-main${needsHeaderOffset ? ' app-main--padded' : ''}`}>

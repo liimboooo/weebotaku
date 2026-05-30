@@ -336,8 +336,8 @@
 
 .wl-badge.ongoing { background: rgba(46,204,113,0.85); color: #fff; }
 .wl-badge.publishing { background: rgba(46,204,113,0.85); color: #fff; }
-.wl-badge.completed { background: rgba(255,255,255,0.85); color: #fff; }
-.wl-badge.finished { background: rgba(255,255,255,0.85); color: #fff; }
+.wl-badge.completed { background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.15); color: #fff; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.wl-badge.finished { background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.15); color: #fff; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 
 .wl-card-wish {
   position: absolute;

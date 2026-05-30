@@ -32,7 +32,7 @@
   padding: 0;
   font-size: 11px;
   font-weight: 700;
-  color: #fff;
+  color: #000;
   background: #ffffff;
   border-radius: 50%;
 }
@@ -165,7 +165,7 @@
   padding: 10px 24px;
   border: none;
   background: #ffffff;
-  color: #fff;
+  color: #000;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -562,7 +562,7 @@
 
 .awc-reply-post-sm {
   background: #ffffff;
-  color: #fff;
+  color: #000;
 }
 
 .awc-reply-post-sm:hover { background: #000000; }

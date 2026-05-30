@@ -210,7 +210,7 @@
 }
 .magazine-action-play {
   background: #ffffff;
-  color: #fff;
+  color: #000;
 }
 .magazine-action-play:hover { background: #000000; transform: translateY(-2px); box-shadow: 0 6px 24px rgba(255,255,255,0.35); }
 .magazine-action-info {

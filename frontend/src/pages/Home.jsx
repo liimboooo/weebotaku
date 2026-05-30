@@ -29,6 +29,7 @@ import AnimatedPage from "../components/AnimatedPage";
 import Skeleton from "../components/Skeleton";
 import Categories from "../components/Categories";
 import TopUpcoming from "../components/TopUpcoming";
+import Footer from "../components/Footer";
 import { fetchTopAnime, fetchSeasonalAnime, fetchAnimeGenres, fetchAnimeById } from "../services/anilistApi";
 import { fetchRandomQuote } from "../services/communityApi";
 import { loadWatchlist, loadWatchHistory, loadRatings } from "../services/storage";
@@ -789,6 +790,8 @@ export default function Home() {
           </div>
         </motion.div>
       </div>
+
+      <Footer />
     </AnimatedPage>
   );
 }
