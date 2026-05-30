@@ -836,6 +836,23 @@ export default function Home() {
 
         <div className="sidebar-column-right">
           <TopTrending />
+
+          {categories.length > 0 && (
+            <div className="sidebar-widget">
+              <h3 className="sidebar-widget-title">Browse by Genre</h3>
+              <div className="sidebar-genre-chips">
+                {categories.slice(0, 12).map((g) => (
+                  <button
+                    key={g}
+                    className="sidebar-genre-chip"
+                    onClick={() => navigate("/browse/anime")}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
        </div>
       </div>

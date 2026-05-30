@@ -67,6 +67,44 @@
   flex-shrink: 0 !important;
 }
 
+/* generic stacked sidebar widget (sits under the trending card) */
+.sidebar-widget {
+  background-color: #0c0c0e;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 24px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.sidebar-widget-title {
+  margin: 0 0 14px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.sidebar-genre-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sidebar-genre-chip {
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #a1a1aa;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.sidebar-genre-chip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
 /* collapse to a single column on tablet/mobile */
 @media (max-width: 1023px) {
   .main-layout-container {
