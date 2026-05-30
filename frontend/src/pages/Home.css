@@ -628,6 +628,8 @@
    Mask lives on a NON-scrolling wrapper: applying it to the scroller itself
    makes the gradient resolve against the full scroll width (fade off-screen). */
 .cw-scroll-wrap {
+  width: 100%;
+  max-width: 100%;
   -webkit-mask-image: linear-gradient(to right, #000 80%, transparent 100%);
   mask-image: linear-gradient(to right, #000 80%, transparent 100%);
   -webkit-mask-repeat: no-repeat;
@@ -638,7 +640,10 @@
 
 .cw-scroll {
   display: flex;
+  flex-wrap: nowrap;
   gap: 10px;
+  width: 100%;
+  min-width: 0;
   overflow-x: auto;
   padding-bottom: 4px;
   -webkit-overflow-scrolling: touch;
