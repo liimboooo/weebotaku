@@ -51,8 +51,8 @@
 @media (min-width: 1024px) {
   .trending-rail {
     float: right;
-    width: 360px;
-    margin: 0 0 20px 28px; /* gap between card and the feed on its left */
+    width: 440px;
+    margin: 0 0 20px 32px; /* gap between card and the feed on its left */
   }
 }
 
