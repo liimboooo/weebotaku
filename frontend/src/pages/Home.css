@@ -28,9 +28,8 @@
   display: none;
 }
 
-/* ─── Layout: short Top Trending card floats top-right; the feed flows
-   beside it and then expands full-width UNDERNEATH it (so sections like
-   "Trending Now" / "Season Highlights" sit under the card). ─── */
+/* ─── Layout: flex top row (Continue Watching + Top Upcoming beside the
+   Top Trending card), then full-width sections below. No float. ─── */
 .home-layout {
   width: 100%;
 }
