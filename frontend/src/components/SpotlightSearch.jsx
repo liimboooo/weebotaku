@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, TrendingUp, Filter, X } from 'lucide-react';
+import { Search, TrendingUp, SlidersHorizontal, X } from 'lucide-react';
 import { fetchSearchAnime, fetchTopAnime } from '../services/anilistApi';
 import './SpotlightSearch.css';
 
 const DEBOUNCE_MS = 250;
 const MAX_SUGGESTIONS = 8;
+const TRENDING_CACHE_KEY = 'spotlight_trending_cache';
 
 function highlightMatch(text, query) {
   if (!query.trim()) return text;
@@ -19,24 +20,39 @@ function highlightMatch(text, query) {
   );
 }
 
-const FALLBACK_TRENDING = [
-  { name: 'Attack on Titan', type: 'Series' },
-  { name: 'Demon Slayer', type: 'Series' },
-  { name: 'Jujutsu Kaisen', type: 'Series' },
-  { name: 'Solo Leveling', type: 'Series' },
-  { name: 'One Piece', type: 'Series' },
-  { name: 'Your Name', type: 'Movie' },
-];
+function loadTrendingCache() {
+  try {
+    const raw = localStorage.getItem(TRENDING_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.ts > 1800000) {
+      localStorage.removeItem(TRENDING_CACHE_KEY);
+      return null;
+    }
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function saveTrendingCache(data) {
+  try {
+    localStorage.setItem(TRENDING_CACHE_KEY, JSON.stringify({ data, ts: Date.now() }));
+  } catch {}
+}
 
 export default function SpotlightSearch({ open, onClose }) {
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
-  const [trending, setTrending] = useState(FALLBACK_TRENDING);
+  const [trending, setTrending] = useState(() => loadTrendingCache() || []);
+  const [trendingLoading, setTrendingLoading] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState(-1);
+
+  const hasTrending = trending.length > 0;
 
   useEffect(() => {
     if (open) {
@@ -49,16 +65,22 @@ export default function SpotlightSearch({ open, onClose }) {
   }, [open]);
 
   useEffect(() => {
-    if (open && trending.length <= FALLBACK_TRENDING.length) {
-      fetchTopAnime(1, 'trending')
-        .then(r => {
-          if (r.data?.length > 0) {
-            setTrending(r.data.slice(0, 6));
-          }
-        })
-        .catch(() => {});
-    }
-  }, [open, trending.length]);
+    if (!open || hasTrending || trendingLoading) return;
+    setTrendingLoading(true);
+    fetchTopAnime(1, 'trending')
+      .then(r => {
+        if (r.data?.length > 0) {
+          const items = r.data.slice(0, 6);
+          setTrending(items);
+          saveTrendingCache(items);
+        }
+      })
+      .catch(() => {
+        const cached = loadTrendingCache();
+        if (cached) setTrending(cached);
+      })
+      .finally(() => setTrendingLoading(false));
+  }, [open, hasTrending, trendingLoading]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(query), DEBOUNCE_MS);
@@ -161,9 +183,10 @@ export default function SpotlightSearch({ open, onClose }) {
       {open && (
         <motion.div
           className="ss-panel"
-          initial={{ opacity: 0, y: -10, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.98 }}
+          style={{ left: '50%' }}
+          initial={{ opacity: 0, y: -10, x: '-50%', scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, x: '-50%', scale: 1 }}
+          exit={{ opacity: 0, y: -10, x: '-50%', scale: 0.98 }}
           transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
         >
           <div className="ss-input-row">
@@ -189,10 +212,10 @@ export default function SpotlightSearch({ open, onClose }) {
             )}
             <button
               className="ss-filter-btn"
-              onClick={() => { handleClose(); navigate('/browse/anime'); }}
-              aria-label="Open filters"
+              onClick={() => { handleClose(); navigate('/search'); }}
+              aria-label="Open search filters"
             >
-              <Filter size={14} />
+              <SlidersHorizontal size={14} />
             </button>
           </div>
 
@@ -200,26 +223,28 @@ export default function SpotlightSearch({ open, onClose }) {
             {showTrending && (
               <div className="ss-empty">
                 <p className="ss-empty-prompt">What do you wanna watch today?</p>
-                <div className="ss-trending-section">
-                  <div className="ss-trending-header">
-                    <TrendingUp size={13} />
-                    <span>Trending Now</span>
+                {hasTrending && (
+                  <div className="ss-trending-section">
+                    <div className="ss-trending-header">
+                      <TrendingUp size={13} />
+                      <span>Trending Now</span>
+                    </div>
+                    <div className="ss-trending-list">
+                      {trending.map((item, i) => (
+                        <button
+                          key={item.id || i}
+                          className="ss-trending-item"
+                          onClick={() => handleTrendingClick(item.name || item.title?.english || item.title?.romaji || '')}
+                        >
+                          <span className="ss-trending-rank">{String(i + 1).padStart(2, '0')}</span>
+                          <span className="ss-trending-name">
+                            {item.name || item.title?.english || item.title?.romaji}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="ss-trending-list">
-                    {trending.map((item, i) => (
-                      <button
-                        key={item.id || i}
-                        className="ss-trending-item"
-                        onClick={() => handleTrendingClick(item.name || item.title?.english || item.title?.romaji || '')}
-                      >
-                        <span className="ss-trending-rank">{String(i + 1).padStart(2, '0')}</span>
-                        <span className="ss-trending-name">
-                          {item.name || item.title?.english || item.title?.romaji}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                )}
               </div>
             )}
 
