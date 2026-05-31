@@ -82,6 +82,15 @@ export async function fetchSeasonalAnime(year, season) {
   }
 }
 
+export async function fetchAnimeTags() {
+  try {
+    const res = await api.get('/catalog/tags');
+    return res.data || [];
+  } catch {
+    return ['Action', 'Adventure', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Mystery', 'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Thriller'];
+  }
+}
+
 export async function fetchAnimeGenres() {
   try {
     const res = await api.get('/catalog/genres');

@@ -412,6 +412,21 @@ exports.getGenres = async (req, res) => {
   }
 };
 
+exports.getTags = async (req, res) => {
+  try {
+    const cached = getCached('tags');
+    if (cached) return res.json({ success: true, data: cached });
+
+    const q = 'query { TagCollection { name } }';
+    const data = await gql(q);
+    const tags = (data?.TagCollection || []).map(t => t.name).filter(Boolean).sort();
+    setCache('tags', tags);
+    res.json({ success: true, data: tags });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 exports.getNewsFeed = async (req, res) => {
   try {
     const cached = getCached('newsFeed');

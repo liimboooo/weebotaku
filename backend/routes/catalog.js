@@ -14,6 +14,7 @@ const {
   getRecommendations,
   getSchedule,
   getGenres,
+  getTags,
   getNewsFeed,
 } = require('../controllers/catalogController');
 
@@ -25,6 +26,7 @@ router.get('/top-rated', getTopRated);
 router.get('/airing', getAiring);
 router.get('/search', search);
 router.get('/genres', getGenres);
+router.get('/tags', getTags);
 router.get('/schedule', getSchedule);
 router.get('/news-feed', getNewsFeed);
 router.get('/anime/:id', getById);
