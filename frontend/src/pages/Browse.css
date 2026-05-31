@@ -141,7 +141,17 @@
 }
 .br-select:hover { border-color: var(--border-hover); }
 .br-select:focus { outline: none; border-color: var(--border-active); background: #18181c; }
-.br-select option { background: #0c0c0e; color: #fff; }
+.br-select option {
+  background: #141418;
+  color: #fff;
+  padding: 10px 12px;
+  font-size: 13.5px;
+}
+.br-select option:checked {
+  background: #26262c;
+  color: #fff;
+}
+.br-select option:disabled { color: var(--text-muted); }
 .br-select-arrow {
   position: absolute;
   right: 12px;
