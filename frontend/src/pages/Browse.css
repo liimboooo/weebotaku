@@ -768,9 +768,9 @@
 .br-poster-wish.active {
   opacity: 1;
   transform: scale(1);
-  color: #a3e635;
-  border-color: rgba(163, 230, 53, 0.5);
-  background: rgba(163, 230, 53, 0.16);
+  color: #000;
+  border-color: #fff;
+  background: #fff;
 }
 
 /* hover overlay: dim + rating top-left + center play */
@@ -828,7 +828,7 @@
   left: 0;
   z-index: 3;
   height: 3px;
-  background: #a3e635;
+  background: #fff;
 }
 
 /* caption below the poster */
@@ -857,11 +857,12 @@
 .br-card:hover .br-cap-title { color: #fff; }
 .br-cap-dot {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   margin-right: 6px;
   border-radius: 50%;
-  background: #a3e635;
+  background: #f43f5e;
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.18);
   vertical-align: middle;
 }
 
