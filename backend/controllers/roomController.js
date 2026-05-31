@@ -169,12 +169,9 @@ exports.leaveRoom = async (req, res) => {
 
     const updated = await Room.findByIdAndUpdate(
       req.params.id,
-      { $pull: { participants: req.user.id } },
-      { new: true, select: 'participants' }
+      { $pull: { participants: req.user.id }, $inc: { participantCount: -1 } },
+      { new: true, select: 'participants participantCount' }
     );
-    if (updated) {
-      await Room.updateOne({ _id: req.params.id }, { $set: { participantCount: updated.participants.length } });
-    }
 
     res.json({ success: true, message: 'Left room' });
   } catch (error) {
@@ -582,7 +579,7 @@ exports.updatePosition = async (req, res) => {
 exports.sendMessage = async (req, res) => {
   try {
     const { text } = req.body;
-    if (!text || !text.trim()) return res.status(400).json({ success: false, message: 'Message required' });
+    if (typeof text !== 'string' || !text.trim()) return res.status(400).json({ success: false, message: 'Message required' });
 
     const room = await Room.findById(req.params.id);
     if (!room || !room.isLive) return res.status(404).json({ success: false, message: 'Room not found' });
@@ -612,16 +609,7 @@ exports.getMessages = async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
     const after = req.query.after ? new Date(req.query.after) : null;
 
-    let query;
-    if (after) {
-      query = Room.findById(req.params.id, {
-        messages: { $elemMatch: { ts: { $gt: after } } },
-      });
-    } else {
-      query = Room.findById(req.params.id).select('messages');
-    }
-
-    const room = await query.lean();
+    const room = await Room.findById(req.params.id).select('messages').lean();
     if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
 
     let msgs = room.messages || [];

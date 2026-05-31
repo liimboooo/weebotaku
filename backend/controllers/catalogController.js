@@ -113,13 +113,14 @@ function setCache(key, data) {
 }
 
 function paginateResponse(data, page, perPage) {
+  const start = (page - 1) * perPage;
   return {
     success: true,
-    data: data.slice(0, perPage),
+    data: data.slice(start, start + perPage),
     page,
     perPage,
     total: data.length,
-    hasMore: page * perPage < data.length,
+    hasMore: start + perPage < data.length,
   };
 }
 

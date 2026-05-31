@@ -85,7 +85,7 @@ exports.likeComment = async (req, res) => {
     let comment = await Comment.findById(req.params.id);
     if (!comment) {
       comment = await Comment.findOne({ 'replies._id': req.params.id });
-      if (comment) return exports.likeReply(req, res);
+      if (comment) { req.params.replyId = req.params.id; return exports.likeReply(req, res); }
       return res.status(404).json({ success: false, message: 'Comment not found' });
     }
 
@@ -128,7 +128,7 @@ exports.dislikeComment = async (req, res) => {
     let comment = await Comment.findById(req.params.id);
     if (!comment) {
       comment = await Comment.findOne({ 'replies._id': req.params.id });
-      if (comment) return exports.dislikeReply(req, res);
+      if (comment) { req.params.replyId = req.params.id; return exports.dislikeReply(req, res); }
       return res.status(404).json({ success: false, message: 'Comment not found' });
     }
 
@@ -201,7 +201,7 @@ exports.deleteComment = async (req, res) => {
     let comment = await Comment.findById(req.params.id);
     if (!comment) {
       comment = await Comment.findOne({ 'replies._id': req.params.id });
-      if (comment) return exports.deleteReply(req, res);
+      if (comment) { req.params.replyId = req.params.id; return exports.deleteReply(req, res); }
       return res.status(404).json({ success: false, message: 'Comment not found' });
     }
 
@@ -222,7 +222,7 @@ exports.editComment = async (req, res) => {
     let comment = await Comment.findById(req.params.id);
     if (!comment) {
       comment = await Comment.findOne({ 'replies._id': req.params.id });
-      if (comment) return exports.editReply(req, res);
+      if (comment) { req.params.replyId = req.params.id; return exports.editReply(req, res); }
       return res.status(404).json({ success: false, message: 'Comment not found' });
     }
 

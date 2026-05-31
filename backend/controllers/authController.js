@@ -471,6 +471,7 @@ exports.removeFromCollection = async (req, res) => {
 exports.getSettings = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('settings');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     res.json({ success: true, settings: user.settings });
   } catch (error) {
     console.error('GetSettings error:', error);
