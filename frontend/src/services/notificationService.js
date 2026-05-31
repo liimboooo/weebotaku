@@ -43,7 +43,7 @@ const NOTIF_CATEGORIES = {
   All: { label: 'All', types: null },
   Replies: { label: 'Replies', types: ['comment_reply'] },
   Likes: { label: 'Likes', types: ['comment_like', 'review_like'] },
-  Friends: { label: 'Friends', types: ['friend_request', 'friend_accepted', 'friend_online'] },
+  Friends: { label: 'Friends', types: [] },
   Social: { label: 'Social', types: ['room_invite', 'room_activity', 'room_ended', 'recommendation'] },
   Updates: { label: 'Updates', types: ['system_update', 'new_feature'] },
   News: { label: 'News', types: ['trailer', 'trending', 'episode', 'info'] },

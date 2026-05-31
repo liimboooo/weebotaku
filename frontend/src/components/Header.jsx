@@ -12,6 +12,7 @@ import {
   getNotificationsByCategory,
   markRead,
   markAllRead,
+  handleSocketNotification,
 } from '../services/notificationService';
 import './Header.css';
 
@@ -135,11 +136,14 @@ export default function Header({ isHome = false }) {
     const onUpdate = () => refreshNotifs();
     const onLogout = () => setIsLoggedIn(false);
     const onLogin = () => setIsLoggedIn(authService.isLoggedIn());
+    const onSocketNotif = (e) => { handleSocketNotification(e.detail); refreshNotifs(); };
     window.addEventListener('notification-added', onUpdate);
+    window.addEventListener('server-notification', onSocketNotif);
     window.addEventListener('auth-logout', onLogout);
     window.addEventListener('auth-login', onLogin);
     return () => {
       window.removeEventListener('notification-added', onUpdate);
+      window.removeEventListener('server-notification', onSocketNotif);
       window.removeEventListener('auth-logout', onLogout);
       window.removeEventListener('auth-login', onLogin);
     };
@@ -193,7 +197,7 @@ export default function Header({ isHome = false }) {
   const handleNotifClick = async (n) => {
     if (!n.read) await markRead(n.id);
     setShowNotifPopout(false);
-    if (n.link) navigate(n.link);
+    navigate(n.link || '/browse/anime');
     refreshNotifs();
   };
 

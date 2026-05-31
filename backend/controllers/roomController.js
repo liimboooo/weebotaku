@@ -14,6 +14,7 @@ function notifyRoomEnded(participantIds, hostUsername, roomName) {
       type: 'room_ended',
       title: `${hostUsername} ended the room`,
       body: `"${roomName}" has ended`,
+      link: '/watch-together',
     }).then(notif => emitNotification(uid, notif)).catch(() => {});
   }
 }
