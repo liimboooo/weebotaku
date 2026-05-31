@@ -19,7 +19,7 @@ app.use(hpp());
 
 // ─── CORS ────────────────────────────────────────────────
 app.use(cors({
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()) : true,
+  origin: ['https://frontend-beryl-theta-14.vercel.app', 'http://localhost:3000'],
   credentials: true,
 }));
 
