@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
-  Play, Share2, ChevronLeft, ChevronRight,
+  Play, Share2, ChevronLeft, ChevronRight, X,
   Check, Copy, Globe, Bell, Eye, Bookmark,
-  MessageCircle, AtSign, Type
+  MessageCircle, AtSign
 } from "lucide-react";
 import { fetchAnimeRecommendations, fetchAnimeCharacters } from "../services/anilistApi";
 import api from "../services/api";
@@ -48,6 +48,7 @@ export default function AnimeInfo() {
   const [copied, setCopied] = useState(false);
   const [characters, setCharacters] = useState([]);
   const [resumeInfo, setResumeInfo] = useState(null);
+  const [trailerOpen, setTrailerOpen] = useState(false);
   const [epScrollLeft, setEpScrollLeft] = useState(false);
   const [epScrollRight, setEpScrollRight] = useState(false);
 
@@ -104,6 +105,13 @@ export default function AnimeInfo() {
     if (shareOpen) document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [shareOpen]);
+
+  useEffect(() => {
+    if (!trailerOpen) return;
+    const handler = (e) => { if (e.key === "Escape") setTrailerOpen(false); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [trailerOpen]);
 
   const checkEpScroll = useCallback(() => {
     const el = epScrollRef.current;
@@ -194,10 +202,10 @@ export default function AnimeInfo() {
               <span>Next ep airing in 6 days</span>
             </div>
             {anime.trailerUrl && (
-              <a href={anime.trailerUrl} target="_blank" rel="noopener noreferrer" className="ai-hero-btn-trailer">
+              <button className="ai-hero-btn-trailer" onClick={() => setTrailerOpen(true)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                 <span>Watch trailer</span>
-              </a>
+              </button>
             )}
             <div className="ai-hero-format">
               <span>Format: {anime.type || "TV Show"}</span>
@@ -257,10 +265,6 @@ export default function AnimeInfo() {
                   </div>
                 )}
               </div>
-
-              <button className="ai-hero-btn-icon" aria-label="Text size">
-                <Type size={16} />
-              </button>
 
               <a href={`https://myanimelist.net/anime/${anime.malId || id}`} target="_blank" rel="noopener noreferrer" className="ai-hero-btn-icon mal-btn">
                 <span>MAL</span>
@@ -446,6 +450,27 @@ export default function AnimeInfo() {
           </section>
         )}
       </div>
+
+      {/* ─── TRAILER MODAL ─── */}
+      {trailerOpen && (
+        <div className="ai-trailer-modal" onClick={() => setTrailerOpen(false)}>
+          <div className="ai-trailer-modal-bg" />
+          <div className="ai-trailer-modal-content" onClick={e => e.stopPropagation()}>
+            <button className="ai-trailer-modal-close" onClick={() => setTrailerOpen(false)}>
+              <X size={20} />
+            </button>
+            <div className="ai-trailer-modal-video">
+              <iframe
+                src={anime.trailerUrl}
+                title="Trailer"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

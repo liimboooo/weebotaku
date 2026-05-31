@@ -693,6 +693,67 @@
 @keyframes ai-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 @keyframes ai-fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 
+/* ─── TRAILER MODAL ─── */
+.ai-trailer-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-trailer-modal-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+}
+
+.ai-trailer-modal-content {
+  position: relative;
+  width: 90%;
+  max-width: 960px;
+  aspect-ratio: 16/9;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+}
+
+.ai-trailer-modal-close {
+  position: absolute;
+  top: -44px;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  z-index: 2;
+  padding: 0;
+}
+
+.ai-trailer-modal-close:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.ai-trailer-modal-video {
+  width: 100%;
+  height: 100%;
+}
+
+.ai-trailer-modal-video iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
 /* ─── RETRY ─── */
 .ai-retry-btn {
   padding: 10px 24px;
