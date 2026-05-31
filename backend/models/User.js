@@ -207,7 +207,6 @@ UserSchema.methods.toPublic = function () {
   return {
     id: this._id,
     username: this.username,
-    email: this.email,
     avatar: this.avatar,
     bio: this.bio,
     socialLinks: this.socialLinks,
