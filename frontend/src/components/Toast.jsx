@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { X, CheckCircle, AlertCircle, Info } from "lucide-react";
+import { X, CheckCircle, AlertCircle, Info, Bookmark, Play } from "lucide-react";
 import "./Toast.css";
 
 const ICONS = {
   success: CheckCircle,
   error: AlertCircle,
   info: Info,
+  save: Bookmark,
+  watch: Play,
 };
 
 export default function ToastContainer() {
@@ -31,10 +33,16 @@ export default function ToastContainer() {
     <div className="toast-container">
       {toasts.map((t) => {
         const Icon = ICONS[t.type] || Info;
+        // addNotification dispatches {title, body}; older callers use {message}
+        const title = t.title || t.message || "Notification";
+        const body = t.body && t.body !== title ? t.body : null;
         return (
           <div key={t.id} className={`toast toast-${t.type}`}>
-            <Icon size={16} />
-            <span>{t.message}</span>
+            <span className="toast-icon"><Icon size={16} /></span>
+            <div className="toast-body">
+              <span className="toast-title">{title}</span>
+              {body && <span className="toast-text">{body}</span>}
+            </div>
             {t.label && <span className="toast-xp-label">{t.label}</span>}
             <button className="toast-close" onClick={() => remove(t.id)}>
               <X size={14} />
