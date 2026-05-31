@@ -700,11 +700,13 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   background: none;
   border: none;
   cursor: pointer;
+  transition: transform var(--duration-normal) var(--ease-out);
 }
+.br-card:hover { transform: translateY(-6px); }
 
 /* poster */
 .br-poster {
@@ -713,13 +715,14 @@
   border-radius: var(--radius-md);
   overflow: hidden;
   background: #0e0e10;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-  transition: transform var(--duration-normal) var(--ease-out),
+  transition: border-color var(--duration-normal) var(--ease-out),
     box-shadow var(--duration-normal) var(--ease-out);
 }
 .br-card:hover .br-poster {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
 }
 .br-poster-img {
   width: 100%;
