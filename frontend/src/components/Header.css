@@ -754,3 +754,13 @@
     padding: 7px 10px;
   }
 }
+
+@media (max-width: 380px) {
+  .top-nav { padding: 0 10px; }
+  .top-nav-search { width: 100px; }
+  .top-nav-search input { font-size: 12px; }
+  .top-nav-left { gap: 6px; }
+  .top-nav-right { gap: 6px; }
+  .brand-text { font-size: 12px; }
+  .top-nav-divider { display: none; }
+}

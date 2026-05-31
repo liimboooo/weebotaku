@@ -303,3 +303,26 @@
   .footer-newsletter { max-width: none; width: 100%; }
   .footer-bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
+
+@media (max-width: 480px) {
+  .footer { padding: 28px 12px 20px; margin-top: 16px; }
+  .footer-inner { gap: 20px; }
+  .footer-top { gap: 24px; }
+  .footer-brand strong { font-size: 16px; }
+  .footer-brand span { font-size: 12px; }
+  .footer-socials { gap: 8px; }
+  .footer-social { width: 32px; height: 32px; }
+  .footer-social svg { width: 15px; height: 15px; }
+  .footer-links { gap: 24px; width: 100%; justify-content: space-between; }
+  .footer-links-col { gap: 6px; }
+  .footer-links-title { font-size: 9px; }
+  .footer-links button { font-size: 12px; }
+  .footer-newsletter p { font-size: 12px; }
+  .footer-newsletter-form input { padding: 8px 12px; font-size: 12px; }
+  .footer-newsletter-form button { width: 38px; }
+  .footer-bottom { gap: 8px; }
+  .footer-copy { font-size: 10px; }
+  .footer-made { font-size: 10px; }
+  .footer-badge { font-size: 9px; padding: 2px 8px; }
+  .footer-glow { display: none; }
+}

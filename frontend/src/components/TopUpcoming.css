@@ -251,14 +251,34 @@
 
 @media (max-width: 480px) {
   .tu-card {
-    min-width: 320px;
-    height: 210px;
+    min-width: 310px;
+    height: 200px;
   }
   .tu-card-cover {
-    flex: 0 0 120px;
-    width: 120px;
+    flex: 0 0 110px;
+    width: 110px;
   }
   .tu-card-body {
-    padding: 12px;
+    padding: 10px;
   }
+  .tu-title { font-size: 1.2rem; }
+  .tu-date { font-size: 1rem; }
+  .tu-desc { font-size: 10.5px; -webkit-line-clamp: 2; }
+  .tu-tag { font-size: 10px; padding: 2px 8px; }
+}
+
+@media (max-width: 380px) {
+  .tu-card {
+    min-width: 280px;
+    height: 180px;
+  }
+  .tu-card-cover {
+    flex: 0 0 90px;
+    width: 90px;
+  }
+  .tu-card-body { padding: 8px; }
+  .tu-date { font-size: 0.9rem; }
+  .tu-desc { display: none; }
+  .tu-cover-title { font-size: 10px; }
+  .tu-label { font-size: 8px; }
 }

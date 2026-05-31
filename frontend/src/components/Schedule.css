@@ -222,3 +222,39 @@
 @keyframes sched-shimmer {
   100% { transform: translateX(100%); }
 }
+
+/* ─── Responsive ──────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sched { padding: 14px; }
+  .sched-chip { padding: 6px 0; }
+  .sched-chip-day { font-size: 9px; }
+  .sched-chip-date { font-size: 15px; }
+  .sched-arrow { width: 30px; height: 30px; }
+  .sched-row { padding: 9px 2px; gap: 8px; }
+  .sched-time { width: 36px; font-size: 11px; }
+  .sched-title { font-size: 12px; }
+  .sched-type { font-size: 9px; padding: 1px 5px; }
+  .sched-ep { font-size: 10px; }
+  .sched-list .sched-row::before { left: 50px; }
+}
+
+@media (max-width: 480px) {
+  .sched { padding: 12px; border-radius: 18px; }
+  .sched-days { gap: 4px; padding-bottom: 12px; }
+  .sched-chips { gap: 4px; }
+  .sched-chip { padding: 5px 0; border-radius: 8px; }
+  .sched-chip-day { font-size: 8px; }
+  .sched-chip-date { font-size: 13px; }
+  .sched-arrow { width: 26px; height: 26px; }
+  .sched-arrow svg { width: 15px; height: 15px; }
+  .sched-row { padding: 7px 2px; gap: 6px; }
+  .sched-time { width: 32px; font-size: 10px; }
+  .sched-title { font-size: 11px; }
+  .sched-type { font-size: 8px; padding: 1px 4px; }
+  .sched-node { width: 7px; height: 7px; }
+  .sched-list .sched-row::before { left: 44px; width: 1px; }
+  .sched-footer { padding-top: 10px; }
+  .sched-clock { font-size: 10px; }
+  .sched-more { font-size: 11px; }
+  .sched-empty { font-size: 11px; padding: 16px 4px; }
+}

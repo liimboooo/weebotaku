@@ -295,6 +295,39 @@
   transform: translateX(0.5px);
 }
 
+/* ─── Responsive ──────────────────────────────────────── */
+@media (max-width: 768px) {
+  .trending-sidebar { padding: 16px; }
+  .sidebar-title { font-size: 18px; }
+  .tab-btn { font-size: 10px; padding: 6px 10px; }
+  .trending-card { height: 80px; padding: 0 12px; }
+  .rank-wrapper { width: 44px; height: 44px; }
+  .rank-outline-huge { font-size: 40px; }
+  .rank-solid-mini { font-size: 18px; left: 14px; top: 10px; }
+  .info-cluster { gap: 10px; }
+  .anime-title { font-size: 13.5px; }
+  .sub-meta-row { gap: 8px; font-size: 11px; }
+  .stats-capsule { font-size: 10px; padding: 1px 6px; gap: 5px; }
+  .glass-play-btn { display: none; }
+}
+
+@media (max-width: 480px) {
+  .trending-sidebar { padding: 12px; border-radius: 18px; }
+  .sidebar-title { font-size: 16px; }
+  .tabs-container { padding: 3px; }
+  .tab-btn { font-size: 9px; padding: 5px 8px; }
+  .trending-card { height: 72px; padding: 0 10px; border-radius: 14px; }
+  .rank-wrapper { width: 36px; height: 36px; }
+  .rank-outline-huge { font-size: 32px; }
+  .rank-solid-mini { font-size: 15px; left: 10px; top: 7px; }
+  .info-cluster { gap: 8px; }
+  .anime-title { font-size: 12px; }
+  .sub-meta-row { gap: 6px; font-size: 10px; flex-wrap: wrap; }
+  .rating-block { font-size: 10px; }
+  .type-label { font-size: 9px; }
+  .stats-capsule { display: none; }
+}
+
 /* ─── Skeleton shimmer (loading state) ───────────────── */
 .trending-card--skeleton {
   cursor: default;
