@@ -132,6 +132,7 @@ export default function Browse() {
   const [pageInfo, setPageInfo] = useState({ total: 0, currentPage: 1, lastPage: 1, hasNextPage: false });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
 
   const [watchlist, setWatchlist] = useState(loadWatchlist());
   const [watchAnime, setWatchAnime] = useState(null);
@@ -165,7 +166,7 @@ export default function Browse() {
       .catch(() => { if (!cancelled) { setItems([]); setError("Failed to load anime. Please try again."); } })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [debouncedSearch, genre, tag, format, year, season, status, country, source, sort, page]);
+  }, [debouncedSearch, genre, tag, format, year, season, status, country, source, sort, page, retryCount]);
 
   // scroll up to the grid when the page changes
   useEffect(() => {
@@ -357,7 +358,7 @@ export default function Browse() {
               <h3>{error ? "Load Error" : "No matches"}</h3>
               <p>{error || "Try clearing a filter or widening your search."}</p>
               {error
-                ? <button className="br-retry-btn" onClick={() => setPage(p => p)}>Retry</button>
+                ? <button className="br-retry-btn" onClick={() => setRetryCount(c => c + 1)}>Retry</button>
                 : activeCount > 0 && <button className="br-retry-btn" onClick={resetAll}>Clear filters</button>}
             </div>
           ) : (

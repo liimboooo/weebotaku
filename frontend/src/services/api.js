@@ -48,6 +48,7 @@ class ApiClient {
         localStorage.removeItem('user');
         window.dispatchEvent(new CustomEvent('auth-logout', { detail: { reason: 'token_expired' } }));
         setTimeout(() => { this._redirecting = false; }, 2000);
+        throw new Error('Session expired. Please log in again.');
       }
 
       const data = await response.json();

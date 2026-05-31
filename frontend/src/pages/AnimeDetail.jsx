@@ -335,6 +335,7 @@ export default function AnimeDetail() {
     if (!episode) return;
     let cancelled = false;
     addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img);
+    setSeekTo(null);
     setIntroOutro({ intro: null, outro: null });
     setShowSkipIntro(false);
     setShowSkipOutro(false);
@@ -690,10 +691,10 @@ export default function AnimeDetail() {
   }, [episodes, epSearch]);
 
   const watchedEpisodes = useMemo(() => {
-    if (!anime?.anilistId) return new Set();
+    if (!anime?.id) return new Set();
     const history = loadWatchHistory();
-    return new Set(history.filter(h => h.animeId === anime.anilistId).map(h => h.episode));
-  }, [anime?.anilistId, episodes]);
+    return new Set(history.filter(h => h.animeId === anime.id).map(h => h.episode));
+  }, [anime?.id, episodes]);
 
   const metadataItemsFn = useMemo(() => {
     const items = [];
