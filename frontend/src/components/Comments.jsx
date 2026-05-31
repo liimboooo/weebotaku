@@ -600,8 +600,7 @@ function Comments({ comments: externalComments, setComments, currentUser = "You"
       const res = await onReplyComment(parentId, reply.text || reply.content);
       if (res?.success) return;
     }
-    setComments?.(c => addReplyDeep(c, parentId, reply));
-  }, [setComments, onReplyComment]);
+  }, [onReplyComment]);
 
   const handleLike = useCallback(async (id) => {
     if (onLikeComment) {

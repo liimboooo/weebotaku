@@ -8,7 +8,7 @@ const PIPE_HEADERS = {
   'Referer': 'https://www.miruro.tv/',
 };
 
-const PROVIDER_PRIORITY = ['ally', 'bee', 'ANIMEKAI', 'kiwi', 'dune', 'hop'];
+const PROVIDER_PRIORITY = ['ally', 'bee', 'animekai', 'kiwi', 'dune', 'hop'];
 const BLOCKED_CDN_HOSTS = ['uwucdn.top', 'owocdn.top'];
 const CORS_CDN_HOSTS = ['wixmp.com', 'wixstatic.com'];
 
@@ -21,7 +21,7 @@ const EP_CACHE_TTL = 5 * 60 * 1000;
 
 async function anilistToTmdb(anilistId) {
   if (tmdbCache.has(anilistId)) return tmdbCache.get(anilistId);
-  const res = await fetch(`${ARM_API}?source=anilist&id=${anilistId}`, { timeout: 3000 });
+  const res = await fetch(`${ARM_API}?source=anilist&id=${anilistId}`, { signal: AbortSignal.timeout(3000) });
   if (!res.ok) return null;
   const data = await res.json();
   const result = data.themoviedb ? { id: data.themoviedb, season: data['themoviedb-season'] || 1 } : null;
@@ -36,7 +36,7 @@ async function ezvidapiResolve(tmdbId, season, episode) {
         const url = `${EZVIDAPI_BASE}/tv/${provider}/${tmdbId}?season=${season}&episode=${episode}`;
         const res = await fetch(url, {
           headers: { 'Referer': 'https://ezvidapi.com/', 'Accept': 'application/json' },
-          timeout: 7000,
+          signal: AbortSignal.timeout(7000),
         });
         if (!res.ok) throw new Error('not ok');
         const data = await res.json();
@@ -78,7 +78,7 @@ function deepTranslateIds(obj) {
 async function pipeFetch(payload) {
   const encoded = encodePipeRequest(payload);
   const url = `${MIRURO_PIPE}?e=${encoded}`;
-  const res = await fetch(url, { headers: PIPE_HEADERS, timeout: 15000 });
+  const res = await fetch(url, { headers: PIPE_HEADERS, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`Pipe returned ${res.status}`);
   const body = (await res.text()).trim();
   return decodePipeResponse(body);
@@ -114,7 +114,7 @@ async function anilistSearch(query) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: gql, variables: { search: query } }),
-    timeout: 10000,
+    signal: AbortSignal.timeout(10000),
   });
   if (!res.ok) throw new Error('AniList query failed');
   const data = await res.json();
@@ -332,7 +332,7 @@ exports.streamProxy = async (req, res) => {
     };
     if (referer) headers['Referer'] = referer;
 
-    const proxyRes = await fetch(targetUrl, { headers, timeout: 9000, redirect: 'follow' });
+    const proxyRes = await fetch(targetUrl, { headers, signal: AbortSignal.timeout(9000), redirect: 'follow' });
     if (!proxyRes.ok) return res.status(proxyRes.status).send('Upstream error');
 
     const contentType = proxyRes.headers.get('content-type') || '';
@@ -346,10 +346,14 @@ exports.streamProxy = async (req, res) => {
       const baseUrl = `${req.protocol}://${req.get('host')}/api/stream/proxy`;
       const urlDir = targetUrl.substring(0, targetUrl.lastIndexOf('/') + 1);
 
-      body = body.replace(/(^(?!#).*$)/gm, (match) => {
-        const line = match.trim();
-        if (!line || line.startsWith('#')) return match;
-        const abs = line.startsWith('http') ? line : urlDir + line;
+      body = body.replace(/(^(?!#).*$)|URI="([^"]+)"/gm, (match, line, uri) => {
+        if (uri) {
+          const abs = uri.startsWith('http') ? uri : urlDir + uri;
+          return match.replace(uri, `${baseUrl}?url=${encodeURIComponent(abs)}&ref=${encodeURIComponent(referer)}`);
+        }
+        const trimmed = match.trim();
+        if (!trimmed) return match;
+        const abs = trimmed.startsWith('http') ? trimmed : urlDir + trimmed;
         return `${baseUrl}?url=${encodeURIComponent(abs)}&ref=${encodeURIComponent(referer)}`;
       });
 

@@ -99,9 +99,6 @@ export function saveWatchHistory(history) {
 
 export function clearWatchHistory() {
   localStorage.removeItem(STORAGE_KEYS.WATCH_HISTORY);
-  if (isLoggedIn()) {
-    api.delete('/auth/watch-history').catch(() => {});
-  }
 }
 
 export function removeFromWatchHistory(timestamp) {

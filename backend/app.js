@@ -39,7 +39,7 @@ const globalLimiter = rateLimit({
   message: { success: false, message: 'Too many requests, please try again later' },
 });
 app.use('/api/', (req, res, next) => {
-  if (req.path.startsWith('/stream/proxy')) return next();
+  if (req.path.startsWith('/stream/')) return next();
   return globalLimiter(req, res, next);
 });
 

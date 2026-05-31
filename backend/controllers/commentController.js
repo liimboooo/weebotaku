@@ -339,7 +339,7 @@ exports.deleteReply = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    reply.deleteOne();
+    await reply.deleteOne();
     await comment.save();
 
     res.json({ success: true, message: 'Reply deleted' });

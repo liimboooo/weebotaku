@@ -177,6 +177,7 @@ exports.googleLogin = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     res.json({ success: true, user: user.toFullProfile() });
   } catch (error) {
     console.error('GetMe error:', error);
@@ -207,6 +208,7 @@ exports.updateProfile = async (req, res) => {
       new: true,
       runValidators: true,
     });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     res.json({ success: true, user: user.toFullProfile() });
   } catch (error) {
@@ -297,6 +299,7 @@ exports.updateFavorites = async (req, res) => {
       { favorites: favorites.map(f => ({ animeId: f.animeId, name: f.name, img: f.img })) },
       { new: true }
     );
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     res.json({ success: true, favorites: user.favorites });
   } catch (error) {
     console.error('UpdateFavorites error:', error);
@@ -450,7 +453,9 @@ exports.removeFromCollection = async (req, res) => {
     const user = await User.findById(req.user.id);
     const col = user.collections.id(req.params.id);
     if (!col) return res.status(404).json({ success: false, message: 'Collection not found' });
-    col.anime = col.anime.filter(a => a.animeId !== parseInt(req.params.animeId));
+    const animeId = parseInt(req.params.animeId);
+    if (isNaN(animeId)) return res.status(400).json({ success: false, message: 'Invalid anime ID' });
+    col.anime = col.anime.filter(a => a.animeId !== animeId);
     await user.save();
     res.json({ success: true, collection: col });
   } catch (error) {

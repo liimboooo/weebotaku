@@ -725,7 +725,7 @@ export default function Home() {
               <strong>Join the Community</strong>
               <span>Discuss episodes, share edits, vote in arena battles</span>
             </div>
-            <button className="home-cta-btn" onClick={() => navigate("/watch-together")}>
+            <button className="home-cta-btn" onClick={() => navigate("/browse/anime")}>
               Explore <ChevronRight size={14} />
             </button>
           </div>

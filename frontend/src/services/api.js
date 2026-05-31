@@ -51,11 +51,17 @@ class ApiClient {
         throw new Error('Session expired. Please log in again.');
       }
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.message || 'API request failed');
+        const text = await response.text().catch(() => 'Unknown error');
+        try {
+          const parsed = JSON.parse(text);
+          throw new Error(parsed.message || `Request failed (${response.status})`);
+        } catch {
+          throw new Error(text || `Request failed (${response.status})`);
+        }
       }
+
+      const data = await response.json();
 
       return data;
     } catch (error) {

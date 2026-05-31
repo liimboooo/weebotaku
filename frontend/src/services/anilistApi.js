@@ -103,7 +103,7 @@ export async function fetchAnimeGenres() {
 export async function fetchAnimeById(id) {
   try {
     const res = await api.get(`/catalog/anime/${id}`);
-    if (res.data) return mapAnime(res.data);
+    if (res.data) return res.data;
     throw new Error('not found');
   } catch {
     throw new Error('Anime not found');
