@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anime Info — v2</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0d0d0d;
+  color: #fff;
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 32px 40px;
+}
+
+.layout {
+  display: flex;
+  align-items: flex-start;
+}
+
+/* ─── LEFT COLUMN ─── */
+.left {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.poster {
+  width: 100%;
+  aspect-ratio: 3/4;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1a1a1a;
+}
+
+.poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.left-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 16px;
+  border-radius: 100px;
+  border: 1px solid #333;
+  background: #111;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.left-btn:hover { background: #1c1c1c; }
+.left-btn svg { flex-shrink: 0; }
+
+.format-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: center;
+  margin-top: 2px;
+}
+
+/* ─── RIGHT COLUMN ─── */
+.right {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding-left: 2rem;
+}
+
+.season-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 16px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+/* ─── GENRE PILLS ─── */
+.genre-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.genre-pill {
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  border: 1px solid #555;
+  background: transparent;
+  cursor: default;
+}
+
+/* ─── ACTION ROW ─── */
+.action-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.btn-play {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: 20px;
+  background: #fff;
+  color: #000;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn-play:hover { background: #eee; }
+.btn-play:active { transform: scale(0.97); }
+
+.btn-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #333;
+  background: #1e1e1e;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+.btn-circle:hover { background: #2a2a2a; border-color: #555; }
+.btn-circle.active { background: rgba(255,255,255,0.08); border-color: #fff; }
+
+.btn-mal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #333;
+  background: #1e1e1e;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.btn-mal:hover { background: #2a2a2a; }
+
+/* ─── SYNOPSIS ─── */
+.synopsis {
+  font-size: 14px;
+  color: #ccc;
+  line-height: 1.7;
+  margin: 0 0 28px;
+}
+
+/* ─── TAB BAR ─── */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #2a2a2a;
+  position: relative;
+}
+
+.tab-btn {
+  padding: 14px 20px;
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.2s;
+  position: relative;
+}
+
+.tab-btn:hover { color: rgba(255,255,255,0.6); }
+.tab-btn.active { color: #fff; }
+
+.tab-underline {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: #fff;
+  border-radius: 2px 2px 0 0;
+  transition: left 0.3s cubic-bezier(0.22, 1, 0.36, 1), width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─── TAB PANELS ─── */
+.tab-content {
+  padding: 24px 0 60px;
+  padding-left: calc(220px + 2rem);
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.tab-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  color: rgba(255,255,255,0.2);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ═══ EPISODES ═══ */
+.ep-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.ep-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #444 #222;
+}
+
+.ep-scroll::-webkit-scrollbar { height: 4px; }
+.ep-scroll::-webkit-scrollbar-track { background: #222; }
+.ep-scroll::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+
+.ep-card {
+  flex: 0 0 190px;
+  min-width: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #161616;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.ep-card:hover { transform: translateY(-2px); }
+
+.ep-thumb {
+  position: relative;
+  width: 100%;
+  height: 110px;
+  overflow: hidden;
+  background: #1e1e1e;
+}
+
+.ep-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: filter 0.2s;
+}
+
+.ep-card:hover .ep-thumb img { filter: brightness(1.15); }
+
+.ep-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e1e1e;
+  color: rgba(255,255,255,0.15);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.ep-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.ep-card:hover .ep-overlay { opacity: 1; }
+.ep-card.first .ep-overlay { opacity: 1; }
+
+.ep-overlay-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: rgba(0,0,0,0.2);
+}
+
+.ep-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+}
+
+.ep-number {
+  font-size: 12px;
+  font-weight: 600;
+  color: #aaa;
+}
+
+.ep-views {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  font-weight: 600;
+}
+
+/* ═══ CHARACTERS ═══ */
+.char-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.char-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  padding: 16px 8px;
+  border-radius: 8px;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.char-card:hover { background: rgba(255,255,255,0.03); }
+
+.char-img-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-bottom: 8px;
+  background: #1a1a1a;
+}
+
+.char-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.char-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.char-role {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  font-weight: 500;
+}
+
+.char-va {
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+  font-weight: 500;
+}
+
+/* ═══ MORE LIKE THIS ═══ */
+.mlt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.mlt-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  overflow: hidden;
+  background: transparent;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.mlt-card:hover { background: rgba(255,255,255,0.02); }
+
+.mlt-card-img {
+  position: relative;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #1a1a1a;
+}
+
+.mlt-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: filter 0.2s;
+}
+
+.mlt-card:hover .mlt-card-img img { filter: brightness(1.08); }
+
+.mlt-card-body {
+  padding: 10px 2px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mlt-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mlt-genre-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.mlt-tag {
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid #555;
+  color: #fff;
+  background: transparent;
+}
+
+.mlt-reason {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  line-height: 1.4;
+}
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 900px) {
+  .page { padding: 20px; }
+  .layout { flex-direction: column; align-items: center; }
+  .left { width: 160px; }
+  .right { width: 100%; padding-left: 0; }
+  .tab-content { padding-left: 0; }
+  .genre-row { justify-content: center; }
+  .action-row { justify-content: center; }
+  .synopsis { text-align: center; }
+  .tab-bar { justify-content: center; }
+  .ep-scroll { padding-bottom: 16px; }
+  .mlt-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .title { font-size: 24px; }
+  .left { width: 140px; }
+  .right { padding-left: 0; }
+  .tab-content { padding-left: 0; }
+  .char-grid { grid-template-columns: repeat(2, 1fr); }
+  .mlt-grid { grid-template-columns: 1fr; }
+  .ep-card { flex: 0 0 160px; }
+  .ep-thumb { height: 90px; }
+}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+const animeData = {
+  title: "Gals Can't Be Kind to Otaku!?",
+  season: "SPRING 2026",
+  genres: ["Comedy", "Romance", "School", "Seinen"],
+  format: "TV",
+  next_episode_in: "6 days",
+  trailer_url: "https://youtube.com/watch?v=example",
+  mal_url: "https://myanimelist.net/anime/example",
+  synopsis: "Atsushi Kudo is a quiet otaku who just wants to enjoy his anime and manga in peace. But when the most popular girl in school, Riona Sakurai, catches him reading a manga in the library, his quiet life is turned upside down. Rather than mock him, Riona reveals her own hidden otaku side, and the two begin an unexpected friendship that blurs the line between fantasy and reality. As they navigate school festivals, cosplay events, and late-night anime marathons, Atsushi wonders if this gyaru goddess could actually be kind to an otaku like him. Or wi...",
+  play_label: "Continue Ep 1",
+  episodes: [
+    { number: 12, thumbnail: "", views: "51K" },
+    { number: 11, thumbnail: "", views: "48K" },
+    { number: 10, thumbnail: "", views: "52K" },
+    { number: 9, thumbnail: "", views: "47K" },
+    { number: 8, thumbnail: "", views: "53K" },
+    { number: 7, thumbnail: "", views: "50K" },
+    { number: 6, thumbnail: "", views: "49K" },
+    { number: 5, thumbnail: "", views: "51K" },
+    { number: 4, thumbnail: "", views: "46K" },
+    { number: 3, thumbnail: "", views: "48K" },
+    { number: 2, thumbnail: "", views: "45K" },
+    { number: 1, thumbnail: "", views: "44K" }
+  ],
+  characters: [
+    { image: "https://picsum.photos/seed/gal-char1/200/200", name: "Riona Sakurai", role: "Main", voice_actor: "Fairouz Ai" },
+    { image: "https://picsum.photos/seed/gal-char2/200/200", name: "Atsushi Kudo", role: "Main", voice_actor: "Kouki Uchiyama" },
+    { image: "https://picsum.photos/seed/gal-char3/200/200", name: "Miyabi Himeno", role: "Supporting", voice_actor: "Nao Touyama" },
+    { image: "", name: "Renji Takigawa", role: "Supporting", voice_actor: "Yoshitsugu Matsuoka" },
+    { image: "https://picsum.photos/seed/gal-char5/200/200", name: "Koharu Saionji", role: "Supporting", voice_actor: "Ayane Sakura" },
+    { image: "", name: "Eita Kaneshiro", role: "Minor", voice_actor: "" },
+    { image: "https://picsum.photos/seed/gal-char7/200/200", name: "Moe Asakura", role: "Minor", voice_actor: "Inori Minase" },
+    { image: "https://picsum.photos/seed/gal-char8/200/200", name: "Shinobu Kudo", role: "Minor", voice_actor: "" }
+  ],
+  more_like_this: [
+    { poster: "https://picsum.photos/seed/mlt-gal1/300/400", title: "My Dress-Up Darling", genres: ["Romance", "Comedy"], reason: "Fans of Gals Can't Be Kind also liked" },
+    { poster: "https://picsum.photos/seed/mlt-gal2/300/400", title: "Nagatoro-san", genres: ["Comedy", "Romance"], reason: "Similar dynamic" },
+    { poster: "https://picsum.photos/seed/mlt-gal3/300/400", title: "Uzaki-chan Wants to Hang Out!", genres: ["Comedy", "Slice of Life"], reason: "Same genre & vibe" },
+    { poster: "https://picsum.photos/seed/mlt-gal4/300/400", title: "Horimiya", genres: ["Romance", "School"], reason: "Recommended based on your watch history" },
+    { poster: "https://picsum.photos/seed/mlt-gal5/300/400", title: "Komi Can't Communicate", genres: ["Comedy", "School"], reason: "Fans also watched" },
+    { poster: "https://picsum.photos/seed/mlt-gal6/300/400", title: "More Than a Married Couple", genres: ["Romance", "Comedy"], reason: "Similar premise" }
+  ]
+};
+
+// ─── ICONS ───
+const icons = {
+  bell: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+  play: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>`,
+  bookmark: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`,
+  share: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`,
+  type: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>`,
+  eye: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  youtube: `<svg width="14" height="14" viewBox="0 0 24 24" fill="#ff0000"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`
+};
+
+// ─── RENDER ───
+function render() {
+  const d = animeData;
+  const tabs = [
+    { key: 'episodes', label: 'Episodes' },
+    { key: 'characters', label: 'Characters' },
+    { key: 'related', label: 'Related' },
+    { key: 'more-like-this', label: 'More like this' }
+  ];
+
+  let html = `
+  <div class="page">
+    <div class="layout">
+
+      <!-- LEFT -->
+      <div class="left">
+        <div class="poster">
+          <img src="https://picsum.photos/seed/gal-poster/600/800" alt="${d.title}" />
+        </div>
+
+        ${d.next_episode_in ? `
+          <button class="left-btn">${icons.bell} Next ep airing in ${d.next_episode_in}</button>
+        ` : ''}
+
+        <a href="${d.trailer_url}" target="_blank" class="left-btn">${icons.youtube} Watch trailer</a>
+
+        <div class="format-label">FORMAT: ${d.format}</div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="right">
+        <div class="season-label">${d.season}</div>
+        <h1 class="title">${d.title}</h1>
+
+        <div class="genre-row">
+          ${d.genres.map(g => `<span class="genre-pill">${g}</span>`).join('')}
+        </div>
+
+        <div class="action-row">
+          <a href="#" class="btn-play">${icons.play} ${d.play_label}</a>
+          <button class="btn-circle" onclick="this.classList.toggle('active')" aria-label="Bookmark">${icons.bookmark}</button>
+          <button class="btn-circle" aria-label="Share">${icons.share}</button>
+          <button class="btn-circle" aria-label="Text size">${icons.type}</button>
+          <a href="${d.mal_url}" target="_blank" class="btn-mal">MAL</a>
+        </div>
+
+        <p class="synopsis">${d.synopsis}</p>
+
+        <div class="tab-bar" id="tabBar">
+          ${tabs.map((t, i) => `
+            <button class="tab-btn${i === 0 ? ' active' : ''}" data-tab="${t.key}" onclick="switchTab('${t.key}')">${t.label}</button>
+          `).join('')}
+          <div class="tab-underline" id="tabUnderline"></div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="tab-content">
+      <div class="tab-panel active" id="panel-episodes">${renderEpisodes(d)}</div>
+      <div class="tab-panel" id="panel-characters">${renderCharacters(d)}</div>
+      <div class="tab-panel" id="panel-related"><div class="tab-empty">No related anime.</div></div>
+      <div class="tab-panel" id="panel-more-like-this">${renderMlt(d)}</div>
+    </div>
+  </div>`;
+
+  document.getElementById('app').innerHTML = html;
+  requestAnimationFrame(() => positionUnderline());
+}
+
+function renderEpisodes(d) {
+  if (!d.episodes || !d.episodes.length) return '<div class="tab-empty">No episodes yet.</div>';
+
+  const sorted = [...d.episodes].sort((a, b) => b.number - a.number);
+
+  return `
+    <div class="ep-label">${d.episodes.length} EPISODES</div>
+    <div class="ep-scroll">
+      ${sorted.map((ep, i) => `
+        <a href="#" class="ep-card${i === 0 ? ' first' : ''}">
+          <div class="ep-thumb">
+            ${ep.thumbnail
+              ? `<img src="${ep.thumbnail}" alt="Episode ${ep.number}" loading="lazy" />`
+              : `<div class="ep-placeholder">Ep ${ep.number}</div>`
+            }
+            <div class="ep-overlay">
+              <div class="ep-overlay-icon">${icons.play}</div>
+            </div>
+          </div>
+          <div class="ep-info">
+            <span class="ep-number">Ep ${ep.number}</span>
+            <span class="ep-views">${icons.eye} ${ep.views}</span>
+          </div>
+        </a>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderCharacters(d) {
+  if (!d.characters || !d.characters.length) return '<div class="tab-empty">No character data available.</div>';
+
+  return `
+    <div class="char-grid">
+      ${d.characters.map(ch => `
+        <div class="char-card">
+          <div class="char-img-wrap">
+            ${ch.image
+              ? `<img src="${ch.image}" alt="${ch.name}" loading="lazy" />`
+              : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1a1a,#252525);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.1);font-size:20px;font-weight:900;">?</div>`
+            }
+          </div>
+          <span class="char-name">${ch.name}</span>
+          <span class="char-role">${ch.role || ''}</span>
+          ${ch.voice_actor ? `<span class="char-va">${ch.voice_actor}</span>` : ''}
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderMlt(d) {
+  if (!d.more_like_this || !d.more_like_this.length) return '<div class="tab-empty">No recommendations available.</div>';
+
+  return `
+    <div class="mlt-grid">
+      ${d.more_like_this.map(item => `
+        <a href="#" class="mlt-card">
+          <div class="mlt-card-img">
+            <img src="${item.poster}" alt="${item.title}" loading="lazy" />
+          </div>
+          <div class="mlt-card-body">
+            <h3 class="mlt-card-title">${item.title}</h3>
+            <div class="mlt-genre-row">
+              ${(item.genres || []).map(g => `<span class="mlt-tag">${g}</span>`).join('')}
+            </div>
+            <p class="mlt-reason">${item.reason || 'Recommended for you'}</p>
+          </div>
+        </a>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ─── TAB SWITCHING ───
+function switchTab(key) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+  document.querySelector(`.tab-btn[data-tab="${key}"]`)?.classList.add('active');
+  document.getElementById(`panel-${key}`)?.classList.add('active');
+  positionUnderline();
+}
+
+function positionUnderline() {
+  const active = document.querySelector('.tab-btn.active');
+  const line = document.getElementById('tabUnderline');
+  if (!active || !line) return;
+  const rect = active.getBoundingClientRect();
+  const bar = document.getElementById('tabBar');
+  const barRect = bar.getBoundingClientRect();
+  line.style.left = (rect.left - barRect.left) + 'px';
+  line.style.width = rect.width + 'px';
+}
+
+window.addEventListener('resize', positionUnderline);
+document.addEventListener('DOMContentLoaded', render);
+</script>
+</body>
+</html>
