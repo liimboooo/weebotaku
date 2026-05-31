@@ -5,40 +5,14 @@ import {
   Check, Copy, Globe, ExternalLink, Download,
   Film, Clock, RefreshCw, Calendar, Tv, Monitor, MessageCircle, AtSign
 } from "lucide-react";
-import { gql, fetchAnimeRecommendations, fetchAnimeCharacters } from "../services/anilistApi";
+import { fetchAnimeRecommendations, fetchAnimeCharacters } from "../services/anilistApi";
+import api from "../services/api";
 import { statusLabel, LIST_OPTIONS } from "../utils/constants";
 import { formatDate, formatTimeAgo } from "../utils/helpers";
 import { loadWatchlist, addToWatchlist, removeFromWatchlist, updateListStatus, loadWatchHistory } from "../services/storage";
 import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./AnimeInfo.css";
-
-const DETAIL_FIELDS = `id idMal title { romaji english native } coverImage { extraLarge large } bannerImage averageScore popularity episodes duration genres description status season seasonYear startDate { year month day } studios(isMain:true) { nodes { name } } trailer { site id } format nextAiringEpisode { episode airingAt timeUntilAiring }`;
-
-
-function mapDetail(a) {
-  return {
-    id: a.id,
-    name: a.title?.english || a.title?.romaji || "",
-    romaji: a.title?.romaji || "",
-    native: a.title?.native || "",
-    img: a.coverImage?.extraLarge || a.coverImage?.large || "",
-    bannerImage: a.bannerImage || "",
-    rating: (a.averageScore || 0) / 10,
-    popularity: a.popularity || 0,
-    year: a.seasonYear || 0,
-    episodes: a.episodes || 0,
-    duration: a.duration || 0,
-    status: statusLabel(a.status),
-    genres: a.genres || [],
-    synopsis: a.description || "",
-    studios: a.studios?.nodes?.map(n => n.name) || [],
-    season: a.season ? `${a.season.charAt(0).toUpperCase() + a.season.slice(1).toLowerCase()} ${a.seasonYear || ""}` : "",
-    type: a.format || "TV",
-    startDate: a.startDate ? { year: a.startDate.year, month: a.startDate.month, day: a.startDate.day } : null,
-    trailerUrl: a.trailer?.site === "youtube" ? `${process.env.REACT_APP_YOUTUBE_EMBED_BASE || "https://www.youtube.com/embed/"}${a.trailer.id}` : null,
-  };
-}
 
 
 const SHARE_OPTIONS = [
@@ -83,15 +57,13 @@ export default function AnimeInfo() {
     setLoading(true);
     setError("");
     try {
-      const q = `query($id:Int){Media(id:$id,type:ANIME){${DETAIL_FIELDS}}}`;
-      const data = await gql(q, { id: Number(id) });
-      if (data?.Media) setAnime(mapDetail(data.Media));
+      const res = await api.get(`/catalog/anime/${id}/details`);
+      if (res?.data) setAnime(res.data);
       else setError("Anime not found.");
     } catch {
       try {
-        const q2 = `query($id:Int){Media(idMal:$id,type:ANIME){${DETAIL_FIELDS}}}`;
-        const data2 = await gql(q2, { id: Number(id) });
-        if (data2?.Media) setAnime(mapDetail(data2.Media));
+        const res = await api.get(`/catalog/anime/${id}`);
+        if (res?.data) setAnime(res.data);
         else setError("Anime not found.");
       } catch { setError("Failed to load anime."); }
     }

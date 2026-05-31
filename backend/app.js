@@ -71,6 +71,7 @@ app.use('/api/badges', require('./routes/badges'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/stream', require('./routes/stream'));
+app.use('/api/catalog', require('./routes/catalog'));
 
 // Health check (also keeps DB connection warm for cron)
 app.get('/api/health', async (req, res) => {

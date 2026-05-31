@@ -1,4 +1,3 @@
-const WAIFU_BASE = process.env.REACT_APP_WAIFU_API_URL || "https://api.waifu.pics/sfw";
 const API_BASE = process.env.REACT_APP_API_URL;
 
 export async function fetchRandomQuote() {
@@ -14,7 +13,8 @@ export async function fetchRandomQuote() {
 }
 
 export async function fetchWaifuImage(category = "waifu") {
-  const res = await fetch(`${WAIFU_BASE}/${category}`);
+  const res = await fetch(`${API_BASE}/scrape/waifu?category=${category}`);
   if (!res.ok) throw new Error(`Waifu error: ${res.status}`);
-  return res.json();
+  const json = await res.json();
+  return json.data;
 }

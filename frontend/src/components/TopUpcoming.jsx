@@ -1,56 +1,44 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
+import api from '../services/api';
 import './TopUpcoming.css';
-
-const ITEMS = [
-  {
-    id: 'kimi-100',
-    title: 'Kimi no Koto ga Dai Dai Dai Dai Daisuki na 100-nin no Kanojo',
-    img: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx162694-QFBei5pbjSh8.png',
-    studio: 'BANDAI NAMCO FILMWORKS',
-    studioColor: '#ff5bc8',
-    label: 'EP 1 AIRING IN',
-    date: 'Jul 5, 2026',
-    source: 'MANGA',
-    desc: 'The third season of Kimi no Koto ga Dai Dai Dai Dai Daisuki na 100-nin no Kanojo.',
-    tags: ['Comedy', 'Ecchi', 'Romance'],
-  },
-  {
-    id: 'wakagimi-2',
-    title: 'Nige Jouzu no Wakagimi 2nd Season',
-    img: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx162896-hSMTVceb50GY.jpg',
-    studio: 'ANIPLEX',
-    studioColor: '#ff9800',
-    label: 'EP 1 AIRING IN',
-    date: 'Jul 2026',
-    source: 'MANGA',
-    desc: 'The second season of Nige Jouzu no Wakagimi.',
-    tags: ['Action', 'Adventure'],
-  },
-  {
-    id: 'black-torch',
-    title: 'BLACK TORCH',
-    img: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx187538-rPuvj09LMjdC.jpg',
-    studio: '100STUDIO',
-    studioColor: '#00e5ff',
-    label: 'EP 1 AIRING IN',
-    date: 'Jul 4, 2026',
-    source: 'MANGA',
-    desc: "Although he may appear rough-and-tumble, Azuma's compassionate side emerges when it comes to furry critters he can communicate with. But Jiro's soft spot for animals gets him into major trouble when a suspicious stray cat bonds with him, granting him exceptional power.",
-    tags: ['Action', 'Adventure', 'Fantasy'],
-  },
-];
 
 const tagClass = (t) => `tu-tag tu-tag--${t.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
 
 export default function TopUpcoming() {
   const scrollRef = useRef(null);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get('/catalog/upcoming?perPage=10');
+        if (!cancelled && res.data) {
+          setItems(res.data.map(a => ({
+            id: String(a.id),
+            title: a.name || 'Unknown',
+            img: a.img || '',
+            studio: a.studio || 'Unknown',
+            date: a.season || 'TBA',
+            desc: (a.synopsis || '').replace(/<[^>]*>/g, '').slice(0, 200),
+            tags: (a.genres || []).slice(0, 3),
+          })));
+        }
+      } catch {}
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const scrollRight = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: 500, behavior: 'smooth' });
     }
   };
+
+  if (loading || items.length === 0) return null;
 
   return (
     <section className="tu-section">
@@ -62,23 +50,21 @@ export default function TopUpcoming() {
       </header>
 
       <div className="tu-scroll" ref={scrollRef}>
-        {ITEMS.map((item) => (
+        {items.map((item) => (
           <article key={item.id} className="tu-card">
             <div className="tu-card-cover">
               <img src={item.img} alt={item.title} loading="lazy" />
               <div className="tu-cover-overlay" />
               <div className="tu-cover-text">
                 <h3 className="tu-cover-title">{item.title}</h3>
-                <span className="tu-studio" style={{ color: item.studioColor }}>
+                <span className="tu-studio">
                   {item.studio}
                 </span>
               </div>
             </div>
 
             <div className="tu-card-body">
-              <span className="tu-label">{item.label}</span>
               <span className="tu-date">{item.date}</span>
-              <span className="tu-source">Source : {item.source}</span>
               <p className="tu-desc">{item.desc}</p>
               <div className="tu-tags">
                 {item.tags.map((t) => (

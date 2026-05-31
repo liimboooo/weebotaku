@@ -16,4 +16,18 @@ router.get('/animechan-proxy', async (req, res) => {
   }
 });
 
+router.get('/waifu', async (req, res) => {
+  try {
+    const { category } = req.query;
+    const cat = category || 'waifu';
+    const response = await fetch(`https://api.waifu.pics/sfw/${cat}`);
+    if (!response.ok) throw new Error(`Waifu API error: ${response.status}`);
+    const data = await response.json();
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Waifu proxy error:', error.message);
+    res.status(500).json({ success: false, message: 'Waifu fetch failed' });
+  }
+});
+
 module.exports = router;

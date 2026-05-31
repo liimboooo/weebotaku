@@ -1,167 +1,203 @@
-const BASE = process.env.REACT_APP_ANILIST_API_URL || "https://graphql.anilist.co";
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
-function getSeasonInfo() {
-  const m = new Date().getMonth();
-  const y = new Date().getFullYear();
-  const seasons = ["WINTER","WINTER","SPRING","SPRING","SPRING","SUMMER","SUMMER","SUMMER","FALL","FALL","FALL","WINTER"];
-  const next = m <= 1 ? "SPRING" : m <= 4 ? "SUMMER" : m <= 7 ? "FALL" : "WINTER";
-  const nextYear = m <= 1 ? y : m <= 8 ? y : y + 1;
-  return { current: seasons[m], year: m <= 1 ? y - 1 : y, next, nextYear };
+const CACHE_TTL = 5 * 60 * 1000;
+const cache = new Map();
+
+function getCached(key) {
+  const e = cache.get(key);
+  if (!e) return null;
+  if (Date.now() - e.time > CACHE_TTL) { cache.delete(key); return null; }
+  return e.data;
 }
 
-const ANIME_QUERY = (nextSeason, nextYear) => `{
-  trending: Page(page:1,perPage:10){media(sort:TRENDING_DESC,type:ANIME){id title{romaji english} coverImage{large extraLarge} bannerImage format episodes season seasonYear status meanScore trending genres description startDate{year month day} studios(isMain:true){nodes{name}} nextAiringEpisode{episode airingAt} trailer{id site}}}
-  popular: Page(page:1,perPage:8){media(sort:POPULARITY_DESC,type:ANIME){id title{romaji english} coverImage{large extraLarge} bannerImage format meanScore trending genres trailer{id site}}}
-  upcoming: Page(page:1,perPage:8){media(season:${nextSeason},seasonYear:${nextYear},type:ANIME,sort:POPULARITY_DESC){id title{romaji english} coverImage{large extraLarge} bannerImage format meanScore genres startDate{year month day}}}
-  airing: Page(page:1,perPage:10){media(status:RELEASING,type:ANIME,sort:POPULARITY_DESC){id title{romaji english} coverImage{large extraLarge} bannerImage format episodes meanScore trending genres nextAiringEpisode{episode airingAt} trailer{id site}}}
-}`;
+function setCache(key, data) {
+  cache.set(key, { data, time: Date.now() });
+}
 
-const MANGA_QUERY = `{
-  trending: Page(page:1,perPage:8){media(sort:TRENDING_DESC,type:MANGA){id title{romaji english} coverImage{large} format chapters volumes meanScore trending genres description startDate{year month day} status}}
-  popular: Page(page:1,perPage:8){media(sort:POPULARITY_DESC,type:MANGA){id title{romaji english} coverImage{large} format chapters volumes meanScore trending genres}}
-  upcoming: Page(page:1,perPage:8){media(status:NOT_YET_RELEASED,type:MANGA,sort:POPULARITY_DESC){id title{romaji english} coverImage{large} format chapters volumes meanScore genres startDate{year month day}}}
-  publishing: Page(page:1,perPage:10){media(status:RELEASING,type:MANGA,sort:POPULARITY_DESC){id title{romaji english} coverImage{large} format chapters volumes meanScore trending genres}}
-}`;
-
-const cache = new Map();
-const CACHE_TTL = 5 * 60 * 1000;
-
-function getCached(key) { const e = cache.get(key); if (!e) return null; if (Date.now()-e.time>CACHE_TTL) { cache.delete(key); return null; } return e.data; }
-function setCache(key, data) { cache.set(key, {data,time:Date.now()}); }
 function pickTitle(t) { return t?.english || t?.romaji || "Unknown"; }
-function stripHtml(h) { if (!h) return ""; return h.replace(/<[^>]*>/g,"").replace(/&[^;]+;/g," ").trim(); }
 
 function mapAnime(a) {
   return {
-    id: a.id, title: pickTitle(a.title), image: a.coverImage?.large || "",
+    id: a.id,
+    title: pickTitle(a),
+    image: a.coverImage?.large || a.image || "",
     bannerImage: a.bannerImage || a.coverImage?.extraLarge || a.coverImage?.large || "",
-    format: a.format || "TV", episodes: a.episodes,
-    score: a.meanScore ? (a.meanScore/10).toFixed(1) : null, trending: a.trending || 0,
-    genres: a.genres || [], synopsis: stripHtml(a.description).slice(0,250),
-    studio: a.studios?.nodes?.[0]?.name || null, season: a.season ? `${a.season} ${a.seasonYear}` : null,
-    status: a.status, mediaType: "anime",
-    nextEpisode: a.nextAiringEpisode ? {ep:a.nextAiringEpisode.episode,at:a.nextAiringEpisode.airingAt} : null,
-    trailer: a.trailer?.site === "youtube" ? a.trailer.id : null,
+    format: a.format || "TV",
+    episodes: a.episodes,
+    score: a.meanScore ? (a.meanScore / 10).toFixed(1) : a.score,
+    trending: a.trending || 0,
+    genres: a.genres || [],
+    synopsis: (a.synopsis || "").slice(0, 250),
+    studio: a.studio || a.studios?.nodes?.[0]?.name || null,
+    season: a.season || null,
+    status: a.status,
+    mediaType: "anime",
+    nextEpisode: a.nextEpisode || a.nextAiringEpisode || null,
+    trailer: a.trailer || null,
   };
 }
 
 function mapManga(m) {
   return {
-    id: m.id, title: pickTitle(m.title), image: m.coverImage?.large || "",
-    format: m.format || "Manga", chapters: m.chapters, volumes: m.volumes,
-    score: m.meanScore ? (m.meanScore/10).toFixed(1) : null, trending: m.trending || 0,
-    genres: m.genres || [], synopsis: stripHtml(m.description).slice(0,250),
-    status: m.status, mediaType: "manga",
+    id: m.id,
+    title: pickTitle(m),
+    image: m.coverImage?.large || m.image || "",
+    format: m.format || "Manga",
+    chapters: m.chapters,
+    volumes: m.volumes,
+    score: m.meanScore ? (m.meanScore / 10).toFixed(1) : m.score,
+    trending: m.trending || 0,
+    genres: m.genres || [],
+    synopsis: (m.synopsis || "").slice(0, 250),
+    status: m.status,
+    mediaType: "manga",
   };
 }
 
-async function anilistFetch(query) {
-  const res = await fetch(BASE, {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({query}),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`AniList ${res.status}: ${text.slice(0,200)}`);
+function buildNewsFeed(anime, manga) {
+  const items = [];
+  function fmtTime(ts) {
+    const d = new Date(ts * 1000);
+    const diff = d - Date.now();
+    if (diff < 0) return "Now";
+    const h = Math.floor(diff / 3600000);
+    if (h < 1) return "Soon";
+    if (h < 24) return `~${h}h`;
+    return `${Math.floor(h / 24)}d`;
   }
-  const json = await res.json();
-  if (json.errors) throw new Error(`AniList error: ${json.errors[0]?.message}`);
-  return json.data;
+
+  for (const a of (anime.animeAiring || [])) {
+    const ep = a.nextEpisode || a.nextAiringEpisode;
+    items.push({
+      id: `airing-${a.id}`, type: "new_episode", mediaType: "anime",
+      title: `${a.title} — New Episode`,
+      description: ep ? `Episode ${ep.episode || ep.ep} airing ${fmtTime(ep.airingAt || ep.at)}` : "Currently airing",
+      image: a.image, bannerImage: a.bannerImage, animeId: a.id,
+      animeTitle: a.title, date: ep ? new Date((ep.airingAt || ep.at) * 1000).toISOString() : new Date().toISOString(),
+      score: a.score, genres: a.genres,
+    });
+  }
+
+  for (const a of (anime.animeTrending || [])) {
+    items.push({
+      id: `trending-${a.id}`, type: "trending", mediaType: "anime",
+      title: `${a.title} is Trending`,
+      description: `Trending #${a.trending} • ${(a.genres || []).slice(0, 3).join(", ")}`,
+      image: a.image, bannerImage: a.bannerImage, animeId: a.id,
+      animeTitle: a.title, date: new Date().toISOString(),
+      score: a.score, genres: a.genres,
+    });
+  }
+
+  for (const a of (anime.animeUpcoming || [])) {
+    items.push({
+      id: `upcoming-${a.id}`, type: "announcement", mediaType: "anime",
+      title: `Coming Soon: ${a.title}`,
+      description: `${a.format} • ${(a.genres || []).slice(0, 3).join(", ")}`,
+      image: a.image, bannerImage: a.bannerImage, animeId: a.id,
+      animeTitle: a.title, date: new Date().toISOString(),
+      score: a.score, genres: a.genres,
+    });
+  }
+
+  for (const a of (anime.animePopular || [])) {
+    items.push({
+      id: `popular-${a.id}`, type: "popular", mediaType: "anime",
+      title: `Popular Pick: ${a.title}`,
+      description: `Rating: ${a.score}/10 • ${(a.genres || []).slice(0, 3).join(", ")}`,
+      image: a.image, bannerImage: a.bannerImage, animeId: a.id,
+      animeTitle: a.title, date: new Date().toISOString(),
+      score: a.score, genres: a.genres,
+    });
+  }
+
+  for (const m of (manga.mangaPublishing || [])) {
+    items.push({
+      id: `manga-pub-${m.id}`, type: "new_chapter", mediaType: "manga",
+      title: `${m.title} — New Chapter`,
+      description: m.chapters ? `${m.chapters} chapters • ${(m.genres || []).slice(0, 3).join(", ")}` : "Currently publishing",
+      image: m.image, animeId: m.id, animeTitle: m.title,
+      date: new Date().toISOString(), score: m.score, genres: m.genres,
+    });
+  }
+
+  for (const m of (manga.mangaTrending || [])) {
+    items.push({
+      id: `manga-trend-${m.id}`, type: "manga_trending", mediaType: "manga",
+      title: `${m.title} Manga is Trending`,
+      description: `Trending #${m.trending} • ${(m.genres || []).slice(0, 3).join(", ")}`,
+      image: m.image, animeId: m.id, animeTitle: m.title,
+      date: new Date().toISOString(), score: m.score, genres: m.genres,
+    });
+  }
+
+  for (const m of (manga.mangaUpcoming || [])) {
+    items.push({
+      id: `manga-upcoming-${m.id}`, type: "manga_announcement", mediaType: "manga",
+      title: `New Manga: ${m.title}`,
+      description: `${m.format} • ${(m.genres || []).slice(0, 3).join(", ")}`,
+      image: m.image, animeId: m.id, animeTitle: m.title,
+      date: new Date().toISOString(), score: m.score, genres: m.genres,
+    });
+  }
+
+  for (const m of (manga.mangaPopular || [])) {
+    items.push({
+      id: `manga-pop-${m.id}`, type: "manga_popular", mediaType: "manga",
+      title: `Popular Manga: ${m.title}`,
+      description: `Rating: ${m.score}/10 • ${(m.genres || []).slice(0, 3).join(", ")}`,
+      image: m.image, animeId: m.id, animeTitle: m.title,
+      date: new Date().toISOString(), score: m.score, genres: m.genres,
+    });
+  }
+
+  return items.sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
 export async function fetchAnimeNews() {
   const cached = getCached("anime-news");
   if (cached) return cached;
 
-  const {next:nextSeason,nextYear} = getSeasonInfo();
+  try {
+    const res = await fetch(`${API_BASE}/catalog/news-feed`);
+    if (!res.ok) throw new Error('Failed to fetch news feed');
+    const json = await res.json();
+    if (!json.success) throw new Error('API error');
 
-  const [animeData, mangaData] = await Promise.all([
-    anilistFetch(ANIME_QUERY(nextSeason, nextYear)),
-    anilistFetch(MANGA_QUERY),
-  ]);
+    const d = json.data;
+    const result = {
+      animeTrending: (d.animeTrending || []).map(mapAnime),
+      animePopular: (d.animePopular || []).map(mapAnime),
+      animeUpcoming: (d.animeUpcoming || []).map(mapAnime),
+      animeAiring: (d.animeAiring || []).map(mapAnime),
+      mangaTrending: (d.mangaTrending || []).map(mapManga),
+      mangaPopular: (d.mangaPopular || []).map(mapManga),
+      mangaUpcoming: (d.mangaUpcoming || []).map(mapManga),
+      mangaPublishing: (d.mangaPublishing || []).map(mapManga),
+      allNews: buildNewsFeed(d, d),
+    };
 
-  const result = {
-    animeTrending: animeData.trending.media.map(mapAnime),
-    animePopular: animeData.popular.media.map(mapAnime),
-    animeUpcoming: animeData.upcoming.media.map(mapAnime),
-    animeAiring: animeData.airing.media.map(mapAnime),
-    mangaTrending: mangaData.trending.media.map(mapManga),
-    mangaPopular: mangaData.popular.media.map(mapManga),
-    mangaUpcoming: mangaData.upcoming.media.map(mapManga),
-    mangaPublishing: mangaData.publishing.media.map(mapManga),
-    allNews: buildNewsFeed(animeData, mangaData),
-  };
-
-  setCache("anime-news", result);
-  return result;
-}
-
-function buildNewsFeed(anime, manga) {
-  const items = [];
-
-  for (const m of anime.airing.media) {
-    const a = mapAnime(m);
-    const ep = m.nextAiringEpisode;
-    items.push({id:`airing-${m.id}`,type:"new_episode",mediaType:"anime",title:`${a.title} — New Episode`,description:ep ? `Episode ${ep.episode} airing ${fmtTime(ep.airingAt)}` : "Currently airing",image:a.image,bannerImage:a.bannerImage,animeId:m.id,animeTitle:a.title,date:ep ? new Date(ep.airingAt*1000).toISOString() : new Date().toISOString(),score:a.score,genres:a.genres});
+    setCache("anime-news", result);
+    return result;
+  } catch {
+    return {
+      animeTrending: [], animePopular: [], animeUpcoming: [], animeAiring: [],
+      mangaTrending: [], mangaPopular: [], mangaUpcoming: [], mangaPublishing: [],
+      allNews: [],
+    };
   }
-
-  for (const m of anime.trending.media) {
-    const a = mapAnime(m);
-    items.push({id:`trending-${m.id}`,type:"trending",mediaType:"anime",title:`${a.title} is Trending`,description: `Trending #${a.trending} \u2022 ${a.genres.slice(0,3).join(", ")}`,image:a.image,bannerImage:a.bannerImage,animeId:m.id,animeTitle:a.title,date:new Date().toISOString(),score:a.score,genres:a.genres});
-  }
-
-  for (const m of anime.upcoming.media) {
-    const a = mapAnime(m);
-    const d = m.startDate ? `${m.startDate.year}-${String(m.startDate.month).padStart(2,"0")}-${String(m.startDate.day).padStart(2,"0")}` : "TBA";
-    items.push({id:`upcoming-${m.id}`,type:"announcement",mediaType:"anime",title:`Coming Soon: ${a.title}`,description:`${d} \u2022 ${a.format} \u2022 ${a.genres.slice(0,3).join(", ")}`,image:a.image,bannerImage:a.bannerImage,animeId:m.id,animeTitle:a.title,date:d,score:a.score,genres:a.genres});
-  }
-
-  for (const m of anime.popular.media) {
-    const a = mapAnime(m);
-    items.push({id:`popular-${m.id}`,type:"popular",mediaType:"anime",title:`Popular Pick: ${a.title}`,description:`Rating: ${a.score}/10 \u2022 ${a.genres.slice(0,3).join(", ")}`,image:a.image,bannerImage:a.bannerImage,animeId:m.id,animeTitle:a.title,date:new Date().toISOString(),score:a.score,genres:a.genres});
-  }
-
-  for (const m of manga.publishing.media) {
-    const b = mapManga(m);
-    items.push({id:`manga-pub-${m.id}`,type:"new_chapter",mediaType:"manga",title:`${b.title} — New Chapter`,description:b.chapters ? `${b.chapters} chapters \u2022 ${b.genres.slice(0,3).join(", ")}` : "Currently publishing",image:b.image,animeId:m.id,animeTitle:b.title,date:new Date().toISOString(),score:b.score,genres:b.genres});
-  }
-
-  for (const m of manga.trending.media) {
-    const b = mapManga(m);
-    items.push({id:`manga-trend-${m.id}`,type:"manga_trending",mediaType:"manga",title:`${b.title} Manga is Trending`,description:`Trending #${b.trending} \u2022 ${b.genres.slice(0,3).join(", ")}`,image:b.image,animeId:m.id,animeTitle:b.title,date:new Date().toISOString(),score:b.score,genres:b.genres});
-  }
-
-  for (const m of manga.upcoming.media) {
-    const b = mapManga(m);
-    const d = m.startDate ? `${m.startDate.year}-${String(m.startDate.month).padStart(2,"0")}-${String(m.startDate.day).padStart(2,"0")}` : "TBA";
-    items.push({id:`manga-upcoming-${m.id}`,type:"manga_announcement",mediaType:"manga",title:`New Manga: ${b.title}`,description:`${d} \u2022 ${b.format} \u2022 ${b.genres.slice(0,3).join(", ")}`,image:b.image,animeId:m.id,animeTitle:b.title,date:d,score:b.score,genres:b.genres});
-  }
-
-  for (const m of manga.popular.media) {
-    const b = mapManga(m);
-    items.push({id:`manga-pop-${m.id}`,type:"manga_popular",mediaType:"manga",title:`Popular Manga: ${b.title}`,description:`Rating: ${b.score}/10 \u2022 ${b.genres.slice(0,3).join(", ")}`,image:b.image,animeId:m.id,animeTitle:b.title,date:new Date().toISOString(),score:b.score,genres:b.genres});
-  }
-
-  return items.sort((a,b) => new Date(b.date)-new Date(a.date));
-}
-
-function fmtTime(ts) {
-  const d = new Date(ts*1000);
-  const diff = d - Date.now();
-  if (diff < 0) return "Now";
-  const h = Math.floor(diff/3600000);
-  if (h < 1) return "Soon";
-  if (h < 24) return `~${h}h`;
-  return `${Math.floor(h/24)}d`;
 }
 
 export async function fetchMediaById(id) {
-  const query = `{Media(id:${Number(id)}){id title{romaji english} coverImage{large} format episodes chapters volumes season seasonYear status meanScore trending genres description startDate{year month day} studios(isMain:true){nodes{name}} nextAiringEpisode{episode airingAt}}}`;
-  const data = await anilistFetch(query);
-  const m = data.Media;
-  if (!m) throw new Error("Not found");
-  return m.type === "MANGA" ? mapManga(m) : mapAnime(m);
+  try {
+    const res = await fetch(`${API_BASE}/catalog/anime/${id}/details`);
+    if (!res.ok) throw new Error("Not found");
+    const json = await res.json();
+    if (!json.success) throw new Error("Not found");
+    return mapAnime(json.data);
+  } catch {
+    throw new Error("Not found");
+  }
 }
 
 export function clearNewsCache() { cache.clear(); }

@@ -364,6 +364,200 @@ exports.streamProxy = async (req, res) => {
   }
 };
 
+const REANIME_BASE = process.env.REANIME_BASE_URL || 'https://reanime.to';
+const reanimeCache = new Map();
+const REANIME_CACHE_TTL = 5 * 60 * 1000;
+
+function cleanTitle(title) {
+  return title.replace(/\s*\([^)]*\)/g, '').replace(/[^\w\s-]/g, '').trim();
+}
+
+function stripSeasonSuffixes(title) {
+  return title
+    .replace(/\s+\d+(?:st|nd|rd|th)?\s+Season\b.*$/i, '')
+    .replace(/\s+Season\s+\d+.*$/i, '')
+    .replace(/\s+Part\s+\d+.*$/i, '')
+    .replace(/\s+Cour\s+\d+.*$/i, '')
+    .trim();
+}
+
+const titleVariants = (title) => {
+  const base = stripSeasonSuffixes(title);
+  const clean = cleanTitle(base || title);
+  const words = title.split(/[\s\-\u2013\u2014]+/).filter(w => w.length > 3);
+  const uniqueWords = [...new Set(words.map(w => w.toLowerCase()))];
+  return [
+    title,
+    base !== title ? base : null,
+    clean,
+    uniqueWords.length >= 2 ? uniqueWords.slice(0, 2).join(' ') : null,
+  ].filter((s, i, a) => s && s.length > 2 && a.indexOf(s) === i);
+};
+
+function extractAnilistId(coverUrl) {
+  const m = (coverUrl || '').match(/[bn]x(\d+)-/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+function scoreRelevance(title, searchQuery) {
+  const t = title.toLowerCase();
+  const q = searchQuery.toLowerCase();
+  if (t === q) return 999;
+  const tWords = [...new Set(t.split(/\W+/).filter(Boolean))];
+  const qWords = [...new Set(q.split(/\W+/).filter(Boolean))];
+  const overlap = qWords.filter((w) => tWords.includes(w)).length;
+  let score = overlap * 20;
+  if (overlap === qWords.length) score += 100;
+  for (const w of qWords) if (w.length > 3 && tWords.includes(w)) score += 10;
+  if (t.includes(q)) score += 80;
+  else if (q.includes(t)) score += 40;
+  return score;
+}
+
+async function reanimeFetch(url) {
+  const cached = reanimeCache.get(url);
+  if (cached && Date.now() - cached.time < REANIME_CACHE_TTL) return cached.data;
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
+      timeout: 10000,
+    });
+    if (!res.ok) return null;
+    const text = await res.text();
+    let parsed;
+    try { parsed = JSON.parse(text); } catch { return null; }
+    reanimeCache.set(url, { data: parsed, time: Date.now() });
+    if (reanimeCache.size > 100) {
+      const oldest = reanimeCache.keys().next().value;
+      reanimeCache.delete(oldest);
+    }
+    return parsed;
+  } catch { return null; }
+}
+
+exports.searchReanime = async (req, res) => {
+  try {
+    const { q, anilistId } = req.query;
+    if (!q) return res.status(400).json({ success: false, message: 'q parameter required' });
+
+    const idNum = anilistId ? parseInt(anilistId) : null;
+    const allVariants = titleVariants(q);
+
+    const mapResults = (results, query) => {
+      let idMatch = null;
+      const scored = results.map(item => {
+        const coverUrl = item.cover_image?.extra_large || item.cover_image?.large || item.cover_image?.medium || '';
+        const extractedId = extractAnilistId(coverUrl);
+        const title = item.title?.english || item.title?.romaji || item.title?.user_preferred || '';
+        const score = scoreRelevance(title, query);
+        const entry = {
+          slug: item.anime_id,
+          title: title || q,
+          anilistId: extractedId || idNum || null,
+          _score: score,
+          source: 'reanime',
+          sourceBase: REANIME_BASE,
+        };
+        if (idNum && extractedId === idNum) idMatch = { ...entry, _score: 999 };
+        return entry;
+      });
+      if (idMatch) return [idMatch];
+      return scored.sort((a, b) => b._score - a._score);
+    };
+
+    for (const variant of allVariants) {
+      const url = `${REANIME_BASE}/api/search?q=${encodeURIComponent(variant)}`;
+      const data = await reanimeFetch(url);
+      if (!data) continue;
+      const items = data.results || data.data || (Array.isArray(data) ? data : null);
+      if (!Array.isArray(items) || items.length === 0) continue;
+      const matched = mapResults(items, variant);
+      if (matched.length > 0) {
+        return res.json({ success: true, data: matched });
+      }
+    }
+
+    res.json({ success: true, data: [] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.getReanimeEpisodes = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    if (!slug) return res.status(400).json({ success: false, message: 'slug parameter required' });
+
+    const url = `${REANIME_BASE}/api/episodes/${slug}`;
+    const data = await reanimeFetch(url);
+    if (!data) return res.json({ success: true, data: [] });
+
+    const eps = data.data || data.episodes || data.results || (Array.isArray(data) ? data : null);
+    if (!Array.isArray(eps)) return res.json({ success: true, data: [] });
+
+    const episodes = eps.map(ep => ({
+      episode: ep.episode_number || ep.number || ep.episode || 0,
+      title: ep.title || `Episode ${ep.episode_number || ep.number || ep.episode || '?'}`,
+      url: String(ep.episode_number || ep.number || ep.episode || 1),
+      thumbnail: ep.thumbnail || ep.image || null,
+      duration: ep.duration || null,
+      aired: ep.aired || ep.airDate || null,
+      airDate: ep.air_date || ep.aired || ep.airDate || null,
+    })).filter(ep => ep.episode > 0).sort((a, b) => a.episode - b.episode);
+
+    res.json({ success: true, data: episodes, total: episodes.length });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.getReanimeStreamUrls = async (req, res) => {
+  try {
+    const { anilistId, episodeNum, fallbackId, slug } = req.query;
+    const rawIds = [anilistId, fallbackId, slug].filter(Boolean);
+    const tryIds = [];
+    for (const id of rawIds) {
+      tryIds.push(String(id));
+      const n = Number(id);
+      if (Number.isInteger(n) && n > 0) tryIds.push(String(n));
+    }
+    if (tryIds.length === 0) return res.json({ success: true, data: [] });
+
+    for (const id of [...new Set(tryIds)]) {
+      const url = `${REANIME_BASE}/api/flix/${id}/${episodeNum}`;
+      const data = await reanimeFetch(url);
+      if (!data) continue;
+
+      const servers = (() => {
+        if (!data) return null;
+        if (Array.isArray(data.servers) && data.servers.length > 0) return data.servers;
+        if (data.data && Array.isArray(data.data.servers) && data.data.servers.length > 0) return data.data.servers;
+        if (data.result && Array.isArray(data.result)) return data.result;
+        if (Array.isArray(data)) return data;
+        return null;
+      })();
+
+      if (servers) {
+        const mapped = servers.map(s => ({
+          label: `${s.serverName || s.name || ''} (${s.dataType || s.type || 'sub'})`,
+          url: s.dataLink || s.url || s.file || '',
+          type: s.dataType || s.type || 'sub',
+          referer: s.referer || s.referrer || s.source || null,
+          embed: s.embed || null,
+        })).filter(s => s.url);
+
+        return res.json({ success: true, data: mapped });
+      }
+    }
+
+    res.json({ success: true, data: [] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 exports.testProviders = async (req, res) => {
   const results = {};
   try {
