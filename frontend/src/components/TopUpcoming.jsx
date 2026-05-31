@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import api from '../services/api';
 import './TopUpcoming.css';
@@ -7,6 +7,7 @@ import './TopUpcoming.css';
 const tagClass = (t) => `tu-tag tu-tag--${t.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
 
 export default function TopUpcoming() {
+  const navigate = useNavigate();
   const scrollRef = useRef(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,19 +34,13 @@ export default function TopUpcoming() {
     return () => { cancelled = true; };
   }, []);
 
-  const scrollRight = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 500, behavior: 'smooth' });
-    }
-  };
-
   if (loading || items.length === 0) return null;
 
   return (
     <section className="tu-section">
       <header className="tu-header">
         <h2 className="tu-title">Top Upcoming</h2>
-        <button className="tu-arrow" onClick={scrollRight} aria-label="Scroll right">
+        <button className="tu-arrow" onClick={() => navigate('/browse/anime?status=NOT_YET_RELEASED')} aria-label="View all upcoming">
           <ArrowRight size={18} strokeWidth={2.4} />
         </button>
       </header>
