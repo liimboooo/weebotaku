@@ -19,7 +19,7 @@ export default function Categories({ categories }) {
           <motion.button
             key={cat}
             className="category-chip"
-            onClick={() => navigate(`/search?q=${encodeURIComponent(cat)}`)}
+            onClick={() => navigate(`/browse/anime?genre=${encodeURIComponent(cat)}`)}
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}

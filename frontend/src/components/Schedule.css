@@ -71,9 +71,9 @@
   font-weight: 800;
 }
 .sched-chip--active {
-  background: #a3e635; /* lime-400 */
+  background: #ffffff;
   color: #0a0a0c;
-  box-shadow: 0 6px 18px rgba(163, 230, 53, 0.3);
+  box-shadow: 0 6px 18px rgba(255, 255, 255, 0.2);
 }
 .sched-chip--active .sched-chip-day {
   opacity: 1;
@@ -109,8 +109,8 @@
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: #a3e635;
-  box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.12);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
 }
 .sched-list .sched-row::before {
   content: "";
@@ -119,7 +119,7 @@
   top: 0;
   bottom: 0;
   width: 1.5px;
-  background: rgba(163, 230, 53, 0.25);
+  background: rgba(255, 255, 255, 0.18);
   z-index: 0;
 }
 .sched-list .sched-row:first-child::before { top: 50%; }
