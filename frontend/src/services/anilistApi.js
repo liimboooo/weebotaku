@@ -140,4 +140,56 @@ export async function fetchAiringSchedule({ anilistId, malId } = {}) {
   }
 }
 
+export async function fetchHomeBundle() {
+  try {
+    const [trendingRes, popularRes, topRes, seasonalRes, upcomingRes, airingRes, genresRes] = await Promise.all([
+      api.get('/catalog/trending?perPage=25'),
+      api.get('/catalog/popular?perPage=25'),
+      api.get('/catalog/top-rated?perPage=25'),
+      api.get('/catalog/seasonal?perPage=25'),
+      api.get('/catalog/upcoming?perPage=25'),
+      api.get('/catalog/airing?perPage=25'),
+      api.get('/catalog/genres'),
+    ]);
+    return {
+      trending: trendingRes.data || [],
+      popular: popularRes.data || [],
+      highRated: topRes.data || [],
+      seasonal: seasonalRes.data || [],
+      upcoming: upcomingRes.data || [],
+      airing: airingRes.data || [],
+      genres: genresRes.data || [],
+    };
+  } catch {
+    return {
+      trending: [], popular: [], highRated: [],
+      seasonal: [], upcoming: [], airing: [], genres: [],
+    };
+  }
+}
+
+export async function fetchBrowseAnime(opts = {}) {
+  try {
+    const params = new URLSearchParams();
+    if (opts.search) params.set('search', opts.search);
+    if (opts.genre) params.set('genre', opts.genre);
+    if (opts.tag) params.set('tag', opts.tag);
+    if (opts.format) params.set('format', opts.format);
+    if (opts.year) params.set('year', opts.year);
+    if (opts.season) params.set('season', opts.season);
+    if (opts.status) params.set('status', opts.status);
+    if (opts.country) params.set('country', opts.country);
+    if (opts.source) params.set('source', opts.source);
+    if (opts.sort) params.set('sort', opts.sort);
+    if (opts.page) params.set('page', opts.page);
+    const res = await api.get(`/catalog/browse?${params.toString()}`);
+    return {
+      data: (res.data || []).map(mapAnime),
+      pageInfo: res.pageInfo || { total: 0, currentPage: opts.page || 1, lastPage: 1, hasNextPage: false },
+    };
+  } catch {
+    return { data: [], pageInfo: { total: 0, currentPage: opts.page || 1, lastPage: 1, hasNextPage: false } };
+  }
+}
+
 export function clearCache() {}

@@ -235,6 +235,49 @@ exports.getAiring = async (req, res) => {
   }
 };
 
+exports.getBrowse = async (req, res) => {
+  try {
+    const {
+      search, genre, tag, format, year, season, status, country, source,
+      sort = 'POPULARITY_DESC', page: p = 1,
+    } = req.query;
+    const page = Math.max(1, Math.min(parseInt(p) || 1, 5000));
+    const hasSearch = !!(search && search.trim());
+
+    const vars = {
+      page,
+      sort: [hasSearch ? 'SEARCH_MATCH' : sort],
+    };
+    const paramDefs = ['$page:Int', '$sort:[MediaSort]'];
+    const mediaArgs = ['type:ANIME', 'sort:$sort'];
+    const add = (def, arg, key, value) => {
+      paramDefs.push(def);
+      mediaArgs.push(arg);
+      vars[key] = value;
+    };
+
+    if (hasSearch) add('$search:String', 'search:$search', 'search', search.trim());
+    if (genre) add('$genres:[String]', 'genre_in:$genres', 'genres', [genre]);
+    if (tag) add('$tags:[String]', 'tag_in:$tags', 'tags', [tag]);
+    if (format) add('$format:MediaFormat', 'format:$format', 'format', format);
+    if (year) add('$year:Int', 'seasonYear:$year', 'year', Number(year));
+    if (season) add('$season:MediaSeason', 'season:$season', 'season', season);
+    if (status) add('$status:MediaStatus', 'status:$status', 'status', status);
+    if (country) add('$country:CountryCode', 'countryOfOrigin:$country', 'country', country);
+    if (source) add('$source:MediaSource', 'source:$source', 'source', source);
+
+    const q = `query(${paramDefs.join(',')}){Page(page:$page,perPage:30){pageInfo{total currentPage lastPage hasNextPage} media(${mediaArgs.join(',')}){${ANIME_FIELDS}}}}`;
+    const data = await gql(q, vars);
+    res.json({
+      success: true,
+      data: (data?.Page?.media || []).map(mapAnime),
+      pageInfo: data?.Page?.pageInfo || { total: 0, currentPage: page, lastPage: 1, hasNextPage: false },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 exports.search = async (req, res) => {
   try {
     const { q, page: p, type, status } = req.query;

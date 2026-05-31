@@ -12,6 +12,7 @@ const {
   getDetails,
   getCharacters,
   getRecommendations,
+  getBrowse,
   getSchedule,
   getGenres,
   getTags,
@@ -24,6 +25,7 @@ router.get('/seasonal', getSeasonal);
 router.get('/upcoming', getUpcoming);
 router.get('/top-rated', getTopRated);
 router.get('/airing', getAiring);
+router.get('/browse', getBrowse);
 router.get('/search', search);
 router.get('/genres', getGenres);
 router.get('/tags', getTags);
