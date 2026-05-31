@@ -18,7 +18,7 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 const Home = lazy(() => import("./pages/Home"));
 const AnimeDetail = lazy(() => import("./pages/AnimeDetail"));
 const AnimeInfo = lazy(() => import("./pages/AnimeInfo"));
-const SearchPage = lazy(() => import("./pages/SearchPage"));
+
 const WatchlistPage = lazy(() => import("./pages/WatchlistPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
@@ -93,7 +93,7 @@ function AppLayout() {
           <Route path="/settings" element={<RouteShell><SettingsPage /></RouteShell>} />
           <Route path="/anime/:id" element={<RouteShell><AnimeDetail /></RouteShell>} />
           <Route path="/anime/:id/info" element={<RouteShell><AnimeInfo /></RouteShell>} />
-          <Route path="/search" element={<RouteShell><SearchPage /></RouteShell>} />
+          <Route path="/search" element={<Navigate to="/browse/anime" replace />} />
           <Route path="/watchlist" element={<RouteShell><WatchlistPage /></RouteShell>} />
           <Route path="/profile" element={<RouteShell><ProtectedRoute><ProfilePage /></ProtectedRoute></RouteShell>} />
           <Route path="/profile/:username" element={<RouteShell><ProfilePage /></RouteShell>} />

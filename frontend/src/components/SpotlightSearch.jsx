@@ -147,7 +147,7 @@ export default function SpotlightSearch({ open, onClose }) {
         navigate(`/anime/${item.id}?ep=1`);
       } else if (query.trim()) {
         handleClose();
-        navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+        navigate(`/browse/anime?q=${encodeURIComponent(query.trim())}`);
       }
     }
   };
@@ -212,7 +212,7 @@ export default function SpotlightSearch({ open, onClose }) {
             )}
             <button
               className="ss-filter-btn"
-              onClick={() => { handleClose(); navigate('/search'); }}
+              onClick={() => { handleClose(); navigate('/browse/anime'); }}
               aria-label="Open search filters"
             >
               <SlidersHorizontal size={14} />

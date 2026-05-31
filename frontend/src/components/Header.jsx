@@ -149,7 +149,7 @@ export default function Header({ isHome = false }) {
 
   const doSearch = (q) => {
     if (q.trim()) {
-      navigate(`/search?q=${encodeURIComponent(q.trim())}`);
+      navigate(`/browse/anime?q=${encodeURIComponent(q.trim())}`);
       setSearchQuery('');
       setShowSearchPopout(false);
       inputRef.current?.blur();

@@ -113,7 +113,7 @@ export default function FastSearch() {
     setRecentSearches(recent);
     localStorage.setItem('recentSearches', JSON.stringify(recent));
     closeSearch();
-    navigate(`/search?q=${encodeURIComponent(q)}`);
+    navigate(`/browse/anime?q=${encodeURIComponent(q)}`);
   };
 
   const removeRecent = (term, e) => {
