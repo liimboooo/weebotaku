@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import api from '../services/api';
 import './TopUpcoming.css';
@@ -51,7 +52,7 @@ export default function TopUpcoming() {
 
       <div className="tu-scroll" ref={scrollRef}>
         {items.map((item) => (
-          <article key={item.id} className="tu-card">
+          <Link key={item.id} to={`/anime/${item.id}/info`} className="tu-card">
             <div className="tu-card-cover">
               <img src={item.img} alt={item.title} loading="lazy" />
               <div className="tu-cover-overlay" />
@@ -72,7 +73,7 @@ export default function TopUpcoming() {
                 ))}
               </div>
             </div>
-          </article>
+          </Link>
         ))}
       </div>
     </section>
