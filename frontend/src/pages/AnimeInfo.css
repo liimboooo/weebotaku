@@ -421,7 +421,7 @@
 
 .ai-share-option:hover { background: #000000; }
 .ai-share-option:focus-visible { outline: 2px solid rgba(255,255,255,0.5); outline-offset: -2px; }
-.ai-share-option.copied { color: #22c55e; }
+.ai-share-option.copied { color: #ffffff; }
 
 /* ─── TWO-COLUMN LAYOUT ─── */
 .ai-body {
@@ -788,7 +788,8 @@
 }
 
 .ai-related-card-badge.airing {
-  background: rgba(34, 197, 94, 0.85);
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
 }
 
 /* Tech pills on image */
