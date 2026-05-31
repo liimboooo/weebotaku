@@ -33,7 +33,8 @@ router.delete('/account', protect, deleteAccount);
 router.post('/2fa/setup', protect, setup2FA);
 router.post('/2fa/verify-setup', protect, verifySetup2FA);
 router.post('/2fa/disable', protect, disable2FA);
-router.post('/2fa/verify-login', verifyLogin2FA);
+const authLimiter = require('express-rate-limit')({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false, message: { success: false, message: 'Too many attempts, try again later' } });
+router.post('/2fa/verify-login', authLimiter, verifyLogin2FA);
 router.get('/2fa/status', protect, get2FAStatus);
 
 router.post('/email/request-verify', requestEmailVerify);

@@ -19,7 +19,7 @@ app.use(hpp());
 
 // ─── CORS ────────────────────────────────────────────────
 app.use(cors({
-  origin: true,
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(s => s.trim()) : true,
   credentials: true,
 }));
 

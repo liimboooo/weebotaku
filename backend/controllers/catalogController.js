@@ -356,6 +356,7 @@ exports.getDetails = async (req, res) => {
       type: a.format || 'TV',
       startDate: a.startDate ? { year: a.startDate.year, month: a.startDate.month, day: a.startDate.day } : null,
       trailerUrl: a.trailer?.site === 'youtube' ? `https://www.youtube.com/embed/${a.trailer.id}` : null,
+      nextAiringEpisode: a.nextAiringEpisode || null,
     };
 
     res.json({ success: true, data: detail });

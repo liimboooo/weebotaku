@@ -24,7 +24,8 @@ function initIO(httpServer) {
 
     try {
       const jwt = require('jsonwebtoken');
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key_change_in_production');
+      if (!process.env.JWT_SECRET) return next(new Error('Server configuration error'));
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       socket.userId = decoded.id;
       next();
     } catch {

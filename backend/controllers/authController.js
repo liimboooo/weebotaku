@@ -253,7 +253,8 @@ exports.searchUsers = async (req, res) => {
     if (!q || q.trim().length < 1) {
       return res.json({ success: true, users: [] });
     }
-    const users = await User.find({ username: { $regex: q.trim(), $options: 'i' } })
+    const escaped = q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const users = await User.find({ username: { $regex: escaped, $options: 'i' } })
       .limit(8)
       .select('username avatar bio memberSince');
     res.json({ success: true, users: users.map(u => ({
@@ -297,7 +298,7 @@ exports.updateFavorites = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user.id,
       { favorites: favorites.map(f => ({ animeId: f.animeId, name: f.name, img: f.img })) },
-      { new: true }
+      { new: true, runValidators: true }
     );
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
     res.json({ success: true, favorites: user.favorites });
@@ -494,7 +495,7 @@ exports.updateSettings = async (req, res) => {
     for (const key of allowed) {
       if (req.body[key] !== undefined) update[`settings.${key}`] = req.body[key];
     }
-    const user = await User.findByIdAndUpdate(req.user.id, update, { new: true }).select('settings');
+    const user = await User.findByIdAndUpdate(req.user.id, update, { new: true, runValidators: true }).select('settings');
     res.json({ success: true, settings: user.settings });
   } catch (error) {
     console.error('UpdateSettings error:', error);
@@ -532,6 +533,12 @@ exports.changePassword = async (req, res) => {
 // @route   DELETE /api/auth/account
 exports.deleteAccount = async (req, res) => {
   try {
+    const { password } = req.body;
+    if (!password) return res.status(400).json({ success: false, message: 'Password required' });
+    const user = await User.findById(req.user.id).select('+password');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid password' });
     await User.findByIdAndDelete(req.user.id);
     res.json({ success: true, message: 'Account deleted' });
   } catch (error) {
@@ -693,7 +700,7 @@ exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ success: false, message: 'Email required' });
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.json({ success: true, message: 'If that email exists, a reset link was sent' });
     const token = require('crypto').randomBytes(32).toString('hex');
     user.resetPasswordToken = token;
