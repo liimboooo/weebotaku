@@ -950,7 +950,7 @@ export default function AnimeDetail() {
               )}
             </div>
 
-            <div style={{ maxWidth: '1020px', marginLeft: '40px', marginRight: '0', width: 'calc(100% - 40px)' }}>
+            <div style={{ maxWidth: '1000px', marginLeft: '40px', marginRight: '0', width: 'calc(100% - 40px)' }}>
               {/* ─── SERVER TOGGLE ─── */}
               {servers.length > 0 && (
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
