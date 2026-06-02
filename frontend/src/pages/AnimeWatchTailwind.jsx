@@ -11,7 +11,7 @@ export default function AnimeWatchTailwind() {
     id: i + 1,
     ep: i + 1,
     title: i === 0 ? "Asa and Yuru" : `Episode ${i + 1}`,
-    views: "97K Views",
+    views: "97K views",
     duration: "24m",
     thumb: "", 
   }));
@@ -99,7 +99,7 @@ export default function AnimeWatchTailwind() {
 
             {/* Stats & Synopsis */}
             <div className="bg-white/5 border border-white/5 rounded-xl p-4 mt-2">
-              <div className="text-sm font-semibold text-white mb-2">97K views • Apr 4, 2026 • #6 trending</div>
+              <div className="text-sm font-semibold text-neutral-400 mb-2">97K views • Apr 4, 2026 • #6 trending</div>
               <p className="text-sm text-neutral-300 leading-relaxed">
                 In a world where certain humans command mighty daemons, a young boy discovers his hidden power. The true battle begins now.
               </p>
