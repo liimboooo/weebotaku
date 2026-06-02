@@ -953,10 +953,10 @@ export default function AnimeDetail() {
             <div style={{ maxWidth: '1050px', marginLeft: '40px', marginRight: '0', width: 'calc(100% - 40px)' }}>
               {/* ─── SERVER TOGGLE ─── */}
               {servers.length > 0 && (
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
                   <span className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Source</span>
-                  <button className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${language === 'sub' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('sub'); try { localStorage.setItem('animewch_last_language', 'sub'); } catch {} }} disabled={!servers.some(s => s.type === 'sub')}>SUB</button>
-                  <button className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${language === 'dub' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('dub'); try { localStorage.setItem('animewch_last_language', 'dub'); } catch {} }} disabled={!servers.some(s => s.type === 'dub')}>DUB</button>
+                  <button className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${language === 'sub' ? 'bg-[#2a1a08] text-[#e2a856]' : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('sub'); try { localStorage.setItem('animewch_last_language', 'sub'); } catch {} }} disabled={!servers.some(s => s.type === 'sub')}>SUB</button>
+                  <button className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${language === 'dub' ? 'bg-[#2a1a08] text-[#e2a856]' : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('dub'); try { localStorage.setItem('animewch_last_language', 'dub'); } catch {} }} disabled={!servers.some(s => s.type === 'dub')}>DUB</button>
                 </div>
               )}
 
@@ -1045,14 +1045,6 @@ export default function AnimeDetail() {
 
           {/* ─── RIGHT SIDEBAR ─── */}
           <aside className="w-[400px] shrink-0 overflow-y-auto rounded-3xl mr-4 my-4 bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/[0.06] shadow-2xl shadow-black/50">
-            <style>{`
-              .sidebar-scroll::-webkit-scrollbar { width: 4px; }
-              .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
-              .sidebar-scroll::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 99px; }
-              .sidebar-scroll::-webkit-scrollbar-thumb:hover { background: #444; }
-              @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-              .ep-card { animation: slideIn 0.25s ease both; }
-            `}</style>
             <div className="p-4">
               {/* ─── HEADER ─── */}
               <div className="flex items-center justify-between mb-4 px-1">
@@ -1084,10 +1076,7 @@ export default function AnimeDetail() {
                 </div>
 
                 {/* list */}
-                <div className="flex flex-col gap-2 max-h-[55vh] overflow-y-auto pr-1 sidebar-scroll relative">
-                  {/* gradient fade at bottom of list */}
-                  <div className="sticky bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#0f0f0f] to-transparent pointer-events-none z-10 -mt-8" />
-
+                <div className="flex flex-col gap-1 overflow-y-auto max-h-[400px] pr-1">
                   {loading ? (
                     <div className="flex items-center justify-center py-12">
                       <Loader size={16} className="text-zinc-500 animate-spin" />
@@ -1101,53 +1090,26 @@ export default function AnimeDetail() {
                         const isActive = realIdx === epIndex;
                         const isWatched = watchedEpisodes.has(ep.episode) && !isActive;
                         return (
-                          <button key={ep.id || realIdx} data-ep={realIdx}
-                            className="ep-card flex items-center w-full text-left cursor-pointer border-none p-0 transition-all duration-200 rounded-2xl overflow-hidden group"
-                            style={{ animationDelay: `${i * 30}ms` }}
+                          <div key={ep.id || realIdx}
+                            className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-white/5 transition-all group ${isActive ? 'bg-[#161622] ring-1 ring-[#6c63ff]/25' : ''}`}
                             onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
                           >
-                            {/* bg layer */}
-                            <div className={`absolute inset-0 transition-all duration-200 ${
-                              isActive
-                                ? 'bg-[#161622] ring-1 ring-[#6c63ff]/25 shadow-lg shadow-[#6c63ff]/5'
-                                : 'bg-transparent group-hover:bg-white/[0.03]'
-                            }`} style={{ borderRadius: 'inherit' }} />
-                            
-                            {/* left accent bar for active */}
-                            {isActive && <div className="w-[4px] bg-[#6c63ff] shrink-0 self-stretch relative z-10 shadow-[0_0_12px_#6c63ff]/40" style={{ borderRadius: '0 4px 4px 0' }} />}
-                            
-                            {/* thumbnail */}
-                            <div className={`relative shrink-0 overflow-hidden ${isActive ? 'bg-[#1a1a2e]' : 'bg-[#1a1a1a]'}`} style={{ width: '120px', height: '90px' }}>
-                              {ep.thumbnail || ep.image ? (
-                                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" src={ep.thumbnail || ep.image} alt="" loading="lazy" style={{ opacity: isActive ? 0.55 : 1 }} />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-[#555] select-none" style={{ fontSize: '28px', fontWeight: 700 }}>
-                                  {ep.episode}
-                                </div>
-                              )}
-                              <div className="absolute bottom-1.5 right-1.5 bg-black/70 text-[#bbb] text-[10px] font-medium px-2 py-0.5 rounded-lg backdrop-blur-sm">
-                                Ep {ep.episode}
-                              </div>
+                            <div className="w-10 h-10 flex-shrink-0 rounded-lg bg-neutral-900 border border-white/5 flex items-center justify-center text-xs font-bold text-neutral-500 group-hover:text-white group-hover:bg-neutral-800 transition-colors">
+                              {ep.episode}
                             </div>
-
-                            {/* info */}
-                            <div className="flex-1 min-w-0 relative z-10" style={{ padding: '10px 14px' }}>
-                              <div className={`text-sm font-medium leading-snug truncate transition-colors ${isWatched ? 'text-[#666]' : 'text-white/85 group-hover:text-white'}`}>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium text-neutral-400 group-hover:text-neutral-200 truncate">
                                 {episodeTitles?.[ep.episode] || ep.title || `Episode ${ep.episode}`}
                               </div>
-                              <div className="text-[11px] text-[#555] mt-1.5 truncate">{anime?.name || "Anime"}</div>
-                              <div className="flex items-center gap-2 mt-2">
-                                <span className="text-[11px] text-[#666]">Ep {ep.episode}</span>
-                                {isWatched && <span className="text-[11px] text-[#4caf50] font-medium flex items-center gap-0.5 bg-[#4caf50]/10 px-2 py-0.5 rounded-full">✓ Watched</span>}
-                              </div>
+                              <div className="text-[11px] text-[#555] mt-0.5 truncate">{anime?.name || "Anime"}</div>
                             </div>
-                          </button>
+                          </div>
                         );
                       })}
                       {(hasMoreEps || filteredEpisodes.length > visibleCount) && (
-                        <button className="w-full py-3.5 text-xs text-[#666] hover:text-white/80 font-medium hover:bg-white/[0.03] transition-all cursor-pointer border-none bg-transparent rounded-2xl mt-0.5" onClick={handleLoadMore}>
+                        <div className="w-full mt-2 py-3 text-center text-xs font-bold text-neutral-500 hover:text-white hover:bg-white/5 rounded-xl transition-colors cursor-pointer" onClick={handleLoadMore}>
                           Load More ({filteredEpisodes.length - visibleCount} remaining)
-                        </button>
+                        </div>
                       )}
                     </>
                   )}
