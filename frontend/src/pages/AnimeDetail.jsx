@@ -795,7 +795,7 @@ export default function AnimeDetail() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-black flex">
+    <div className="w-full min-h-screen bg-[#0a0a0a] flex">
       {/* ambient bg */}
       <div className="fixed inset-0 pointer-events-none z-0"
         style={{
@@ -1042,20 +1042,20 @@ export default function AnimeDetail() {
           </div>
 
           {/* ─── RIGHT SIDEBAR ─── */}
-          <aside className="w-[400px] flex-shrink-0 border-l border-white/5 bg-gradient-to-b from-zinc-900/40 to-black overflow-y-auto">
+          <aside className="w-[360px] flex-shrink-0 border-l border-[#1e1e1e] bg-[#111] overflow-y-auto">
             <div className="p-3">
               {/* ─── HEADER ─── */}
               <div className="flex items-center justify-between mb-3 px-1">
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold text-white truncate">
+                  <div className="text-base font-semibold text-white truncate">
                     Up Next{episodeTitles?.[selectedEp] || episode?.title ? ` — ${episodeTitles?.[selectedEp] || episode?.title}` : ""}
                   </div>
-                  <div className="text-[11px] text-zinc-500 mt-0.5 truncate">
+                  <div className="text-xs text-[#888] mt-0.5 truncate">
                     Playing — Episode {selectedEp}{anime?.name ? ` — ${anime.name}` : ""}
                   </div>
                 </div>
-                <button className="flex items-center justify-center w-7 h-7 rounded-full hover:bg-white/10 transition-colors text-zinc-400 hover:text-white cursor-pointer border-none bg-transparent flex-none ml-2" onClick={() => setIsEpisodesExpanded(p => !p)} title={isEpisodesExpanded ? 'Collapse' : 'Expand'}>
-                  {isEpisodesExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                <button className="flex items-center justify-center w-7 h-7 rounded hover:bg-white/5 transition-colors text-[#888] hover:text-white cursor-pointer border-none bg-transparent flex-none ml-2" onClick={() => setIsEpisodesExpanded(p => !p)} title={isEpisodesExpanded ? 'Collapse' : 'Expand'}>
+                  <ChevronUp size={14} />
                 </button>
               </div>
 
@@ -1063,24 +1063,24 @@ export default function AnimeDetail() {
               <div className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${isEpisodesExpanded ? 'max-h-[70vh]' : 'max-h-0'}`}>
                 {/* search */}
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center gap-1.5 flex-1 bg-white/5 rounded-xl px-3 py-1.5 border border-white/5 focus-within:border-orange-500/30 transition-colors">
-                    <Search size={12} className="text-zinc-500 flex-none" />
-                    <input className="flex-1 bg-transparent text-xs text-white outline-none placeholder-zinc-600 border-none" type="text" placeholder="Search episodes..." value={epSearch} onChange={e => { setEpSearch(e.target.value); if (!e.target.value) setVisibleCount(50); }} />
-                    {epSearch && <button className="text-zinc-500 hover:text-white cursor-pointer bg-transparent border-none p-0.5 flex-none" onClick={() => { setEpSearch(""); setVisibleCount(50); }}><X size={11} /></button>}
+                  <div className="flex items-center gap-1.5 flex-1 bg-[#1a1a1a] rounded px-3 border border-[#2a2a2a] focus-within:border-[#6c63ff] transition-colors" style={{ height: '36px' }}>
+                    <Search size={12} className="text-[#888] flex-none" />
+                    <input className="flex-1 bg-transparent text-xs text-white outline-none placeholder-[#555] border-none" type="text" placeholder="Search episodes..." value={epSearch} onChange={e => { setEpSearch(e.target.value); if (!e.target.value) setVisibleCount(50); }} />
+                    {epSearch && <button className="text-[#888] hover:text-white cursor-pointer bg-transparent border-none p-0.5 flex-none" onClick={() => { setEpSearch(""); setVisibleCount(50); }}><X size={11} /></button>}
                   </div>
-                  <button className="flex items-center justify-center w-7 h-7 rounded-full hover:bg-white/10 transition-colors text-zinc-400 hover:text-white cursor-pointer border-none bg-transparent flex-none" title="Refresh" onClick={() => setRetryCount(c => c + 1)}>
+                  <button className="flex items-center justify-center w-7 h-7 rounded hover:bg-white/5 transition-colors text-[#888] hover:text-white cursor-pointer border-none bg-transparent flex-none" title="Refresh" onClick={() => setRetryCount(c => c + 1)}>
                     <RefreshCw size={12} />
                   </button>
                 </div>
 
                 {/* list */}
-                <div className="space-y-1 max-h-[55vh] overflow-y-auto pr-1 custom-scrollbar">
+                <div className="max-h-[55vh] overflow-y-auto pr-1 custom-scrollbar">
                   {loading ? (
                     <div className="flex items-center justify-center py-10">
                       <Loader size={16} className="text-zinc-500 animate-spin" />
                     </div>
                   ) : filteredEpisodes.length === 0 ? (
-                    <p className="text-xs text-zinc-600 text-center py-10">{epSearch ? "No matching episodes" : "No episodes"}</p>
+                    <p className="text-xs text-[#555] text-center py-10">{epSearch ? "No matching episodes" : "No episodes"}</p>
                   ) : (
                     <>
                       {filteredEpisodes.slice(0, visibleCount).map((ep, i) => {
@@ -1089,46 +1089,43 @@ export default function AnimeDetail() {
                         const isWatched = watchedEpisodes.has(ep.episode) && !isActive;
                         return (
                           <button key={ep.id || realIdx} data-ep={realIdx}
-                            className={`group flex items-start gap-2.5 w-full p-2 rounded-2xl text-left transition-all cursor-pointer border-none ${isActive ? 'bg-amber-900/20 border border-orange-500/30' : 'hover:bg-white/[0.03] border border-transparent'}`}
+                            className="flex items-center w-full text-left cursor-pointer border-none p-0 bg-transparent"
+                            style={{ height: '100px', borderBottom: '1px solid #1e1e1e' }}
                             onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
                           >
+                            {/* left border for active */}
+                            {isActive && <div className="w-[3px] bg-[#6c63ff] shrink-0 self-stretch" />}
+                            
                             {/* thumbnail */}
-                            <div className="relative flex-none w-[140px]">
-                              <div className="relative w-full overflow-hidden rounded-xl aspect-video bg-zinc-800/60 ring-1 ring-white/[0.06]">
-                                {ep.thumbnail || ep.image ? (
-                                  <img className="h-full w-full object-cover" src={ep.thumbnail || ep.image} alt="" loading="lazy" />
-                                ) : (
-                                  <div className="h-full w-full flex items-center justify-center text-zinc-600 text-base font-bold">{ep.episode}</div>
-                                )}
-                                <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded-md bg-black/70 text-white text-[10px] font-semibold backdrop-blur-sm">
-                                  Ep {ep.episode}
+                            <div className={`relative shrink-0 ${isActive ? 'bg-[#1a1a2e]' : 'bg-[#1e1e1e]'}`} style={{ width: '120px', height: '100%' }}>
+                              {ep.thumbnail || ep.image ? (
+                                <img className="w-full h-full object-cover" src={ep.thumbnail || ep.image} alt="" loading="lazy" style={{ opacity: isActive ? 0.6 : 1 }} />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-[#555]" style={{ fontSize: '28px', fontWeight: 700 }}>
+                                  {ep.episode}
                                 </div>
+                              )}
+                              <div className="absolute bottom-1.5 right-1.5 bg-[#222] text-[#aaa] text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ borderRadius: '4px' }}>
+                                Ep {ep.episode}
                               </div>
-                              {isActive && (
-                                <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full bg-orange-500" />
-                              )}
-                              {isWatched && (
-                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500/50 to-transparent rounded-b-xl" />
-                              )}
                             </div>
+
                             {/* info */}
-                            <div className="flex-1 min-w-0 pt-0.5">
-                              <div className={`text-sm font-medium leading-snug line-clamp-2 ${isWatched ? 'text-zinc-500' : 'text-zinc-200 group-hover:text-white'} transition-colors`}>
+                            <div className="flex-1 min-w-0" style={{ padding: '10px 12px' }}>
+                              <div className={`text-sm font-medium leading-snug truncate ${isWatched ? 'text-[#888]' : 'text-white'}`}>
                                 {episodeTitles?.[ep.episode] || ep.title || `Episode ${ep.episode}`}
                               </div>
-                              <div className="text-[11px] text-zinc-600 mt-1 line-clamp-1">{anime?.name || "Anime"}</div>
+                              <div className="text-[11px] text-[#666] mt-1 truncate">{anime?.name || "Anime"}</div>
                               <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[11px] text-zinc-600">
-                                  {ep.airDate ? new Date(ep.airDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : `Ep ${ep.episode}`}
-                                </span>
-                                {isWatched && <span className="text-[10px] text-amber-400/60 font-medium">✓ Watched</span>}
+                                <span className="text-[11px] text-[#888]">Ep {ep.episode}</span>
+                                {isWatched && <span className="text-[11px] text-[#4caf50] font-medium">✓ Watched</span>}
                               </div>
                             </div>
                           </button>
                         );
                       })}
                       {(hasMoreEps || filteredEpisodes.length > visibleCount) && (
-                        <button className="w-full py-2.5 text-xs text-zinc-500 hover:text-zinc-300 font-medium rounded-xl hover:bg-white/5 transition-colors cursor-pointer border-none bg-transparent" onClick={handleLoadMore}>
+                        <button className="w-full py-2.5 text-xs text-[#888] hover:text-white font-medium hover:bg-white/5 transition-colors cursor-pointer border-none bg-transparent" onClick={handleLoadMore} style={{ borderBottom: '1px solid #1e1e1e' }}>
                           Load More ({filteredEpisodes.length - visibleCount} remaining)
                         </button>
                       )}
@@ -1138,29 +1135,29 @@ export default function AnimeDetail() {
 
                 {/* next airing */}
                 {nextAiring && (
-                  <div className="flex items-center gap-2 mt-3 px-2 py-2.5 rounded-xl bg-[#0c2d1c] ring-1 ring-emerald-500/20">
-                    <Bell size={12} className="text-emerald-400 flex-none" />
-                    <span className="text-xs text-emerald-400">Next ep airing in <strong className="text-emerald-300 font-semibold">{nextAiring.text}</strong></span>
+                  <div className="flex items-center gap-2 mt-3 px-2 py-2.5 rounded bg-[#0c2d1c]" style={{ border: '1px solid #1a3d2a' }}>
+                    <Bell size={12} className="text-[#4caf50] flex-none" />
+                    <span className="text-xs text-[#4caf50]">Next ep airing in <strong className="text-[#4caf50] font-semibold">{nextAiring.text}</strong></span>
                   </div>
                 )}
               </div>
 
               {/* ─── MORE LIKE THIS ─── */}
               {recommendations.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-white/5">
-                  <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3 px-1">More Like This</div>
+                <div className="mt-4 pt-3" style={{ borderTop: '1px solid #1e1e1e' }}>
+                  <div className="text-[11px] font-semibold text-[#555] uppercase mb-3 px-1" style={{ letterSpacing: '2px' }}>More Like This</div>
                   <div className="space-y-1.5">
                     {recommendations.map((rec, i) => (
                       <button key={rec.id || i}
-                        className="flex items-start gap-3 w-full p-2 rounded-2xl text-left transition-all hover:bg-white/[0.03] cursor-pointer border-none bg-transparent"
+                        className="flex items-center gap-3 w-full p-2 text-left transition-all hover:bg-white/[0.03] cursor-pointer border-none bg-transparent rounded"
                         onClick={() => navigate(`/anime/${rec.id}/info`)}
                       >
-                        <div className="relative flex-none w-[80px] overflow-hidden rounded-xl aspect-[2/3] bg-zinc-800/60 ring-1 ring-white/[0.06]">
-                          <img className="h-full w-full object-cover" src={rec.image} alt="" loading="lazy" />
+                        <div className="relative flex-none overflow-hidden rounded bg-[#1e1e1e]" style={{ width: '80px', height: '60px' }}>
+                          <img className="w-full h-full object-cover" src={rec.image} alt="" loading="lazy" />
                         </div>
-                        <div className="flex-1 min-w-0 pt-0.5">
-                          <div className="text-sm font-medium text-zinc-200 leading-snug line-clamp-2">{rec.name}</div>
-                          <div className="text-[11px] text-zinc-600 mt-1 line-clamp-1">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-white leading-snug line-clamp-2">{rec.name}</div>
+                          <div className="text-[11px] text-[#666] mt-0.5 line-clamp-1">
                             {rec.genres?.slice(0, 2).join(" • ") || rec.format || "Anime"}
                           </div>
                         </div>
