@@ -813,7 +813,7 @@ export default function AnimeDetail() {
           <div className="flex-1 flex flex-col min-w-0">
 
             {/* ─── VIDEO PLAYER ─── */}
-            <div className="relative bg-gradient-to-b from-zinc-900/50 to-black overflow-hidden mt-8 mb-4" style={{ aspectRatio: '16/9', maxHeight: '48vh', maxWidth: '860px', width: 'calc(100% - 40px)', marginLeft: '40px', borderRadius: '16px' }}>
+            <div className="relative bg-gradient-to-b from-zinc-900/50 to-black overflow-hidden mt-8 mb-4" style={{ aspectRatio: '16/9', maxHeight: '55vh', borderRadius: '16px', marginLeft: '40px', marginRight: '0' }}>
               {/* loading */}
               {loading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
@@ -950,7 +950,7 @@ export default function AnimeDetail() {
               )}
             </div>
 
-            <div style={{ maxWidth: '860px', marginLeft: '40px', width: 'calc(100% - 40px)' }}>
+            <div style={{ marginLeft: '40px', marginRight: '0' }}>
               {/* ─── SERVER TOGGLE ─── */}
               {servers.length > 0 && (
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
