@@ -1044,7 +1044,7 @@ export default function AnimeDetail() {
           </div>
 
           {/* ─── RIGHT SIDEBAR ─── */}
-          <aside className="w-[360px] shrink-0 overflow-y-auto rounded-3xl mr-4 my-4 bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/[0.06] shadow-2xl shadow-black/50">
+          <aside className="w-[400px] shrink-0 overflow-y-auto rounded-3xl mr-4 my-4 bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/[0.06] shadow-2xl shadow-black/50">
             <style>{`
               .sidebar-scroll::-webkit-scrollbar { width: 4px; }
               .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
