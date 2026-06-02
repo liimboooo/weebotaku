@@ -1,0 +1,36 @@
+.watch-page { padding-top: 20px; }
+.watch-grid { display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
+
+.watch-main { display:flex; flex-direction:column; gap:14px; }
+.player-card { padding: 12px; }
+.player-aspect { position: relative; padding-top: 56.25%; background:#000; border-radius:10px; overflow:hidden; }
+.player-aspect iframe { position:absolute; inset:0; width:100%; height:100%; }
+.player-loading, .player-error { padding: 48px; text-align:center; color:var(--text-muted); }
+
+.meta-card { padding: 14px; }
+.meta-title { font-size:18px; font-weight:800; }
+.meta-sub { color:var(--text-muted); margin-top:6px; font-size:13px; }
+.meta-synopsis { margin-top:10px; color:var(--text-secondary); font-size:14px; }
+
+.comments-card { padding: 12px; }
+.comments-heading { margin:0 0 8px 0; }
+
+.watch-side { display:flex; flex-direction:column; gap:12px; }
+.episodes-card { padding:12px; }
+.episodes-header { display:flex; justify-content:space-between; align-items:center; }
+.episode-list { margin-top:10px; max-height:380px; overflow:auto; display:flex; flex-direction:column; gap:8px; }
+.episode-row { text-align:left; padding:8px; border-radius:10px; background:transparent; border:1px solid transparent; color:var(--text-primary); }
+.episode-row:hover { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.04); }
+
+.recommend-card { padding:12px; }
+.recommend-list { display:flex; flex-direction:column; gap:10px; margin-top:8px; }
+.recommend-item { display:flex; gap:10px; align-items:center; }
+.recommend-item img { width:56px; height:40px; object-fit:cover; border-radius:8px; flex-shrink:0; }
+.recommend-meta { min-width:0; }
+.recommend-title { font-weight:700; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.recommend-sub { color:var(--text-muted); font-size:12px; }
+
+@media (max-width: 900px) {
+  .watch-grid { grid-template-columns: 1fr; }
+  .watch-side { order: 2; }
+}
