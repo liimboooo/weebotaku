@@ -190,25 +190,33 @@ export default function AnimeInfo() {
   const nextEpText = getNextEpText(anime);
 
   const epTitles = [
-    "Asa and Yuru", "Right and Left", "Dera and Hana", "Jin and Yuru",
-    "Hare and Tortoise", "The Kagemori Clan and the Unknown Assailants",
-    "Asa and Break", "Suspicion and Conviction", "Embrace and Whisper",
-    "Dawn and Dusk", "Light and Shadow", "Fire and Ice"
+    "What is Evil? Whatever Springs from Weakness.", 
+    "It Takes a Great Deal of History to Produce a Little Literature.",
+    "The Highest Reward for a Person's Toil is Not What They Get for It, but What They Become by It.",
+    "We Should Not Be Upset That Others Hide the Truth from Us, When We Hide It from Ourselves.",
+    "Every Failure is a Step to Success.",
+    "There are Two Kinds of Lies...",
+    "Nothing is as Dangerous as an Ignorant Friend.",
+    "The Wound is the Place Where the Light Enters You.",
+    "Man is Condemned to be Free.",
+    "The Best Way to Predict the Future is to Create It.",
+    "He Who Cannot Obey Himself Will Be Commanded.",
+    "Only in the Darkness Can You See the Stars."
   ];
 
   const epDescriptions = [
-    "In a world where certain humans command mighty daemons, a young boy discovers his hidden power.",
-    "Guided by Dera, Yuru flees from his pursuers and awakens the guardian deities of the village.",
-    "Yuru learns the truth about his village and learns the rules of modern society as he rides down the mountain.",
-    "After a short rest, Yuru and his Daemons begin their search for Asa by sniffing out her blood.",
-    "Yuru and his Daemons track the scent of Asa's blood to a warehouse, where they encounter Jin and his men.",
-    "Yuru is reunited with Asa at the Kagemori mansion and asks her about their parents.",
-    "The morning after the battle, Yuru asks about the eyepatch covering her right eye.",
-    "Dera arrives at the Kagemori mansion to retrieve Yuru, and they're invited to breakfast by the clan head.",
-    "In order to cheer Yuru up, Dera drags him and his Daemons around the city to see the sights.",
-    "As twilight falls, the ancient guardians stir from their slumber.",
-    "The boundary between worlds grows thin as old enemies return.",
-    "An unexpected alliance forms in the heat of battle."
+    "Ayanokoji and the Class D students face their next major special exam on a deserted island, where teamwork is put to the ultimate test.",
+    "Ryuen begins his aggressive psychological attacks against Class D, forcing Horikita to confront her own vulnerabilities.",
+    "Secrets within the student council begin to surface as Nagumo makes a bold move to consolidate his power over the school.",
+    "A traitor is suspected within Class D, leading to widespread paranoia and fractured alliances during the voting exam.",
+    "Karuizawa's past trauma is exploited, pushing Ayanokoji to intervene from the shadows with a ruthless strategy.",
+    "The paper shuffle exam results in unexpected pairings, forcing students with deep rivalries to cooperate to avoid expulsion.",
+    "Ayanokoji's father makes an unexpected appearance, threatening the very foundation of Kiyotaka's peaceful school life.",
+    "Class C mounts a desperate counterattack, relying on a risky gamble that could change the entire grade hierarchy.",
+    "Sakayanagi finally confronts Ayanokoji directly, setting the stage for a clash between natural genius and artificial perfection.",
+    "The winter break brings temporary relief, but hidden agendas continue to unravel in the background.",
+    "A special exam forces the students to make heart-wrenching sacrifices, testing their morality and ambition.",
+    "The season concludes with a decisive confrontation, reshaping the entire power dynamic of Advanced Nurturing High School."
   ];
 
   if (loading) {
@@ -249,10 +257,10 @@ export default function AnimeInfo() {
             </div>
             
             <div className="flex flex-col gap-3 mt-2">
-              {isAiring && nextEpText && (
+              {(isAiring || true) && (
                 <div className="w-full bg-[#0c2d1c] text-emerald-400 py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm font-bold shadow-lg shadow-emerald-900/20 ring-1 ring-emerald-500/20">
                   <Bell size={16} />
-                  <span>Next ep airing {nextEpText}</span>
+                  <span>Next ep airing {nextEpText || "in 4 days"}</span>
                 </div>
               )}
               
@@ -274,7 +282,7 @@ export default function AnimeInfo() {
           <div className="flex-1 flex flex-col md:pt-4">
             {anime.season && (
               <span className="text-sm text-neutral-400 font-semibold uppercase tracking-widest mb-3">
-                {anime.season} {anime.year || ""}
+                {anime.season}
               </span>
             )}
             
@@ -315,13 +323,13 @@ export default function AnimeInfo() {
                 <Bookmark size={18} fill={bookmarked ? "currentColor" : "none"} />
               </button>
               
-              <button
-                onClick={() => setFavorited(f => !f)}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${favorited ? "bg-white text-black" : "bg-neutral-800/80 hover:bg-neutral-700 text-white border border-neutral-700"}`}
-                aria-label="Favorite"
+              <a
+                href={`https://anilist.co/anime/${anime.id}`} target="_blank" rel="noopener noreferrer"
+                className="w-12 h-12 rounded-full flex items-center justify-center transition-all bg-neutral-800/80 hover:bg-neutral-700 text-white border border-neutral-700"
+                aria-label="AniList"
               >
-                <Heart size={18} fill={favorited ? "currentColor" : "none"} />
-              </button>
+                <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"><path d="M24 17.53v2.421c0 .71-.391 1.101-1.1 1.101h-8.913c-.71 0-1.1-.391-1.1-1.101v-2.422c0-.71.39-1.101 1.1-1.101h6.67l-2.071-8.563H15.5c-.71 0-1.101-.391-1.101-1.101V4.343c0-.71.391-1.101 1.101-1.101h2.518c.552 0 .964.316 1.077.854l4.8 12.336c.1.282.105.696-.067 1.099zM2.87 21.052c-.71 0-1.101-.391-1.101-1.101v-2.421c0-.71.391-1.101 1.101-1.101h3.69l3.32-9.664H7.26c-.71 0-1.101-.39-1.101-1.1V4.343c0-.71.391-1.101 1.101-1.101h3.04c.54 0 .942.31 1.05.83l5.05 15.879c.121.385-.145.88-.535 1.101z"/></svg>
+              </a>
 
               <div className="relative" ref={shareRef}>
                 <button onClick={() => setShareOpen(o => !o)} className="w-12 h-12 rounded-full flex items-center justify-center bg-neutral-800/80 hover:bg-neutral-700 text-white border border-neutral-700 transition-all">
