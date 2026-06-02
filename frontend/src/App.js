@@ -19,6 +19,7 @@ import AuthModal from "./components/AuthModal";
 
 const Home = lazy(() => import("./pages/Home"));
 const AnimeDetail = lazy(() => import("./pages/AnimeDetail"));
+const AnimeWatchTailwind = lazy(() => import("./pages/AnimeWatchTailwind"));
 const AnimeInfo = lazy(() => import("./pages/AnimeInfo"));
 
 
@@ -95,6 +96,7 @@ function AppLayout() {
           <Route path="/browse/anime" element={<RouteShell><Browse /></RouteShell>} />
           <Route path="/settings" element={<RouteShell><SettingsPage /></RouteShell>} />
           <Route path="/anime/:id" element={<RouteShell><AnimeDetail /></RouteShell>} />
+          <Route path="/anime/:id/watch-tailwind" element={<RouteShell><AnimeWatchTailwind /></RouteShell>} />
           <Route path="/anime/:id/info" element={<RouteShell><AnimeInfo /></RouteShell>} />
           <Route path="/search" element={<Navigate to="/browse/anime" replace />} />
           <Route path="/watchlist" element={<RouteShell><WatchlistPage /></RouteShell>} />
