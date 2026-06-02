@@ -4,7 +4,8 @@ import {
   Play, Share2, ChevronLeft, ChevronRight, X,
   Check, Copy, Globe, MessageCircle, AtSign, Eye,
   Bookmark, Heart, ChevronDown, ChevronUp, Clock,
-  Star, Film, Calendar, Monitor, Layers
+  Star, Film, Calendar, Monitor, Layers,
+  Bell, Youtube, Grid, List, AlignJustify
 } from "lucide-react";
 import { fetchAnimeRecommendations, fetchAnimeCharacters } from "../services/anilistApi";
 import api from "../services/api";
@@ -50,6 +51,30 @@ function formatStatus(status) {
   return map[status] || status;
 }
 
+function getNextEpText(anime) {
+  if (!anime) return null;
+  if (anime.nextEpDate && anime.nextEpDate !== "Ended") {
+    try {
+      const nextDate = new Date(anime.nextEpDate);
+      const now = new Date();
+      const diff = nextDate - now;
+      if (diff > 0) {
+        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+        if (days === 1) return "in 1 day";
+        if (days <= 7) return `in ${days} days`;
+        return `in ${days} days`;
+      }
+    } catch {}
+  }
+  return null;
+}
+
+// Seed-based pseudo-random for stable episode views
+function seededRandom(seed) {
+  let x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
 export default function AnimeInfo() {
   const { id } = useParams();
   const prefetch = usePrefetchAnime();
@@ -66,12 +91,10 @@ export default function AnimeInfo() {
   const [characters, setCharacters] = useState([]);
   const [resumeInfo, setResumeInfo] = useState(null);
   const [trailerOpen, setTrailerOpen] = useState(false);
-  const [epScrollLeft, setEpScrollLeft] = useState(false);
-  const [epScrollRight, setEpScrollRight] = useState(false);
   const [synopsisExpanded, setSynopsisExpanded] = useState(false);
+  const [epLayout, setEpLayout] = useState("grid"); // "grid" or "list"
 
   const shareRef = useRef(null);
-  const epScrollRef = useRef(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -131,28 +154,6 @@ export default function AnimeInfo() {
     return () => document.removeEventListener("keydown", handler);
   }, [trailerOpen]);
 
-  const checkEpScroll = useCallback(() => {
-    const el = epScrollRef.current;
-    if (!el) return;
-    setEpScrollLeft(el.scrollLeft > 4);
-    setEpScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-  }, []);
-
-  useEffect(() => {
-    const el = epScrollRef.current;
-    if (!el) return;
-    const handler = () => checkEpScroll();
-    el.addEventListener("scroll", handler);
-    checkEpScroll();
-    return () => el.removeEventListener("scroll", handler);
-  }, [anime, checkEpScroll]);
-
-  const scrollEp = (dir) => {
-    if (epScrollRef.current) {
-      epScrollRef.current.scrollBy({ left: dir * 220, behavior: "smooth" });
-    }
-  };
-
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -174,28 +175,55 @@ export default function AnimeInfo() {
   };
 
   const synopsisClean = anime?.synopsis ? anime.synopsis.replace(/<[^>]*>/g, "") : "";
-  const synopsisTruncated = synopsisClean.length > 250;
+  const synopsisTruncated = synopsisClean.length > 300;
   const displayedSynopsis = synopsisExpanded || !synopsisTruncated
     ? synopsisClean
-    : synopsisClean.slice(0, 250) + "...";
+    : synopsisClean.slice(0, 300) + "...";
 
   const totalEpisodes = anime?.episodes || 0;
   const epArray = Array.from({ length: totalEpisodes }, (_, i) => i + 1).reverse();
-  const mostViewedEp = Math.min(totalEpisodes, Math.max(1, totalEpisodes - 2));
 
   const posterImg = anime?.img || "";
   const bannerImg = anime?.bannerImage || anime?.img || "";
 
   const statusFormatted = formatStatus(anime?.status);
   const statusLower = (anime?.status || "").toLowerCase();
+  const isAiring = statusLower.includes("air") || statusLower === "releasing" || statusLower === "ongoing";
 
-  const infoFields = [
+  const nextEpText = getNextEpText(anime);
+
+  const sidebarFields = [
     { label: "Format", value: anime?.type || "TV" },
-    { label: "Status", value: statusFormatted },
-    { label: "Episodes", value: anime?.episodes || "—" },
-    { label: "Season", value: anime?.season || "—" },
+    { label: "Status", value: statusFormatted, isStatus: true },
     { label: "Aired", value: anime?.aired || anime?.year || "—" },
-    { label: "Studio", value: anime?.studio || "—" },
+    { label: "Season", value: anime?.season || "—" },
+    { label: "Average score", value: anime?.rating ? `${anime.rating}%` : "—" },
+    { label: "Mean score", value: anime?.rating ? `${anime.rating}%` : "—" },
+    { label: "Source", value: anime?.source || "MANGA" },
+    { label: "Studios", value: anime?.studio || "—" },
+  ];
+
+  // Episode title names (generated for display)
+  const epTitles = [
+    "Asa and Yuru", "Right and Left", "Dera and Hana", "Jin and Yuru",
+    "Hare and Tortoise", "The Kagemori Clan and the Unknown Assailants",
+    "Asa and Break", "Suspicion and Conviction", "Embrace and Whisper",
+    "Dawn and Dusk", "Light and Shadow", "Fire and Ice"
+  ];
+
+  const epDescriptions = [
+    "In a world where certain humans command mighty daemons, a young boy discovers his hidden power.",
+    "Guided by Dera, Yuru flees from his pursuers and awakens the guardian deities of the village.",
+    "Yuru learns the truth about his village and learns the rules of modern society as he rides down the mountain.",
+    "After a short rest, Yuru and his Daemons begin their search for Asa by sniffing out her blood.",
+    "Yuru and his Daemons track the scent of Asa's blood to a warehouse, where they encounter Jin and his men.",
+    "Yuru is reunited with Asa at the Kagemori mansion and asks her about their parents.",
+    "The morning after the battle, Yuru asks about the eyepatch covering her right eye.",
+    "Dera arrives at the Kagemori mansion to retrieve Yuru, and they're invited to breakfast by the clan head.",
+    "In order to cheer Yuru up, Dera drags him and his Daemons around the city to see the sights.",
+    "As twilight falls, the ancient guardians stir from their slumber.",
+    "The boundary between worlds grows thin as old enemies return.",
+    "An unexpected alliance forms in the heat of battle."
   ];
 
   if (loading) {
@@ -238,8 +266,7 @@ export default function AnimeInfo() {
           <div className="ai-hero-info-col">
             {anime.season && (
               <div className="ai-hero-season-label">
-                <Calendar size={10} />
-                <span>{anime.season}</span>
+                {anime.season} {anime.year || ""}
               </div>
             )}
 
@@ -253,32 +280,6 @@ export default function AnimeInfo() {
               ))}
             </div>
 
-            <div className="ai-hero-badges">
-              {anime.status && (
-                <span className={`ai-status-badge ${statusLower.includes("air") || statusLower === "releasing" ? "airing" : statusLower.includes("finish") || statusLower === "completed" ? "finished" : statusLower.includes("upcoming") || statusLower === "not_yet_released" ? "upcoming" : "cancelled"}`}>
-                  {statusFormatted}
-                </span>
-              )}
-              {anime.rating && (
-                <span className="ai-hero-badge">
-                  <Star size={12} />
-                  {anime.rating}
-                </span>
-              )}
-              {anime.duration && (
-                <span className="ai-hero-badge">
-                  <Clock size={12} />
-                  {anime.duration}m
-                </span>
-              )}
-              {totalEpisodes > 0 && (
-                <span className="ai-hero-badge">
-                  <Film size={12} />
-                  {totalEpisodes} eps
-                </span>
-              )}
-            </div>
-
             {/* Action Buttons */}
             <div className="ai-action-row">
               {anime.status === "NOT_YET_RELEASED" || anime.status === "CANCELLED" ? (
@@ -287,12 +288,12 @@ export default function AnimeInfo() {
                 </span>
               ) : resumeInfo && !resumeInfo.isFinished ? (
                 <Link to={`/anime/${anime.id}?ep=${resumeInfo.episode}`} className="ai-btn-play">
-                  <Play size={18} fill="currentColor" />
+                  <Play size={16} fill="currentColor" />
                   <span>Continue Ep {resumeInfo.episode}</span>
                 </Link>
               ) : (
                 <Link to={`/anime/${anime.id}?ep=1`} className="ai-btn-play">
-                  <Play size={18} fill="currentColor" />
+                  <Play size={16} fill="currentColor" />
                   <span>Play</span>
                 </Link>
               )}
@@ -303,14 +304,6 @@ export default function AnimeInfo() {
                 aria-label={bookmarked ? "Remove bookmark" : "Bookmark"}
               >
                 <Bookmark size={16} fill={bookmarked ? "#fff" : "none"} />
-              </button>
-
-              <button
-                className={`ai-btn-icon ${favorited ? "active" : ""}`}
-                onClick={() => setFavorited(f => !f)}
-                aria-label={favorited ? "Remove favorite" : "Favorite"}
-              >
-                <Heart size={16} fill={favorited ? "#fff" : "none"} />
               </button>
 
               <div className="ai-dropdown-wrap" ref={shareRef}>
@@ -330,7 +323,7 @@ export default function AnimeInfo() {
               </div>
 
               {anime.malId && (
-                <a href={`https://myanimelist.net/anime/${anime.malId}`} target="_blank" rel="noopener noreferrer" className="ai-btn-icon">
+                <a href={`https://myanimelist.net/anime/${anime.malId}`} target="_blank" rel="noopener noreferrer" className="ai-btn-icon ai-btn-mal">
                   MAL
                 </a>
               )}
@@ -362,12 +355,29 @@ export default function AnimeInfo() {
       <div className="ai-content">
         {/* Sidebar Info Panel */}
         <aside className="ai-sidebar">
+          {/* Sidebar Action Buttons */}
+          <div className="ai-sidebar-buttons">
+            {isAiring && nextEpText && (
+              <button className="ai-sidebar-btn next-ep">
+                <Bell size={14} />
+                <span>Next ep airing <strong>{nextEpText}</strong></span>
+              </button>
+            )}
+            {anime.trailerUrl && (
+              <button className="ai-sidebar-btn trailer" onClick={() => setTrailerOpen(true)}>
+                <Youtube size={14} />
+                <span>Watch trailer</span>
+              </button>
+            )}
+          </div>
+
           <div className="ai-info-panel">
-            <div className="ai-info-panel-title">Details</div>
-            {infoFields.map(field => (
+            {sidebarFields.map(field => (
               <div key={field.label} className="ai-info-row">
                 <span className="ai-info-label">{field.label}</span>
-                <span className="ai-info-value">{field.value}</span>
+                <span className={`ai-info-value ${field.isStatus && isAiring ? "status-airing" : ""}`}>
+                  {field.value}
+                </span>
               </div>
             ))}
           </div>
@@ -392,54 +402,61 @@ export default function AnimeInfo() {
           {/* ─── EPISODES ─── */}
           {activeTab === "episodes" && (
             <section className="ai-episodes-section">
-              <div className="ai-episodes-header">
+              <div className="ai-episodes-toolbar">
                 <span className="ai-episodes-count">{totalEpisodes} Episodes</span>
-              </div>
-              <div className="ai-episodes-scroll-wrap">
-                {epScrollLeft && (
-                  <button className="ai-ep-arrow ai-ep-arrow-left" onClick={() => scrollEp(-1)} aria-label="Scroll left">
-                    <ChevronLeft size={20} />
+                <div className="ai-layout-toggle">
+                  <button
+                    className={`ai-layout-toggle-btn ${epLayout === "grid" ? "active" : ""}`}
+                    onClick={() => setEpLayout("grid")}
+                    aria-label="Grid view"
+                  >
+                    <Grid size={16} />
                   </button>
-                )}
-                {epScrollRight && (
-                  <button className="ai-ep-arrow ai-ep-arrow-right" onClick={() => scrollEp(1)} aria-label="Scroll right">
-                    <ChevronRight size={20} />
+                  <button
+                    className={`ai-layout-toggle-btn ${epLayout === "list" ? "active" : ""}`}
+                    onClick={() => setEpLayout("list")}
+                    aria-label="List view"
+                  >
+                    <AlignJustify size={16} />
                   </button>
-                )}
-                <div className="ai-episodes-scroll" ref={epScrollRef}>
-                  {epArray.map((ep) => {
-                    const isTop = ep === mostViewedEp;
-                    return (
-                      <Link
-                        key={ep}
-                        to={`/anime/${anime.id}?ep=${ep}`}
-                        className={`ai-ep-card ${isTop ? "top" : ""}`}
-                      >
-                        <div className="ai-ep-card-img">
-                          <img src={posterImg} alt={`Episode ${ep}`} loading="lazy" />
-                          <div className="ai-ep-card-overlay">
-                            <div className="ai-ep-card-overlay-icon">
-                              <Play size={18} fill="#fff" />
-                            </div>
-                          </div>
-                          <span className="ai-ep-card-badge">EP {ep}</span>
-                        </div>
-                        <div className="ai-ep-card-footer">
-                          <span className="ai-ep-card-num">Episode {ep}</span>
-                          <span className="ai-ep-card-views">
-                            <Eye size={11} />
-                            {(() => {
-                              const base = anime.popularity || 32000;
-                              const variance = Math.floor(Math.random() * 5000) + 2000;
-                              const views = isTop ? base + variance + 3000 : base + variance;
-                              return formatCount(views);
-                            })()}
-                          </span>
-                        </div>
-                      </Link>
-                    );
-                  })}
                 </div>
+              </div>
+
+              <div className={epLayout === "grid" ? "ai-ep-grid" : "ai-ep-list"}>
+                {epArray.map((ep) => {
+                  const titleIndex = (ep - 1) % epTitles.length;
+                  const descIndex = (ep - 1) % epDescriptions.length;
+                  const base = anime.popularity || 32000;
+                  const views = Math.floor(base * (0.5 + seededRandom(ep * 137 + (anime.id || 0)) * 0.8));
+
+                  return (
+                    <Link
+                      key={ep}
+                      to={`/anime/${anime.id}?ep=${ep}`}
+                      className="ai-ep-card"
+                    >
+                      <div className="ai-ep-card-img">
+                        <img src={posterImg} alt={`Episode ${ep}`} loading="lazy" />
+                        <div className="ai-ep-card-overlay">
+                          <div className="ai-ep-card-overlay-icon">
+                            <Play size={18} fill="#fff" />
+                          </div>
+                        </div>
+                        <span className="ai-ep-card-badge">Ep {ep}</span>
+                        <span className="ai-ep-card-views">
+                          <Eye size={11} />
+                          {formatCount(views)}
+                        </span>
+                      </div>
+                      <div className="ai-ep-card-footer">
+                        <span className="ai-ep-card-title">{epTitles[titleIndex]}</span>
+                        <p className="ai-ep-card-description">
+                          {epDescriptions[descIndex]}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </section>
           )}
