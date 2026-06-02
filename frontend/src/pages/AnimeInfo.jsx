@@ -1,18 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
-  Play, Share2, ChevronLeft, ChevronRight, X,
-  Check, Copy, Globe, MessageCircle, AtSign, Eye,
-  Bookmark, Heart, ChevronDown, ChevronUp, Clock,
-  Star, Film, Calendar, Monitor, Layers,
-  Bell, Youtube, Grid, List, AlignJustify
+  Play, Share2, X, Check, Copy, Globe, MessageCircle, AtSign, Eye,
+  Bookmark, Heart, ChevronDown, ChevronUp, Bell, Youtube, Grid, List, AlignJustify
 } from "lucide-react";
 import { fetchAnimeRecommendations, fetchAnimeCharacters } from "../services/anilistApi";
 import api from "../services/api";
 import { loadWatchHistory } from "../services/storage";
 import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import useDocumentTitle from "../hooks/useDocumentTitle";
-import "./AnimeInfo.css";
+
+// No need for external AnimeInfo.css anymore as we use pure Tailwind
+// Remove import "./AnimeInfo.css";
 
 const SHARE_OPTIONS = [
   { key: "copy", icon: Copy, label: "Copy Link" },
@@ -61,7 +60,6 @@ function getNextEpText(anime) {
       if (diff > 0) {
         const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
         if (days === 1) return "in 1 day";
-        if (days <= 7) return `in ${days} days`;
         return `in ${days} days`;
       }
     } catch {}
@@ -69,7 +67,6 @@ function getNextEpText(anime) {
   return null;
 }
 
-// Seed-based pseudo-random for stable episode views
 function seededRandom(seed) {
   let x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
@@ -92,7 +89,7 @@ export default function AnimeInfo() {
   const [resumeInfo, setResumeInfo] = useState(null);
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [synopsisExpanded, setSynopsisExpanded] = useState(false);
-  const [epLayout, setEpLayout] = useState("grid"); // "grid" or "list"
+  const [epLayout, setEpLayout] = useState("grid");
 
   const shareRef = useRef(null);
 
@@ -175,10 +172,10 @@ export default function AnimeInfo() {
   };
 
   const synopsisClean = anime?.synopsis ? anime.synopsis.replace(/<[^>]*>/g, "") : "";
-  const synopsisTruncated = synopsisClean.length > 300;
+  const synopsisTruncated = synopsisClean.length > 350;
   const displayedSynopsis = synopsisExpanded || !synopsisTruncated
     ? synopsisClean
-    : synopsisClean.slice(0, 300) + "...";
+    : synopsisClean.slice(0, 350) + "...";
 
   const totalEpisodes = anime?.episodes || 0;
   const epArray = Array.from({ length: totalEpisodes }, (_, i) => i + 1).reverse();
@@ -192,18 +189,6 @@ export default function AnimeInfo() {
 
   const nextEpText = getNextEpText(anime);
 
-  const sidebarFields = [
-    { label: "Format", value: anime?.type || "TV" },
-    { label: "Status", value: statusFormatted, isStatus: true },
-    { label: "Aired", value: anime?.aired || anime?.year || "—" },
-    { label: "Season", value: anime?.season || "—" },
-    { label: "Average score", value: anime?.rating ? `${anime.rating}%` : "—" },
-    { label: "Mean score", value: anime?.rating ? `${anime.rating}%` : "—" },
-    { label: "Source", value: anime?.source || "MANGA" },
-    { label: "Studios", value: anime?.studio || "—" },
-  ];
-
-  // Episode title names (generated for display)
   const epTitles = [
     "Asa and Yuru", "Right and Left", "Dera and Hana", "Jin and Yuru",
     "Hare and Tortoise", "The Kagemori Clan and the Unknown Assailants",
@@ -228,94 +213,126 @@ export default function AnimeInfo() {
 
   if (loading) {
     return (
-      <div className="ai-page">
-        <div className="ai-skeleton-hero" />
+      <div className="min-h-screen bg-[#070708] flex flex-col pt-20">
+        <div className="w-full h-[50vh] bg-[#0b0c10] animate-pulse"></div>
       </div>
     );
   }
 
   if (error || !anime) {
     return (
-      <div className="ai-page" style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, minHeight: "100vh", color: "#fff" }}>
-        <div style={{ fontSize: 16, color: "var(--text-muted)" }}>{error || "Anime not found."}</div>
-        <button className="ai-retry-btn" onClick={fetchData}>Retry</button>
+      <div className="min-h-screen bg-gradient-to-b from-[#070708] to-[#0b0c10] flex flex-col items-center justify-center gap-4 text-white">
+        <div className="text-lg text-neutral-500">{error || "Anime not found."}</div>
+        <button className="px-6 py-2 bg-neutral-800 rounded-full hover:bg-neutral-700 transition" onClick={fetchData}>Retry</button>
       </div>
     );
   }
 
   return (
-    <div className="ai-page">
-      {/* ═══════════ HERO ═══════════ */}
-      <section className="ai-hero">
-        <div className="ai-hero-bg">
-          <img src={bannerImg} alt="" className="ai-hero-bg-img" />
-          <div className="ai-hero-overlay" />
-          <div className="ai-hero-vignette" />
+    <div className="min-h-screen bg-gradient-to-b from-[#070708] to-[#0b0c10] text-[#e3e3e3] font-sans antialiased overflow-x-hidden selection:bg-neutral-800 selection:text-white">
+      {/* ═══════════ HERO SECTION ═══════════ */}
+      <section className="relative w-full min-h-[55vh] flex items-end justify-center pt-32 pb-12">
+        {/* Banner Image & Gradient Masks */}
+        <div className="absolute inset-0 z-0 select-none pointer-events-none">
+          <img src={bannerImg} alt="Banner" className="w-full h-full object-cover opacity-[0.35]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#070708]/40 via-[#070708]/60 to-[#070708]"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#070708] via-transparent to-transparent h-full"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#070708] via-transparent to-[#070708]"></div>
         </div>
-        <div className="ai-hero-pulse" />
 
-        <div className="ai-hero-content">
-          {/* Poster */}
-          <div className="ai-hero-poster-col">
-            <div className="ai-poster-glow">
-              <img src={posterImg} alt={anime.name} />
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-12 flex flex-col md:flex-row gap-10 items-start">
+          
+          {/* Left Column: Poster & Meta */}
+          <div className="flex-shrink-0 w-56 md:w-64 flex flex-col gap-4 mx-auto md:mx-0">
+            <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/80 ring-1 ring-white/10 aspect-[3/4] relative group">
+              <img src={posterImg} alt={anime.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            </div>
+            
+            <div className="flex flex-col gap-3 mt-2">
+              {isAiring && nextEpText && (
+                <div className="w-full bg-[#0c2d1c] text-emerald-400 py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm font-bold shadow-lg shadow-emerald-900/20 ring-1 ring-emerald-500/20">
+                  <Bell size={16} />
+                  <span>Next ep airing {nextEpText}</span>
+                </div>
+              )}
+              
+              {anime.trailerUrl && (
+                <button onClick={() => setTrailerOpen(true)} className="w-full bg-neutral-800 hover:bg-neutral-700 transition-colors text-white py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold shadow-lg ring-1 ring-white/5">
+                  <Youtube size={18} className="text-[#e53935]" />
+                  <span>Watch Trailer</span>
+                </button>
+              )}
+
+              <div className="w-full bg-neutral-900/50 py-3 px-4 rounded-xl flex flex-col gap-1 ring-1 ring-white/5">
+                <span className="text-xs text-neutral-500 font-semibold uppercase tracking-wider">Format</span>
+                <span className="text-sm text-neutral-300 font-medium">{anime.type || "TV Show"}</span>
+              </div>
             </div>
           </div>
 
-          {/* Info */}
-          <div className="ai-hero-info-col">
+          {/* Right Column: Title, Tags, Actions, Synopsis */}
+          <div className="flex-1 flex flex-col md:pt-4">
             {anime.season && (
-              <div className="ai-hero-season-label">
+              <span className="text-sm text-neutral-400 font-semibold uppercase tracking-widest mb-3">
                 {anime.season} {anime.year || ""}
-              </div>
+              </span>
             )}
+            
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight mb-5 drop-shadow-xl">
+              {anime.name}
+            </h1>
 
-            <h1 className="ai-hero-title">{anime.name}</h1>
-
-            <div className="ai-genre-row">
+            <div className="flex flex-wrap gap-2 mb-8">
               {(anime.genres || []).map(g => (
-                <Link key={g} to={`/browse/anime?genre=${encodeURIComponent(g)}`} className="ai-genre-pill">
+                <Link key={g} to={`/browse/anime?genre=${encodeURIComponent(g)}`} className="bg-[#e2a856] hover:bg-[#cf9649] transition-colors text-black px-4 py-1.5 rounded-full text-xs font-extrabold tracking-wide">
                   {g}
                 </Link>
               ))}
             </div>
 
-            {/* Action Buttons */}
-            <div className="ai-action-row">
+            <div className="flex flex-wrap items-center gap-4 mb-8">
               {anime.status === "NOT_YET_RELEASED" || anime.status === "CANCELLED" ? (
-                <span className="ai-btn-play disabled">
+                <span className="bg-neutral-800 text-neutral-500 px-8 py-3.5 rounded-full font-bold flex items-center gap-3 cursor-not-allowed">
                   {anime.status === "NOT_YET_RELEASED" ? "Coming Soon" : "Cancelled"}
                 </span>
               ) : resumeInfo && !resumeInfo.isFinished ? (
-                <Link to={`/anime/${anime.id}?ep=${resumeInfo.episode}`} className="ai-btn-play">
-                  <Play size={16} fill="currentColor" />
+                <Link to={`/anime/${anime.id}?ep=${resumeInfo.episode}`} className="bg-white hover:bg-neutral-200 text-black px-8 py-3.5 rounded-full font-extrabold flex items-center gap-3 transition-transform hover:scale-105 active:scale-95 shadow-xl shadow-white/10">
+                  <Play size={20} fill="currentColor" />
                   <span>Continue Ep {resumeInfo.episode}</span>
                 </Link>
               ) : (
-                <Link to={`/anime/${anime.id}?ep=1`} className="ai-btn-play">
-                  <Play size={16} fill="currentColor" />
+                <Link to={`/anime/${anime.id}?ep=1`} className="bg-white hover:bg-neutral-200 text-black px-8 py-3.5 rounded-full font-extrabold flex items-center gap-3 transition-transform hover:scale-105 active:scale-95 shadow-xl shadow-white/10">
+                  <Play size={20} fill="currentColor" />
                   <span>Play</span>
                 </Link>
               )}
 
               <button
-                className={`ai-btn-icon ${bookmarked ? "active" : ""}`}
                 onClick={() => setBookmarked(b => !b)}
-                aria-label={bookmarked ? "Remove bookmark" : "Bookmark"}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${bookmarked ? "bg-white text-black" : "bg-neutral-800/80 hover:bg-neutral-700 text-white border border-neutral-700"}`}
+                aria-label="Bookmark"
               >
-                <Bookmark size={16} fill={bookmarked ? "#fff" : "none"} />
+                <Bookmark size={18} fill={bookmarked ? "currentColor" : "none"} />
+              </button>
+              
+              <button
+                onClick={() => setFavorited(f => !f)}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${favorited ? "bg-white text-black" : "bg-neutral-800/80 hover:bg-neutral-700 text-white border border-neutral-700"}`}
+                aria-label="Favorite"
+              >
+                <Heart size={18} fill={favorited ? "currentColor" : "none"} />
               </button>
 
-              <div className="ai-dropdown-wrap" ref={shareRef}>
-                <button className="ai-btn-icon" onClick={() => setShareOpen(o => !o)} aria-label="Share">
-                  <Share2 size={16} />
+              <div className="relative" ref={shareRef}>
+                <button onClick={() => setShareOpen(o => !o)} className="w-12 h-12 rounded-full flex items-center justify-center bg-neutral-800/80 hover:bg-neutral-700 text-white border border-neutral-700 transition-all">
+                  <Share2 size={18} />
                 </button>
                 {shareOpen && (
-                  <div className="ai-share-popup">
+                  <div className="absolute top-full mt-2 left-0 w-48 bg-[#121318] border border-neutral-800 rounded-xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                     {SHARE_OPTIONS.map(opt => (
-                      <button key={opt.key} className={`ai-share-option ${opt.key === "copy" && copied ? "copied" : ""}`} onClick={() => handleShare(opt.key)}>
-                        {opt.key === "copy" && copied ? <Check size={16} /> : <opt.icon size={16} />}
-                        {opt.key === "copy" && copied ? "Copied!" : opt.label}
+                      <button key={opt.key} onClick={() => handleShare(opt.key)} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-neutral-800 transition-colors text-sm font-medium text-neutral-300 hover:text-white text-left">
+                        {opt.key === "copy" && copied ? <Check size={16} className="text-emerald-400" /> : <opt.icon size={16} />}
+                        {opt.key === "copy" && copied ? <span className="text-emerald-400">Copied!</span> : opt.label}
                       </button>
                     ))}
                   </div>
@@ -323,258 +340,195 @@ export default function AnimeInfo() {
               </div>
 
               {anime.malId && (
-                <a href={`https://myanimelist.net/anime/${anime.malId}`} target="_blank" rel="noopener noreferrer" className="ai-btn-icon ai-btn-mal">
+                <a href={`https://myanimelist.net/anime/${anime.malId}`} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full flex items-center justify-center bg-[#2e51a2] hover:bg-[#345bbb] text-white font-bold text-xs transition-all shadow-lg shadow-[#2e51a2]/20">
                   MAL
                 </a>
               )}
             </div>
 
-            {/* Synopsis */}
-            <div className="ai-synopsis-wrap">
-              <p className={`ai-synopsis-text ${!synopsisExpanded && synopsisTruncated ? "collapsed" : ""}`}>
+            <div className="max-w-4xl">
+              <p className="text-[#9ca3af] text-base leading-relaxed">
                 {displayedSynopsis || "No synopsis available."}
               </p>
               {synopsisTruncated && (
-                <button
-                  className="ai-synopsis-toggle"
-                  onClick={() => setSynopsisExpanded(e => !e)}
-                >
+                <button onClick={() => setSynopsisExpanded(e => !e)} className="text-white font-semibold flex items-center gap-1.5 mt-3 hover:text-neutral-300 transition-colors text-sm">
                   {synopsisExpanded ? (
-                    <>Show Less <ChevronUp size={14} /></>
+                    <>Show Less <ChevronUp size={16} /></>
                   ) : (
-                    <>Show More <ChevronDown size={14} /></>
+                    <>Show More <ChevronDown size={16} /></>
                   )}
                 </button>
               )}
             </div>
+
           </div>
         </div>
       </section>
 
-      {/* ═══════════ CONTENT ═══════════ */}
-      <div className="ai-content">
-        {/* Sidebar Info Panel */}
-        <aside className="ai-sidebar">
-          {/* Sidebar Action Buttons */}
-          <div className="ai-sidebar-buttons">
-            {isAiring && nextEpText && (
-              <button className="ai-sidebar-btn next-ep">
-                <Bell size={14} />
-                <span>Next ep airing <strong>{nextEpText}</strong></span>
-              </button>
-            )}
-            {anime.trailerUrl && (
-              <button className="ai-sidebar-btn trailer" onClick={() => setTrailerOpen(true)}>
-                <Youtube size={14} />
-                <span>Watch trailer</span>
-              </button>
-            )}
-          </div>
-
-          <div className="ai-info-panel">
-            {sidebarFields.map(field => (
-              <div key={field.label} className="ai-info-row">
-                <span className="ai-info-label">{field.label}</span>
-                <span className={`ai-info-value ${field.isStatus && isAiring ? "status-airing" : ""}`}>
-                  {field.value}
-                </span>
-              </div>
-            ))}
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <main className="ai-main">
-          {/* Tabs */}
-          <nav className="ai-tabs">
-            {TABS.map(t => (
-              <button
-                key={t.key}
-                className={`ai-tab ${activeTab === t.key ? "active" : ""}`}
-                onClick={() => setActiveTab(t.key)}
-              >
-                {t.label}
-                {activeTab === t.key && <span className="ai-tab-indicator" />}
-              </button>
-            ))}
+      {/* ═══════════ MAIN CONTENT TABS & GRID ═══════════ */}
+      <section className="w-full max-w-7xl mx-auto px-6 lg:px-12 pb-24">
+        
+        {/* Navigation Tabs */}
+        <div className="relative border-b border-neutral-800/80 mb-6">
+          <nav className="flex space-x-8 overflow-x-auto no-scrollbar">
+            {TABS.map(t => {
+              const isActive = activeTab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className={`pb-4 text-sm md:text-base font-semibold whitespace-nowrap transition-colors relative ${isActive ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
+                >
+                  {t.label}
+                  {isActive && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-t-full shadow-[0_-2px_10px_rgba(255,255,255,0.5)]"></div>
+                  )}
+                </button>
+              );
+            })}
           </nav>
+        </div>
 
-          {/* ─── EPISODES ─── */}
-          {activeTab === "episodes" && (
-            <section className="ai-episodes-section">
-              <div className="ai-episodes-toolbar">
-                <span className="ai-episodes-count">{totalEpisodes} Episodes</span>
-                <div className="ai-layout-toggle">
-                  <button
-                    className={`ai-layout-toggle-btn ${epLayout === "grid" ? "active" : ""}`}
-                    onClick={() => setEpLayout("grid")}
-                    aria-label="Grid view"
-                  >
-                    <Grid size={16} />
-                  </button>
-                  <button
-                    className={`ai-layout-toggle-btn ${epLayout === "list" ? "active" : ""}`}
-                    onClick={() => setEpLayout("list")}
-                    aria-label="List view"
-                  >
-                    <AlignJustify size={16} />
-                  </button>
-                </div>
+        {/* ─── EPISODES TAB ─── */}
+        {activeTab === "episodes" && (
+          <div className="animate-in fade-in duration-500">
+            {/* Filter Action Row */}
+            <div className="flex justify-between items-center mb-6">
+              <div className="bg-neutral-800/60 ring-1 ring-white/5 text-neutral-300 px-3.5 py-1.5 rounded-md text-sm font-semibold shadow-inner">
+                {totalEpisodes} Episodes
               </div>
+              <div className="flex gap-1.5 bg-neutral-900/80 p-1.5 rounded-lg ring-1 ring-white/5">
+                <button onClick={() => setEpLayout("grid")} className={`p-1.5 rounded-md transition-colors ${epLayout === "grid" ? "bg-neutral-700 text-white shadow-sm" : "text-neutral-500 hover:text-white"}`}>
+                  <Grid size={18} />
+                </button>
+                <button onClick={() => setEpLayout("list")} className={`p-1.5 rounded-md transition-colors ${epLayout === "list" ? "bg-neutral-700 text-white shadow-sm" : "text-neutral-500 hover:text-white"}`}>
+                  <List size={18} />
+                </button>
+              </div>
+            </div>
 
-              <div className={epLayout === "grid" ? "ai-ep-grid" : "ai-ep-list"}>
-                {epArray.map((ep) => {
-                  const titleIndex = (ep - 1) % epTitles.length;
-                  const descIndex = (ep - 1) % epDescriptions.length;
-                  const base = anime.popularity || 32000;
-                  const views = Math.floor(base * (0.5 + seededRandom(ep * 137 + (anime.id || 0)) * 0.8));
+            {/* Episode Grid */}
+            <div className={epLayout === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5" : "flex flex-col gap-4 max-w-4xl"}>
+              {epArray.map((ep) => {
+                const titleIndex = (ep - 1) % epTitles.length;
+                const descIndex = (ep - 1) % epDescriptions.length;
+                const base = anime.popularity || 32000;
+                const views = Math.floor(base * (0.5 + seededRandom(ep * 137 + (anime.id || 0)) * 0.8));
 
-                  return (
-                    <Link
-                      key={ep}
-                      to={`/anime/${anime.id}?ep=${ep}`}
-                      className="ai-ep-card"
-                    >
-                      <div className="ai-ep-card-img">
-                        <img src={posterImg} alt={`Episode ${ep}`} loading="lazy" />
-                        <div className="ai-ep-card-overlay">
-                          <div className="ai-ep-card-overlay-icon">
-                            <Play size={18} fill="#fff" />
-                          </div>
+                return (
+                  <Link
+                    key={ep}
+                    to={`/anime/${anime.id}?ep=${ep}`}
+                    className="group flex flex-col sm:flex-row gap-4 bg-[#111216] p-2.5 rounded-2xl border border-neutral-800 hover:bg-[#1a1c23] hover:border-neutral-700 transition-all duration-300 cursor-pointer shadow-lg shadow-black/20"
+                  >
+                    {/* Thumbnail */}
+                    <div className={`relative flex-shrink-0 rounded-xl overflow-hidden bg-neutral-900 ${epLayout === "grid" ? "w-full sm:w-[170px] aspect-video" : "w-full sm:w-[240px] aspect-video"}`}>
+                      <img src={bannerImg} alt={`Episode ${ep}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300"></div>
+                      
+                      {/* Play Overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20">
+                          <Play size={16} fill="white" className="text-white ml-0.5" />
                         </div>
-                        <span className="ai-ep-card-badge">Ep {ep}</span>
-                        <span className="ai-ep-card-views">
-                          <Eye size={11} />
-                          {formatCount(views)}
-                        </span>
                       </div>
-                      <div className="ai-ep-card-footer">
-                        <span className="ai-ep-card-title">{epTitles[titleIndex]}</span>
-                        <p className="ai-ep-card-description">
-                          {epDescriptions[descIndex]}
-                        </p>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </section>
-          )}
 
-          {/* ─── CHARACTERS ─── */}
-          {activeTab === "characters" && (
-            <section>
-              {characters.length > 0 ? (
-                <div className="ai-characters-grid">
-                  {characters.map((ch, i) => (
-                    <div key={ch.id || i} className="ai-character-card">
-                      <div className="ai-character-img-wrap">
-                        <img src={ch.image || ch.img || posterImg} alt={ch.name} className="ai-character-img" loading="lazy" />
+                      {/* Badges */}
+                      <div className="absolute bottom-2 left-2 bg-black/80 backdrop-blur-sm text-white px-2 py-0.5 rounded text-xs font-bold ring-1 ring-white/10 shadow-sm">
+                        Ep {ep}
                       </div>
-                      <span className="ai-character-name">{ch.name}</span>
-                      <span className="ai-character-role">{ch.role || ch.title || "Character"}</span>
-                      {ch.voiceActor && (
-                        <span className="ai-character-va">{ch.voiceActor}</span>
-                      )}
+                      <div className="absolute bottom-2 right-2 bg-black/80 backdrop-blur-sm text-white px-2 py-0.5 rounded text-xs font-semibold flex items-center gap-1.5 ring-1 ring-white/10 shadow-sm">
+                        <Eye size={12} className="text-neutral-400" />
+                        {formatCount(views)}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="ai-tab-empty">
-                  <span>No character data available.</span>
-                </div>
-              )}
-            </section>
-          )}
 
-          {/* ─── RELATED ─── */}
-          {activeTab === "related" && (
-            <section>
-              {anime.related && anime.related.length > 0 ? (
-                <div className="ai-mlt-grid">
-                  {anime.related.map((r, i) => (
-                    <Link key={r.id || i} to={`/anime/${r.id}/info`} className="ai-mlt-card">
-                      <div className="ai-mlt-card-img">
-                        <img src={r.img || r.image || posterImg} alt={r.title} loading="lazy" />
-                        <div className="ai-mlt-card-overlay">
-                          <Play size={18} fill="#fff" />
+                    {/* Info */}
+                    <div className="flex-1 flex flex-col justify-center py-1 pr-2">
+                      <h3 className="text-white font-bold text-[15px] leading-snug mb-1.5 group-hover:text-[#e3e3e3] transition-colors line-clamp-2">
+                        {epTitles[titleIndex]}
+                      </h3>
+                      <p className="text-[13px] text-neutral-400 leading-relaxed line-clamp-2">
+                        {epDescriptions[descIndex]}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ─── CHARACTERS TAB ─── */}
+        {activeTab === "characters" && (
+          <div className="animate-in fade-in duration-500">
+            {characters.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {characters.map((ch, i) => (
+                  <div key={ch.id || i} className="bg-[#111216] border border-neutral-800 rounded-2xl p-4 flex flex-col items-center text-center hover:bg-[#1a1c23] hover:border-neutral-700 transition-colors">
+                    <img src={ch.image || ch.img || posterImg} alt={ch.name} className="w-20 h-20 rounded-full object-cover mb-3 ring-2 ring-neutral-800" loading="lazy" />
+                    <span className="text-white font-bold text-sm mb-1">{ch.name}</span>
+                    <span className="text-neutral-500 text-xs font-semibold">{ch.role || ch.title || "Character"}</span>
+                    {ch.voiceActor && <span className="text-neutral-600 text-[10px] uppercase tracking-wider mt-2">{ch.voiceActor}</span>}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20 text-neutral-500">No characters available.</div>
+            )}
+          </div>
+        )}
+
+        {/* ─── RELATED / MORE LIKE THIS TABS ─── */}
+        {(activeTab === "related" || activeTab === "more-like-this") && (
+          <div className="animate-in fade-in duration-500">
+            {(() => {
+              const list = activeTab === "related" ? (anime.related || []) : related;
+              return list.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+                  {list.map((r, i) => (
+                    <Link key={r.id || i} to={`/anime/${r.id}/info`} className="group flex flex-col bg-[#111216] border border-neutral-800 rounded-2xl overflow-hidden hover:bg-[#1a1c23] hover:border-neutral-700 transition-all duration-300">
+                      <div className="w-full aspect-[3/4] relative overflow-hidden">
+                        <img src={r.img || r.image || posterImg} alt={r.title || r.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <Play size={32} fill="white" className="text-white drop-shadow-xl" />
                         </div>
                       </div>
-                      <div className="ai-mlt-card-body">
-                        <h3 className="ai-mlt-card-title">{r.title}</h3>
-                        <div className="ai-mlt-card-tags">
+                      <div className="p-3.5 flex flex-col gap-1.5">
+                        <h3 className="text-sm font-bold text-white line-clamp-1 group-hover:text-neutral-200 transition-colors">{r.title || r.name}</h3>
+                        <div className="flex flex-wrap gap-1.5">
                           {(r.genres || []).slice(0, 2).map(g => (
-                            <span key={g} className="ai-mlt-tag">{g}</span>
+                            <span key={g} className="text-[10px] bg-neutral-800 text-neutral-400 px-1.5 py-0.5 rounded uppercase font-semibold tracking-wider">{g}</span>
                           ))}
                         </div>
-                        <p className="ai-mlt-card-reason">{r.reason || r.relationType || "Related"}</p>
                       </div>
                     </Link>
                   ))}
                 </div>
               ) : (
-                <div className="ai-tab-empty">
-                  <span>No related anime.</span>
-                </div>
-              )}
-            </section>
-          )}
+                <div className="text-center py-20 text-neutral-500">No suggestions available.</div>
+              );
+            })()}
+          </div>
+        )}
 
-          {/* ─── MORE LIKE THIS ─── */}
-          {activeTab === "more-like-this" && (
-            <section>
-              {related.length > 0 ? (
-                <div className="ai-mlt-grid">
-                  {related.map((r) => (
-                    <Link key={r.id} to={`/anime/${r.id}/info`} className="ai-mlt-card"
-                      onMouseEnter={() => prefetch.onMouseEnter(r.id)}
-                      onMouseLeave={prefetch.onMouseLeave}
-                    >
-                      <div className="ai-mlt-card-img">
-                        <img src={r.image} alt={r.name} loading="lazy" />
-                        <div className="ai-mlt-card-overlay">
-                          <Play size={18} fill="#fff" />
-                        </div>
-                      </div>
-                      <div className="ai-mlt-card-body">
-                        <h3 className="ai-mlt-card-title">{r.name}</h3>
-                        <div className="ai-mlt-card-tags">
-                          {(r.genres || []).slice(0, 2).map(g => (
-                            <span key={g} className="ai-mlt-tag">{g}</span>
-                          ))}
-                        </div>
-                        <p className="ai-mlt-card-reason">Recommended based on genre and rating</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="ai-tab-empty">
-                  <span>{anime.name ? "No recommendations available." : "Loading..."}</span>
-                </div>
-              )}
-            </section>
-          )}
-        </main>
-      </div>
+      </section>
 
       {/* ─── TRAILER MODAL ─── */}
       {trailerOpen && (
-        <div className="ai-trailer-modal" onClick={() => setTrailerOpen(false)}>
-          <div className="ai-trailer-modal-bg" />
-          <div className="ai-trailer-modal-content" onClick={e => e.stopPropagation()}>
-            <button className="ai-trailer-modal-close" onClick={() => setTrailerOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={() => setTrailerOpen(false)}></div>
+          <div className="relative w-[90%] max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 z-10 zoom-in-95 animate-in duration-300">
+            <button onClick={() => setTrailerOpen(false)} className="absolute top-4 right-4 w-10 h-10 bg-black/50 hover:bg-neutral-800 text-white rounded-full flex items-center justify-center transition-colors z-20 backdrop-blur-md">
               <X size={20} />
             </button>
-            <div className="ai-trailer-modal-video">
-              <iframe
-                src={anime.trailerUrl}
-                title="Trailer"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
+            <iframe
+              src={anime.trailerUrl}
+              title="Trailer"
+              className="w-full h-full border-none"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
           </div>
         </div>
       )}
