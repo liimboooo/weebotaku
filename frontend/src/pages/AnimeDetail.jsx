@@ -813,7 +813,7 @@ export default function AnimeDetail() {
           <div className="flex-1 flex flex-col min-w-0">
 
             {/* ─── VIDEO PLAYER ─── */}
-            <div className="relative w-full bg-gradient-to-b from-zinc-900/50 to-black overflow-hidden mt-2 mx-4 mb-3" style={{ aspectRatio: '16/9', maxHeight: '55vh', borderRadius: '16px' }}>
+            <div className="relative bg-gradient-to-b from-zinc-900/50 to-black overflow-hidden mt-8 mb-4" style={{ aspectRatio: '16/9', maxHeight: '48vh', maxWidth: '860px', width: 'calc(100% - 80px)', marginLeft: '40px', borderRadius: '16px' }}>
               {/* loading */}
               {loading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
@@ -950,94 +950,96 @@ export default function AnimeDetail() {
               )}
             </div>
 
-            {/* ─── SERVER TOGGLE ─── */}
-            {servers.length > 0 && (
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
-                <span className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Source</span>
-                <button className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${language === 'sub' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('sub'); try { localStorage.setItem('animewch_last_language', 'sub'); } catch {} }} disabled={!servers.some(s => s.type === 'sub')}>SUB</button>
-                <button className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${language === 'dub' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('dub'); try { localStorage.setItem('animewch_last_language', 'dub'); } catch {} }} disabled={!servers.some(s => s.type === 'dub')}>DUB</button>
-              </div>
-            )}
+            <div style={{ maxWidth: '860px', marginLeft: '40px', width: 'calc(100% - 80px)' }}>
+              {/* ─── SERVER TOGGLE ─── */}
+              {servers.length > 0 && (
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
+                  <span className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Source</span>
+                  <button className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${language === 'sub' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('sub'); try { localStorage.setItem('animewch_last_language', 'sub'); } catch {} }} disabled={!servers.some(s => s.type === 'sub')}>SUB</button>
+                  <button className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${language === 'dub' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('dub'); try { localStorage.setItem('animewch_last_language', 'dub'); } catch {} }} disabled={!servers.some(s => s.type === 'dub')}>DUB</button>
+                </div>
+              )}
 
-            {/* ─── BANNER ─── */}
-            {alertBannerVisible && (
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-[#3d1a04] border-b border-orange-500/20">
-                <AlertTriangle size={13} className="text-orange-400 flex-none" />
-                <p className="text-xs text-orange-400 flex-1">If the current server doesn't work, feel free to try the other available servers.</p>
-                <button className="text-orange-400/70 hover:text-orange-300 cursor-pointer bg-transparent border-none p-1 flex-none" onClick={() => setAlertBannerVisible(false)}><X size={12} /></button>
-              </div>
-            )}
+              {/* ─── BANNER ─── */}
+              {alertBannerVisible && (
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-[#3d1a04] border-b border-orange-500/20">
+                  <AlertTriangle size={13} className="text-orange-400 flex-none" />
+                  <p className="text-xs text-orange-400 flex-1">If the current server doesn't work, feel free to try the other available servers.</p>
+                  <button className="text-orange-400/70 hover:text-orange-300 cursor-pointer bg-transparent border-none p-1 flex-none" onClick={() => setAlertBannerVisible(false)}><X size={12} /></button>
+                </div>
+              )}
 
-            {/* ─── VIDEO METADATA ─── */}
-            <div className="px-4 py-4 flex flex-col gap-4 border-b border-white/5">
-              {/* Episode Title */}
-              <h1 className="text-2xl md:text-3xl font-bold text-white">
-                {episode?.title || episodeTitles?.[selectedEp] || `Episode ${selectedEp}`}
-              </h1>
+              {/* ─── VIDEO METADATA ─── */}
+              <div className="px-4 py-4 flex flex-col gap-4 border-b border-white/5">
+                {/* Episode Title */}
+                <h1 className="text-2xl md:text-3xl font-bold text-white">
+                  {episode?.title || episodeTitles?.[selectedEp] || `Episode ${selectedEp}`}
+                </h1>
 
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                {/* Anime Info Row */}
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-zinc-800 ring-2 ring-white/10 shrink-0 overflow-hidden">
-                    {anime?.img && <img src={anime.img} alt="" className="w-full h-full object-cover" />}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  {/* Anime Info Row */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-zinc-800 ring-2 ring-white/10 shrink-0 overflow-hidden">
+                      {anime?.img && <img src={anime.img} alt="" className="w-full h-full object-cover" />}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-white text-base leading-tight">{anime?.name || "Anime"}</span>
+                      <span className="text-xs text-zinc-400 font-medium mt-0.5">6.4K users</span>
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-white text-base leading-tight">{anime?.name || "Anime"}</span>
-                    <span className="text-xs text-zinc-400 font-medium mt-0.5">6.4K users</span>
+
+                  {/* Actions Row */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button className="bg-white text-black px-5 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-zinc-200 transition-colors">
+                      <Bookmark size={14} /> Add to List
+                    </button>
+                    <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5">
+                      <button className="px-4 py-2.5 hover:bg-white/10 text-white font-medium text-sm flex items-center gap-2 border-r border-white/10 transition-colors">👍 12K</button>
+                      <button className="px-4 py-2.5 hover:bg-white/10 text-white font-medium text-sm flex items-center gap-2 transition-colors">👎</button>
+                    </div>
+                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors">
+                      Dub <ChevronDown size={14} className="text-zinc-400" />
+                    </button>
+                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors">
+                      Server <ChevronDown size={14} className="text-zinc-400" />
+                    </button>
+                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors">
+                      <Share2 size={14} /> Share
+                    </button>
+                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 w-10 h-10 flex items-center justify-center rounded-full text-white transition-colors" title="Report">
+                      <Flag size={14} />
+                    </button>
                   </div>
                 </div>
 
-                {/* Actions Row */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <button className="bg-white text-black px-5 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-zinc-200 transition-colors">
-                    <Bookmark size={14} /> Add to List
-                  </button>
-                  <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5">
-                    <button className="px-4 py-2.5 hover:bg-white/10 text-white font-medium text-sm flex items-center gap-2 border-r border-white/10 transition-colors">👍 12K</button>
-                    <button className="px-4 py-2.5 hover:bg-white/10 text-white font-medium text-sm flex items-center gap-2 transition-colors">👎</button>
-                  </div>
-                  <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors">
-                    Dub <ChevronDown size={14} className="text-zinc-400" />
-                  </button>
-                  <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors">
-                    Server <ChevronDown size={14} className="text-zinc-400" />
-                  </button>
-                  <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors">
-                    <Share2 size={14} /> Share
-                  </button>
-                  <button className="bg-white/5 border border-white/5 hover:bg-white/10 w-10 h-10 flex items-center justify-center rounded-full text-white transition-colors" title="Report">
-                    <Flag size={14} />
-                  </button>
+                {/* Stats & Synopsis */}
+                <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                  <div className="text-sm font-semibold text-zinc-400 mb-2">97K views • Apr 4, 2026 • #6 trending</div>
+                  {anime?.description ? (
+                    <p className="text-sm text-zinc-300 leading-relaxed">{anime.description.replace(/<[^>]*>/g, '')}</p>
+                  ) : (
+                    <p className="text-sm text-zinc-300 leading-relaxed">In a world where certain humans command mighty daemons, a young boy discovers his hidden power. The true battle begins now.</p>
+                  )}
                 </div>
               </div>
 
-              {/* Stats & Synopsis */}
-              <div className="bg-white/5 border border-white/5 rounded-xl p-4">
-                <div className="text-sm font-semibold text-zinc-400 mb-2">97K views • Apr 4, 2026 • #6 trending</div>
-                {anime?.description ? (
-                  <p className="text-sm text-zinc-300 leading-relaxed">{anime.description.replace(/<[^>]*>/g, '')}</p>
-                ) : (
-                  <p className="text-sm text-zinc-300 leading-relaxed">In a world where certain humans command mighty daemons, a young boy discovers his hidden power. The true battle begins now.</p>
-                )}
+              {/* ─── COMMENTS ─── */}
+              <div className="px-4">
+                <Comments
+                  comments={comments}
+                  setComments={setComments}
+                  currentUser={currentUsername}
+                  isLoggedIn={authService.isLoggedIn()}
+                  onSeek={handleSeek}
+                  onAdd={handleAddComment}
+                  onLikeComment={handleLikeComment}
+                  onDislikeComment={handleDislikeComment}
+                  onReplyComment={handleReplyComment}
+                  onEditComment={handleEditComment}
+                  onDeleteComment={handleDeleteComment}
+                  loading={commentsLoading}
+                />
               </div>
-            </div>
-
-            {/* ─── COMMENTS ─── */}
-            <div className="px-4">
-              <Comments
-                comments={comments}
-                setComments={setComments}
-                currentUser={currentUsername}
-                isLoggedIn={authService.isLoggedIn()}
-                onSeek={handleSeek}
-                onAdd={handleAddComment}
-                onLikeComment={handleLikeComment}
-                onDislikeComment={handleDislikeComment}
-                onReplyComment={handleReplyComment}
-                onEditComment={handleEditComment}
-                onDeleteComment={handleDeleteComment}
-                loading={commentsLoading}
-              />
             </div>
           </div>
 
