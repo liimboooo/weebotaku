@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Loader, Play, Star, Tv, Calendar, Clock, Monitor, Search, Film,
-  X, SkipForward, RefreshCw, List, AlertTriangle, Bell, ChevronDown, ChevronUp
+  X, SkipForward, RefreshCw, List, AlertTriangle, Bell, ChevronDown, ChevronUp,
+  Share2, Bookmark, Flag
 } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
 import Hls from "hls.js";
@@ -799,8 +800,8 @@ export default function AnimeDetail() {
       <div className="fixed inset-0 pointer-events-none z-0"
         style={{
           background: `
-            radial-gradient(ellipse at 75% 0%, rgba(99,102,241,0.12), transparent 60%),
-            radial-gradient(ellipse at 25% 100%, rgba(168,85,247,0.08), transparent 50%),
+            radial-gradient(ellipse at 75% 0%, rgba(217,119,6,0.12), transparent 60%),
+            radial-gradient(ellipse at 25% 100%, rgba(234,88,12,0.08), transparent 50%),
             repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 4px)
           `
         }}
@@ -844,7 +845,7 @@ export default function AnimeDetail() {
                   <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 text-xl font-bold">!</div>
                   <p className="text-sm text-zinc-400">Episode not available on this source.</p>
                   <div className="flex gap-3">
-                    {serverIndex < langServers().length - 1 && <button className="px-5 py-2 rounded-full bg-indigo-500/20 text-indigo-300 text-sm font-medium hover:bg-indigo-500/30 transition-colors" onClick={tryNextServer}>Try Next Source</button>}
+                    {serverIndex < langServers().length - 1 && <button className="px-5 py-2 rounded-full bg-amber-500/20 text-amber-300 text-sm font-medium hover:bg-amber-500/30 transition-colors" onClick={tryNextServer}>Try Next Source</button>}
                     {epIndex < episodes.length - 1 && <button className="px-5 py-2 rounded-full bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors" onClick={() => { setIframeError(false); failedServers.current = new Set(); setEpIndex(i => i + 1); }}>Skip to Next Episode</button>}
                     <button className="px-5 py-2 rounded-full bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors" onClick={() => { setIframeError(false); failedServers.current = new Set(); setStreamRetryCount(c => c + 1); }}>Retry</button>
                   </div>
@@ -853,7 +854,7 @@ export default function AnimeDetail() {
               {/* stream loading */}
               {!loading && !error && streamLoading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                  <div className="w-8 h-8 rounded-full border-2 border-indigo-500/30 border-t-indigo-400 animate-spin" />
+                  <div className="w-8 h-8 rounded-full border-2 border-amber-500/30 border-t-amber-400 animate-spin" />
                   <p className="text-sm text-zinc-500">Loading stream...</p>
                 </div>
               )}
@@ -866,12 +867,12 @@ export default function AnimeDetail() {
 
               {/* skip buttons */}
               {streamMode === "hls" && showSkipIntro && (
-                <button className="absolute bottom-20 right-4 z-10 flex items-center gap-1.5 px-4 py-2 rounded-full bg-indigo-500/80 text-white text-xs font-semibold backdrop-blur-sm hover:bg-indigo-500 transition-colors shadow-lg" onClick={handleSkipIntro}>
+                <button className="absolute bottom-20 right-4 z-10 flex items-center gap-1.5 px-4 py-2 rounded-full bg-amber-500/80 text-white text-xs font-semibold backdrop-blur-sm hover:bg-amber-500 transition-colors shadow-lg" onClick={handleSkipIntro}>
                   <SkipForward size={14} /> Skip Intro
                 </button>
               )}
               {streamMode === "hls" && showSkipOutro && (
-                <button className="absolute bottom-20 right-4 z-10 flex items-center gap-1.5 px-4 py-2 rounded-full bg-indigo-500/80 text-white text-xs font-semibold backdrop-blur-sm hover:bg-indigo-500 transition-colors shadow-lg" onClick={handleSkipOutro}>
+                <button className="absolute bottom-20 right-4 z-10 flex items-center gap-1.5 px-4 py-2 rounded-full bg-amber-500/80 text-white text-xs font-semibold backdrop-blur-sm hover:bg-amber-500 transition-colors shadow-lg" onClick={handleSkipOutro}>
                   <SkipForward size={14} /> {epIndex < episodes.length - 1 ? "Next Episode" : "Skip Outro"}
                 </button>
               )}
@@ -883,7 +884,7 @@ export default function AnimeDetail() {
                     <p className="text-xs text-zinc-400 uppercase tracking-widest mb-2">Next episode in</p>
                     <div className="text-5xl font-bold text-white mb-4">{autoNextCountdown}</div>
                     <div className="flex gap-3 justify-center">
-                      <button className="flex items-center gap-1.5 px-5 py-2 rounded-full bg-indigo-500 text-white text-sm font-semibold hover:bg-indigo-400 transition-colors" onClick={() => { cancelAutoNext(); setEpIndex(i => i + 1); setSelectedEp(episodes[epIndex + 1]?.episode || (epIndex + 2)); }}>
+                      <button className="flex items-center gap-1.5 px-5 py-2 rounded-full bg-amber-500 text-white text-sm font-semibold hover:bg-amber-400 transition-colors" onClick={() => { cancelAutoNext(); setEpIndex(i => i + 1); setSelectedEp(episodes[epIndex + 1]?.episode || (epIndex + 2)); }}>
                         <Play size={14} /> Play Now
                       </button>
                       <button className="px-5 py-2 rounded-full bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors" onClick={cancelAutoNext}>Cancel</button>
@@ -907,7 +908,7 @@ export default function AnimeDetail() {
                     {showSpeedMenu && (
                       <div className="absolute top-full left-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl py-1 z-10 min-w-[80px]">
                         {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(s => (
-                          <button key={s} className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${playbackSpeed === s ? "text-indigo-400 bg-indigo-500/10" : "text-zinc-400 hover:text-white hover:bg-white/5"}`} onClick={() => handleSpeedChange(s)}>
+                          <button key={s} className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${playbackSpeed === s ? "text-amber-400 bg-amber-500/10" : "text-zinc-400 hover:text-white hover:bg-white/5"}`} onClick={() => handleSpeedChange(s)}>
                             {s}x
                           </button>
                         ))}
@@ -966,6 +967,60 @@ export default function AnimeDetail() {
                 <button className="text-orange-400/70 hover:text-orange-300 cursor-pointer bg-transparent border-none p-1 flex-none" onClick={() => setAlertBannerVisible(false)}><X size={12} /></button>
               </div>
             )}
+
+            {/* ─── VIDEO METADATA ─── */}
+            <div className="px-4 py-4 flex flex-col gap-4 border-b border-white/5">
+              {/* Episode Title */}
+              <h1 className="text-2xl md:text-3xl font-bold text-white">
+                {episode?.title || episodeTitles?.[selectedEp] || `Episode ${selectedEp}`}
+              </h1>
+
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                {/* Anime Info Row */}
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full bg-zinc-800 ring-2 ring-white/10 shrink-0 overflow-hidden">
+                    {anime?.img && <img src={anime.img} alt="" className="w-full h-full object-cover" />}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-white text-base leading-tight">{anime?.name || "Anime"}</span>
+                    <span className="text-xs text-zinc-400 font-medium mt-0.5">6.4K users</span>
+                  </div>
+                </div>
+
+                {/* Actions Row */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button className="bg-white text-black px-5 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-zinc-200 transition-colors">
+                    <Bookmark size={14} /> Add to List
+                  </button>
+                  <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5">
+                    <button className="px-4 py-2.5 hover:bg-white/10 text-white font-medium text-sm flex items-center gap-2 border-r border-white/10 transition-colors">👍 12K</button>
+                    <button className="px-4 py-2.5 hover:bg-white/10 text-white font-medium text-sm flex items-center gap-2 transition-colors">👎</button>
+                  </div>
+                  <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors">
+                    Dub <ChevronDown size={14} className="text-zinc-400" />
+                  </button>
+                  <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors">
+                    Server <ChevronDown size={14} className="text-zinc-400" />
+                  </button>
+                  <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors">
+                    <Share2 size={14} /> Share
+                  </button>
+                  <button className="bg-white/5 border border-white/5 hover:bg-white/10 w-10 h-10 flex items-center justify-center rounded-full text-white transition-colors" title="Report">
+                    <Flag size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Stats & Synopsis */}
+              <div className="bg-white/5 border border-white/5 rounded-xl p-4">
+                <div className="text-sm font-semibold text-zinc-400 mb-2">97K views • Apr 4, 2026 • #6 trending</div>
+                {anime?.description ? (
+                  <p className="text-sm text-zinc-300 leading-relaxed">{anime.description.replace(/<[^>]*>/g, '')}</p>
+                ) : (
+                  <p className="text-sm text-zinc-300 leading-relaxed">In a world where certain humans command mighty daemons, a young boy discovers his hidden power. The true battle begins now.</p>
+                )}
+              </div>
+            </div>
 
             {/* ─── COMMENTS ─── */}
             <div className="px-4">
