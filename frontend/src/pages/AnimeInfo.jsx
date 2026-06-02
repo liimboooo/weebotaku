@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   Play, Share2, ChevronLeft, ChevronRight, X,
-  Check, Copy, Globe, Bell, Eye, Bookmark,
-  MessageCircle, AtSign
+  Check, Copy, Globe, MessageCircle, AtSign, Eye,
+  Bookmark, Heart, ChevronDown, ChevronUp, Clock,
+  Star, Film, Calendar, Monitor, Layers
 } from "lucide-react";
 import { fetchAnimeRecommendations, fetchAnimeCharacters } from "../services/anilistApi";
 import api from "../services/api";
@@ -34,6 +35,21 @@ function formatCount(n) {
   return String(n);
 }
 
+function formatStatus(status) {
+  if (!status) return "Unknown";
+  const map = {
+    "FINISHED": "Finished",
+    "RELEASING": "Airing",
+    "NOT_YET_RELEASED": "Upcoming",
+    "CANCELLED": "Cancelled",
+    "HIATUS": "Hiatus",
+    "Ongoing": "Airing",
+    "Upcoming": "Upcoming",
+    "Completed": "Finished",
+  };
+  return map[status] || status;
+}
+
 export default function AnimeInfo() {
   const { id } = useParams();
   const prefetch = usePrefetchAnime();
@@ -44,6 +60,7 @@ export default function AnimeInfo() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("episodes");
   const [bookmarked, setBookmarked] = useState(false);
+  const [favorited, setFavorited] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [characters, setCharacters] = useState([]);
@@ -51,6 +68,7 @@ export default function AnimeInfo() {
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [epScrollLeft, setEpScrollLeft] = useState(false);
   const [epScrollRight, setEpScrollRight] = useState(false);
+  const [synopsisExpanded, setSynopsisExpanded] = useState(false);
 
   const shareRef = useRef(null);
   const epScrollRef = useRef(null);
@@ -156,6 +174,10 @@ export default function AnimeInfo() {
   };
 
   const synopsisClean = anime?.synopsis ? anime.synopsis.replace(/<[^>]*>/g, "") : "";
+  const synopsisTruncated = synopsisClean.length > 250;
+  const displayedSynopsis = synopsisExpanded || !synopsisTruncated
+    ? synopsisClean
+    : synopsisClean.slice(0, 250) + "...";
 
   const totalEpisodes = anime?.episodes || 0;
   const epArray = Array.from({ length: totalEpisodes }, (_, i) => i + 1).reverse();
@@ -164,9 +186,21 @@ export default function AnimeInfo() {
   const posterImg = anime?.img || "";
   const bannerImg = anime?.bannerImage || anime?.img || "";
 
+  const statusFormatted = formatStatus(anime?.status);
+  const statusLower = (anime?.status || "").toLowerCase();
+
+  const infoFields = [
+    { label: "Format", value: anime?.type || "TV" },
+    { label: "Status", value: statusFormatted },
+    { label: "Episodes", value: anime?.episodes || "—" },
+    { label: "Season", value: anime?.season || "—" },
+    { label: "Aired", value: anime?.aired || anime?.year || "—" },
+    { label: "Studio", value: anime?.studio || "—" },
+  ];
+
   if (loading) {
     return (
-      <div className="ai-page" style={{ background: "#0a0a0a", minHeight: "100vh", padding: "40px" }}>
+      <div className="ai-page">
         <div className="ai-skeleton-hero" />
       </div>
     );
@@ -174,8 +208,8 @@ export default function AnimeInfo() {
 
   if (error || !anime) {
     return (
-      <div className="ai-page" style={{ background: "#0a0a0a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, color: "#fff" }}>
-        <div style={{ fontSize: 16, color: "#999" }}>{error || "Anime not found."}</div>
+      <div className="ai-page" style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16, minHeight: "100vh", color: "#fff" }}>
+        <div style={{ fontSize: 16, color: "var(--text-muted)" }}>{error || "Anime not found."}</div>
         <button className="ai-retry-btn" onClick={fetchData}>Retry</button>
       </div>
     );
@@ -183,83 +217,104 @@ export default function AnimeInfo() {
 
   return (
     <div className="ai-page">
-      {/* ═══════════ HERO BANNER ═══════════ */}
-      <section className="ai-hero-banner">
+      {/* ═══════════ HERO ═══════════ */}
+      <section className="ai-hero">
         <div className="ai-hero-bg">
           <img src={bannerImg} alt="" className="ai-hero-bg-img" />
-          <div className="ai-hero-gradient" />
-          <div className="ai-hero-gradient-side" />
+          <div className="ai-hero-overlay" />
+          <div className="ai-hero-vignette" />
         </div>
+        <div className="ai-hero-pulse" />
 
-        <div className="ai-hero-inner">
-          {/* Left — Poster + Meta */}
-          <div className="ai-hero-left">
-            <div className="ai-hero-poster-wrap">
-              <img src={posterImg} alt={anime.name} className="ai-hero-poster" />
-            </div>
-            {anime.status === "Ongoing" && (
-              <div className="ai-hero-badge-next">
-                <Bell size={12} />
-                <span>Currently airing</span>
-              </div>
-            )}
-            {anime.status === "Upcoming" && (
-              <div className="ai-hero-badge-next">
-                <Bell size={12} />
-                <span>Coming soon</span>
-              </div>
-            )}
-            {anime.trailerUrl && (
-              <button className="ai-hero-btn-trailer" onClick={() => setTrailerOpen(true)}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                <span>Watch trailer</span>
-              </button>
-            )}
-            <div className="ai-hero-format">
-              <span>Format: {anime.type || "TV Show"}</span>
+        <div className="ai-hero-content">
+          {/* Poster */}
+          <div className="ai-hero-poster-col">
+            <div className="ai-poster-glow">
+              <img src={posterImg} alt={anime.name} />
             </div>
           </div>
 
-          {/* Right — Main Info */}
-          <div className="ai-hero-right">
-            <div className="ai-hero-season">{anime.season || "CURRENT"}</div>
+          {/* Info */}
+          <div className="ai-hero-info-col">
+            {anime.season && (
+              <div className="ai-hero-season-label">
+                <Calendar size={10} />
+                <span>{anime.season}</span>
+              </div>
+            )}
+
             <h1 className="ai-hero-title">{anime.name}</h1>
-            <div className="ai-hero-genre-row">
+
+            <div className="ai-genre-row">
               {(anime.genres || []).map(g => (
-                <Link key={g} to={`/browse/anime?genre=${encodeURIComponent(g)}`} className="ai-hero-genre-pill">
+                <Link key={g} to={`/browse/anime?genre=${encodeURIComponent(g)}`} className="ai-genre-pill">
                   {g}
                 </Link>
               ))}
             </div>
 
+            <div className="ai-hero-badges">
+              {anime.status && (
+                <span className={`ai-status-badge ${statusLower.includes("air") || statusLower === "releasing" ? "airing" : statusLower.includes("finish") || statusLower === "completed" ? "finished" : statusLower.includes("upcoming") || statusLower === "not_yet_released" ? "upcoming" : "cancelled"}`}>
+                  {statusFormatted}
+                </span>
+              )}
+              {anime.rating && (
+                <span className="ai-hero-badge">
+                  <Star size={12} />
+                  {anime.rating}
+                </span>
+              )}
+              {anime.duration && (
+                <span className="ai-hero-badge">
+                  <Clock size={12} />
+                  {anime.duration}m
+                </span>
+              )}
+              {totalEpisodes > 0 && (
+                <span className="ai-hero-badge">
+                  <Film size={12} />
+                  {totalEpisodes} eps
+                </span>
+              )}
+            </div>
+
             {/* Action Buttons */}
-            <div className="ai-hero-action-row">
+            <div className="ai-action-row">
               {anime.status === "NOT_YET_RELEASED" || anime.status === "CANCELLED" ? (
-                <span className="ai-hero-btn-play disabled">
+                <span className="ai-btn-play disabled">
                   {anime.status === "NOT_YET_RELEASED" ? "Coming Soon" : "Cancelled"}
                 </span>
               ) : resumeInfo && !resumeInfo.isFinished ? (
-                <Link to={`/anime/${anime.id}?ep=${resumeInfo.episode}`} className="ai-hero-btn-play">
+                <Link to={`/anime/${anime.id}?ep=${resumeInfo.episode}`} className="ai-btn-play">
                   <Play size={18} fill="currentColor" />
                   <span>Continue Ep {resumeInfo.episode}</span>
                 </Link>
               ) : (
-                <Link to={`/anime/${anime.id}?ep=1`} className="ai-hero-btn-play">
+                <Link to={`/anime/${anime.id}?ep=1`} className="ai-btn-play">
                   <Play size={18} fill="currentColor" />
                   <span>Play</span>
                 </Link>
               )}
 
               <button
-                className={`ai-hero-btn-icon ${bookmarked ? "active" : ""}`}
+                className={`ai-btn-icon ${bookmarked ? "active" : ""}`}
                 onClick={() => setBookmarked(b => !b)}
                 aria-label={bookmarked ? "Remove bookmark" : "Bookmark"}
               >
                 <Bookmark size={16} fill={bookmarked ? "#fff" : "none"} />
               </button>
 
+              <button
+                className={`ai-btn-icon ${favorited ? "active" : ""}`}
+                onClick={() => setFavorited(f => !f)}
+                aria-label={favorited ? "Remove favorite" : "Favorite"}
+              >
+                <Heart size={16} fill={favorited ? "#fff" : "none"} />
+              </button>
+
               <div className="ai-dropdown-wrap" ref={shareRef}>
-                <button className="ai-hero-btn-icon" onClick={() => setShareOpen(o => !o)} aria-label="Share">
+                <button className="ai-btn-icon" onClick={() => setShareOpen(o => !o)} aria-label="Share">
                   <Share2 size={16} />
                 </button>
                 {shareOpen && (
@@ -274,189 +329,216 @@ export default function AnimeInfo() {
                 )}
               </div>
 
-              <a href={`https://myanimelist.net/anime/${anime.malId || id}`} target="_blank" rel="noopener noreferrer" className="ai-hero-btn-icon mal-btn">
-                <span>MAL</span>
-              </a>
+              {anime.malId && (
+                <a href={`https://myanimelist.net/anime/${anime.malId}`} target="_blank" rel="noopener noreferrer" className="ai-btn-icon">
+                  MAL
+                </a>
+              )}
             </div>
 
             {/* Synopsis */}
-            <p className="ai-hero-synopsis">
-              {synopsisClean
-                ? (() => {
-                    const s = synopsisClean;
-                    const sentences = s.match(/[^.!?]+[.!?]+/g);
-                    if (sentences && sentences.length >= 3) {
-                      return sentences.slice(0, 3).join(" ").trim() + " Or wi...";
-                    }
-                    return s.length > 200 ? s.slice(0, 200) + "... Or wi..." : s;
-                  })()
-                : "Juuzou Oogami, a legendary 39-year-old hitman, is stung by a mysterious wasp and wakes up transformed into a 13-year-old boy. His boss gives him one order: infiltrate a middle school. Or wi..."}
-            </p>
-
-            {/* Tabs */}
-            <nav className="ai-hero-tabs">
-              {TABS.map(t => (
+            <div className="ai-synopsis-wrap">
+              <p className={`ai-synopsis-text ${!synopsisExpanded && synopsisTruncated ? "collapsed" : ""}`}>
+                {displayedSynopsis || "No synopsis available."}
+              </p>
+              {synopsisTruncated && (
                 <button
-                  key={t.key}
-                  className={`ai-hero-tab ${activeTab === t.key ? "active" : ""}`}
-                  onClick={() => setActiveTab(t.key)}
+                  className="ai-synopsis-toggle"
+                  onClick={() => setSynopsisExpanded(e => !e)}
                 >
-                  {t.label}
-                  {activeTab === t.key && <span className="ai-hero-tab-underline" />}
+                  {synopsisExpanded ? (
+                    <>Show Less <ChevronUp size={14} /></>
+                  ) : (
+                    <>Show More <ChevronDown size={14} /></>
+                  )}
                 </button>
-              ))}
-            </nav>
+              )}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ═══════════ TAB CONTENT ═══════════ */}
-      <div className="ai-tab-content">
-
-        {/* ─── EPISODES ─── */}
-        {activeTab === "episodes" && (
-          <section className="ai-episodes-section">
-            <span className="ai-episodes-count">{totalEpisodes} Episodes</span>
-            <div className="ai-episodes-scroll-wrap">
-              {epScrollLeft && (
-                <button className="ai-ep-arrow ai-ep-arrow-left" onClick={() => scrollEp(-1)} aria-label="Scroll left">
-                  <ChevronLeft size={20} />
-                </button>
-              )}
-              {epScrollRight && (
-                <button className="ai-ep-arrow ai-ep-arrow-right" onClick={() => scrollEp(1)} aria-label="Scroll right">
-                  <ChevronRight size={20} />
-                </button>
-              )}
-              <div className="ai-episodes-scroll" ref={epScrollRef}>
-                {epArray.map((ep) => {
-                  const isTop = ep === mostViewedEp;
-                  return (
-                    <Link
-                      key={ep}
-                      to={`/anime/${anime.id}?ep=${ep}`}
-                      className={`ai-ep-card ${isTop ? "top" : ""}`}
-                    >
-                      <div className="ai-ep-card-img">
-                        <img src={posterImg} alt={`Episode ${ep}`} loading="lazy" />
-                        <div className="ai-ep-card-overlay">
-                          <Play size={20} fill="#fff" />
-                        </div>
-                      </div>
-                      <div className="ai-ep-card-footer">
-                        <span className="ai-ep-card-num">Ep {ep}</span>
-                        <span className="ai-ep-card-views">
-                          <Eye size={11} />
-                          {(() => {
-                            const base = anime.popularity || 32000;
-                            const variance = Math.floor(Math.random() * 5000) + 2000;
-                            const views = isTop ? base + variance + 3000 : base + variance;
-                            return formatCount(views);
-                          })()}
-                        </span>
-                      </div>
-                    </Link>
-                  );
-                })}
+      {/* ═══════════ CONTENT ═══════════ */}
+      <div className="ai-content">
+        {/* Sidebar Info Panel */}
+        <aside className="ai-sidebar">
+          <div className="ai-info-panel">
+            <div className="ai-info-panel-title">Details</div>
+            {infoFields.map(field => (
+              <div key={field.label} className="ai-info-row">
+                <span className="ai-info-label">{field.label}</span>
+                <span className="ai-info-value">{field.value}</span>
               </div>
-            </div>
-          </section>
-        )}
+            ))}
+          </div>
+        </aside>
 
-        {/* ─── CHARACTERS ─── */}
-        {activeTab === "characters" && (
-          <section className="ai-characters-section">
-            <div className="ai-characters-grid">
+        {/* Main Content */}
+        <main className="ai-main">
+          {/* Tabs */}
+          <nav className="ai-tabs">
+            {TABS.map(t => (
+              <button
+                key={t.key}
+                className={`ai-tab ${activeTab === t.key ? "active" : ""}`}
+                onClick={() => setActiveTab(t.key)}
+              >
+                {t.label}
+                {activeTab === t.key && <span className="ai-tab-indicator" />}
+              </button>
+            ))}
+          </nav>
+
+          {/* ─── EPISODES ─── */}
+          {activeTab === "episodes" && (
+            <section className="ai-episodes-section">
+              <div className="ai-episodes-header">
+                <span className="ai-episodes-count">{totalEpisodes} Episodes</span>
+              </div>
+              <div className="ai-episodes-scroll-wrap">
+                {epScrollLeft && (
+                  <button className="ai-ep-arrow ai-ep-arrow-left" onClick={() => scrollEp(-1)} aria-label="Scroll left">
+                    <ChevronLeft size={20} />
+                  </button>
+                )}
+                {epScrollRight && (
+                  <button className="ai-ep-arrow ai-ep-arrow-right" onClick={() => scrollEp(1)} aria-label="Scroll right">
+                    <ChevronRight size={20} />
+                  </button>
+                )}
+                <div className="ai-episodes-scroll" ref={epScrollRef}>
+                  {epArray.map((ep) => {
+                    const isTop = ep === mostViewedEp;
+                    return (
+                      <Link
+                        key={ep}
+                        to={`/anime/${anime.id}?ep=${ep}`}
+                        className={`ai-ep-card ${isTop ? "top" : ""}`}
+                      >
+                        <div className="ai-ep-card-img">
+                          <img src={posterImg} alt={`Episode ${ep}`} loading="lazy" />
+                          <div className="ai-ep-card-overlay">
+                            <div className="ai-ep-card-overlay-icon">
+                              <Play size={18} fill="#fff" />
+                            </div>
+                          </div>
+                          <span className="ai-ep-card-badge">EP {ep}</span>
+                        </div>
+                        <div className="ai-ep-card-footer">
+                          <span className="ai-ep-card-num">Episode {ep}</span>
+                          <span className="ai-ep-card-views">
+                            <Eye size={11} />
+                            {(() => {
+                              const base = anime.popularity || 32000;
+                              const variance = Math.floor(Math.random() * 5000) + 2000;
+                              const views = isTop ? base + variance + 3000 : base + variance;
+                              return formatCount(views);
+                            })()}
+                          </span>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* ─── CHARACTERS ─── */}
+          {activeTab === "characters" && (
+            <section>
               {characters.length > 0 ? (
-                characters.map((ch, i) => (
-                  <div key={ch.id || i} className="ai-character-card">
-                    <div className="ai-character-img-wrap">
-                      <img src={ch.image || ch.img || posterImg} alt={ch.name} className="ai-character-img" loading="lazy" />
+                <div className="ai-characters-grid">
+                  {characters.map((ch, i) => (
+                    <div key={ch.id || i} className="ai-character-card">
+                      <div className="ai-character-img-wrap">
+                        <img src={ch.image || ch.img || posterImg} alt={ch.name} className="ai-character-img" loading="lazy" />
+                      </div>
+                      <span className="ai-character-name">{ch.name}</span>
+                      <span className="ai-character-role">{ch.role || ch.title || "Character"}</span>
+                      {ch.voiceActor && (
+                        <span className="ai-character-va">{ch.voiceActor}</span>
+                      )}
                     </div>
-                    <span className="ai-character-name">{ch.name}</span>
-                    <span className="ai-character-role">{ch.role || ch.title || "Character"}</span>
-                    {ch.voiceActor && (
-                      <span className="ai-character-va">{ch.voiceActor}</span>
-                    )}
-                  </div>
-                ))
+                  ))}
+                </div>
               ) : (
                 <div className="ai-tab-empty">
                   <span>No character data available.</span>
                 </div>
               )}
-            </div>
-          </section>
-        )}
+            </section>
+          )}
 
-        {/* ─── RELATED ─── */}
-        {activeTab === "related" && (
-          <section className="ai-related-section">
-            {anime.related && anime.related.length > 0 ? (
-              <div className="ai-mlt-grid">
-                {anime.related.map((r, i) => (
-                  <Link key={r.id || i} to={`/anime/${r.id}/info`} className="ai-mlt-card">
-                    <div className="ai-mlt-card-img">
-                      <img src={r.img || r.image || posterImg} alt={r.title} loading="lazy" />
-                      <div className="ai-mlt-card-overlay">
-                        <Play size={18} fill="#fff" />
+          {/* ─── RELATED ─── */}
+          {activeTab === "related" && (
+            <section>
+              {anime.related && anime.related.length > 0 ? (
+                <div className="ai-mlt-grid">
+                  {anime.related.map((r, i) => (
+                    <Link key={r.id || i} to={`/anime/${r.id}/info`} className="ai-mlt-card">
+                      <div className="ai-mlt-card-img">
+                        <img src={r.img || r.image || posterImg} alt={r.title} loading="lazy" />
+                        <div className="ai-mlt-card-overlay">
+                          <Play size={18} fill="#fff" />
+                        </div>
                       </div>
-                    </div>
-                    <div className="ai-mlt-card-body">
-                      <h3 className="ai-mlt-card-title">{r.title}</h3>
-                      <div className="ai-mlt-card-tags">
-                        {(r.genres || []).slice(0, 2).map(g => (
-                          <span key={g} className="ai-mlt-tag">{g}</span>
-                        ))}
+                      <div className="ai-mlt-card-body">
+                        <h3 className="ai-mlt-card-title">{r.title}</h3>
+                        <div className="ai-mlt-card-tags">
+                          {(r.genres || []).slice(0, 2).map(g => (
+                            <span key={g} className="ai-mlt-tag">{g}</span>
+                          ))}
+                        </div>
+                        <p className="ai-mlt-card-reason">{r.reason || r.relationType || "Related"}</p>
                       </div>
-                      <p className="ai-mlt-card-reason">{r.reason || r.relationType || "Related"}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="ai-tab-empty">
-                <span>No related anime.</span>
-              </div>
-            )}
-          </section>
-        )}
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="ai-tab-empty">
+                  <span>No related anime.</span>
+                </div>
+              )}
+            </section>
+          )}
 
-        {/* ─── MORE LIKE THIS ─── */}
-        {activeTab === "more-like-this" && (
-          <section className="ai-mlt-section">
-            {related.length > 0 ? (
-              <div className="ai-mlt-grid">
-                {related.map((r) => (
-                  <Link key={r.id} to={`/anime/${r.id}/info`} className="ai-mlt-card"
-                    onMouseEnter={() => prefetch.onMouseEnter(r.id)}
-                    onMouseLeave={prefetch.onMouseLeave}
-                  >
-                    <div className="ai-mlt-card-img">
-                      <img src={r.image} alt={r.name} loading="lazy" />
-                      <div className="ai-mlt-card-overlay">
-                        <Play size={18} fill="#fff" />
+          {/* ─── MORE LIKE THIS ─── */}
+          {activeTab === "more-like-this" && (
+            <section>
+              {related.length > 0 ? (
+                <div className="ai-mlt-grid">
+                  {related.map((r) => (
+                    <Link key={r.id} to={`/anime/${r.id}/info`} className="ai-mlt-card"
+                      onMouseEnter={() => prefetch.onMouseEnter(r.id)}
+                      onMouseLeave={prefetch.onMouseLeave}
+                    >
+                      <div className="ai-mlt-card-img">
+                        <img src={r.image} alt={r.name} loading="lazy" />
+                        <div className="ai-mlt-card-overlay">
+                          <Play size={18} fill="#fff" />
+                        </div>
                       </div>
-                    </div>
-                    <div className="ai-mlt-card-body">
-                      <h3 className="ai-mlt-card-title">{r.name}</h3>
-                      <div className="ai-mlt-card-tags">
-                        {(r.genres || []).slice(0, 2).map(g => (
-                          <span key={g} className="ai-mlt-tag">{g}</span>
-                        ))}
+                      <div className="ai-mlt-card-body">
+                        <h3 className="ai-mlt-card-title">{r.name}</h3>
+                        <div className="ai-mlt-card-tags">
+                          {(r.genres || []).slice(0, 2).map(g => (
+                            <span key={g} className="ai-mlt-tag">{g}</span>
+                          ))}
+                        </div>
+                        <p className="ai-mlt-card-reason">Recommended based on genre and rating</p>
                       </div>
-                      <p className="ai-mlt-card-reason">Recommended based on genre and rating</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="ai-tab-empty">
-                <span>{anime.name ? "No recommendations available." : "Loading..."}</span>
-              </div>
-            )}
-          </section>
-        )}
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="ai-tab-empty">
+                  <span>{anime.name ? "No recommendations available." : "Loading..."}</span>
+                </div>
+              )}
+            </section>
+          )}
+        </main>
       </div>
 
       {/* ─── TRAILER MODAL ─── */}

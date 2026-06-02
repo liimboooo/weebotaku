@@ -5,7 +5,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, useNavig
 import { syncFromBackend } from "./services/storage";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
-import ToastContainer from "./components/Toast";
+
 import { LoadingProvider } from "./components/LoadingProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AnimatedPage from "./components/AnimatedPage";
@@ -14,10 +14,13 @@ import Loader from "./components/Loader";
 
 import { AnimatePresence } from "framer-motion";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { AuthModalProvider } from "./contexts/AuthModalContext";
+import AuthModal from "./components/AuthModal";
 
 const Home = lazy(() => import("./pages/Home"));
 const AnimeDetail = lazy(() => import("./pages/AnimeDetail"));
 const AnimeInfo = lazy(() => import("./pages/AnimeInfo"));
+
 
 const WatchlistPage = lazy(() => import("./pages/WatchlistPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
@@ -77,8 +80,8 @@ function AppLayout() {
     <>
       {!isAuthPage && <Header isHome={isHome} />}
       {!isAuthPage && <Sidebar />}
+      <AuthModal />
       <div className={`app-main${needsHeaderOffset ? ' app-main--padded' : ''}`}>
-      <ToastContainer />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Navigate to="/home" replace />} />
@@ -110,9 +113,11 @@ function App() {
   return (
     <LanguageProvider>
       <LoadingProvider>
-        <Router>
-          <AppLayout />
-        </Router>
+        <AuthModalProvider>
+          <Router>
+            <AppLayout />
+          </Router>
+        </AuthModalProvider>
       </LoadingProvider>
     </LanguageProvider>
   );
