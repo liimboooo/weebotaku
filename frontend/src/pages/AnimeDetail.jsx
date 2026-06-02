@@ -953,17 +953,17 @@ export default function AnimeDetail() {
             {servers.length > 0 && (
               <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
                 <span className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Source</span>
-                <button className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${language === 'sub' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('sub'); try { localStorage.setItem('animewch_last_language', 'sub'); } catch {} }} disabled={!servers.some(s => s.type === 'sub')}>SUB</button>
-                <button className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${language === 'dub' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('dub'); try { localStorage.setItem('animewch_last_language', 'dub'); } catch {} }} disabled={!servers.some(s => s.type === 'dub')}>DUB</button>
+                <button className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${language === 'sub' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('sub'); try { localStorage.setItem('animewch_last_language', 'sub'); } catch {} }} disabled={!servers.some(s => s.type === 'sub')}>SUB</button>
+                <button className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${language === 'dub' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-white/5 text-zinc-400 border border-transparent hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('dub'); try { localStorage.setItem('animewch_last_language', 'dub'); } catch {} }} disabled={!servers.some(s => s.type === 'dub')}>DUB</button>
               </div>
             )}
 
             {/* ─── BANNER ─── */}
             {alertBannerVisible && (
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/5 border-b border-amber-500/10">
-                <AlertTriangle size={13} className="text-amber-400/70 flex-none" />
-                <p className="text-xs text-amber-300/80 flex-1">If the current server doesn't work, try switching servers or changing language.</p>
-                <button className="text-amber-400/50 hover:text-amber-300 cursor-pointer bg-transparent border-none p-1 flex-none" onClick={() => setAlertBannerVisible(false)}><X size={12} /></button>
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-[#3d1a04] border-b border-orange-500/20">
+                <AlertTriangle size={13} className="text-orange-400 flex-none" />
+                <p className="text-xs text-orange-400 flex-1">If the current server doesn't work, feel free to try the other available servers.</p>
+                <button className="text-orange-400/70 hover:text-orange-300 cursor-pointer bg-transparent border-none p-1 flex-none" onClick={() => setAlertBannerVisible(false)}><X size={12} /></button>
               </div>
             )}
 
@@ -1008,7 +1008,7 @@ export default function AnimeDetail() {
               <div className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${isEpisodesExpanded ? 'max-h-[70vh]' : 'max-h-0'}`}>
                 {/* search */}
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center gap-1.5 flex-1 bg-white/5 rounded-xl px-3 py-1.5 border border-white/5 focus-within:border-indigo-500/30 transition-colors">
+                  <div className="flex items-center gap-1.5 flex-1 bg-white/5 rounded-xl px-3 py-1.5 border border-white/5 focus-within:border-orange-500/30 transition-colors">
                     <Search size={12} className="text-zinc-500 flex-none" />
                     <input className="flex-1 bg-transparent text-xs text-white outline-none placeholder-zinc-600 border-none" type="text" placeholder="Search episodes..." value={epSearch} onChange={e => { setEpSearch(e.target.value); if (!e.target.value) setVisibleCount(50); }} />
                     {epSearch && <button className="text-zinc-500 hover:text-white cursor-pointer bg-transparent border-none p-0.5 flex-none" onClick={() => { setEpSearch(""); setVisibleCount(50); }}><X size={11} /></button>}
@@ -1034,7 +1034,7 @@ export default function AnimeDetail() {
                         const isWatched = watchedEpisodes.has(ep.episode) && !isActive;
                         return (
                           <button key={ep.id || realIdx} data-ep={realIdx}
-                            className={`group flex items-start gap-2.5 w-full p-2 rounded-2xl text-left transition-all cursor-pointer border-none ${isActive ? 'bg-gradient-to-r from-indigo-500/15 to-purple-500/5 border border-indigo-500/20' : 'hover:bg-white/[0.03] border border-transparent'}`}
+                            className={`group flex items-start gap-2.5 w-full p-2 rounded-2xl text-left transition-all cursor-pointer border-none ${isActive ? 'bg-amber-900/20 border border-orange-500/30' : 'hover:bg-white/[0.03] border border-transparent'}`}
                             onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
                           >
                             {/* thumbnail */}
@@ -1050,10 +1050,10 @@ export default function AnimeDetail() {
                                 </div>
                               </div>
                               {isActive && (
-                                <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full bg-gradient-to-b from-indigo-400 to-purple-500" />
+                                <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-8 rounded-full bg-orange-500" />
                               )}
                               {isWatched && (
-                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500/50 to-transparent rounded-b-xl" />
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500/50 to-transparent rounded-b-xl" />
                               )}
                             </div>
                             {/* info */}
@@ -1066,7 +1066,7 @@ export default function AnimeDetail() {
                                 <span className="text-[11px] text-zinc-600">
                                   {ep.airDate ? new Date(ep.airDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : `Ep ${ep.episode}`}
                                 </span>
-                                {isWatched && <span className="text-[10px] text-indigo-400/60 font-medium">✓ Watched</span>}
+                                {isWatched && <span className="text-[10px] text-amber-400/60 font-medium">✓ Watched</span>}
                               </div>
                             </div>
                           </button>
@@ -1083,9 +1083,9 @@ export default function AnimeDetail() {
 
                 {/* next airing */}
                 {nextAiring && (
-                  <div className="flex items-center gap-2 mt-3 px-2 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500/5 to-transparent border border-indigo-500/10">
-                    <Bell size={12} className="text-indigo-400/60 flex-none" />
-                    <span className="text-xs text-zinc-500">Next ep airing in <strong className="text-indigo-300 font-semibold">{nextAiring.text}</strong></span>
+                  <div className="flex items-center gap-2 mt-3 px-2 py-2.5 rounded-xl bg-[#0c2d1c] ring-1 ring-emerald-500/20">
+                    <Bell size={12} className="text-emerald-400 flex-none" />
+                    <span className="text-xs text-emerald-400">Next ep airing in <strong className="text-emerald-300 font-semibold">{nextAiring.text}</strong></span>
                   </div>
                 )}
               </div>
