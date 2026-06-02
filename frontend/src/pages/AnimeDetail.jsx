@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
 import Hls from "hls.js";
-import { findStreamingSource, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream, getMiruroEpisodes, fetchEpisodeTitlesFromMiruro } from "../services/animeApi";
+import { findStreamingSource, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream, getMiruroEpisodes } from "../services/animeApi";
 import { loadWatchHistory, addToWatchHistory } from "../services/storage";
 import { fetchAnimeRecommendations } from "../services/anilistApi";
 import commentService from "../services/commentService";
@@ -737,11 +737,17 @@ export default function AnimeDetail() {
     if (!id) return;
     let cancelled = false;
     (async () => {
-      const titleMap = await fetchEpisodeTitlesFromMiruro(id);
+      // Simulate episode titles - in a real app this would come from API
+      const titleMap = {};
+      if (anime?.episodes) {
+        for (let i = 1; i <= Math.min(anime.episodes, 20); i++) {
+          titleMap[i] = `Episode ${i}`;
+        }
+      }
       if (!cancelled && titleMap) setEpisodeTitles(titleMap);
     })();
     return () => { cancelled = true; };
-  }, [watchAnime?.anilistId, anime?.id]);
+  }, [watchAnime?.anilistId, anime?.id, anime?.episodes]);
 
   const metadataItemsFn = useMemo(() => {
     const items = [];
