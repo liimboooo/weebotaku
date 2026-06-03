@@ -1135,16 +1135,20 @@ export default function AnimeDetail() {
                             className={`flex items-center gap-3 -mx-4 px-4 py-2 cursor-pointer transition-colors duration-200 group ${isActive ? 'bg-neutral-800' : 'hover:bg-white/5'}`}
                             onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
                           >
-                            <div className="relative w-20 aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-neutral-900">
+                            <div className="relative w-36 aspect-video flex-shrink-0 rounded-xl overflow-hidden bg-neutral-900 shadow-lg transition-shadow duration-300 group-hover:shadow-white/10 group-hover:shadow-lg">
                               {ep?.thumbnail ? (
-                                <img className="w-full h-full object-cover" src={ep.thumbnail} alt="" loading="lazy" />
+                                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" src={ep.thumbnail} alt="" loading="lazy" />
                               ) : (
                                 <div className="w-full h-full bg-gradient-to-br from-neutral-800 to-neutral-950 flex items-center justify-center">
-                                  <Film size={14} className="text-neutral-600" />
+                                  <Film size={18} className="text-neutral-600" />
                                 </div>
                               )}
-                              <div className="absolute bottom-0 left-0 px-1 py-0.5 bg-black/80 rounded-tr-md rounded-bl-md">
-                                <span className="text-[10px] font-bold text-white/90 leading-none">Ep {epNum}</span>
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                              <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 bg-gradient-to-t from-black/90 via-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <span className="text-[11px] font-bold text-white drop-shadow-sm">Ep {epNum}</span>
+                              </div>
+                              <div className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
@@ -1199,15 +1203,19 @@ export default function AnimeDetail() {
                   <div className="flex flex-col gap-2">
                     {recommendations.slice(0, 4).map((rec, i) => (
                       <button key={rec?.id || i}
-                        className="group flex items-center gap-3 w-full p-2.5 text-left transition-all hover:bg-white/[0.03] cursor-pointer border-none bg-transparent rounded-2xl"
+                        className="group flex items-center gap-3 w-full p-3 text-left transition-all hover:bg-white/[0.03] cursor-pointer border-none bg-transparent rounded-2xl"
                         onClick={() => navigate(`/anime/${rec?.id || ''}/info`)}
                       >
-                        <div className="relative shrink-0 overflow-hidden rounded-xl bg-[#1a1a1a] transition-transform duration-200 group-hover:scale-[1.03] group-active:scale-[0.98]" style={{ width: '72px', height: '54px' }}>
+                        <div className="relative shrink-0 overflow-hidden rounded-xl bg-[#1a1a1a] shadow-md transition-all duration-200 group-hover:shadow-white/10 group-hover:shadow-lg" style={{ width: '80px', height: '60px' }}>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10" />
                           {rec?.image ? (
                             <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" src={rec.image} alt="" loading="lazy" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[#555] text-xs font-bold">?</div>
+                            <div className="w-full h-full flex items-center justify-center text-[#555] text-xs font-bold bg-gradient-to-br from-neutral-800 to-neutral-950">?</div>
                           )}
+                          <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 z-20">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
+                          </div>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-white/80 leading-snug line-clamp-2 group-hover:text-white transition-colors">{rec?.name || 'Unknown'}</div>
