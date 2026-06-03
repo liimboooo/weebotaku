@@ -1068,7 +1068,7 @@ export default function AnimeDetail() {
           </div>
 
           {/* ─── RIGHT SIDEBAR ─── */}
-          <aside className="w-[400px] shrink-0 overflow-y-auto rounded-3xl mr-4 my-4 bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/[0.06] shadow-2xl shadow-black/50">
+          <aside className="w-[400px] shrink-0 overflow-y-auto overflow-x-hidden rounded-3xl mr-4 my-4 bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/[0.06] shadow-2xl shadow-black/50">
             <div className="p-4">
               {/* ─── HEADER ─── */}
               <div className="flex items-center justify-between mb-4 px-1">
@@ -1132,10 +1132,11 @@ export default function AnimeDetail() {
                         const epNum = ep?.episode || realIdx + 1;
                         return sidebarView === 'thumbnail' ? (
                           <div key={ep?.id || realIdx}
-                            className={`flex items-center gap-3 -mx-4 px-4 py-2 cursor-pointer transition-colors duration-200 group ${isActive ? 'bg-neutral-800' : 'hover:bg-white/5'}`}
+                            className={`relative flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-all duration-200 group rounded-xl mx-1 ${isActive ? 'bg-white/[0.07] border border-white/[0.12] shadow-lg shadow-black/30' : 'hover:bg-white/[0.03] border border-transparent'}`}
                             onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
                           >
-                            <div className="relative w-36 aspect-video flex-shrink-0 rounded-xl overflow-hidden bg-neutral-900 shadow-lg transition-shadow duration-300 group-hover:shadow-white/10 group-hover:shadow-lg">
+                            {isActive && <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.3)]" />}
+                            <div className={`relative w-36 aspect-video flex-shrink-0 rounded-xl overflow-hidden bg-neutral-900 transition-all duration-300 ${isActive ? 'ring-1 ring-white/20 shadow-lg shadow-white/5' : 'shadow-lg'} group-hover:shadow-white/10 group-hover:shadow-lg`}>
                               {ep?.thumbnail ? (
                                 <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" src={ep.thumbnail} alt="" loading="lazy" />
                               ) : (
@@ -1150,30 +1151,42 @@ export default function AnimeDetail() {
                               <div className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
                               </div>
+                              {isActive && (
+                                <div className="absolute inset-0 ring-1 ring-inset ring-white/20 rounded-xl pointer-events-none" />
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="text-sm font-bold text-white/90 truncate group-hover:text-white transition-colors">
+                              <div className={`text-sm font-bold truncate transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
                                 {epTitle}
                               </div>
                               <div className="text-[11px] text-[#555] mt-0.5 truncate">
                                 {views || '88K'} views • {timeAgo || '1 month ago'}
                               </div>
                             </div>
+                            {isActive && (
+                              <div className="shrink-0 w-[18px] h-[18px] rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div key={ep?.id || realIdx}
-                            className={`-mx-4 px-4 py-2 cursor-pointer transition-colors duration-200 group ${isActive ? 'bg-neutral-800' : 'hover:bg-white/5'}`}
+                            className={`relative flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-all duration-200 rounded-xl mx-1 ${isActive ? 'bg-white/[0.07] border border-white/[0.12] shadow-lg shadow-black/30' : 'hover:bg-white/[0.03] border border-transparent'}`}
                             onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
                           >
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-sm font-bold text-[#555] shrink-0">{epNum}.</span>
-                              <div className="min-w-0 flex-1">
-                                <span className="text-sm font-bold text-white/90 truncate group-hover:text-white transition-colors">{epTitle}</span>
+                            {isActive && <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.3)]" />}
+                            <span className={`text-sm font-bold shrink-0 w-6 text-right ${isActive ? 'text-white' : 'text-[#555]'}`}>{epNum}.</span>
+                            <div className="min-w-0 flex-1">
+                              <span className={`text-sm font-bold truncate block transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>{epTitle}</span>
+                              <div className="text-[11px] text-[#555] mt-0.5">
+                                {views || '88K'} views • {timeAgo || '1 month ago'}
                               </div>
                             </div>
-                            <div className="text-[11px] text-[#555] mt-0.5 pl-5">
-                              {views || '88K'} views • {timeAgo || '1 month ago'}
-                            </div>
+                            {isActive && (
+                              <div className="shrink-0 w-[18px] h-[18px] rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
