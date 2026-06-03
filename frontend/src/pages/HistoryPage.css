@@ -336,8 +336,8 @@
 
 .hp-card-thumb {
   position: relative;
-  width: 125px;
-  height: 190px;
+  width: 120px;
+  height: 175px;
   border-radius: 12px;
   overflow: hidden;
   flex-shrink: 0;
@@ -607,7 +607,7 @@
   .hp-hero-hud { display: none; }
   .hp-hero-actions { bottom: 16px; right: 16px; }
   .hp-grid { grid-template-columns: 1fr; }
-  .hp-card-thumb { width: 100px; height: 150px; }
+  .hp-card-thumb { width: 95px; height: 140px; }
   .hp-card-title { font-size: 0.88rem; }
 }
 
@@ -619,5 +619,5 @@
   .hp-hero-metrics { gap: 16px; }
   .hp-metric strong { font-size: 1rem; }
   .hp-card { padding: 10px; gap: 12px; }
-  .hp-card-thumb { width: 85px; height: 125px; }
+  .hp-card-thumb { width: 80px; height: 115px; }
 }
