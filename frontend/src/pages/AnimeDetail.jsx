@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Loader, Play, Star, Tv, Calendar, Clock, Monitor, Search, Film,
   X, SkipForward, RefreshCw, List, AlertTriangle, Bell, ChevronDown, ChevronUp,
-  Share2, Bookmark, Flag
+  Share2, Bookmark, Flag, LayoutGrid, Send, Image
 } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
 import Hls from "hls.js";
@@ -47,8 +47,11 @@ export default function AnimeDetail() {
   const [streamRetryCount, setStreamRetryCount] = useState(0);
   const [isEpisodesExpanded, setIsEpisodesExpanded] = useState(true);
   const [episodeLayout, setEpisodeLayout] = useState('detailed');
+  const [sidebarView, setSidebarView] = useState('list');
   const [recommendations, setRecommendations] = useState([]);
   const [alertBannerVisible, setAlertBannerVisible] = useState(true);
+  const [commentText, setCommentText] = useState('');
+  const [commentSpoiler, setCommentSpoiler] = useState(false);
   const [epSearch, setEpSearch] = useState("");
   const [language, setLanguage] = useState(() => {
     const s = loadSettings();
@@ -173,8 +176,8 @@ export default function AnimeDetail() {
     };
   }, [id, mapComment]);
 
-  const handleAddComment = useCallback(async (text) => {
-    const res = await commentService.createComment(parseInt(id), text, { episode: selectedEp });
+  const handleAddComment = useCallback(async (text, spoiler = false) => {
+    const res = await commentService.createComment(parseInt(id), text, { episode: selectedEp, isSpoiler: spoiler });
     if (res.success) setComments(prev => [mapComment(res.data), ...prev]);
   }, [id, selectedEp, mapComment]);
 
@@ -1023,6 +1026,42 @@ export default function AnimeDetail() {
                 </div>
               </div>
 
+              {/* ─── COMMENT INPUT ─── */}
+              <div className="px-4 pt-4">
+                <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden transition-all focus-within:border-[#6c63ff]/50">
+                  <textarea
+                    className="w-full bg-transparent text-sm text-white/90 placeholder-[#555] border-none outline-none resize-none px-4 pt-3 pb-2"
+                    placeholder="What scene hit the hardest?"
+                    rows={2}
+                    value={commentText}
+                    onChange={e => setCommentText(e.target.value)}
+                  />
+                  <div className="flex items-center justify-between px-4 pb-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <button
+                        className={`relative w-9 h-5 rounded-full transition-colors ${commentSpoiler ? 'bg-orange-500' : 'bg-white/10'}`}
+                        onClick={() => setCommentSpoiler(p => !p)}
+                      >
+                        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${commentSpoiler ? 'translate-x-4' : 'translate-x-0'}`} />
+                      </button>
+                      <span className="text-[11px] text-[#666] font-medium">Spoiler</span>
+                    </label>
+                    <button
+                      className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center hover:bg-orange-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer border-none"
+                      disabled={!commentText.trim()}
+                      onClick={() => {
+                        if (commentText.trim()) {
+                          handleAddComment(commentText.trim(), commentSpoiler);
+                          setCommentText('');
+                          setCommentSpoiler(false);
+                        }
+                      }}
+                    >
+                      <Send size={14} className="text-white" />
+                    </button>
+                  </div>
+                </div>
+              </div>
               {/* ─── COMMENTS ─── */}
               <div className="px-4">
                 <Comments
@@ -1040,6 +1079,31 @@ export default function AnimeDetail() {
                   loading={commentsLoading}
                 />
               </div>
+              {/* ─── RELATED ANIME ─── */}
+              {recommendations.length > 0 && (
+                <div className="px-4 pt-8 pb-6">
+                  <div className="text-[11px] font-semibold text-[#555] uppercase tracking-[2px] mb-4">Related Anime</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                    {recommendations.map((rec, i) => (
+                      <button key={rec.id || i}
+                        className="group text-left cursor-pointer border-none bg-transparent p-0"
+                        onClick={() => navigate(`/anime/${rec.id}/info`)}
+                      >
+                        <div className="aspect-[3/4] rounded-2xl overflow-hidden bg-zinc-900 mb-2 transition-transform duration-200 group-hover:scale-[1.03] group-active:scale-[0.98]">
+                          {rec.image ? (
+                            <img className="w-full h-full object-cover" src={rec.image} alt="" loading="lazy" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Image size={24} className="text-zinc-700" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-xs font-medium text-zinc-400 leading-snug line-clamp-2 group-hover:text-white transition-colors">{rec.name || 'Unknown'}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1056,7 +1120,10 @@ export default function AnimeDetail() {
                     Playing — Episode {selectedEp}{anime?.name ? ` — ${anime.name}` : ""}
                   </div>
                 </div>
-                <button className="flex items-center justify-center w-8 h-8 rounded-2xl hover:bg-white/[0.06] transition-all text-[#777] hover:text-white cursor-pointer border-none bg-transparent shrink-0 ml-2" onClick={() => setIsEpisodesExpanded(p => !p)} title={isEpisodesExpanded ? 'Collapse' : 'Expand'}>
+                <button className="flex items-center justify-center w-8 h-8 rounded-2xl hover:bg-white/[0.06] transition-all text-[#777] hover:text-white cursor-pointer border-none bg-transparent shrink-0 ml-1" onClick={() => setSidebarView(p => p === 'list' ? 'thumbnails' : 'list')} title={sidebarView === 'list' ? 'Thumbnail view' : 'List view'}>
+                  {sidebarView === 'list' ? <LayoutGrid size={15} /> : <List size={15} />}
+                </button>
+                <button className="flex items-center justify-center w-8 h-8 rounded-2xl hover:bg-white/[0.06] transition-all text-[#777] hover:text-white cursor-pointer border-none bg-transparent shrink-0 ml-1" onClick={() => setIsEpisodesExpanded(p => !p)} title={isEpisodesExpanded ? 'Collapse' : 'Expand'}>
                   <ChevronUp size={15} className="transition-transform duration-200" style={{ transform: isEpisodesExpanded ? 'rotate(0deg)' : 'rotate(180deg)' }} />
                 </button>
               </div>
@@ -1076,44 +1143,90 @@ export default function AnimeDetail() {
                 </div>
 
                 {/* list */}
-                <div className="flex flex-col gap-1 overflow-y-auto max-h-[400px] pr-1">
-                  {loading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <Loader size={16} className="text-zinc-500 animate-spin" />
-                    </div>
-                  ) : filteredEpisodes.length === 0 ? (
-                    <p className="text-xs text-[#555] text-center py-12">{epSearch ? "No matching episodes" : "No episodes"}</p>
-                  ) : (
-                    <>
-                      {filteredEpisodes.slice(0, visibleCount).map((ep, i) => {
-                        const realIdx = episodes.indexOf(ep);
-                        const isActive = realIdx === epIndex;
-                        const isWatched = watchedEpisodes.has(ep.episode) && !isActive;
-                        return (
-                          <div key={ep.id || realIdx}
-                            className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-white/5 transition-all group ${isActive ? 'bg-[#161622] ring-1 ring-[#6c63ff]/25' : ''}`}
-                            onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
-                          >
-                            <div className="w-10 h-10 flex-shrink-0 rounded-lg bg-neutral-900 border border-white/5 flex items-center justify-center text-xs font-bold text-neutral-500 group-hover:text-white group-hover:bg-neutral-800 transition-colors">
-                              {ep.episode}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium text-neutral-400 group-hover:text-neutral-200 truncate">
-                                {episodeTitles?.[ep.episode] || ep.title || `Episode ${ep.episode}`}
+                {sidebarView === 'list' ? (
+                  <div className="flex flex-col gap-1 overflow-y-auto max-h-[400px] pr-1">
+                    {loading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <Loader size={16} className="text-zinc-500 animate-spin" />
+                      </div>
+                    ) : filteredEpisodes.length === 0 ? (
+                      <p className="text-xs text-[#555] text-center py-12">{epSearch ? "No matching episodes" : "No episodes"}</p>
+                    ) : (
+                      <>
+                        {filteredEpisodes.slice(0, visibleCount).map((ep, i) => {
+                          const realIdx = episodes.indexOf(ep);
+                          const isActive = realIdx === epIndex;
+                          const isWatched = watchedEpisodes.has(ep.episode) && !isActive;
+                          return (
+                            <div key={ep.id || realIdx}
+                              className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-white/5 transition-all group ${isActive ? 'bg-[#161622] ring-1 ring-[#6c63ff]/25' : ''}`}
+                              onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
+                            >
+                              <div className="w-10 h-10 flex-shrink-0 rounded-lg bg-neutral-900 border border-white/5 flex items-center justify-center text-xs font-bold text-neutral-500 group-hover:text-white group-hover:bg-neutral-800 transition-colors">
+                                {ep.episode}
                               </div>
-                              <div className="text-[11px] text-[#555] mt-0.5 truncate">{anime?.name || "Anime"}</div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-neutral-400 group-hover:text-neutral-200 truncate">
+                                  {episodeTitles?.[ep.episode] || ep.title || `Episode ${ep.episode}`}
+                                </div>
+                                <div className="text-[11px] text-[#555] mt-0.5 truncate">{anime?.name || "Anime"}</div>
+                              </div>
                             </div>
+                          );
+                        })}
+                        {(hasMoreEps || filteredEpisodes.length > visibleCount) && (
+                          <div className="w-full mt-2 py-3 text-center text-xs font-bold text-neutral-500 hover:text-white hover:bg-white/5 rounded-xl transition-colors cursor-pointer" onClick={handleLoadMore}>
+                            Load More ({filteredEpisodes.length - visibleCount} remaining)
                           </div>
-                        );
-                      })}
-                      {(hasMoreEps || filteredEpisodes.length > visibleCount) && (
-                        <div className="w-full mt-2 py-3 text-center text-xs font-bold text-neutral-500 hover:text-white hover:bg-white/5 rounded-xl transition-colors cursor-pointer" onClick={handleLoadMore}>
-                          Load More ({filteredEpisodes.length - visibleCount} remaining)
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 overflow-y-auto max-h-[400px] pr-1">
+                    {loading ? (
+                      <div className="col-span-2 flex items-center justify-center py-12">
+                        <Loader size={16} className="text-zinc-500 animate-spin" />
+                      </div>
+                    ) : filteredEpisodes.length === 0 ? (
+                      <p className="col-span-2 text-xs text-[#555] text-center py-12">{epSearch ? "No matching episodes" : "No episodes"}</p>
+                    ) : (
+                      <>
+                        {filteredEpisodes.slice(0, visibleCount).map((ep, i) => {
+                          const realIdx = episodes.indexOf(ep);
+                          const isActive = realIdx === epIndex;
+                          const isWatched = watchedEpisodes.has(ep.episode) && !isActive;
+                          return (
+                            <div key={ep.id || realIdx}
+                              className={`relative aspect-video rounded-xl overflow-hidden cursor-pointer group ${isActive ? 'ring-2 ring-[#6c63ff]/70' : 'ring-1 ring-white/[0.06] hover:ring-white/20'} transition-all`}
+                              onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
+                            >
+                              {ep.thumbnail ? (
+                                <img className="w-full h-full object-cover" src={ep.thumbnail} alt="" loading="lazy" />
+                              ) : (
+                                <div className="w-full h-full bg-neutral-900 flex items-center justify-center">
+                                  <Film size={18} className="text-neutral-600" />
+                                </div>
+                              )}
+                              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] font-bold text-white/80 bg-black/40 px-1.5 py-0.5 rounded">{ep.episode}</span>
+                                  <span className="text-[11px] font-medium text-white/90 truncate">{episodeTitles?.[ep.episode] || ep.title || `Episode ${ep.episode}`}</span>
+                                </div>
+                              </div>
+                              {isWatched && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.6)]" />}
+                            </div>
+                          );
+                        })}
+                        {(hasMoreEps || filteredEpisodes.length > visibleCount) && (
+                          <div className="col-span-2 mt-1 py-3 text-center text-xs font-bold text-neutral-500 hover:text-white hover:bg-white/5 rounded-xl transition-colors cursor-pointer" onClick={handleLoadMore}>
+                            Load More ({filteredEpisodes.length - visibleCount} remaining)
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
 
                 {/* next airing */}
                 {nextAiring && (
