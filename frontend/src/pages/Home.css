@@ -703,9 +703,10 @@
 .cw-card-img {
   position: relative;
   width: 100%;
-  height: 130px;
+  height: 158px;
   overflow: hidden;
   background: #000000;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
 }
 
 .cw-card-img img {
@@ -1135,9 +1136,10 @@
 }
 .upcoming-card-img {
   position: relative;
-  aspect-ratio: 3/4;
+  aspect-ratio: 2/3;
   overflow: hidden;
   background: var(--card-surface);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
 }
 .upcoming-card-img img {
   width: 100%;

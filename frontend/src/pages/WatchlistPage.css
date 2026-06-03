@@ -249,9 +249,18 @@
 
 .wl-card-thumb {
   position: relative;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 2 / 3;
   overflow: hidden;
   background: var(--card-surface);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+.wl-card-thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255,255,255,0.06);
+  pointer-events: none;
 }
 
 .wl-card-thumb img {

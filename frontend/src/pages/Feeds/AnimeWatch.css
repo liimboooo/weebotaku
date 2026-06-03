@@ -85,11 +85,12 @@
 
 .watch-poster-wrap {
   position: relative;
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
-  aspect-ratio: 3/4;
-  max-height: 240px;
+  aspect-ratio: 2/3;
+  max-height: 280px;
   background: #000000;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 
 .watch-poster {
@@ -1071,11 +1072,12 @@ video.watch-frame:fullscreen {
 
 .yt-suggestion-thumb {
   position: relative;
-  width: 168px;
+  width: 180px;
   flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
   background: #18181b;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.4);
 }
 .yt-suggestion-thumb-img {
   width: 100%;

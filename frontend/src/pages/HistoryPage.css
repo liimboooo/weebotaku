@@ -335,22 +335,37 @@
 
 .hp-card-thumb {
   position: relative;
-  width: 100px;
-  height: 140px;
-  border-radius: 10px;
+  width: 120px;
+  height: 175px;
+  border-radius: 12px;
   overflow: hidden;
   flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  transition: box-shadow 0.3s var(--ease-out);
+}
+
+.hp-card-thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  pointer-events: none;
 }
 
 .hp-card-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s var(--ease-out);
+  transition: transform 0.5s var(--ease-out);
 }
 
 .hp-card:hover .hp-card-thumb img {
-  transform: scale(1.08);
+  transform: scale(1.1);
+}
+
+.hp-card:hover .hp-card-thumb {
+  box-shadow: 0 8px 28px rgba(255,255,255,0.08);
 }
 
 .hp-card-play {
@@ -587,7 +602,7 @@
   .hp-hero-hud { display: none; }
   .hp-hero-actions { bottom: 16px; right: 16px; }
   .hp-grid { grid-template-columns: 1fr; }
-  .hp-card-thumb { width: 80px; height: 110px; }
+  .hp-card-thumb { width: 95px; height: 140px; }
   .hp-card-title { font-size: 0.88rem; }
 }
 
@@ -599,5 +614,5 @@
   .hp-hero-metrics { gap: 16px; }
   .hp-metric strong { font-size: 1rem; }
   .hp-card { padding: 10px; gap: 12px; }
-  .hp-card-thumb { width: 70px; height: 95px; }
+  .hp-card-thumb { width: 80px; height: 115px; }
 }
