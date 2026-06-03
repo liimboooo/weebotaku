@@ -63,6 +63,8 @@ function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchLoading }) {
           ? <div className="br-poster-fallback">{anime.name?.[0] || "?"}</div>
           : <img className="br-poster-img" src={anime.img} alt={anime.name} loading="lazy" decoding="async" onError={() => setImgErr(true)} />}
 
+        <div className="br-poster-shine" />
+
         <button
           className={`br-poster-wish ${inWishlist ? "active" : ""}`}
           onClick={(e) => { e.stopPropagation(); onWishlist(anime.id); }}

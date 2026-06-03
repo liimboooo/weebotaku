@@ -187,6 +187,7 @@ export default function WatchlistPage() {
                       >
                         <div className="wl-card-thumb">
                           <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
+                          <div className="wl-card-shine" />
                           <div className="wl-card-overlay">
                             <div className="wl-card-play"><Play size={20} fill="currentColor" /></div>
                             <div className="wl-card-tech">
