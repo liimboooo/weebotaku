@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Loader, Play, Star, Tv, Calendar, Clock, Monitor, Film,
   X, SkipForward, RefreshCw, AlertTriangle, Bell, ChevronDown, ChevronUp,
-  Share2, Bookmark, Flag, ArrowUpDown, LayoutGrid
+  Share2, Bookmark, Flag, ArrowUpDown, LayoutGrid, List, ArrowUp, ArrowDown
 } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
 import Hls from "hls.js";
@@ -46,7 +46,8 @@ export default function AnimeDetail() {
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
   const [isEpisodesExpanded, setIsEpisodesExpanded] = useState(true);
-  const [episodeLayout, setEpisodeLayout] = useState('detailed');
+  const [sidebarView, setSidebarView] = useState('thumbnail');
+  const [sortOrder, setSortOrder] = useState('asc');
   const [recommendations, setRecommendations] = useState([]);
   const [alertBannerVisible, setAlertBannerVisible] = useState(true);
   const [epSearch, setEpSearch] = useState("");
@@ -725,6 +726,12 @@ export default function AnimeDetail() {
     );
   }, [episodes, epSearch]);
 
+  const sortedEpisodes = useMemo(() => {
+    const list = [...filteredEpisodes];
+    if (sortOrder === 'desc') list.reverse();
+    return list;
+  }, [filteredEpisodes, sortOrder]);
+
   const watchedEpisodes = useMemo(() => {
     if (!anime?.id) return new Set();
     const history = loadWatchHistory();
@@ -1090,11 +1097,19 @@ export default function AnimeDetail() {
                   <button className="flex items-center justify-center w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] transition-all text-[#666] hover:text-white cursor-pointer bg-transparent shrink-0" title="Refresh" onClick={() => setRetryCount(c => c + 1)}>
                     <RefreshCw size={13} />
                   </button>
-                  <button className="flex items-center justify-center w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] transition-all text-[#666] hover:text-white cursor-pointer bg-transparent shrink-0" title="Sort">
-                    <ArrowUpDown size={13} />
+                  <button
+                    className={`flex items-center justify-center w-10 h-10 rounded-2xl border transition-all cursor-pointer bg-transparent shrink-0 ${sortOrder === 'desc' ? 'bg-white/[0.08] border-white/[0.12] text-white' : 'bg-white/[0.04] border-white/[0.06] text-[#666] hover:text-white hover:bg-white/[0.08]'}`}
+                    title={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`}
+                    onClick={() => setSortOrder(p => p === 'asc' ? 'desc' : 'asc')}
+                  >
+                    {sortOrder === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
                   </button>
-                  <button className="flex items-center justify-center w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] transition-all text-[#666] hover:text-white cursor-pointer bg-transparent shrink-0" title="View">
-                    <LayoutGrid size={13} />
+                  <button
+                    className={`flex items-center justify-center w-10 h-10 rounded-2xl border transition-all cursor-pointer bg-transparent shrink-0 ${sidebarView === 'list' ? 'bg-white/[0.08] border-white/[0.12] text-white' : 'bg-white/[0.04] border-white/[0.06] text-[#666] hover:text-white hover:bg-white/[0.08]'}`}
+                    title={sidebarView === 'thumbnail' ? 'List view' : 'Thumbnail view'}
+                    onClick={() => setSidebarView(p => p === 'thumbnail' ? 'list' : 'thumbnail')}
+                  >
+                    {sidebarView === 'thumbnail' ? <List size={13} /> : <LayoutGrid size={13} />}
                   </button>
                 </div>
 
@@ -1104,22 +1119,24 @@ export default function AnimeDetail() {
                     <div className="flex items-center justify-center py-12">
                       <Loader size={16} className="text-zinc-500 animate-spin" />
                     </div>
-                  ) : filteredEpisodes.length === 0 ? (
+                  ) : sortedEpisodes.length === 0 ? (
                     <p className="text-xs text-[#555] text-center py-12">{epSearch ? 'No matching episodes' : 'No episodes'}</p>
                   ) : (
                     <>
-                      {filteredEpisodes.slice(0, visibleCount).map((ep, i) => {
+                      {sortedEpisodes.slice(0, visibleCount).map((ep, i) => {
                         const realIdx = episodes.indexOf(ep);
                         const isActive = realIdx === epIndex;
-                        const views = ((ep.episode || 1) * 7 + 41) + 'K';
-                        const timeAgo = ['1 month ago', '2 weeks ago', '3 weeks ago', '1 month ago', '2 months ago', '3 months ago', '2 weeks ago', '4 weeks ago'][(ep.episode || 1) % 8];
-                        return (
-                          <div key={ep.id || realIdx}
-                            className={`flex items-center gap-3 -mx-4 px-4 py-2 cursor-pointer transition-all group ${isActive ? 'bg-white/[0.07]' : 'hover:bg-white/5'}`}
+                        const views = ((ep?.episode || 1) * 7 + 41) + 'K';
+                        const timeAgo = ['1 month ago', '2 weeks ago', '3 weeks ago', '1 month ago', '2 months ago', '3 months ago', '2 weeks ago', '4 weeks ago'][(ep?.episode || 1) % 8];
+                        const epTitle = episodeTitles?.[ep?.episode] || ep?.title || 'Untitled';
+                        const epNum = ep?.episode || realIdx + 1;
+                        return sidebarView === 'thumbnail' ? (
+                          <div key={ep?.id || realIdx}
+                            className={`flex items-center gap-3 -mx-4 px-4 py-2 cursor-pointer transition-colors duration-200 group ${isActive ? 'bg-neutral-800' : 'hover:bg-white/5'}`}
                             onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
                           >
                             <div className="relative w-20 aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-neutral-900">
-                              {ep.thumbnail ? (
+                              {ep?.thumbnail ? (
                                 <img className="w-full h-full object-cover" src={ep.thumbnail} alt="" loading="lazy" />
                               ) : (
                                 <div className="w-full h-full bg-gradient-to-br from-neutral-800 to-neutral-950 flex items-center justify-center">
@@ -1127,23 +1144,38 @@ export default function AnimeDetail() {
                                 </div>
                               )}
                               <div className="absolute bottom-0 left-0 px-1 py-0.5 bg-black/80 rounded-tr-md rounded-bl-md">
-                                <span className="text-[10px] font-bold text-white/90 leading-none">Ep {ep.episode || realIdx + 1}</span>
+                                <span className="text-[10px] font-bold text-white/90 leading-none">Ep {epNum}</span>
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-bold text-white/90 truncate group-hover:text-white transition-colors">
-                                {episodeTitles?.[ep.episode] || ep?.title || 'Untitled'}
+                                {epTitle}
                               </div>
                               <div className="text-[11px] text-[#555] mt-0.5 truncate">
                                 {views || '88K'} views • {timeAgo || '1 month ago'}
                               </div>
                             </div>
                           </div>
+                        ) : (
+                          <div key={ep?.id || realIdx}
+                            className={`-mx-4 px-4 py-2 cursor-pointer transition-colors duration-200 group ${isActive ? 'bg-neutral-800' : 'hover:bg-white/5'}`}
+                            onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
+                          >
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-sm font-bold text-[#555] shrink-0">{epNum}.</span>
+                              <div className="min-w-0 flex-1">
+                                <span className="text-sm font-bold text-white/90 truncate group-hover:text-white transition-colors">{epTitle}</span>
+                              </div>
+                            </div>
+                            <div className="text-[11px] text-[#555] mt-0.5 pl-5">
+                              {views || '88K'} views • {timeAgo || '1 month ago'}
+                            </div>
+                          </div>
                         );
                       })}
-                      {(hasMoreEps || filteredEpisodes.length > visibleCount) && (
+                      {(hasMoreEps || sortedEpisodes.length > visibleCount) && (
                         <div className="-mx-4 px-4 mt-1 py-3 text-center text-xs font-bold text-neutral-500 hover:text-white hover:bg-white/5 transition-colors cursor-pointer" onClick={handleLoadMore}>
-                          Load More ({filteredEpisodes.length - visibleCount} remaining)
+                          Load More ({sortedEpisodes.length - visibleCount} remaining)
                         </div>
                       )}
                     </>
