@@ -1231,11 +1231,11 @@ export default function AnimeDetail() {
                         <div className="card-bg-artwork" style={{ backgroundImage: `url(${rec?.image || ''})` }} />
                         <div className="card-gradient-mask" />
                         <div className="info-cluster" style={{ maxWidth: '100%', gap: '12px' }}>
-                          <div className="rank-wrapper" style={{ width: '64px', height: '64px' }}>
+                          <div className="rank-wrapper" style={{ width: '80px', height: '80px' }}>
                             {rec?.image ? (
                               <img className="w-full h-full object-cover rounded-xl ring-1 ring-white/[0.08] shadow-lg" src={rec.image} alt="" />
                             ) : (
-                              <div className="w-full h-full rounded-xl bg-neutral-800 flex items-center justify-center text-[#555] text-xs font-bold">?</div>
+                              <div className="w-full h-full rounded-xl bg-neutral-800 flex items-center justify-center text-[#555] text-sm font-bold">?</div>
                             )}
                           </div>
                           <div className="meta-text-block">
