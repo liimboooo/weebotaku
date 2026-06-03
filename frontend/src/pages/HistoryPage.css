@@ -283,6 +283,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
+  overflow: hidden;
 }
 
 .hp-card {
@@ -371,7 +372,8 @@
 .hp-card-play {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  border-radius: 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
   display: grid;
   place-items: center;
   opacity: 0;
@@ -383,19 +385,22 @@
 }
 
 .hp-card-play-icon {
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.8);
+  border: 2px solid rgba(255,255,255,0.85);
   display: grid;
   place-items: center;
   color: #fff;
   transition: all 0.25s;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(8px);
 }
 
 .hp-card:hover .hp-card-play-icon {
-  background: rgba(255, 255, 255,0.25);
-  border-color: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255,0.2);
+  border-color: #ffffff;
+  transform: scale(1.05);
 }
 
 .hp-card-progress-bar {

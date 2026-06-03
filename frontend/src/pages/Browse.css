@@ -705,6 +705,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: 24px 18px;
+  overflow: hidden;
 }
 .br-card {
   position: relative;
@@ -713,6 +714,7 @@
   gap: 10px;
   background: none;
   border: none;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: transform var(--duration-normal) var(--ease-out);
 }
@@ -795,22 +797,24 @@
   align-items: center;
   justify-content: center;
   opacity: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.2));
+  border-radius: inherit;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.15) 100%);
   transition: opacity var(--duration-normal) var(--ease-out);
 }
 .br-card:hover .br-poster-hover { opacity: 1; }
 .br-poster-rating {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 10px;
+  left: 10px;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 3px 8px;
+  gap: 4px;
+  padding: 4px 10px;
   border-radius: var(--radius-full);
-  background: rgba(0, 0, 0, 0.6);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.7);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #eab308;
   font-size: 11px;
   font-weight: 700;
@@ -819,20 +823,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   color: #fff;
   cursor: pointer;
-  transform: scale(0.85);
-  transition: transform var(--duration-normal) var(--ease-spring), background var(--duration-fast) var(--ease-out);
+  transform: scale(0.8);
+  transition: transform var(--duration-normal) var(--ease-spring), background var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
 }
 .br-card:hover .br-poster-play { transform: scale(1); }
-.br-poster-play:hover { background: #fff; color: #000; }
+.br-poster-play:hover { background: #fff; color: #000; border-color: #fff; }
 .br-poster-play:disabled { opacity: 0.5; cursor: wait; }
 
 .br-poster-progress {
