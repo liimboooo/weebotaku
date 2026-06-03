@@ -819,7 +819,7 @@ export default function AnimeDetail() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-[#0a0a0a] flex">
+    <div className="w-full min-h-screen bg-[#0a0a0a] flex overflow-x-hidden">
       {/* ambient bg */}
       <div className="fixed inset-0 pointer-events-none z-0"
         style={{
@@ -1068,7 +1068,7 @@ export default function AnimeDetail() {
           </div>
 
           {/* ─── RIGHT SIDEBAR ─── */}
-          <aside className="w-[400px] shrink-0 overflow-y-auto overflow-x-hidden rounded-3xl mr-4 my-4 bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/[0.06] shadow-2xl shadow-black/50">
+          <aside className="w-[380px] shrink-0 overflow-y-auto overflow-x-hidden rounded-3xl mr-4 my-4 bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/[0.06] shadow-2xl shadow-black/50">
             <div className="p-4">
               {/* ─── HEADER ─── */}
               <div className="flex items-center justify-between mb-4 px-1">
@@ -1114,7 +1114,7 @@ export default function AnimeDetail() {
                 </div>
 
                 {/* list */}
-                <div className="flex flex-col overflow-y-auto max-h-[400px]">
+                <div className="flex flex-col overflow-y-auto overflow-x-hidden max-h-[400px]">
                   {loading ? (
                     <div className="flex items-center justify-center py-12">
                       <Loader size={16} className="text-zinc-500 animate-spin" />
