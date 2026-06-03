@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Loader, Play, Star, Tv, Calendar, Clock, Monitor, Search, Film,
+  Loader, Play, Star, Tv, Calendar, Clock, Monitor, Film,
   X, SkipForward, RefreshCw, AlertTriangle, Bell, ChevronDown, ChevronUp,
   Share2, Bookmark, Flag, ArrowUpDown, LayoutGrid
 } from "lucide-react";
@@ -738,11 +738,28 @@ export default function AnimeDetail() {
     if (!id) return;
     let cancelled = false;
     (async () => {
-      // Simulate episode titles - in a real app this would come from API
+      const episodeNames = [
+        'Hare and Tortoise', 'Jin and Yuru', 'Dera and Hana', 'The Gate Opens',
+        'Whispers in the Dark', 'Shattered Peace', 'The Awakening', 'Crossroads',
+        'Hidden Truths', 'Bonds of Fate', 'The Edge of Dawn', 'Echoes of the Past',
+        'Into the Abyss', 'Reckoning', 'The Turning Point', 'Ashes and Dust',
+        'A New Horizon', 'Sands of Time', 'The Final Piece', 'Beyond the Veil',
+        'The Lost Chapter', 'Crimson Skies', 'Iron Resolve', 'The Calm Before',
+        'Storm Rising', 'Fractured Mirrors', 'The Heart of the Matter', 'Legacy',
+        'Convergence', 'The Long Road', 'Twilight\'s Edge', 'The Unseen Hand',
+        'Reclamation', 'The Price of Power', 'Moment of Truth', 'Departure',
+        'The Other Side', 'Requiem', 'Resurgence', 'Homecoming',
+        'The Infinite Hour', 'Glass and Steel', 'The Wandering Star', 'Collision Course',
+        'The Breaking Point', 'Luminous', 'The Final Stand', 'Epilogue',
+        'Promise', 'Dawn of Tomorrow'
+      ];
       const titleMap = {};
       if (anime?.episodes) {
-        for (let i = 1; i <= Math.min(anime.episodes, 20); i++) {
-          titleMap[i] = `Episode ${i}`;
+        for (let i = 1; i <= Math.min(anime.episodes, episodeNames.length); i++) {
+          titleMap[i] = episodeNames[i - 1];
+        }
+        for (let i = episodeNames.length + 1; i <= anime.episodes; i++) {
+          titleMap[i] = `Beyond the Dawn — Part ${i - episodeNames.length}`;
         }
       }
       if (!cancelled && titleMap) setEpisodeTitles(titleMap);
@@ -1050,10 +1067,10 @@ export default function AnimeDetail() {
               <div className="flex items-center justify-between mb-4 px-1">
                 <div className="min-w-0">
                   <div className="text-base font-semibold text-white/90 truncate">
-                    Up Next{episodeTitles?.[selectedEp] || episode?.title ? ` — ${episodeTitles?.[selectedEp] || episode?.title || ''}` : ''}
+                    Up Next{episodeTitles?.[selectedEp] || episode?.title ? ` - ${episodeTitles?.[selectedEp] || episode?.title || ''}` : ''}
                   </div>
                   <div className="text-xs text-[#777] mt-0.5 truncate">
-                    Playing — Episode {selectedEp || 1}{anime?.name ? ` — ${anime?.name || ''}` : ''}
+                    Playing - Episode {selectedEp || 1}{anime?.name ? ` - ${anime?.name || ''}` : ''}
                   </div>
                 </div>
                 <button className="flex items-center justify-center w-8 h-8 rounded-2xl hover:bg-white/[0.06] transition-all text-[#777] hover:text-white cursor-pointer border-none bg-transparent shrink-0 ml-2" onClick={() => setIsEpisodesExpanded(p => !p)} title={isEpisodesExpanded ? 'Collapse' : 'Expand'}>
@@ -1065,10 +1082,9 @@ export default function AnimeDetail() {
               <div className={`overflow-hidden transition-[max-height] duration-400 ease-out ${isEpisodesExpanded ? 'max-h-[70vh]' : 'max-h-0'}`}>
                 {/* search & filters bar */}
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="flex items-center gap-2.5 flex-1 bg-white/[0.04] rounded-2xl px-4 border border-white/[0.06] focus-within:border-[#6c63ff]/50 ring-1 ring-transparent focus-within:ring-[#6c63ff]/10 transition-all" style={{ height: '40px' }}>
-                    <Search size={14} className="text-[#666] shrink-0" />
+                  <div className="flex items-center flex-1 bg-white/[0.04] rounded-2xl px-4 border border-white/[0.06] focus-within:border-[#6c63ff]/50 ring-1 ring-transparent focus-within:ring-[#6c63ff]/10 transition-all" style={{ height: '40px' }}>
                     <input className="flex-1 bg-transparent text-xs text-white/80 outline-none placeholder-[#555] border-none py-0" type="text" placeholder="Search Episode" value={epSearch} onChange={e => { setEpSearch(e.target.value); if (!e.target.value) setVisibleCount(50); }} />
-                    <ArrowUpDown size={13} className="text-[#555] shrink-0" />
+                    <ArrowUpDown size={13} className="text-[#555] shrink-0 ml-2" />
                     {epSearch && <button className="text-[#666] hover:text-white cursor-pointer bg-transparent border-none p-0.5 shrink-0" onClick={() => { setEpSearch(""); setVisibleCount(50); }}><X size={12} /></button>}
                   </div>
                   <button className="flex items-center justify-center w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] transition-all text-[#666] hover:text-white cursor-pointer bg-transparent shrink-0" title="Refresh" onClick={() => setRetryCount(c => c + 1)}>
@@ -1083,7 +1099,7 @@ export default function AnimeDetail() {
                 </div>
 
                 {/* list */}
-                <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[400px] pr-1">
+                <div className="flex flex-col overflow-y-auto max-h-[400px]">
                   {loading ? (
                     <div className="flex items-center justify-center py-12">
                       <Loader size={16} className="text-zinc-500 animate-spin" />
@@ -1095,15 +1111,14 @@ export default function AnimeDetail() {
                       {filteredEpisodes.slice(0, visibleCount).map((ep, i) => {
                         const realIdx = episodes.indexOf(ep);
                         const isActive = realIdx === epIndex;
-                        const isWatched = watchedEpisodes.has(ep.episode) && !isActive;
                         const views = ((ep.episode || 1) * 7 + 41) + 'K';
                         const timeAgo = ['1 month ago', '2 weeks ago', '3 weeks ago', '1 month ago', '2 months ago', '3 months ago', '2 weeks ago', '4 weeks ago'][(ep.episode || 1) % 8];
                         return (
                           <div key={ep.id || realIdx}
-                            className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all group ${isActive ? 'bg-white/[0.07]' : 'hover:bg-white/5'}`}
+                            className={`flex items-center gap-3 -mx-4 px-4 py-2 cursor-pointer transition-all group ${isActive ? 'bg-white/[0.07]' : 'hover:bg-white/5'}`}
                             onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
                           >
-                            <div className="relative w-16 h-10 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-900">
+                            <div className="relative w-20 aspect-video flex-shrink-0 rounded-lg overflow-hidden bg-neutral-900">
                               {ep.thumbnail ? (
                                 <img className="w-full h-full object-cover" src={ep.thumbnail} alt="" loading="lazy" />
                               ) : (
@@ -1111,13 +1126,13 @@ export default function AnimeDetail() {
                                   <Film size={14} className="text-neutral-600" />
                                 </div>
                               )}
-                              <div className="absolute bottom-0 left-0 px-1.5 py-0.5 bg-black/80 rounded-tr-md rounded-bl-md">
+                              <div className="absolute bottom-0 left-0 px-1 py-0.5 bg-black/80 rounded-tr-md rounded-bl-md">
                                 <span className="text-[10px] font-bold text-white/90 leading-none">Ep {ep.episode || realIdx + 1}</span>
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-bold text-white/90 truncate group-hover:text-white transition-colors">
-                                {episodeTitles?.[ep.episode] || ep?.title || `Episode ${ep.episode || realIdx + 1}`}
+                                {episodeTitles?.[ep.episode] || ep?.title || 'Untitled'}
                               </div>
                               <div className="text-[11px] text-[#555] mt-0.5 truncate">
                                 {views || '88K'} views • {timeAgo || '1 month ago'}
@@ -1127,50 +1142,21 @@ export default function AnimeDetail() {
                         );
                       })}
                       {(hasMoreEps || filteredEpisodes.length > visibleCount) && (
-                        <div className="w-full mt-2 py-3 text-center text-xs font-bold text-neutral-500 hover:text-white hover:bg-white/5 rounded-xl transition-colors cursor-pointer" onClick={handleLoadMore}>
+                        <div className="-mx-4 px-4 mt-1 py-3 text-center text-xs font-bold text-neutral-500 hover:text-white hover:bg-white/5 transition-colors cursor-pointer" onClick={handleLoadMore}>
                           Load More ({filteredEpisodes.length - visibleCount} remaining)
                         </div>
                       )}
                     </>
                   )}
                 </div>
-
-                {/* next airing */}
-                {nextAiring && (
-                  <div className="flex items-center gap-3 mt-4 px-4 py-3.5 rounded-2xl bg-[#0a1f12] border border-emerald-500/20 shadow-[inset_0_1px_0_rgba(76,175,80,0.08)]">
-                    <div className="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse shrink-0 shadow-[0_0_8px_#4caf50]/50" />
-                    <Bell size={14} className="text-[#4caf50]/70 shrink-0" />
-                    <span className="text-xs text-[#4caf50]/90">Next ep airing in <strong className="text-[#4caf50] font-semibold">{nextAiring?.text || '3 days'}</strong></span>
-                  </div>
-                )}
               </div>
 
-              {/* ─── MORE LIKE THIS ─── */}
-              {recommendations?.length > 0 && (
-                <div className="mt-5 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                  <div className="text-[11px] font-semibold text-[#555] uppercase tracking-[2px] mb-4 px-1">More Like This</div>
-                  <div className="flex flex-col gap-2">
-                    {recommendations.slice(0, 4).map((rec, i) => (
-                      <button key={rec?.id || i}
-                        className="group flex items-center gap-3 w-full p-2.5 text-left transition-all hover:bg-white/[0.03] cursor-pointer border-none bg-transparent rounded-2xl"
-                        onClick={() => navigate(`/anime/${rec?.id || ''}/info`)}
-                      >
-                        <div className="relative shrink-0 overflow-hidden rounded-xl bg-[#1a1a1a] transition-transform duration-200 group-hover:scale-[1.03] group-active:scale-[0.98]" style={{ width: '72px', height: '54px' }}>
-                          {rec?.image ? (
-                            <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" src={rec.image} alt="" loading="lazy" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[#555] text-xs font-bold">?</div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-white/80 leading-snug line-clamp-2 group-hover:text-white transition-colors">{rec?.name || 'Unknown'}</div>
-                          <div className="text-[11px] text-[#555] mt-0.5 line-clamp-1">
-                            {rec?.genres?.slice(0, 2).join(' • ') || rec?.format || 'Anime'}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+              {/* ─── NEXT AIRING ─── */}
+              {nextAiring && (
+                <div className="flex items-center gap-3 -mx-4 mt-0 px-4 py-3.5 bg-[#0a1f12] border-t border-emerald-500/20">
+                  <div className="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse shrink-0 shadow-[0_0_8px_#4caf50]/50" />
+                  <Bell size={14} className="text-[#4caf50]/70 shrink-0" />
+                  <span className="text-xs text-[#4caf50]/90">Next ep airing in <strong className="text-[#4caf50] font-semibold">{nextAiring?.text || '3 days'}</strong></span>
                 </div>
               )}
             </div>
