@@ -3,8 +3,9 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Loader, Play, Star, Tv, Calendar, Clock, Monitor, Film,
   X, SkipForward, RefreshCw, AlertTriangle, Bell, ChevronDown, ChevronUp,
-  Share2, Bookmark, Flag, ArrowUpDown, LayoutGrid, List, ArrowUp, ArrowDown
+  Share2, Bookmark, Flag, LayoutGrid, List, ArrowUp, ArrowDown
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { getAnimeById } from "../data/animeData";
 import Hls from "hls.js";
 import { findStreamingSource, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream, getMiruroEpisodes } from "../services/animeApi";
@@ -1088,11 +1089,11 @@ export default function AnimeDetail() {
               {/* ─── EPISODES ─── */}
               <div className={`overflow-hidden transition-[max-height] duration-400 ease-out ${isEpisodesExpanded ? 'max-h-[70vh]' : 'max-h-0'}`}>
                 {/* search & filters bar */}
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="flex items-center flex-1 bg-white/[0.04] rounded-2xl px-4 border border-white/[0.06] focus-within:border-[#6c63ff]/50 ring-1 ring-transparent focus-within:ring-[#6c63ff]/10 transition-all" style={{ height: '40px' }}>
-                    <input className="flex-1 bg-transparent text-xs text-white/80 outline-none placeholder-[#555] border-none py-0" type="text" placeholder="Search Episode" value={epSearch} onChange={e => { setEpSearch(e.target.value); if (!e.target.value) setVisibleCount(50); }} />
-                    <ArrowUpDown size={13} className="text-[#555] shrink-0 ml-2" />
-                    {epSearch && <button className="text-[#666] hover:text-white cursor-pointer bg-transparent border-none p-0.5 shrink-0" onClick={() => { setEpSearch(""); setVisibleCount(50); }}><X size={12} /></button>}
+                <div className="flex items-center gap-1.5 mb-4">
+                  <div className="relative flex items-center flex-1 bg-white/[0.04] rounded-full px-3 border border-white/[0.06] focus-within:border-white/20 transition-all" style={{ height: '34px' }}>
+                    <svg className="text-[#555] shrink-0" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <input className="flex-1 bg-transparent text-xs text-white/80 outline-none placeholder-[#555] border-none py-0 ml-2" type="text" placeholder="Search" value={epSearch} onChange={e => { setEpSearch(e.target.value); if (!e.target.value) setVisibleCount(50); }} />
+                    {epSearch && <button className="text-[#555] hover:text-white cursor-pointer bg-transparent border-none p-0.5 shrink-0" onClick={() => { setEpSearch(""); setVisibleCount(50); }}><X size={12} /></button>}
                   </div>
                   <button className="flex items-center justify-center w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] transition-all text-[#666] hover:text-white cursor-pointer bg-transparent shrink-0" title="Refresh" onClick={() => setRetryCount(c => c + 1)}>
                     <RefreshCw size={13} />
@@ -1123,73 +1124,81 @@ export default function AnimeDetail() {
                     <p className="text-xs text-[#555] text-center py-12">{epSearch ? 'No matching episodes' : 'No episodes'}</p>
                   ) : (
                     <>
-                      {sortedEpisodes.slice(0, visibleCount).map((ep, i) => {
-                        const realIdx = episodes.indexOf(ep);
-                        const isActive = realIdx === epIndex;
-                        const views = ((ep?.episode || 1) * 7 + 41) + 'K';
-                        const timeAgo = ['1 month ago', '2 weeks ago', '3 weeks ago', '1 month ago', '2 months ago', '3 months ago', '2 weeks ago', '4 weeks ago'][(ep?.episode || 1) % 8];
-                        const epTitle = episodeTitles?.[ep?.episode] || ep?.title || 'Untitled';
-                        const epNum = ep?.episode || realIdx + 1;
-                        return sidebarView === 'thumbnail' ? (
-                          <div key={ep?.id || realIdx}
-                            className={`relative flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-all duration-200 group rounded-xl mx-1 ${isActive ? 'bg-white/[0.07] border border-white/[0.12] shadow-lg shadow-black/30' : 'hover:bg-white/[0.03] border border-transparent'}`}
-                            onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
-                          >
-                            {isActive && <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.3)]" />}
-                            <div className={`relative w-36 aspect-video flex-shrink-0 rounded-xl overflow-hidden bg-neutral-900 transition-all duration-300 ${isActive ? 'ring-1 ring-white/20 shadow-lg shadow-white/5' : 'shadow-lg'} group-hover:shadow-white/10 group-hover:shadow-lg`}>
-                              {ep?.thumbnail ? (
-                                <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" src={ep.thumbnail} alt="" loading="lazy" />
+                      <AnimatePresence mode="wait">
+                        {sortedEpisodes.slice(0, visibleCount).map((ep, i) => {
+                          const realIdx = episodes.indexOf(ep);
+                          const isActive = realIdx === epIndex;
+                          const views = ((ep?.episode || 1) * 7 + 41) + 'K';
+                          const timeAgo = ['1 month ago', '2 weeks ago', '3 weeks ago', '1 month ago', '2 months ago', '3 months ago', '2 weeks ago', '4 weeks ago'][(ep?.episode || 1) % 8];
+                          const epTitle = episodeTitles?.[ep?.episode] || ep?.title || 'Untitled';
+                          const epNum = ep?.episode || realIdx + 1;
+                          return (
+                            <motion.div
+                              key={ep?.id || realIdx}
+                              layout
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                              transition={{ duration: 0.2, delay: i * 0.015 }}
+                              className={`relative flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-all duration-200 group rounded-xl mx-1 ${isActive ? 'bg-white/[0.07] border border-white/[0.12] shadow-lg shadow-black/30' : 'hover:bg-white/[0.03] border border-transparent'}`}
+                              onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
+                            >
+                              {isActive && <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.3)]" />}
+                              {sidebarView === 'thumbnail' ? (
+                                <>
+                                  <div className={`relative w-36 aspect-video flex-shrink-0 rounded-xl overflow-hidden bg-neutral-900 transition-all duration-300 ${isActive ? 'ring-1 ring-white/20 shadow-lg shadow-white/5' : 'shadow-lg'} group-hover:shadow-white/10 group-hover:shadow-lg`}>
+                                    {ep?.thumbnail ? (
+                                      <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" src={ep.thumbnail} alt="" loading="lazy" />
+                                    ) : (
+                                      <div className="w-full h-full bg-gradient-to-br from-neutral-800 to-neutral-950 flex items-center justify-center">
+                                        <Film size={18} className="text-neutral-600" />
+                                      </div>
+                                    )}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                                    <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 bg-gradient-to-t from-black/90 via-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                      <span className="text-[11px] font-bold text-white drop-shadow-sm">Ep {epNum}</span>
+                                    </div>
+                                    <div className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0">
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
+                                    </div>
+                                    {isActive && (
+                                      <div className="absolute inset-0 ring-1 ring-inset ring-white/20 rounded-xl pointer-events-none" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className={`text-sm font-bold truncate transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
+                                      {epTitle}
+                                    </div>
+                                    <div className="text-[11px] text-[#555] mt-0.5 truncate">
+                                      {views || '88K'} views • {timeAgo || '1 month ago'}
+                                    </div>
+                                  </div>
+                                  {isActive && (
+                                    <div className="shrink-0 w-[18px] h-[18px] rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center">
+                                      <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
+                                    </div>
+                                  )}
+                                </>
                               ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-neutral-800 to-neutral-950 flex items-center justify-center">
-                                  <Film size={18} className="text-neutral-600" />
-                                </div>
+                                <>
+                                  <span className={`text-sm font-bold shrink-0 w-6 text-right ${isActive ? 'text-white' : 'text-[#555]'}`}>{epNum}.</span>
+                                  <div className="min-w-0 flex-1">
+                                    <span className={`text-sm font-bold truncate block transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>{epTitle}</span>
+                                    <div className="text-[11px] text-[#555] mt-0.5">
+                                      {views || '88K'} views • {timeAgo || '1 month ago'}
+                                    </div>
+                                  </div>
+                                  {isActive && (
+                                    <div className="shrink-0 w-[18px] h-[18px] rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center">
+                                      <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
+                                    </div>
+                                  )}
+                                </>
                               )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                              <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 bg-gradient-to-t from-black/90 via-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                <span className="text-[11px] font-bold text-white drop-shadow-sm">Ep {epNum}</span>
-                              </div>
-                              <div className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
-                              </div>
-                              {isActive && (
-                                <div className="absolute inset-0 ring-1 ring-inset ring-white/20 rounded-xl pointer-events-none" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className={`text-sm font-bold truncate transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
-                                {epTitle}
-                              </div>
-                              <div className="text-[11px] text-[#555] mt-0.5 truncate">
-                                {views || '88K'} views • {timeAgo || '1 month ago'}
-                              </div>
-                            </div>
-                            {isActive && (
-                              <div className="shrink-0 w-[18px] h-[18px] rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center">
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div key={ep?.id || realIdx}
-                            className={`relative flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-all duration-200 rounded-xl mx-1 ${isActive ? 'bg-white/[0.07] border border-white/[0.12] shadow-lg shadow-black/30' : 'hover:bg-white/[0.03] border border-transparent'}`}
-                            onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
-                          >
-                            {isActive && <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.3)]" />}
-                            <span className={`text-sm font-bold shrink-0 w-6 text-right ${isActive ? 'text-white' : 'text-[#555]'}`}>{epNum}.</span>
-                            <div className="min-w-0 flex-1">
-                              <span className={`text-sm font-bold truncate block transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>{epTitle}</span>
-                              <div className="text-[11px] text-[#555] mt-0.5">
-                                {views || '88K'} views • {timeAgo || '1 month ago'}
-                              </div>
-                            </div>
-                            {isActive && (
-                              <div className="shrink-0 w-[18px] h-[18px] rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center">
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
                       {(hasMoreEps || sortedEpisodes.length > visibleCount) && (
                         <div className="-mx-4 px-4 mt-1 py-3 text-center text-xs font-bold text-neutral-500 hover:text-white hover:bg-white/5 transition-colors cursor-pointer" onClick={handleLoadMore}>
                           Load More ({sortedEpisodes.length - visibleCount} remaining)
