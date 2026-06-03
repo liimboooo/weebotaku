@@ -1159,6 +1159,35 @@ export default function AnimeDetail() {
                   <span className="text-xs text-[#4caf50]/90">Next ep airing in <strong className="text-[#4caf50] font-semibold">{nextAiring?.text || '3 days'}</strong></span>
                 </div>
               )}
+
+              {/* ─── MORE LIKE THIS ─── */}
+              {recommendations?.length > 0 && (
+                <div className="mt-5 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div className="text-[11px] font-semibold text-[#555] uppercase tracking-[2px] mb-4 px-1">More Like This</div>
+                  <div className="flex flex-col gap-2">
+                    {recommendations.slice(0, 4).map((rec, i) => (
+                      <button key={rec?.id || i}
+                        className="group flex items-center gap-3 w-full p-2.5 text-left transition-all hover:bg-white/[0.03] cursor-pointer border-none bg-transparent rounded-2xl"
+                        onClick={() => navigate(`/anime/${rec?.id || ''}/info`)}
+                      >
+                        <div className="relative shrink-0 overflow-hidden rounded-xl bg-[#1a1a1a] transition-transform duration-200 group-hover:scale-[1.03] group-active:scale-[0.98]" style={{ width: '72px', height: '54px' }}>
+                          {rec?.image ? (
+                            <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" src={rec.image} alt="" loading="lazy" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[#555] text-xs font-bold">?</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-white/80 leading-snug line-clamp-2 group-hover:text-white transition-colors">{rec?.name || 'Unknown'}</div>
+                          <div className="text-[11px] text-[#555] mt-0.5 line-clamp-1">
+                            {rec?.genres?.slice(0, 2).join(' • ') || rec?.format || 'Anime'}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </aside>
 
