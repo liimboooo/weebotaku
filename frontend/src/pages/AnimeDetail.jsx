@@ -1141,30 +1141,31 @@ export default function AnimeDetail() {
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -8 }}
                               transition={{ duration: 0.2, delay: i * 0.015 }}
-                              className={`relative flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-all duration-200 group rounded-xl mx-1 ${isActive ? 'bg-white/[0.07] border border-white/[0.12] shadow-lg shadow-black/30' : 'hover:bg-white/[0.03] border border-transparent'}`}
+                              className={`relative flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-all duration-300 group rounded-[18px] mx-1 ${isActive ? 'bg-[rgba(22,22,28,0.8)] border border-white/[0.07] shadow-[inset_16px_0_40px_-15px_rgba(255,255,255,0.08)]' : 'bg-[rgba(17,17,20,0.5)] border border-white/[0.02] hover:bg-[rgba(22,22,28,0.8)] hover:border-white/[0.07]'}`}
                               onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
                             >
-                              {isActive && <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.3)]" />}
+                              {isActive && <div className="absolute left-0 top-3 bottom-3 w-[3.5px] rounded-r-[4px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.3)] z-[2]" />}
                               {sidebarView === 'thumbnail' ? (
                                 <>
-                                  <div className={`relative w-36 aspect-video flex-shrink-0 rounded-xl overflow-hidden bg-neutral-900 transition-all duration-300 ${isActive ? 'ring-1 ring-white/20 shadow-lg shadow-white/5' : 'shadow-lg'} group-hover:shadow-white/10 group-hover:shadow-lg`}>
+                                  <div className="relative w-36 aspect-video flex-shrink-0 rounded-xl overflow-hidden bg-neutral-900 shadow-lg ring-1 ring-white/[0.03] group-hover:ring-white/10 transition-all duration-300">
                                     {ep?.thumbnail && !brokenThumbs.has(ep?.id || realIdx) ? (
-                                      <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" src={ep.thumbnail} alt="" loading="lazy" onError={() => setBrokenThumbs(prev => new Set(prev).add(ep?.id || realIdx))} />
+                                      <>
+                                        <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src={ep.thumbnail} alt="" loading="lazy" onError={() => setBrokenThumbs(prev => new Set(prev).add(ep?.id || realIdx))} />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
+                                      </>
                                     ) : (
                                       <div className="w-full h-full bg-gradient-to-br from-neutral-800 to-neutral-950 flex items-center justify-center">
                                         <Film size={18} className="text-neutral-600" />
                                       </div>
                                     )}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                                    <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 bg-gradient-to-t from-black/90 via-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                      <span className="text-[11px] font-bold text-white drop-shadow-sm">Ep {epNum}</span>
+                                    <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2 flex items-center justify-between">
+                                      <span className="text-[11px] font-bold text-white/90 drop-shadow-lg">Ep {epNum}</span>
+                                      <div className="w-6 h-6 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
+                                      </div>
                                     </div>
-                                    <div className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0">
-                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
-                                    </div>
-                                    {isActive && (
-                                      <div className="absolute inset-0 ring-1 ring-inset ring-white/20 rounded-xl pointer-events-none" />
-                                    )}
+                                    {isActive && <div className="absolute inset-0 ring-1 ring-inset ring-white/20 rounded-xl pointer-events-none" />}
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className={`text-sm font-bold truncate transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
@@ -1175,8 +1176,8 @@ export default function AnimeDetail() {
                                     </div>
                                   </div>
                                   {isActive && (
-                                    <div className="shrink-0 w-[18px] h-[18px] rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center">
-                                      <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
+                                    <div className="shrink-0 w-7 h-7 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
+                                      <svg width="11" height="11" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
                                     </div>
                                   )}
                                 </>
