@@ -1230,14 +1230,14 @@ export default function AnimeDetail() {
                       <div key={rec?.id || i} className="trending-card group" onClick={() => navigate(`/anime/${rec?.id || ''}/info`)}>
                         <div className="card-bg-artwork" style={{ backgroundImage: `url(${rec?.image || ''})` }} />
                         <div className="card-gradient-mask" />
+                        <div className="rank-wrapper" style={{ width: '80px', height: '80px', zIndex: 2, margin: '0', position: 'relative' }}>
+                          {rec?.image ? (
+                            <img className="w-full h-full object-cover rounded-xl ring-1 ring-white/[0.08] shadow-lg" src={rec.image} alt="" />
+                          ) : (
+                            <div className="w-full h-full rounded-xl bg-neutral-800 flex items-center justify-center text-[#555] text-sm font-bold">?</div>
+                          )}
+                        </div>
                         <div className="info-cluster" style={{ maxWidth: '100%', gap: '12px' }}>
-                          <div className="rank-wrapper" style={{ width: '80px', height: '80px' }}>
-                            {rec?.image ? (
-                              <img className="w-full h-full object-cover rounded-xl ring-1 ring-white/[0.08] shadow-lg" src={rec.image} alt="" />
-                            ) : (
-                              <div className="w-full h-full rounded-xl bg-neutral-800 flex items-center justify-center text-[#555] text-sm font-bold">?</div>
-                            )}
-                          </div>
                           <div className="meta-text-block">
                             <h3 className="anime-title" style={{ fontSize: '14px' }}>{rec?.name || 'Unknown'}</h3>
                             <div className="sub-meta-row">
