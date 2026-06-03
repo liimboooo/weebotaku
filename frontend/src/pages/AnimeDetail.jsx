@@ -2,8 +2,8 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Loader, Play, Star, Tv, Calendar, Clock, Monitor, Search, Film,
-  X, SkipForward, RefreshCw, List, AlertTriangle, Bell, ChevronDown, ChevronUp,
-  Share2, Bookmark, Flag
+  X, SkipForward, RefreshCw, List, LayoutGrid, AlertTriangle, Bell, ChevronDown, ChevronUp,
+  Share2, Bookmark, Flag, Send, Eye, EyeOff
 } from "lucide-react";
 import { getAnimeById } from "../data/animeData";
 import Hls from "hls.js";
@@ -47,6 +47,7 @@ export default function AnimeDetail() {
   const [streamRetryCount, setStreamRetryCount] = useState(0);
   const [isEpisodesExpanded, setIsEpisodesExpanded] = useState(true);
   const [episodeLayout, setEpisodeLayout] = useState('detailed');
+  const [sidebarView, setSidebarView] = useState('list');
   const [recommendations, setRecommendations] = useState([]);
   const [alertBannerVisible, setAlertBannerVisible] = useState(true);
   const [epSearch, setEpSearch] = useState("");
@@ -98,6 +99,8 @@ export default function AnimeDetail() {
 
   const [comments, setComments] = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(true);
+  const [commentText, setCommentText] = useState('');
+  const [commentSpoiler, setCommentSpoiler] = useState(false);
 
   const currentUser = authService.getCurrentUser();
   const currentUsername = currentUser?.username || localStorage.getItem('username') || 'Guest';
@@ -1025,6 +1028,28 @@ export default function AnimeDetail() {
 
               {/* ─── COMMENTS ─── */}
               <div className="px-4">
+                {/* Comment Input */}
+                <div className="flex items-start gap-3 mb-6 pt-4">
+                  <div className="w-10 h-10 rounded-full bg-neutral-800 ring-1 ring-white/10 shrink-0 flex items-center justify-center text-sm font-bold text-neutral-400 uppercase">
+                    {currentUsername ? currentUsername[0] : '?'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.06] rounded-2xl px-4 focus-within:border-white/20 transition-all" style={{ height: '44px' }}>
+                      <input className="flex-1 bg-transparent text-sm text-white/80 outline-none placeholder-neutral-600 border-none py-0" type="text" placeholder="What scene hit the hardest?" value={commentText} onChange={e => setCommentText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && commentText.trim()) { handleAddComment(commentText); setCommentText(''); } }} />
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                        <button className={`w-8 h-5 rounded-full transition-colors relative ${commentSpoiler ? 'bg-orange-500/50' : 'bg-white/10'}`} onClick={() => setCommentSpoiler(p => !p)}>
+                          <div className={`w-3.5 h-3.5 rounded-full bg-white absolute top-0.5 transition-all ${commentSpoiler ? 'left-[14px]' : 'left-[3px]'}`} />
+                        </button>
+                        <span className="text-[11px] text-neutral-500 font-medium flex items-center gap-1">{commentSpoiler ? <EyeOff size={11} /> : <Eye size={11} />} Spoiler</span>
+                      </label>
+                      <button className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors border-none cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed" disabled={!commentText.trim()} onClick={() => { handleAddComment(commentText); setCommentText(''); }}>
+                        <Send size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 <Comments
                   comments={comments}
                   setComments={setComments}
@@ -1040,6 +1065,37 @@ export default function AnimeDetail() {
                   loading={commentsLoading}
                 />
               </div>
+
+              {/* ─── RELATED ANIME GRID ─── */}
+              {recommendations.length > 0 && (
+                <div className="px-4 mt-8 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                  <h2 className="text-base font-bold text-white/90 mb-5">Related Anime</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                    {recommendations.map((rec, i) => (
+                      <div key={rec.id || i} className="group cursor-pointer" onClick={() => navigate(`/anime/${rec.id}/info`)}>
+                        <div className="aspect-[3/4] rounded-xl overflow-hidden bg-neutral-900 relative">
+                          {rec.image ? (
+                            <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={rec.image} alt={rec.name || 'Related anime'} loading="lazy" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-neutral-600 text-sm font-bold">?</div>
+                          )}
+                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Play size={24} className="text-white drop-shadow-lg" fill="white" />
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <h3 className="text-xs font-semibold text-neutral-400 group-hover:text-white transition-colors line-clamp-2 leading-snug">{rec.name || 'Untitled'}</h3>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {(rec.genres || []).slice(0, 2).map(g => (
+                              <span key={g} className="text-[9px] bg-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded uppercase font-semibold tracking-wider">{g}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1056,9 +1112,14 @@ export default function AnimeDetail() {
                     Playing — Episode {selectedEp}{anime?.name ? ` — ${anime.name}` : ""}
                   </div>
                 </div>
-                <button className="flex items-center justify-center w-8 h-8 rounded-2xl hover:bg-white/[0.06] transition-all text-[#777] hover:text-white cursor-pointer border-none bg-transparent shrink-0 ml-2" onClick={() => setIsEpisodesExpanded(p => !p)} title={isEpisodesExpanded ? 'Collapse' : 'Expand'}>
-                  <ChevronUp size={15} className="transition-transform duration-200" style={{ transform: isEpisodesExpanded ? 'rotate(0deg)' : 'rotate(180deg)' }} />
-                </button>
+                <div className="flex items-center gap-1 shrink-0 ml-2">
+                  <button className="flex items-center justify-center w-8 h-8 rounded-2xl hover:bg-white/[0.06] transition-all text-[#777] hover:text-white cursor-pointer border-none bg-transparent" onClick={() => setSidebarView(p => p === 'list' ? 'thumbnails' : 'list')} title={sidebarView === 'list' ? 'Thumbnail view' : 'List view'}>
+                    {sidebarView === 'list' ? <LayoutGrid size={14} /> : <List size={14} />}
+                  </button>
+                  <button className="flex items-center justify-center w-8 h-8 rounded-2xl hover:bg-white/[0.06] transition-all text-[#777] hover:text-white cursor-pointer border-none bg-transparent" onClick={() => setIsEpisodesExpanded(p => !p)} title={isEpisodesExpanded ? 'Collapse' : 'Expand'}>
+                    <ChevronUp size={15} className="transition-transform duration-200" style={{ transform: isEpisodesExpanded ? 'rotate(0deg)' : 'rotate(180deg)' }} />
+                  </button>
+                </div>
               </div>
 
               {/* ─── EPISODES ─── */}
@@ -1076,20 +1137,20 @@ export default function AnimeDetail() {
                 </div>
 
                 {/* list */}
-                <div className="flex flex-col gap-1 overflow-y-auto max-h-[400px] pr-1">
+                <div className={`overflow-y-auto pr-1 ${sidebarView === 'list' ? 'flex flex-col gap-1 max-h-[400px]' : 'grid grid-cols-2 gap-2 max-h-[420px]'}`}>
                   {loading ? (
-                    <div className="flex items-center justify-center py-12">
+                    <div className="flex items-center justify-center py-12 col-span-2">
                       <Loader size={16} className="text-zinc-500 animate-spin" />
                     </div>
                   ) : filteredEpisodes.length === 0 ? (
-                    <p className="text-xs text-[#555] text-center py-12">{epSearch ? "No matching episodes" : "No episodes"}</p>
+                    <p className="text-xs text-[#555] text-center py-12 col-span-2">{epSearch ? "No matching episodes" : "No episodes"}</p>
                   ) : (
                     <>
                       {filteredEpisodes.slice(0, visibleCount).map((ep, i) => {
                         const realIdx = episodes.indexOf(ep);
                         const isActive = realIdx === epIndex;
                         const isWatched = watchedEpisodes.has(ep.episode) && !isActive;
-                        return (
+                        return sidebarView === 'list' ? (
                           <div key={ep.id || realIdx}
                             className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-white/5 transition-all group ${isActive ? 'bg-[#161622] ring-1 ring-[#6c63ff]/25' : ''}`}
                             onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
@@ -1099,15 +1160,36 @@ export default function AnimeDetail() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-medium text-neutral-400 group-hover:text-neutral-200 truncate">
-                                {episodeTitles?.[ep.episode] || ep.title || `Episode ${ep.episode}`}
+                                {episodeTitles?.[ep.episode] || ep.title || 'Untitled Episode'}
                               </div>
-                              <div className="text-[11px] text-[#555] mt-0.5 truncate">{anime?.name || "Anime"}</div>
+                              <div className="text-[11px] text-[#555] mt-0.5 truncate">{anime?.name || 'Anime'}</div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div key={ep.id || realIdx}
+                            className={`group rounded-xl overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-[#6c63ff]/40 ${isActive ? 'ring-2 ring-[#6c63ff]' : ''}`}
+                            onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
+                          >
+                            <div className="aspect-video w-full bg-neutral-900 relative overflow-hidden">
+                              {ep.thumbnail || ep.image ? (
+                                <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src={ep.thumbnail || ep.image} alt="" loading="lazy" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-neutral-600 text-lg font-bold">{ep.episode}</div>
+                              )}
+                              <div className="absolute bottom-1.5 right-1.5 bg-black/70 text-[#bbb] text-[10px] font-medium px-1.5 py-0.5 rounded-md">
+                                Ep {ep.episode}
+                              </div>
+                            </div>
+                            <div className="p-2 bg-[#0f0f0f]">
+                              <div className="text-xs font-medium text-neutral-400 group-hover:text-neutral-200 truncate leading-snug">
+                                {episodeTitles?.[ep.episode] || ep.title || 'Untitled Episode'}
+                              </div>
                             </div>
                           </div>
                         );
                       })}
                       {(hasMoreEps || filteredEpisodes.length > visibleCount) && (
-                        <div className="w-full mt-2 py-3 text-center text-xs font-bold text-neutral-500 hover:text-white hover:bg-white/5 rounded-xl transition-colors cursor-pointer" onClick={handleLoadMore}>
+                        <div className={`w-full mt-2 py-3 text-center text-xs font-bold text-neutral-500 hover:text-white hover:bg-white/5 rounded-xl transition-colors cursor-pointer ${sidebarView === 'thumbnails' ? 'col-span-2' : ''}`} onClick={handleLoadMore}>
                           Load More ({filteredEpisodes.length - visibleCount} remaining)
                         </div>
                       )}
