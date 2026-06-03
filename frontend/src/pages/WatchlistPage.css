@@ -250,7 +250,7 @@
 
 .wl-card-thumb {
   position: relative;
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 3 / 5;
   overflow: hidden;
   background: var(--card-surface);
   box-shadow: 0 4px 16px rgba(0,0,0,0.4);

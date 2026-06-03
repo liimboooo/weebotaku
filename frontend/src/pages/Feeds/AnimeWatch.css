@@ -87,8 +87,8 @@
   position: relative;
   border-radius: 12px;
   overflow: hidden;
-  aspect-ratio: 2/3;
-  max-height: 280px;
+  aspect-ratio: 3/5;
+  max-height: 320px;
   background: #000000;
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
