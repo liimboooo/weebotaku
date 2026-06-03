@@ -721,8 +721,8 @@
 /* poster */
 .br-poster {
   position: relative;
-  aspect-ratio: 3 / 5;
-  border-radius: var(--radius-lg);
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-md);
   overflow: hidden;
   background: #0e0e10;
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -732,7 +732,7 @@
 }
 .br-card:hover .br-poster {
   border-color: rgba(255, 255, 255, 0.22);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 30px rgba(255,255,255,0.04);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
 }
 .br-poster-img {
   width: 100%;
