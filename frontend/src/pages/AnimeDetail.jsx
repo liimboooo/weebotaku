@@ -1227,17 +1227,19 @@ export default function AnimeDetail() {
                   <div className="flex flex-col gap-2">
                     {recommendations.slice(0, 4).map((rec, i) => (
                       <button key={rec?.id || i}
-                        className="group flex items-center gap-3 w-full p-3 text-left transition-all hover:bg-white/[0.03] cursor-pointer border-none bg-transparent rounded-2xl"
+                        className="group flex items-center gap-3 w-full p-3 text-left transition-all duration-300 cursor-pointer border bg-[rgba(17,17,20,0.5)] border-white/[0.02] hover:bg-[rgba(22,22,28,0.8)] hover:border-white/[0.07] rounded-[18px]"
                         onClick={() => navigate(`/anime/${rec?.id || ''}/info`)}
                       >
-                        <div className="relative shrink-0 overflow-hidden rounded-xl bg-[#1a1a1a] shadow-md transition-all duration-200 group-hover:shadow-white/10 group-hover:shadow-lg" style={{ width: '80px', height: '60px' }}>
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10" />
+                        <div className="relative shrink-0 overflow-hidden rounded-xl bg-[#1a1a1a] shadow-md transition-all duration-300 ring-1 ring-white/[0.03] group-hover:ring-white/10 group-hover:shadow-lg" style={{ width: '80px', height: '60px' }}>
                           {rec?.image ? (
-                            <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" src={rec.image} alt="" loading="lazy" />
+                            <>
+                              <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src={rec.image} alt="" loading="lazy" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                            </>
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-[#555] text-xs font-bold bg-gradient-to-br from-neutral-800 to-neutral-950">?</div>
                           )}
-                          <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 z-20">
+                          <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 z-20">
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
                           </div>
                         </div>
