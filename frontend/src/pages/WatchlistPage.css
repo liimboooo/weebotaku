@@ -235,7 +235,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 20px;
-  overflow: hidden;
 }
 
 .wl-card {
@@ -283,7 +282,7 @@
 .wl-card-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 50%, transparent 100%);
+  background: rgba(0,0,0,0.4);
   opacity: 0;
   display: grid;
   place-items: center;
@@ -292,21 +291,17 @@
 .wl-card:hover .wl-card-overlay { opacity: 1; }
 .wl-card-play {
   color: #fff;
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.85);
+  border: 2px solid rgba(255,255,255,0.8);
   display: grid;
   place-items: center;
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(8px);
   transition: all 0.3s;
-  transform: scale(0.9);
 }
 .wl-card:hover .wl-card-play {
-  background: rgba(255, 255, 255,0.18);
+  background: rgba(255, 255, 255,0.2);
   border-color: #ffffff;
-  transform: scale(1);
 }
 
 .wl-card-tech {
