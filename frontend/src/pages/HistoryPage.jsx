@@ -160,8 +160,6 @@ export default function HistoryPage() {
                         >
                           <div className="hp-card-thumb">
                             <img src={item.img || item.animeImg || ""} alt="" loading="lazy" decoding="async" />
-                            <div className="hp-card-thumb-shine" />
-                            <div className="hp-card-thumb-border" />
                             <div className="hp-card-play">
                               <div className="hp-card-play-icon"><Play size={14} fill="currentColor" /></div>
                             </div>

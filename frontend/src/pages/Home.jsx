@@ -303,7 +303,6 @@ function ContinueWatchingRow() {
             >
               <div className="cw-card-img">
                 <img src={item.img} alt={item.name} loading="lazy" decoding="async" />
-                <div className="cw-card-shine" />
                 <span className="cw-card-ep">EP {item.episode}</span>
                 <button
                   className="cw-card-close"
@@ -400,8 +399,6 @@ function SeasonGrid({ animeList }) {
           >
             <div className="upcoming-card-img">
               <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
-              <div className="upcoming-card-shine" />
-              <div className="upcoming-play-btn"><Play size={16} fill="currentColor" /></div>
               <div className="upcoming-card-badge">
                 {anime.rating && <><Star size={10} fill="#ffffff" color="#ffffff" /> {anime.rating?.toFixed(1)}</>}
               </div>
@@ -468,8 +465,6 @@ function UpcomingSection({ animeList }) {
           >
             <div className="upcoming-card-img">
               <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
-              <div className="upcoming-card-shine" />
-              <div className="upcoming-play-btn"><Play size={16} fill="currentColor" /></div>
               <div className="upcoming-card-badge">
                 <Calendar size={10} /> {anime.season || "TBA"}
               </div>
@@ -691,8 +686,6 @@ export default function Home() {
                 >
                   <div className="upcoming-card-img">
                     <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
-                    <div className="upcoming-card-shine" />
-                    <div className="upcoming-play-btn"><Play size={16} fill="currentColor" /></div>
                     <div className="upcoming-card-badge">
                       {anime.rating && <><Star size={10} fill="#ffffff" color="#ffffff" /> {anime.rating?.toFixed(1)}</>}
                     </div>
