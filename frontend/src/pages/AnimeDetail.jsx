@@ -48,6 +48,7 @@ export default function AnimeDetail() {
   const [streamRetryCount, setStreamRetryCount] = useState(0);
   const [isEpisodesExpanded, setIsEpisodesExpanded] = useState(true);
   const [sidebarView, setSidebarView] = useState('thumbnail');
+  const [brokenThumbs, setBrokenThumbs] = useState(new Set());
   const [sortOrder, setSortOrder] = useState('asc');
   const [recommendations, setRecommendations] = useState([]);
   const [alertBannerVisible, setAlertBannerVisible] = useState(true);
@@ -1147,8 +1148,8 @@ export default function AnimeDetail() {
                               {sidebarView === 'thumbnail' ? (
                                 <>
                                   <div className={`relative w-36 aspect-video flex-shrink-0 rounded-xl overflow-hidden bg-neutral-900 transition-all duration-300 ${isActive ? 'ring-1 ring-white/20 shadow-lg shadow-white/5' : 'shadow-lg'} group-hover:shadow-white/10 group-hover:shadow-lg`}>
-                                    {ep?.thumbnail ? (
-                                      <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" src={ep.thumbnail} alt="" loading="lazy" />
+                                    {ep?.thumbnail && !brokenThumbs.has(ep?.id || realIdx) ? (
+                                      <img className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" src={ep.thumbnail} alt="" loading="lazy" onError={() => setBrokenThumbs(prev => new Set(prev).add(ep?.id || realIdx))} />
                                     ) : (
                                       <div className="w-full h-full bg-gradient-to-br from-neutral-800 to-neutral-950 flex items-center justify-center">
                                         <Film size={18} className="text-neutral-600" />
