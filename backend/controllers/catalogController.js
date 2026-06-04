@@ -420,7 +420,11 @@ exports.getSchedule = async (req, res) => {
   try {
     const start = parseInt(req.query.start) || Math.floor(Date.now() / 1000);
     const end = parseInt(req.query.end) || start + 86400;
-    const q = `query($start:Int,$end:Int){Page(page:1,perPage:50){airingSchedules(airingAt_greater:$start,airingAt_lesser:$end,sort:TIME){id airingAt episode media{id title{romaji english} format coverImage{large}}}}}`;
+    const cacheKey = `schedule_${Math.floor(start / 86400)}`;
+    const cached = getCached(cacheKey);
+    if (cached) return res.json({ success: true, data: cached });
+
+    const q = `query($start:Int,$end:Int){Page(page:1,perPage:50){airingSchedules(airingAt_greater:$start,airingAt_lesser:$end,sort:TIME){id airingAt episode media{id title{romaji english} format coverImage{large} description(asHtml:false) genres averageScore episodes status}}}}`;
     const data = await gql(q, { start: start - 1, end });
     const schedule = (data?.Page?.airingSchedules || [])
       .filter(s => s.media)
@@ -432,9 +436,16 @@ exports.getSchedule = async (req, res) => {
         name: s.media.title?.english || s.media.title?.romaji || '',
         format: s.media.format || 'TV',
         img: s.media.coverImage?.large || '',
+        synopsis: (s.media.description || '').replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ').slice(0, 500),
+        genres: s.media.genres || [],
+        rating: (s.media.averageScore || 0) / 10,
+        totalEpisodes: s.media.episodes || 0,
+        status: s.media.status || '',
       }));
+    setCache(cacheKey, schedule);
     res.json({ success: true, data: schedule });
   } catch (err) {
+    console.error('getSchedule error:', err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 };

@@ -1,260 +1,436 @@
-/* ═══════════════════════════════════════════════════════
-   SCHEDULE — daily airing timeline (sidebar widget)
-   ═══════════════════════════════════════════════════════ */
 .sched {
   width: 100%;
-  background-color: #0c0c0e;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: #0c0c0e;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 24px;
-  padding: 18px;
+  padding: 16px 18px 14px;
   box-sizing: border-box;
   font-family: system-ui, -apple-system, sans-serif;
+  pointer-events: auto !important;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-/* ─── Day selector ───────────────────────────────────── */
+.sched:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+/* ─── Header ────────────────────────────────── */
+.sched-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.sched-header-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e4e4e7;
+  letter-spacing: 0.02em;
+}
+
+.sched-header-clock {
+  font-size: 11px;
+  color: #71717a;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Day selector ──────────────────────────── */
 .sched-days {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 6px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  pointer-events: auto !important;
 }
+
 .sched-arrow {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.04);
-  color: #a1a1aa;
+  background: rgba(255, 255, 255, 0.03);
+  color: #71717a;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 0.2s, color 0.2s;
+  pointer-events: auto !important;
 }
+
 .sched-arrow:hover {
-  background: rgba(255, 255, 255, 0.09);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e4e4e7;
 }
+
 .sched-chips {
   display: flex;
   flex: 1;
-  gap: 8px;
+  gap: 6px;
 }
+
 .sched-chip {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 8px 0;
-  border: none;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #a1a1aa;
+  gap: 1px;
+  padding: 7px 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #71717a;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-}
-.sched-chip:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-.sched-chip-day {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  opacity: 0.8;
-}
-.sched-chip-date {
-  font-size: 18px;
-  font-weight: 800;
-}
-.sched-chip--active {
-  background: #ffffff;
-  color: #0a0a0c;
-  box-shadow: 0 6px 18px rgba(255, 255, 255, 0.2);
-}
-.sched-chip--active .sched-chip-day {
-  opacity: 1;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+  pointer-events: auto !important;
 }
 
-/* ─── Timeline list ──────────────────────────────────── */
-.sched-list {
-  padding: 6px 0;
+.sched-chip:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #a1a1aa;
 }
+
+.sched-chip--active {
+  background: #fff;
+  color: #0a0a0c;
+  border-color: #fff;
+  transform: scale(1.02);
+}
+
+.sched-chip-day {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+
+.sched-chip--active .sched-chip-day {
+  opacity: 1;
+  color: #0a0a0c;
+}
+
+.sched-chip-date {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* ─── Timeline list ─────────────────────────── */
+.sched-list {
+  padding: 4px 0;
+  position: relative;
+  pointer-events: auto !important;
+}
+
 .sched-row {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 11px 4px;
+  gap: 10px;
+  padding: 9px 6px;
   cursor: pointer;
+  border-radius: 10px;
+  transition: background 0.15s;
+  pointer-events: auto !important;
 }
-.sched-row:not(.sched-row--skeleton):hover .sched-title {
-  color: #ffffff;
+
+.sched-row:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
+
+.sched-row--now {
+  background: rgba(255, 255, 255, 0.04);
+  animation: sched-now-glow 3s ease-in-out infinite;
+}
+
+.sched-row--now:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+@keyframes sched-now-glow {
+  0%, 100% { box-shadow: inset 2px 0 0 rgba(34, 197, 94, 0.15); }
+  50% { box-shadow: inset 2px 0 0 rgba(34, 197, 94, 0.35); }
+}
+
 .sched-time {
-  flex-shrink: 0;
-  width: 42px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #71717a;
-  font-variant-numeric: tabular-nums;
-}
-/* timeline node + connecting line */
-.sched-node {
   position: relative;
   flex-shrink: 0;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
-}
-.sched-list .sched-row::before {
-  content: "";
-  position: absolute;
-  left: 58px; /* aligns with the node center (time width 42 + gap 12 + node/2) */
-  top: 0;
-  bottom: 0;
-  width: 1.5px;
-  background: rgba(255, 255, 255, 0.18);
-  z-index: 0;
-}
-.sched-list .sched-row:first-child::before { top: 50%; }
-.sched-list .sched-row:last-child::before { bottom: 50%; }
-.sched-node { z-index: 1; }
-
-.sched-title {
-  flex: 1;
-  min-width: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #e4e4e7;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: color 0.2s ease;
-}
-.sched-type {
-  flex-shrink: 0;
-  padding: 2px 7px;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #a1a1aa;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-}
-.sched-ep {
-  flex-shrink: 0;
+  width: 40px;
   font-size: 11px;
   font-weight: 600;
   color: #71717a;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.15s;
+  z-index: 1;
 }
+
+.sched-row--now .sched-time {
+  color: #22c55e;
+}
+
+.sched-row:hover .sched-time {
+  color: #a1a1aa;
+}
+
+/* Timeline node + line */
+.sched-node {
+  position: relative;
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.04);
+  z-index: 1;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.sched-row:hover .sched-node {
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+  transform: scale(1.15);
+}
+
+.sched-row--now .sched-node {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+  animation: sched-node-pulse 2s ease-in-out infinite;
+}
+
+@keyframes sched-node-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2); }
+  50% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.08); }
+}
+
+.sched-list .sched-row::before {
+  content: "";
+  position: absolute;
+  left: 54px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  z-index: 0;
+  pointer-events: none !important;
+  transition: background 0.2s;
+}
+
+.sched-row:hover::before {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sched-list .sched-row:first-child::before { top: 50%; }
+.sched-list .sched-row:last-child::before { bottom: 50%; }
+
+.sched-title {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #d4d4d8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s;
+  z-index: 1;
+}
+
+.sched-row:hover .sched-title {
+  color: #fff;
+}
+
+.sched-type {
+  position: relative;
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #71717a;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  transition: background 0.15s, color 0.15s;
+  z-index: 1;
+}
+
+.sched-row:hover .sched-type {
+  background: rgba(255, 255, 255, 0.08);
+  color: #a1a1aa;
+}
+
+.sched-ep {
+  position: relative;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  color: #52525b;
+  transition: color 0.15s;
+  z-index: 1;
+}
+
+.sched-row:hover .sched-ep {
+  color: #71717a;
+}
+
 .sched-empty {
   padding: 24px 4px;
   text-align: center;
-  color: #71717a;
-  font-size: 13px;
+  color: #52525b;
+  font-size: 12px;
+  animation: sched-fade-in 0.3s ease-out;
 }
 
-/* ─── Footer ─────────────────────────────────────────── */
+@keyframes sched-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Footer ────────────────────────────────── */
 .sched-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 14px;
-  margin-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 12px;
+  margin-top: 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  pointer-events: auto !important;
 }
-.sched-clock {
-  font-size: 12px;
+
+.sched-view-all {
+  border: none;
+  background: none;
   color: #71717a;
-  font-variant-numeric: tabular-nums;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
 }
+
+.sched-view-all:hover {
+  color: #e4e4e7;
+}
+
 .sched-more {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   border: none;
   background: none;
-  color: #e4e4e7;
+  color: #71717a;
   font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: color 0.2s;
+  padding: 0;
 }
+
 .sched-more:hover {
-  color: #ffffff;
+  color: #e4e4e7;
 }
+
 .sched-more-icon--up {
   transform: rotate(180deg);
 }
 
-/* ─── Skeleton shimmer ───────────────────────────────── */
+/* ─── Skeleton shimmer ──────────────────────── */
 .sched-row--skeleton {
   cursor: default;
+  padding: 9px 6px;
+  border-radius: 10px;
 }
-.sched-row--skeleton .sched-time {
-  height: 12px;
+
+.sched-row--skeleton:hover {
+  background: transparent;
+}
+
+.sched-row--skeleton .sched-node-skeleton {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sched-time-skeleton {
+  flex-shrink: 0;
+  width: 40px;
+  height: 10px;
   border-radius: 4px;
 }
-.sched-row--skeleton .sched-title {
-  height: 12px;
+
+.sched-title-skeleton {
+  flex: 1;
+  height: 10px;
   border-radius: 4px;
 }
+
+.sched-badge-skeleton {
+  flex-shrink: 0;
+  width: 28px;
+  height: 10px;
+  border-radius: 4px;
+}
+
 .sched-shimmer {
   position: relative;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.04);
 }
+
 .sched-shimmer::after {
   content: "";
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
   animation: sched-shimmer 1.4s infinite;
 }
+
 @keyframes sched-shimmer {
-  100% { transform: translateX(100%); }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
 }
 
-/* ─── Responsive ──────────────────────────────────────── */
+/* ─── Responsive ────────────────────────────── */
 @media (max-width: 768px) {
   .sched { padding: 14px; }
   .sched-chip { padding: 6px 0; }
-  .sched-chip-day { font-size: 9px; }
-  .sched-chip-date { font-size: 15px; }
-  .sched-arrow { width: 30px; height: 30px; }
-  .sched-row { padding: 9px 2px; gap: 8px; }
-  .sched-time { width: 36px; font-size: 11px; }
+  .sched-chip-day { font-size: 8px; }
+  .sched-chip-date { font-size: 14px; }
+  .sched-arrow { width: 28px; height: 28px; }
+  .sched-row { padding: 8px 4px; gap: 8px; }
+  .sched-time { width: 36px; font-size: 10px; }
   .sched-title { font-size: 12px; }
-  .sched-type { font-size: 9px; padding: 1px 5px; }
-  .sched-ep { font-size: 10px; }
-  .sched-list .sched-row::before { left: 50px; }
+  .sched-type { font-size: 8px; padding: 1px 4px; }
+  .sched-ep { font-size: 9px; }
+  .sched-list .sched-row::before { left: 48px; }
 }
 
 @media (max-width: 480px) {
   .sched { padding: 12px; border-radius: 18px; }
-  .sched-days { gap: 4px; padding-bottom: 12px; }
+  .sched-days { gap: 4px; padding-bottom: 10px; }
   .sched-chips { gap: 4px; }
   .sched-chip { padding: 5px 0; border-radius: 8px; }
-  .sched-chip-day { font-size: 8px; }
-  .sched-chip-date { font-size: 13px; }
-  .sched-arrow { width: 26px; height: 26px; }
-  .sched-arrow svg { width: 15px; height: 15px; }
+  .sched-chip-day { font-size: 7px; }
+  .sched-chip-date { font-size: 12px; }
+  .sched-arrow { width: 24px; height: 24px; }
   .sched-row { padding: 7px 2px; gap: 6px; }
-  .sched-time { width: 32px; font-size: 10px; }
+  .sched-time { width: 32px; font-size: 9px; }
   .sched-title { font-size: 11px; }
-  .sched-type { font-size: 8px; padding: 1px 4px; }
-  .sched-node { width: 7px; height: 7px; }
-  .sched-list .sched-row::before { left: 44px; width: 1px; }
+  .sched-type { font-size: 7px; padding: 1px 3px; }
+  .sched-ep { font-size: 8px; }
+  .sched-list .sched-row::before { left: 42px; width: 1px; }
   .sched-footer { padding-top: 10px; }
-  .sched-clock { font-size: 10px; }
-  .sched-more { font-size: 11px; }
-  .sched-empty { font-size: 11px; padding: 16px 4px; }
+  .sched-view-all { font-size: 10px; }
+  .sched-more { font-size: 10px; }
+  .sched-empty { font-size: 10px; padding: 14px 4px; }
 }

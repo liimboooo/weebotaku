@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bookmark, Clock, Film, Home, LogOut, Settings, User } from 'lucide-react';
+import { Bookmark, Calendar, Clock, Film, Home, LogOut, Settings, User } from 'lucide-react';
 import authService from '../services/authService';
 import './Sidebar.css';
 
 const TOP_ITEMS = [
   { icon: Home, label: 'Home', path: '/home' },
   { icon: Film, label: 'Browse', path: '/browse/anime' },
+  { icon: Calendar, label: 'Schedule', path: '/schedule' },
 ];
 
 const BOTTOM_ITEMS = [

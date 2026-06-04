@@ -39,6 +39,8 @@
   min-width: 0;
 }
 .trending-rail {
+  position: relative;
+  z-index: 1;
   margin-bottom: 24px;
   display: flex;
   flex-direction: column;

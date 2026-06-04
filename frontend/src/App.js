@@ -27,6 +27,7 @@ const WatchlistPage = lazy(() => import("./pages/WatchlistPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage"));
+const SchedulePage = lazy(() => import("./pages/SchedulePage"));
 const Browse = lazy(() => import("./pages/Browse"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -102,6 +103,7 @@ function AppLayout() {
           <Route path="/watchlist" element={<RouteShell><WatchlistPage /></RouteShell>} />
           <Route path="/profile" element={<RouteShell><ProtectedRoute><ProfilePage /></ProtectedRoute></RouteShell>} />
           <Route path="/profile/:username" element={<RouteShell><ProfilePage /></RouteShell>} />
+          <Route path="/schedule" element={<RouteShell><SchedulePage /></RouteShell>} />
           <Route path="/history" element={<RouteShell><HistoryPage /></RouteShell>} />
           <Route path="*" element={<RouteShell><NotFound /></RouteShell>} />
         </Routes>

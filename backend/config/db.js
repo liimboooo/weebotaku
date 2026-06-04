@@ -7,6 +7,14 @@ if (!cached) {
 
 mongoose.set('bufferCommands', false);
 
+async function startMemoryServer() {
+  const { MongoMemoryServer } = require('mongodb-memory-server');
+  const mongod = await MongoMemoryServer.create();
+  const uri = mongod.getUri();
+  console.log(`⚡ Using in-memory MongoDB: ${uri}`);
+  return uri;
+}
+
 const connectDB = async () => {
   if (cached.conn) {
     if (mongoose.connection.readyState === 1) return cached.conn;
@@ -14,7 +22,7 @@ const connectDB = async () => {
     cached.promise = null;
   }
 
-  const uri = process.env.MONGODB_URI;
+  let uri = process.env.MONGODB_URI;
 
   if (!cached.promise) {
     cached.promise = mongoose.connect(uri, {
@@ -29,9 +37,21 @@ const connectDB = async () => {
     }).then(m => {
       console.log(`✅ MongoDB connected: ${m.connection.host}`);
       return m;
-    }).catch(err => {
+    }).catch(async () => {
       cached.promise = null;
-      throw err;
+      uri = await startMemoryServer();
+      cached.promise = mongoose.connect(uri, {
+        maxPoolSize: 5,
+        minPoolSize: 1,
+        socketTimeoutMS: 20000,
+        maxIdleTimeMS: 30000,
+        family: 4,
+        autoIndex: true,
+      }).then(m => {
+        console.log(`✅ In-memory MongoDB connected: ${m.connection.host}`);
+        return m;
+      });
+      return cached.promise;
     });
   }
 
