@@ -19,9 +19,21 @@ app.use(helmet({
 app.use(hpp());
 
 // ─── CORS ────────────────────────────────────────────────
-const allowedOrigins = [FRONTEND_URL, 'https://frontend-beryl-theta-14.vercel.app'].filter(Boolean);
+const isDev = process.env.NODE_ENV !== 'production';
+const allowedOrigins = [
+  FRONTEND_URL,
+  'https://frontend-beryl-theta-14.vercel.app',
+  ...(isDev ? ['http://localhost:3000', 'http://127.0.0.1:3000'] : []),
+].filter(Boolean);
+console.log('CORS allowed origins:', allowedOrigins);
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, origin);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
