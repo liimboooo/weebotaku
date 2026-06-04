@@ -1,4 +1,6 @@
 // API Configuration
+import { STORAGE_KEYS } from '../utils/constants';
+
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 class ApiClient {
@@ -8,7 +10,7 @@ class ApiClient {
   }
 
   getToken() {
-    return localStorage.getItem('token');
+    return localStorage.getItem(STORAGE_KEYS.TOKEN);
   }
 
   getHeaders(withAuth = true) {
@@ -44,8 +46,14 @@ class ApiClient {
 
       if (response.status === 401 && !this._redirecting && !options.skipAuthRedirect) {
         this._redirecting = true;
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        const keysToRemove = [
+          STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER, STORAGE_KEYS.USERNAME, STORAGE_KEYS.IS_LOGGED_IN,
+          STORAGE_KEYS.USER_AVATAR,
+          STORAGE_KEYS.MEMBER_SINCE, STORAGE_KEYS.SOCIAL_LINKS,
+          STORAGE_KEYS.WATCHLIST, STORAGE_KEYS.MANGA_READ_LIST, STORAGE_KEYS.WATCH_HISTORY,
+          STORAGE_KEYS.USER_RATINGS, STORAGE_KEYS.LIKED_ANIME, STORAGE_KEYS.MANGA_PROGRESS,
+        ];
+        keysToRemove.forEach(k => localStorage.removeItem(k));
         window.dispatchEvent(new CustomEvent('auth-logout', { detail: { reason: 'token_expired' } }));
         setTimeout(() => { this._redirecting = false; }, 2000);
         throw new Error('Session expired. Please log in again.');

@@ -9,7 +9,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { getAnimeById } from "../data/animeData";
 import Hls from "hls.js";
 import { findStreamingSource, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream, getMiruroEpisodes } from "../services/animeApi";
-import { loadWatchHistory, addToWatchHistory } from "../services/storage";
+import { loadWatchHistory, addToWatchHistory, addToWatchlist, removeFromWatchlist, isInWatchlist } from "../services/storage";
 import { fetchAnimeRecommendations } from "../services/anilistApi";
 import commentService from "../services/commentService";
 import authService from "../services/authService";
@@ -48,6 +48,8 @@ export default function AnimeDetail() {
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
   const [isEpisodesExpanded, setIsEpisodesExpanded] = useState(true);
+  const [bookmarked, setBookmarked] = useState(() => id ? isInWatchlist(id) : false);
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [sidebarView, setSidebarView] = useState('thumbnail');
   const [brokenThumbs, setBrokenThumbs] = useState(new Set());
   const [sortOrder, setSortOrder] = useState('asc');
@@ -88,6 +90,7 @@ export default function AnimeDetail() {
   const failedServers = useRef(new Set());
   const epIndexRef = useRef(epIndex);
   const episodesRef = useRef(episodes);
+  const lastHistorySaveRef = useRef(false);
   useEffect(() => { epIndexRef.current = epIndex; }, [epIndex]);
   useEffect(() => { episodesRef.current = episodes; }, [episodes]);
 
@@ -123,7 +126,7 @@ export default function AnimeDetail() {
       text: r.content,
       time: new Date(r.createdAt).getTime().toString(),
       likes: r.likes?.length || 0,
-      dislikes: 0,
+      dislikes: r.dislikes?.length || 0,
       replies: [],
     })),
     pinned: c.pinned || false,
@@ -213,7 +216,10 @@ export default function AnimeDetail() {
   useDocumentTitle(anime ? `${anime.name} - Ep ${selectedEp}` : "Loading...");
   useEffect(() => {
     const epFromUrl = searchParams.get("ep");
-    if (epFromUrl) { setSelectedEp(Number(epFromUrl)); return; }
+    if (epFromUrl) {
+      const epNum = parseInt(epFromUrl, 10);
+      if (!isNaN(epNum) && epNum > 0) { setSelectedEp(epNum); return; }
+    }
     const history = loadWatchHistory();
     const found = history.find((h) => h.animeId === parseInt(id));
     if (found) setSelectedEp(found.episode);
@@ -302,7 +308,7 @@ export default function AnimeDetail() {
             watchAnime.source, watchAnime.sourceBase, watchAnime.anilistId, 0
           );
           if (timedOut) return;
-          if (result.episodes.length > 0) {
+          if (result?.episodes?.length > 0) {
             clearTimeout(timer);
             setEpisodes(result.episodes);
             setHasMoreEps(result.hasMore);
@@ -363,20 +369,20 @@ export default function AnimeDetail() {
       watchAnime.title || watchAnime.slug, watchAnime.tagSlug,
       watchAnime.source, watchAnime.sourceBase, watchAnime.anilistId, nextPage
     );
-    if (result.episodes.length > 0) {
+    if (result?.episodes?.length > 0) {
       setEpisodes(prev => [...prev, ...result.episodes]);
       setEpPage(nextPage);
       setHasMoreEps(result.hasMore);
     }
-    if (!result.hasMore) setAllEpsLoaded(true);
+    if (!result?.hasMore) setAllEpsLoaded(true);
   };
 
-  const episode = episodes[epIndex];
+  const episode = episodes[epIndex] || null;
 
   useEffect(() => {
     if (!episode) return;
     let cancelled = false;
-    addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img);
+    addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img, 0, anime?.episodes);
     setSeekTo(null);
     setIntroOutro({ intro: null, outro: null });
     setShowSkipIntro(false);
@@ -534,13 +540,15 @@ export default function AnimeDetail() {
         if (introOutro.outro && t >= introOutro.outro.end) autoSkippedOutro.done = true;
       }
 
-      if (dur && t > 5 && t % 15 < 1) {
-        addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img, t);
+      if (dur && t > 5 && t % 15 < 1 && !lastHistorySaveRef.current) {
+        lastHistorySaveRef.current = true;
+        setTimeout(() => { lastHistorySaveRef.current = false; }, 5000);
+        addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img, t, anime?.episodes);
       }
     };
 
     const onEnded = () => {
-      addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img, video.duration || 0);
+      addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img, video.duration || 0, anime?.episodes);
       const settings = loadSettings();
       const currentEpIdx = epIndexRef.current;
       const currentEps = episodesRef.current;
@@ -853,9 +861,13 @@ export default function AnimeDetail() {
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 text-xl font-bold">!</div>
                   <p className="text-sm text-zinc-400">{error}</p>
-                  <button className="px-5 py-2 rounded-full bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors" onClick={() => { if (episodes.length === 0) setRetryCount(c => c + 1); else setStreamRetryCount(c => c + 1); }}>
-                    Retry
-                  </button>
+                  {(retryCount + streamRetryCount) < 3 ? (
+                    <button className="px-5 py-2 rounded-full bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors" onClick={() => { if (episodes.length === 0) setRetryCount(c => c + 1); else setStreamRetryCount(c => c + 1); }}>
+                      Retry
+                    </button>
+                  ) : (
+                    <p className="text-xs text-zinc-500">No more sources available</p>
+                  )}
                 </div>
               )}
               {/* hls video */}
@@ -1017,23 +1029,50 @@ export default function AnimeDetail() {
 
                   {/* Actions Row */}
                   <div className="flex flex-wrap items-center gap-2">
-                    <button className="bg-white text-black px-5 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-zinc-200 transition-colors">
-                      <Bookmark size={14} /> Add to List
-                    </button>
-                    <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5">
-                      <button className="px-4 py-2.5 hover:bg-white/10 text-white font-medium text-sm flex items-center gap-2 border-r border-white/10 transition-colors">👍 12K</button>
-                      <button className="px-4 py-2.5 hover:bg-white/10 text-white font-medium text-sm flex items-center gap-2 transition-colors">👎</button>
+                    <div className="relative">
+                      <button
+                        className={`px-5 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 transition-colors ${bookmarked ? 'bg-white/10 text-white' : 'bg-white text-black hover:bg-zinc-200'}`}
+                        onClick={() => { if (!bookmarked) { setShowStatusMenu(s => !s); } else { removeFromWatchlist(id); setBookmarked(false); } }}
+                      >
+                        <Bookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} /> {bookmarked ? 'In List' : 'Add to List'}
+                      </button>
+                      {showStatusMenu && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowStatusMenu(false)} />
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="absolute top-full left-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl py-1 min-w-[140px] shadow-2xl z-50"
+                          >
+                            {["Planning","Watching","Completed","Paused","Dropped"].map(s => (
+                              <button
+                                key={s}
+                                className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
+                                onClick={() => {
+                                  addToWatchlist({ id, name: anime?.name || episode?.title || `Episode ${selectedEp}`, img: anime?.img, type: 'anime', listStatus: s });
+                                  setBookmarked(true);
+                                  setShowStatusMenu(false);
+                                }}
+                              >{s}</button>
+                            ))}
+                          </motion.div>
+                        </>
+                      )}
                     </div>
-                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors">
+                    <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5">
+                      <button className="px-4 py-2.5 hover:bg-white/10 text-white font-medium text-sm flex items-center gap-2 border-r border-white/10 transition-colors" onClick={() => {}}>👍 12K</button>
+                      <button className="px-4 py-2.5 hover:bg-white/10 text-white font-medium text-sm flex items-center gap-2 transition-colors" onClick={() => {}}>👎</button>
+                    </div>
+                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors" onClick={() => setAlertBannerVisible(true)}>
                       Dub <ChevronDown size={14} className="text-zinc-400" />
                     </button>
-                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors">
+                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors" onClick={() => setAlertBannerVisible(true)}>
                       Server <ChevronDown size={14} className="text-zinc-400" />
                     </button>
-                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors">
+                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
                       <Share2 size={14} /> Share
                     </button>
-                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 w-10 h-10 flex items-center justify-center rounded-full text-white transition-colors" title="Report">
+                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 w-10 h-10 flex items-center justify-center rounded-full text-white transition-colors" title="Report" onClick={() => {}}>
                       <Flag size={14} />
                     </button>
                   </div>

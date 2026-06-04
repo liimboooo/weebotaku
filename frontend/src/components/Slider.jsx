@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Bookmark, Play, Star, Zap } from "lucide-react";
@@ -10,7 +10,8 @@ function SliderCard({ item, onClick }) {
   const [loaded, setLoaded] = useState(false);
   const [imgErr, setImgErr] = useState(false);
   const [wishlist, setWishlist] = useState(() => loadWatchlist());
-  const inWishlist = wishlist.some(i => i.id === item.id);
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const inWishlist = wishlist.some(i => String(i.id) === String(item.id));
 
   const toggleWishlist = (e) => {
     e.stopPropagation();
@@ -18,9 +19,15 @@ function SliderCard({ item, onClick }) {
       removeFromWatchlist(item.id);
       setWishlist(loadWatchlist());
     } else {
-      addToWatchlist(item);
-      setWishlist(loadWatchlist());
+      setShowStatusMenu(true);
     }
+  };
+
+  const addWithStatus = (status, e) => {
+    e.stopPropagation();
+    addToWatchlist({ ...item, listStatus: status });
+    setWishlist(loadWatchlist());
+    setShowStatusMenu(false);
   };
 
   return (
@@ -66,6 +73,22 @@ function SliderCard({ item, onClick }) {
           <button className={`slider-wish-btn ${inWishlist ? "active" : ""}`} onClick={toggleWishlist}>
             <Bookmark size={12} fill={inWishlist ? "currentColor" : "none"} />
           </button>
+          {showStatusMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setShowStatusMenu(false); }} />
+              <div className="absolute top-8 right-0 bg-zinc-900 border border-zinc-700 rounded-xl py-1 min-w-[130px] shadow-2xl z-50"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {["Planning","Watching","Completed","Paused","Dropped"].map(s => (
+                  <button
+                    key={s}
+                    className="w-full text-left px-3 py-1.5 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
+                    onClick={(e) => addWithStatus(s, e)}
+                  >{s}</button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
         <p className="slider-card-desc">{(item.synopsis || '').replace(/<[^>]*>/g, '')}</p>
         <div className="slider-card-foot">

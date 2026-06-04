@@ -12,6 +12,8 @@ const {
   connectMAL, malCallback, disconnectMAL, syncMAL,
   connectAniList, aniListCallback, disconnectAniList, syncAniList,
   updateFavorites,
+  exportFavorites,
+  importFavorites,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
@@ -57,5 +59,7 @@ router.post('/sync/anilist/disconnect', protect, disconnectAniList);
 router.post('/sync/anilist/sync', protect, syncAniList);
 
 router.put('/favorites', protect, updateFavorites);
+router.get('/favorites/export', protect, exportFavorites);
+router.post('/favorites/import', protect, importFavorites);
 
 module.exports = router;

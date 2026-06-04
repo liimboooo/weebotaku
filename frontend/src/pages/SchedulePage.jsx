@@ -490,19 +490,13 @@ export default function SchedulePage() {
                     <div key={s.id} className="relative grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-start gap-4 md:gap-6 pb-12 last:pb-0 group">
                       {isLeft ? (
                         <>
-                      <div className="hidden md:flex justify-end pr-5">
-                        <AnimeCard item={s} />
-                      </div>
-                      <div className="hidden md:block relative pt-1">
-                        <div className="flex justify-center">
-                          <TimelineNode active={isFirst} />
-                        </div>
-                      </div>
-                      <div className="hidden md:flex pl-5 pt-3">
-                        <TimestampBlock time={timeStr} episode={s.episode} />
-                      </div>
-                          <div className="relative flex justify-center md:block pt-1">
-                            <TimelineNode active={isFirst} />
+                          <div className="hidden md:flex justify-end pr-5">
+                            <AnimeCard item={s} />
+                          </div>
+                          <div className="hidden md:block relative pt-1">
+                            <div className="flex justify-center">
+                              <TimelineNode active={isFirst} />
+                            </div>
                           </div>
                           <div className="hidden md:flex pl-5 pt-3">
                             <TimestampBlock time={timeStr} episode={s.episode} />
@@ -523,19 +517,13 @@ export default function SchedulePage() {
                         </>
                       ) : (
                         <>
-                      <div className="hidden md:flex justify-end pr-5 pt-3">
-                        <TimestampBlock time={timeStr} episode={s.episode} alignRight />
-                      </div>
-                      <div className="hidden md:block relative pt-1">
-                        <div className="flex justify-center">
-                          <TimelineNode active={isFirst} />
-                        </div>
-                      </div>
-                      <div className="hidden md:flex pl-5">
-                        <AnimeCard item={s} />
-                      </div>
-                          <div className="relative flex justify-center md:block pt-1">
-                            <TimelineNode active={isFirst} />
+                          <div className="hidden md:flex justify-end pr-5 pt-3">
+                            <TimestampBlock time={timeStr} episode={s.episode} alignRight />
+                          </div>
+                          <div className="hidden md:block relative pt-1">
+                            <div className="flex justify-center">
+                              <TimelineNode active={isFirst} />
+                            </div>
                           </div>
                           <div className="hidden md:flex pl-5">
                             <AnimeCard item={s} />

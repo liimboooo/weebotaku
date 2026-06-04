@@ -40,6 +40,7 @@ async function raceToFirst(promises) {
   let settled = false;
   return new Promise((resolve) => {
     for (const p of promises) {
+      // eslint-disable-next-line no-loop-func
       p.then(val => { if (!settled && val) { settled = true; resolve(val); } }).catch(() => {});
     }
     Promise.allSettled(promises).then(() => { if (!settled) resolve(null); });
@@ -66,9 +67,24 @@ function extractServers(data) {
   return null;
 }
 
+function combineAbortSignals(s1, s2) {
+  const controller = new AbortController();
+  const onAbort = () => controller.abort();
+  s1.addEventListener('abort', onAbort);
+  s2.addEventListener('abort', onAbort);
+  if (s1.aborted || s2.aborted) controller.abort();
+  return controller.signal;
+}
+
 async function tryFetch(url, signal) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  const mergedSignal = signal
+    ? combineAbortSignals(signal, controller.signal)
+    : controller.signal;
   try {
-    const res = await fetch(url, { signal, mode: "cors" });
+    const res = await fetch(url, { signal: mergedSignal, mode: "cors" });
+    clearTimeout(timeout);
     if (!res.ok) return null;
     const text = await res.text();
     let parsed;
@@ -79,6 +95,7 @@ async function tryFetch(url, signal) {
     if (parsed && parsed.success === false) return null;
     return parsed;
   } catch {
+    clearTimeout(timeout);
     return null;
   }
 }
@@ -140,14 +157,18 @@ function extractAnilistId(coverUrl) {
   return m ? parseInt(m[1], 10) : null;
 }
 
-const SOURCES = process.env.REACT_APP_STREAM_SOURCES
-  ? JSON.parse(process.env.REACT_APP_STREAM_SOURCES)
-  : {
-      reanime: {
-        name: "reanime",
-        base: REANIME_BASE,
-      },
-    };
+let parsedSources = null;
+try {
+  if (process.env.REACT_APP_STREAM_SOURCES) {
+    parsedSources = JSON.parse(process.env.REACT_APP_STREAM_SOURCES);
+  }
+} catch {}
+const SOURCES = parsedSources || {
+  reanime: {
+    name: "reanime",
+    base: REANIME_BASE,
+  },
+};
 
 const searchCache = new Map();
 

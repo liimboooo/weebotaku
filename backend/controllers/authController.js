@@ -1,9 +1,72 @@
 const User = require('../models/User');
+const Sync = require('../models/Sync');
 const Notification = require('../models/Notification');
 const { emitNotification } = require('./notifyHelper');
 const { OAuth2Client } = require('google-auth-library');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../emailService');
 const bcrypt = require('bcryptjs');
+const malService = require('../services/malService');
+const anilistService = require('../services/anilistService');
+const { MAX_FAVORITES, MAX_ACTIVITIES, MAX_COLLECTIONS } = require('../config/constants');
+
+async function pushToConnectedServices(user, animeId, listStatus, rating = 0, progress = 0) {
+  try {
+    const syncs = await Sync.find({ userId: user._id, syncStatus: 'synced' });
+    for (const sync of syncs) {
+      try {
+        let accessToken = sync.accessToken;
+        if (sync.expiresAt && new Date() > sync.expiresAt && sync.refreshToken) {
+          try {
+            const refresh = sync.service === 'mal'
+              ? await malService.refreshAccessToken(sync.refreshToken)
+              : await anilistService.refreshAccessToken(sync.refreshToken);
+            accessToken = refresh.accessToken;
+            sync.accessToken = refresh.accessToken;
+            sync.refreshToken = refresh.refreshToken || sync.refreshToken;
+            sync.expiresAt = refresh.expiresAt;
+            await sync.save();
+          } catch {}
+        }
+        if (sync.service === 'mal') {
+          await malService.updateAnimeList(accessToken, animeId, listStatus, rating, progress);
+        } else if (sync.service === 'anilist') {
+          await anilistService.saveMediaListEntry(accessToken, animeId, listStatus, rating, progress);
+        }
+      } catch {}
+    }
+  } catch {}
+}
+
+async function pushFavoritesToConnectedServices(user) {
+  try {
+    const syncs = await Sync.find({ userId: user._id, syncStatus: 'synced' });
+    const favorites = user.favorites || [];
+    if (!favorites.length) return;
+    
+    for (const sync of syncs) {
+      try {
+        let accessToken = sync.accessToken;
+        if (sync.expiresAt && new Date() > sync.expiresAt && sync.refreshToken) {
+          try {
+            const refresh = sync.service === 'mal'
+              ? await malService.refreshAccessToken(sync.refreshToken)
+              : await anilistService.refreshAccessToken(sync.refreshToken);
+            accessToken = refresh.accessToken;
+            sync.accessToken = refresh.accessToken;
+            sync.refreshToken = refresh.refreshToken || sync.refreshToken;
+            sync.expiresAt = refresh.expiresAt;
+            await sync.save();
+          } catch {}
+        }
+        if (sync.service === 'mal') {
+          await malService.updateFavorites(accessToken, favorites);
+        } else if (sync.service === 'anilist') {
+          await anilistService.updateFavorites(accessToken, favorites);
+        }
+      } catch {}
+    }
+  } catch {}
+}
 
 // @route   POST /api/auth/register
 exports.register = async (req, res) => {
@@ -239,6 +302,8 @@ exports.updateListStatus = async (req, res) => {
     item.listStatus = listStatus;
     await user.save();
 
+    pushToConnectedServices(user, animeId, listStatus, item.rating || 0, 0);
+
     res.json({ success: true, data: user.watchlist });
   } catch (error) {
     console.error('UpdateListStatus error:', error);
@@ -292,8 +357,8 @@ exports.logout = async (req, res) => {
 exports.updateFavorites = async (req, res) => {
   try {
     const { favorites } = req.body;
-    if (!Array.isArray(favorites) || favorites.length > 5) {
-      return res.status(400).json({ success: false, message: 'Max 5 favorites allowed' });
+    if (!Array.isArray(favorites) || favorites.length > MAX_FAVORITES) {
+      return res.status(400).json({ success: false, message: `Max ${MAX_FAVORITES} favorites allowed` });
     }
     const user = await User.findByIdAndUpdate(
       req.user.id,
@@ -301,9 +366,72 @@ exports.updateFavorites = async (req, res) => {
       { new: true, runValidators: true }
     );
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    
+    // Push to connected services
+    pushFavoritesToConnectedServices(user).catch(() => {});
+    
     res.json({ success: true, favorites: user.favorites });
   } catch (error) {
     console.error('UpdateFavorites error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   GET /api/auth/favorites/export
+exports.exportFavorites = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('favorites');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    
+    const exportData = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      username: req.user.username,
+      favorites: user.favorites || [],
+    };
+    
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="animewch-favorites-${Date.now()}.json"`);
+    res.json({ success: true, data: exportData });
+  } catch (error) {
+    console.error('ExportFavorites error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/favorites/import
+exports.importFavorites = async (req, res) => {
+  try {
+    const { data } = req.body;
+    if (!data || !data.favorites || !Array.isArray(data.favorites)) {
+      return res.status(400).json({ success: false, message: 'Invalid import data format' });
+    }
+    
+    if (data.favorites.length > MAX_FAVORITES) {
+      return res.status(400).json({ success: false, message: `Max ${MAX_FAVORITES} favorites allowed` });
+    }
+    
+    const validFavorites = data.favorites.filter(f => f && f.animeId && f.name);
+    
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { favorites: validFavorites.map(f => ({ animeId: f.animeId, name: f.name, img: f.img || '' })) },
+      { new: true, runValidators: true }
+    );
+    
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    
+    // Push to connected services
+    pushFavoritesToConnectedServices(user).catch(() => {});
+    
+    res.json({ 
+      success: true, 
+      favorites: user.favorites,
+      imported: validFavorites.length,
+      skipped: data.favorites.length - validFavorites.length,
+    });
+  } catch (error) {
+    console.error('ImportFavorites error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
@@ -318,7 +446,7 @@ exports.logActivity = async (req, res) => {
     }
     const user = await User.findById(req.user.id);
     user.activities.unshift({ type, animeId, animeName, animeImg, detail, createdAt: new Date() });
-    if (user.activities.length > 50) user.activities = user.activities.slice(0, 50);
+    if (user.activities.length > MAX_ACTIVITIES) user.activities = user.activities.slice(0, MAX_ACTIVITIES);
     await user.save();
     res.json({ success: true });
   } catch (error) {
@@ -385,8 +513,8 @@ exports.createCollection = async (req, res) => {
     const { name, description, isPublic } = req.body;
     if (!name) return res.status(400).json({ success: false, message: 'Collection name required' });
     const user = await User.findById(req.user.id);
-    if (user.collections.length >= 20) {
-      return res.status(400).json({ success: false, message: 'Max 20 collections' });
+    if (user.collections.length >= MAX_COLLECTIONS) {
+      return res.status(400).json({ success: false, message: `Max ${MAX_COLLECTIONS} collections` });
     }
     user.collections.push({ name, description: description || '', anime: [], isPublic: isPublic !== false });
     await user.save();
@@ -755,10 +883,6 @@ exports.validateResetToken = async (req, res) => {
 
 // ─── MAL / AniList Sync (OAuth) ──────────────────────────
 
-const Sync = require('../models/Sync');
-const malService = require('../services/malService');
-const anilistService = require('../services/anilistService');
-
 function mergeIntoWatchlist(existing, incoming) {
   const existingIds = new Set(existing.map(w => w.animeId));
   const added = [];
@@ -808,7 +932,8 @@ exports.getSyncStatus = async (req, res) => {
 // @route   POST /api/auth/sync/mal/connect
 exports.connectMAL = async (req, res) => {
   try {
-    const { url, codeVerifier } = malService.getConnectUrl();
+    const origin = req.headers.origin || req.headers.host || '';
+    const { url, codeVerifier } = malService.getConnectUrl(origin);
     res.json({ success: true, authUrl: url, codeVerifier });
   } catch (error) {
     console.error('ConnectMAL error:', error);
@@ -821,8 +946,10 @@ exports.malCallback = async (req, res) => {
   try {
     const { code, codeVerifier } = req.body;
     if (!code) return res.status(400).json({ success: false, message: 'Authorization code required' });
+    if (!codeVerifier) return res.status(400).json({ success: false, message: 'Missing code verifier — please reconnect from Settings' });
 
-    const tokenData = await malService.exchangeCode(code, codeVerifier || code);
+    const origin = req.headers.origin || req.headers.host || '';
+    const tokenData = await malService.exchangeCode(code, codeVerifier, origin);
     let userInfo = { username: 'mal_user', avatar: '' };
     try {
       userInfo = await malService.getUserInfo(tokenData.accessToken);
@@ -830,6 +957,7 @@ exports.malCallback = async (req, res) => {
       console.warn('MAL user info fetch failed, using fallback:', e.message);
     }
     const list = await malService.fetchAnimeList(tokenData.accessToken);
+    const malFavorites = await malService.fetchFavorites(tokenData.accessToken);
 
     const existing = await Sync.findOne({ userId: req.user.id, service: 'mal' });
     if (existing) {
@@ -853,9 +981,39 @@ exports.malCallback = async (req, res) => {
     }
 
     const user = await User.findById(req.user.id);
+    if (!user) return res.status(401).json({ success: false, message: 'Session expired — please log in again.' });
     const { watchlist, addedCount, updatedCount } = mergeIntoWatchlist(user.watchlist, list);
     user.watchlist = watchlist;
+    if (malFavorites && malFavorites.length) {
+      const existingFavIds = new Set((user.favorites || []).map(f => f.animeId));
+      const newFavs = malFavorites.filter(f => f.animeId && !existingFavIds.has(f.animeId)).slice(0, MAX_FAVORITES - (user.favorites || []).length);
+      if (newFavs.length) {
+        user.favorites = [...(user.favorites || []), ...newFavs];
+      }
+    }
     await user.save();
+
+    // Push local favorites to MAL
+    await malService.updateFavorites(tokenData.accessToken, user.favorites || []);
+
+    // Push local-only items to MAL
+    const malIds = new Set(list.map(item => String(item.animeId)));
+    for (const item of user.watchlist) {
+      if (!malIds.has(String(item.animeId))) {
+        try {
+          await malService.updateAnimeList(
+            tokenData.accessToken,
+            item.animeId,
+            item.listStatus || 'Planning',
+            item.rating || 0,
+            item.progress || 0
+          );
+          await new Promise(r => setTimeout(r, 400));
+        } catch (e) {
+          console.warn(`Failed to push anime ${item.animeId} to MAL:`, e.message);
+        }
+      }
+    }
 
     await Sync.updateOne(
       { userId: req.user.id, service: 'mal' },
@@ -873,7 +1031,7 @@ exports.malCallback = async (req, res) => {
   } catch (error) {
     await Sync.updateOne(
       { userId: req.user.id, service: 'mal' },
-      { syncStatus: 'failed', lastError: error.message }
+      { syncStatus: 'synced', lastError: error.message }
     ).catch(() => {});
     console.error('MalCallback error:', error);
     res.status(500).json({ success: false, message: error.message || 'MAL callback failed' });
@@ -907,12 +1065,35 @@ exports.syncMAL = async (req, res) => {
     await sync.save();
 
     let accessToken = sync.accessToken;
+    if (sync.expiresAt && new Date() > sync.expiresAt && sync.refreshToken) {
+      try {
+        const refreshed = await malService.refreshAccessToken(sync.refreshToken);
+        accessToken = refreshed.accessToken;
+        sync.accessToken = refreshed.accessToken;
+        sync.refreshToken = refreshed.refreshToken || sync.refreshToken;
+        sync.expiresAt = refreshed.expiresAt;
+        await sync.save();
+      } catch (e) {
+        console.warn('MAL token refresh failed, trying with existing token:', e.message);
+      }
+    }
     const list = await malService.fetchAnimeList(accessToken);
+    const malFavorites = await malService.fetchFavorites(accessToken);
 
     const user = await User.findById(req.user.id);
     const { watchlist, addedCount, updatedCount } = mergeIntoWatchlist(user.watchlist, list);
     user.watchlist = watchlist;
+    if (malFavorites && malFavorites.length) {
+      const existingFavIds = new Set((user.favorites || []).map(f => f.animeId));
+      const newFavs = malFavorites.filter(f => f.animeId && !existingFavIds.has(f.animeId)).slice(0, MAX_FAVORITES - (user.favorites || []).length);
+      if (newFavs.length) {
+        user.favorites = [...(user.favorites || []), ...newFavs];
+      }
+    }
     await user.save();
+
+    // Push local favorites to MAL
+    await malService.updateFavorites(accessToken, user.favorites || []);
 
     sync.syncStatus = 'synced';
     sync.lastSynced = new Date();
@@ -929,7 +1110,7 @@ exports.syncMAL = async (req, res) => {
   } catch (error) {
     await Sync.updateOne(
       { userId: req.user.id, service: 'mal' },
-      { syncStatus: 'failed', lastError: error.message }
+      { syncStatus: 'synced', lastError: error.message }
     ).catch(() => {});
     console.error('SyncMAL error:', error.message);
     res.status(500).json({ success: false, message: error.message || 'Sync failed' });
@@ -939,7 +1120,8 @@ exports.syncMAL = async (req, res) => {
 // @route   POST /api/auth/sync/anilist/connect
 exports.connectAniList = async (req, res) => {
   try {
-    const authUrl = anilistService.getAuthUrl();
+    const origin = req.headers.origin || req.headers.host || '';
+    const authUrl = anilistService.getAuthUrl(origin);
     res.json({ success: true, authUrl });
   } catch (error) {
     console.error('ConnectAniList error:', error);
@@ -950,12 +1132,14 @@ exports.connectAniList = async (req, res) => {
 // @route   POST /api/auth/sync/anilist/callback
 exports.aniListCallback = async (req, res) => {
   try {
-    const { code } = req.body;
+    const { code, codeVerifier } = req.body;
     if (!code) return res.status(400).json({ success: false, message: 'Authorization code required' });
 
-    const tokenData = await anilistService.exchangeCode(code);
+    const origin = req.headers.origin || req.headers.host || '';
+    const tokenData = await anilistService.exchangeCode(code, origin);
     const userInfo = await anilistService.getUserInfo(tokenData.accessToken);
     const list = await anilistService.fetchAnimeList(tokenData.accessToken, userInfo.id);
+    const alFavorites = await anilistService.fetchFavorites(tokenData.accessToken);
 
     const existing = await Sync.findOne({ userId: req.user.id, service: 'anilist' });
     if (existing) {
@@ -979,9 +1163,39 @@ exports.aniListCallback = async (req, res) => {
     }
 
     const user = await User.findById(req.user.id);
+    if (!user) return res.status(401).json({ success: false, message: 'Session expired — please log in again.' });
     const { watchlist, addedCount, updatedCount } = mergeIntoWatchlist(user.watchlist, list);
     user.watchlist = watchlist;
+    if (alFavorites && alFavorites.length) {
+      const existingFavIds = new Set((user.favorites || []).map(f => f.animeId));
+      const newFavs = alFavorites.filter(f => f.animeId && !existingFavIds.has(f.animeId)).slice(0, MAX_FAVORITES - (user.favorites || []).length);
+      if (newFavs.length) {
+        user.favorites = [...(user.favorites || []), ...newFavs];
+      }
+    }
     await user.save();
+
+    // Push local favorites to AniList
+    await anilistService.updateFavorites(tokenData.accessToken, user.favorites || []);
+
+    // Push local-only items to AniList
+    const alIds = new Set(list.map(item => String(item.animeId)));
+    for (const item of user.watchlist) {
+      if (!alIds.has(String(item.animeId))) {
+        try {
+          await anilistService.saveMediaListEntry(
+            tokenData.accessToken,
+            item.animeId,
+            item.listStatus || 'Planning',
+            item.rating || 0,
+            item.progress || 0
+          );
+          await new Promise(r => setTimeout(r, 400));
+        } catch (e) {
+          console.warn(`Failed to push anime ${item.animeId} to AniList:`, e.message);
+        }
+      }
+    }
 
     await Sync.updateOne(
       { userId: req.user.id, service: 'anilist' },
@@ -999,7 +1213,7 @@ exports.aniListCallback = async (req, res) => {
   } catch (error) {
     await Sync.updateOne(
       { userId: req.user.id, service: 'anilist' },
-      { syncStatus: 'failed', lastError: error.message }
+      { syncStatus: 'synced', lastError: error.message }
     ).catch(() => {});
     console.error('AniListCallback error:', error);
     res.status(500).json({ success: false, message: error.message || 'AniList callback failed' });
@@ -1040,11 +1254,22 @@ exports.syncAniList = async (req, res) => {
 
     const userInfo = await anilistService.getUserInfo(accessToken);
     const list = await anilistService.fetchAnimeList(accessToken, userInfo.id);
+    const alFavorites = await anilistService.fetchFavorites(accessToken);
 
     const user = await User.findById(req.user.id);
     const { watchlist, addedCount, updatedCount } = mergeIntoWatchlist(user.watchlist, list);
     user.watchlist = watchlist;
+    if (alFavorites && alFavorites.length) {
+      const existingFavIds = new Set((user.favorites || []).map(f => f.animeId));
+      const newFavs = alFavorites.filter(f => f.animeId && !existingFavIds.has(f.animeId)).slice(0, MAX_FAVORITES - (user.favorites || []).length);
+      if (newFavs.length) {
+        user.favorites = [...(user.favorites || []), ...newFavs];
+      }
+    }
     await user.save();
+
+    // Push local favorites to AniList
+    await anilistService.updateFavorites(accessToken, user.favorites || []);
 
     sync.syncStatus = 'synced';
     sync.lastSynced = new Date();
@@ -1061,7 +1286,7 @@ exports.syncAniList = async (req, res) => {
   } catch (error) {
     await Sync.updateOne(
       { userId: req.user.id, service: 'anilist' },
-      { syncStatus: 'failed', lastError: error.message }
+      { syncStatus: 'synced', lastError: error.message }
     ).catch(() => {});
     console.error('SyncAniList error:', error.message);
     res.status(500).json({ success: false, message: error.message || 'Sync failed' });

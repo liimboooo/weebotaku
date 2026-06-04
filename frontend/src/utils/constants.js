@@ -55,7 +55,7 @@ export const STATUS_BUCKET_OPTIONS = [
 ];
 
 /** Watchlist / list status options. */
-export const LIST_OPTIONS = ["Watch Later", "Watching", "Completed", "On Hold", "Dropped"];
+export const LIST_OPTIONS = ["Planning", "Watching", "Completed", "Paused", "Dropped"];
 
 /** Search page status filter. */
 export const SEARCH_STATUSES = ["All", "Ongoing", "Completed"];
@@ -113,6 +113,18 @@ export const AVATAR_COLORS = [
   "#6366f1", "#ef4444", "#10b981", "#f59e0b",
   "#3b82f6", "#ec4899", "#14b8a6", "#8b5cf6",
 ];
+
+export const MAX_FAVORITES = 5;
+export const MAX_ACTIVITIES = 50;
+export const MAX_COLLECTIONS = 20;
+
+export const DEFAULT_RETRIES = 2;
+export const RETRY_DELAY_MS = 1000;
+export const FETCH_TIMEOUT = 30000;
+export const SYNC_INTERVAL_MS = 2 * 60 * 1000;
+export const PING_INTERVAL_MS = 4 * 60 * 1000;
+export const TOAST_DURATION_MS = 3000;
+export const TOAST_DURATION_LONG_MS = 4000;
 
 export const FAST_SEARCH_DEBOUNCE_MS = 250;
 export const FAST_SEARCH_MAX_ANIME = 6;

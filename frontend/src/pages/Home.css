@@ -1127,8 +1127,8 @@
   cursor: pointer;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  background: var(--card-surface);
-  border: 1px solid var(--card-border);
+  background: var(--card-surface, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.06));
   transition: all var(--duration-normal) var(--ease-out);
 }
 .upcoming-card:hover {

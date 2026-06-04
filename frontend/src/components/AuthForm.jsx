@@ -4,7 +4,7 @@ import { Sparkles, Mail, User, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from
 
 const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
-export default function AuthForm({ type, username, email, password, setUsername, setEmail, setPassword, onSubmit, onModeChange, error, setError, loading, onGoogleSuccess, onGoogleError }) {
+export default function AuthForm({ type, username, email, password, setUsername, setEmail, setPassword, setConfirmPassword, onSubmit, onModeChange, error, setError, loading, onGoogleSuccess, onGoogleError }) {
   const navigate = useNavigate();
   const [showPw, setShowPw] = useState(false);
   const [confirmPw, setConfirmPw] = useState("");
@@ -122,7 +122,7 @@ export default function AuthForm({ type, username, email, password, setUsername,
               type={showPw ? "text" : "password"}
               placeholder="Confirm password"
               value={confirmPw}
-              onChange={(e) => setConfirmPw(e.target.value)}
+              onChange={(e) => { setConfirmPw(e.target.value); setConfirmPassword?.(e.target.value); }}
               autoComplete="new-password"
             />
             <span className="auth-input-bar" />

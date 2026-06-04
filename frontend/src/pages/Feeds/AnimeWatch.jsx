@@ -82,6 +82,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
   const failedServers = useRef(new Set());
+  const lastHistorySaveRef = useRef(false);
 
   /* ─── COMMENTS ─── */
   const [comments, setComments] = useState([]);
@@ -187,16 +188,18 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
 
   const loadMoreEpisodes = async () => {
     const nextPage = epPage + 1;
-    const result = await getEpisodePage(
-      anime.title || anime.slug, anime.tagSlug,
-      anime.source, anime.sourceBase, anime.anilistId, nextPage
-    );
-    if (result.episodes.length > 0) {
-      setEpisodes(prev => [...prev, ...result.episodes]);
-      setEpPage(nextPage);
-      setHasMoreEps(result.hasMore);
-    }
-    if (!result.hasMore) setAllEpsLoaded(true);
+    try {
+      const result = await getEpisodePage(
+        anime.title || anime.slug, anime.tagSlug,
+        anime.source, anime.sourceBase, anime.anilistId, nextPage
+      );
+      if (result?.episodes?.length > 0) {
+        setEpisodes(prev => [...prev, ...result.episodes]);
+        setEpPage(nextPage);
+        setHasMoreEps(result.hasMore);
+      }
+      if (!result?.hasMore) setAllEpsLoaded(true);
+    } catch {}
   };
 
   const episode = episodes[epIndex];
@@ -204,8 +207,9 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [streamCache, setStreamCache] = useState({});
 
   useEffect(() => {
-    if (!episode) return;
-    addToWatchHistory(anime.anilistId, episode.episode, animeName, '');
+    if (!episode || !anime) return;
+    if (!anime) return;
+    addToWatchHistory(anime.anilistId, episode.episode, animeName, anime.image || anime.img || '', 0, anime.episodes);
     const cached = streamCache[episode.url];
     if (cached) {
       const mode = cached._mode || "iframe";
@@ -278,11 +282,13 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   }, [episode, streamRetryCount]);
 
   useEffect(() => {
+    if (!anime) return;
     const nextEp = episodes[epIndex + 1];
     if (!nextEp || streamCache[nextEp.url]) return;
-    getStreamUrls(nextEp.url, anime.source, anime.anilistId).then(urls => {
+    getStreamUrls(nextEp.url, anime.source, anime.anilistId, anime.anilistId, anime.slug).then(urls => {
       if (urls.length > 0) setStreamCache(c => ({ ...c, [nextEp.url]: { servers: urls, _mode: "iframe" } }));
     }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [epIndex, episodes, anime.anilistId, streamCache]);
 
   useEffect(() => {
@@ -409,13 +415,15 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         if (introOutro.outro && t >= introOutro.outro.end) autoSkippedOutro.done = true;
       }
 
-      if (dur && t > 5 && t % 15 < 1) {
-        addToWatchHistory(anime.anilistId, episode.episode, animeName, '', t);
+      if (dur && t > 5 && t % 15 < 1 && !lastHistorySaveRef.current) {
+        lastHistorySaveRef.current = true;
+        setTimeout(() => { lastHistorySaveRef.current = false; }, 5000);
+        addToWatchHistory(anime.anilistId, episode.episode, animeName, anime.image || anime.img || '', t, anime.episodes);
       }
     };
 
     const onEnded = () => {
-      addToWatchHistory(anime.anilistId, episode.episode, animeName, '', video.duration || 0);
+      addToWatchHistory(anime.anilistId, episode.episode, animeName, anime.image || anime.img || '', video.duration || 0, anime.episodes);
       if (epIndex < episodes.length - 1) {
         setAutoNextCountdown(5);
         let count = 5;
@@ -445,18 +453,19 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   }, [streamMode, streamUrl]);
 
   useEffect(() => {
-    if (!episode) { savedPositionRef.current = 0; return; }
+    if (!episode || !anime) { savedPositionRef.current = 0; return; }
     const history = loadWatchHistory();
-    const found = history.find(h => h.animeId === anime.anilistId && h.episode === episode.episode);
+    const found = history.find(h => String(h.animeId) === String(anime.anilistId) && h.episode === episode.episode);
     savedPositionRef.current = (found?.position && found.position > 5) ? found.position : 0;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episode, anime.anilistId]);
 
   useEffect(() => {
-    if (!anime.anilistId) return;
+    if (!anime?.anilistId) return;
     let cancelled = false;
     fetchAnimeRecommendations(anime.anilistId).then(r => { if (!cancelled) setRecommendations(r); }).catch(() => {});
     return () => { cancelled = true; };
-  }, [anime.anilistId]);
+  }, [anime?.anilistId]);
 
   useEffect(() => {
     if (scrollRef.current && episodes[epIndex]) {

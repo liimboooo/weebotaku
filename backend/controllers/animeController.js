@@ -1,4 +1,41 @@
 const User = require('../models/User');
+const Sync = require('../models/Sync');
+const malService = require('../services/malService');
+const anilistService = require('../services/anilistService');
+
+function idParam(req) {
+  const n = parseInt(req.params.id);
+  if (isNaN(n) || n <= 0) return null;
+  return n;
+}
+
+async function pushToConnectedServices(user, animeId, listStatus, rating = 0, progress = 0) {
+  try {
+    const syncs = await Sync.find({ userId: user._id, syncStatus: 'synced' });
+    for (const sync of syncs) {
+      try {
+        let accessToken = sync.accessToken;
+        if (sync.expiresAt && new Date() > sync.expiresAt && sync.refreshToken) {
+          try {
+            const refresh = sync.service === 'mal'
+              ? await malService.refreshAccessToken(sync.refreshToken)
+              : await anilistService.refreshAccessToken(sync.refreshToken);
+            accessToken = refresh.accessToken;
+            sync.accessToken = refresh.accessToken;
+            sync.refreshToken = refresh.refreshToken || sync.refreshToken;
+            sync.expiresAt = refresh.expiresAt;
+            await sync.save();
+          } catch {}
+        }
+        if (sync.service === 'mal') {
+          await malService.updateAnimeList(accessToken, animeId, listStatus, rating, progress);
+        } else if (sync.service === 'anilist') {
+          await anilistService.saveMediaListEntry(accessToken, animeId, listStatus, rating, progress);
+        }
+      } catch {}
+    }
+  } catch {}
+}
 
 // @route   GET /api/anime/watchlist
 // @access  Private
@@ -16,7 +53,8 @@ exports.getWatchlist = async (req, res) => {
 // @access  Private
 exports.addToWatchlist = async (req, res) => {
   try {
-    const animeId = parseInt(req.params.id);
+    const animeId = idParam(req);
+    if (!animeId) return res.status(400).json({ success: false, message: 'Invalid anime ID' });
     const user = await User.findById(req.user.id);
 
     // Check if already in watchlist
@@ -24,9 +62,11 @@ exports.addToWatchlist = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Already in watchlist' });
     }
 
-    const { name, img, rating, episodes, year, status, genres } = req.body;
-    user.watchlist.push({ animeId, name, img, rating, episodes, year, status, genres });
+    const { name, img, rating, episodes, year, status, genres, listStatus } = req.body;
+    user.watchlist.push({ animeId, name, img, rating, episodes, year, status, genres, listStatus });
     await user.save();
+
+    pushToConnectedServices(user, animeId, listStatus || 'Planning', rating || 0, 0);
 
     res.status(201).json({ success: true, data: user.watchlist });
   } catch (error) {
@@ -39,10 +79,13 @@ exports.addToWatchlist = async (req, res) => {
 // @access  Private
 exports.removeFromWatchlist = async (req, res) => {
   try {
-    const animeId = parseInt(req.params.id);
+    const animeId = idParam(req);
+    if (!animeId) return res.status(400).json({ success: false, message: 'Invalid anime ID' });
     const user = await User.findById(req.user.id);
     user.watchlist = user.watchlist.filter(item => item.animeId !== animeId);
     await user.save();
+
+    pushToConnectedServices(user, animeId, 'Dropped', 0, 0);
 
     res.json({ success: true, data: user.watchlist });
   } catch (error) {
@@ -55,7 +98,8 @@ exports.removeFromWatchlist = async (req, res) => {
 // @access  Private
 exports.updateWatchHistory = async (req, res) => {
   try {
-    const animeId = parseInt(req.params.id);
+    const animeId = idParam(req);
+    if (!animeId) return res.status(400).json({ success: false, message: 'Invalid anime ID' });
     const { episodeWatched, animeName, animeImg, position } = req.body;
     const user = await User.findById(req.user.id);
 
@@ -81,6 +125,15 @@ exports.updateWatchHistory = async (req, res) => {
     }
 
     await user.save();
+
+    // Sync progress to connected services
+    const watchlistItem = user.watchlist?.find(i => i.animeId === animeId);
+    if (watchlistItem) {
+      pushToConnectedServices(user, animeId, watchlistItem.listStatus || 'Watching', watchlistItem.rating || 0, episodeWatched || 0);
+    } else {
+      pushToConnectedServices(user, animeId, 'Watching', 0, episodeWatched || 0);
+    }
+
     res.json({ success: true, data: user.watchHistory });
   } catch (error) {
     console.error('UpdateWatchHistory error:', error);
@@ -104,7 +157,8 @@ exports.getWatchHistory = async (req, res) => {
 // @access  Private
 exports.rateAnime = async (req, res) => {
   try {
-    const animeId = req.params.id;
+    const animeId = idParam(req);
+    if (!animeId) return res.status(400).json({ success: false, message: 'Invalid anime ID' });
     const { rating } = req.body;
 
     if (!rating || rating < 1 || rating > 10) {
@@ -114,6 +168,9 @@ exports.rateAnime = async (req, res) => {
     const user = await User.findById(req.user.id);
     user.ratings.set(animeId, rating);
     await user.save();
+
+    const watchlistItem = user.watchlist?.find(i => i.animeId === animeId);
+    pushToConnectedServices(user, animeId, watchlistItem?.listStatus || 'Completed', rating, watchlistItem?.progress || 0);
 
     res.json({ success: true, data: Object.fromEntries(user.ratings) });
   } catch (error) {
@@ -138,7 +195,8 @@ exports.getRatings = async (req, res) => {
 // @access  Private
 exports.likeAnime = async (req, res) => {
   try {
-    const animeId = parseInt(req.params.id);
+    const animeId = idParam(req);
+    if (!animeId) return res.status(400).json({ success: false, message: 'Invalid anime ID' });
     const user = await User.findById(req.user.id);
 
     const idx = user.likedAnime.indexOf(animeId);
@@ -148,6 +206,10 @@ exports.likeAnime = async (req, res) => {
       user.likedAnime.push(animeId);
     }
     await user.save();
+
+    if (idx === -1) {
+      pushToConnectedServices(user, animeId, 'Planning', 0, 0);
+    }
 
     res.json({ success: true, data: user.likedAnime, liked: idx === -1 });
   } catch (error) {

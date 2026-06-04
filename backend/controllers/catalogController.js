@@ -1,4 +1,12 @@
 const fetch = require('node-fetch');
+const {
+  DEFAULT_RETRIES,
+  SYNC_RETRY_DELAY_MS,
+  SYNC_RATE_LIMIT_WAIT_MS,
+  SYNC_RATE_LIMIT_MAX_WAIT_MS,
+  GRAPHQL_TIMEOUT_MS,
+  ANILIST_PER_PAGE,
+} = require('../config/constants');
 
 const ANILIST = process.env.ANILIST_API_URL || 'https://graphql.anilist.co';
 const ANIME_FIELDS = `id idMal title { romaji english } coverImage { large extraLarge } bannerImage averageScore popularity episodes genres description status season seasonYear studios(isMain:true) { nodes { name } } trailer { site id } format startDate { year month day } nextAiringEpisode { episode airingAt timeUntilAiring }`;
@@ -38,7 +46,7 @@ function getNextSeasonYear() {
   return y;
 }
 
-async function gql(query, variables = {}, retries = 2) {
+async function gql(query, variables = {}, retries = DEFAULT_RETRIES) {
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
@@ -46,15 +54,15 @@ async function gql(query, variables = {}, retries = 2) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, variables }),
-        timeout: 10000,
+        timeout: GRAPHQL_TIMEOUT_MS,
       });
       if (r.status === 429) {
-        const wait = Math.min((attempt + 1) * 1500, 5000);
+        const wait = Math.min((attempt + 1) * SYNC_RATE_LIMIT_WAIT_MS, SYNC_RATE_LIMIT_MAX_WAIT_MS);
         await new Promise(res => setTimeout(res, wait));
         continue;
       }
       if (!r.ok) {
-        if (attempt < retries) { await new Promise(res => setTimeout(res, 1000)); continue; }
+        if (attempt < retries) { await new Promise(res => setTimeout(res, SYNC_RETRY_DELAY_MS)); continue; }
         throw new Error(`AniList HTTP ${r.status}`);
       }
       const j = await r.json();
@@ -62,7 +70,7 @@ async function gql(query, variables = {}, retries = 2) {
       return j.data;
     } catch (e) {
       lastErr = e;
-      if (attempt < retries) { await new Promise(res => setTimeout(res, 1000)); continue; }
+      if (attempt < retries) { await new Promise(res => setTimeout(res, SYNC_RETRY_DELAY_MS)); continue; }
       throw lastErr;
     }
   }
@@ -95,8 +103,9 @@ function mapAnime(a) {
 }
 
 const CACHE = new Map();
-const CACHE_TTL = 5 * 60 * 1000;
-const CACHE_MAX = 50;
+const { CACHE_TTL_MS, CACHE_MAX_ENTRIES } = require('../config/constants');
+const CACHE_TTL = CACHE_TTL_MS;
+const CACHE_MAX = CACHE_MAX_ENTRIES;
 
 function getCached(key) {
   const entry = CACHE.get(key);
@@ -132,7 +141,7 @@ exports.getTrending = async (req, res) => {
     if (cached) return res.json(paginateResponse(cached, page, perPage));
 
     const q = `query($page:Int,$perPage:Int){Page(page:$page,perPage:$perPage){media(sort:TRENDING_DESC,type:ANIME){${ANIME_FIELDS}}}}`;
-    const data = await gql(q, { page: 1, perPage: 50 });
+    const data = await gql(q, { page: 1, perPage: ANILIST_PER_PAGE });
     const results = (data?.Page?.media || []).map(mapAnime);
     setCache('trending', results);
     res.json(paginateResponse(results, page, perPage));

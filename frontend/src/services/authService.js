@@ -20,7 +20,7 @@ function storeUserData(user) {
       year: item.year,
       status: item.status,
       genres: item.genres || [],
-      listStatus: item.listStatus || 'Watch Later',
+      listStatus: item.listStatus || 'Planning',
       type: 'anime',
     }));
     localStorage.setItem(STORAGE_KEYS.WATCHLIST, JSON.stringify(mapped));
@@ -163,12 +163,27 @@ class AuthService {
   }
 
   getCurrentUser() {
-    const user = localStorage.getItem(STORAGE_KEYS.USER);
-    return user ? JSON.parse(user) : null;
+    try {
+      const user = localStorage.getItem(STORAGE_KEYS.USER);
+      return user ? JSON.parse(user) : null;
+    } catch {
+      return null;
+    }
   }
 
   isLoggedIn() {
-    return !!localStorage.getItem(STORAGE_KEYS.TOKEN);
+    const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp && Date.now() >= payload.exp * 1000) {
+        this.logout().catch(() => {});
+        return false;
+      }
+      return true;
+    } catch {
+      return !!token;
+    }
   }
 
   async refreshUser() {
@@ -185,7 +200,6 @@ class AuthService {
     const res = await api.post('/auth/sync/mal/connect', {});
     if (res?.authUrl) {
       localStorage.setItem('mal_code_verifier', res.codeVerifier || '');
-      window.open(res.authUrl, '_self');
     }
     return res;
   }
@@ -204,9 +218,6 @@ class AuthService {
 
   async connectAniList() {
     const res = await api.post('/auth/sync/anilist/connect', {});
-    if (res?.authUrl) {
-      window.open(res.authUrl, '_self');
-    }
     return res;
   }
 
@@ -224,6 +235,14 @@ class AuthService {
 
   async updateFavorites(favorites) {
     return api.put('/auth/favorites', { favorites });
+  }
+
+  async exportFavorites() {
+    return api.get('/auth/favorites/export');
+  }
+
+  async importFavorites(data) {
+    return api.post('/auth/favorites/import', { data });
   }
 }
 

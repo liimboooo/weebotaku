@@ -962,15 +962,45 @@
   font-weight: 700;
 }
 
-.st-sync-card-right {
-  flex-shrink: 0;
-}
+  .st-sync-card-right {
+    flex-shrink: 0;
+  }
 
-.st-sync-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
+  .st-sync-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .st-import-preview {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+  }
+
+  .st-import-preview-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #ffffff;
+    margin-bottom: 8px;
+  }
+
+  .st-import-preview-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .st-import-preview-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #ffffff;
+  }
 
 /* ─── Info Card ─── */
 

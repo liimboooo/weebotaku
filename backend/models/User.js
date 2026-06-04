@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { NOTIFICATION_DEFAULTS } = require('../config/constants');
 
 const UserSchema = new mongoose.Schema({
   username: {
@@ -59,7 +60,7 @@ const UserSchema = new mongoose.Schema({
     year: Number,
     status: String,
     genres: [String],
-    listStatus: { type: String, default: 'Watch Later' },
+    listStatus: { type: String, default: 'Planning' },
     type: { type: String, default: 'anime' },
     addedAt: { type: Date, default: Date.now },
   }],
@@ -139,19 +140,19 @@ const UserSchema = new mongoose.Schema({
     showMatureWarnings: { type: Boolean, default: true },
     showEpisodeProgress: { type: Boolean, default: true },
     showRatingsCards: { type: Boolean, default: true },
-    emailNotifs: { type: Boolean, default: true },
-    newEpisodes: { type: Boolean, default: true },
-    communityActivity: { type: Boolean, default: false },
-    friendsActivity: { type: Boolean, default: false },
-    systemUpdates: { type: Boolean, default: true },
-    weeklyRecs: { type: Boolean, default: true },
-    pushNotifs: { type: Boolean, default: true },
-    newsNotifications: { type: Boolean, default: true },
-    newEpisodeAlerts: { type: Boolean, default: true },
-    commentReplies: { type: Boolean, default: true },
-    friendRequests: { type: Boolean, default: true },
-    animeRecs: { type: Boolean, default: false },
-    newFeatures: { type: Boolean, default: false },
+    emailNotifs: { type: Boolean, default: NOTIFICATION_DEFAULTS.emailNotifs },
+    newEpisodes: { type: Boolean, default: NOTIFICATION_DEFAULTS.newEpisodes },
+    communityActivity: { type: Boolean, default: NOTIFICATION_DEFAULTS.communityActivity },
+    friendsActivity: { type: Boolean, default: NOTIFICATION_DEFAULTS.friendsActivity },
+    systemUpdates: { type: Boolean, default: NOTIFICATION_DEFAULTS.systemUpdates },
+    weeklyRecs: { type: Boolean, default: NOTIFICATION_DEFAULTS.weeklyRecs },
+    pushNotifs: { type: Boolean, default: NOTIFICATION_DEFAULTS.pushNotifs },
+    newsNotifications: { type: Boolean, default: NOTIFICATION_DEFAULTS.newsNotifications },
+    newEpisodeAlerts: { type: Boolean, default: NOTIFICATION_DEFAULTS.newEpisodeAlerts },
+    commentReplies: { type: Boolean, default: NOTIFICATION_DEFAULTS.commentReplies },
+    friendRequests: { type: Boolean, default: NOTIFICATION_DEFAULTS.friendRequests },
+    animeRecs: { type: Boolean, default: NOTIFICATION_DEFAULTS.animeRecs },
+    newFeatures: { type: Boolean, default: NOTIFICATION_DEFAULTS.newFeatures },
     publicProfile: { type: Boolean, default: true },
     showWatchlistPublic: { type: Boolean, default: true },
     allowMessaging: { type: String, default: 'anyone' },

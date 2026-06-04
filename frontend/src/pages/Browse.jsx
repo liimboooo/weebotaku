@@ -53,8 +53,8 @@ const SOURCES = [
 const CUR_YEAR = new Date().getFullYear() + 1;
 const YEARS = Array.from({ length: CUR_YEAR - 1960 + 1 }, (_, i) => CUR_YEAR - i);
 
-function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchLoading }) {
-  const inWishlist = wishlist.some(i => i.id === anime.id);
+function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchLoading, statusMenuOpen, onAddWithStatus }) {
+  const inWishlist = wishlist.some(i => String(i.id) === String(anime.id));
   const [imgErr, setImgErr] = useState(false);
   return (
     <>
@@ -63,13 +63,31 @@ function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchLoading }) {
           ? <div className="br-poster-fallback">{anime.name?.[0] || "?"}</div>
           : <img className="br-poster-img" src={anime.img} alt={anime.name} loading="lazy" decoding="async" onError={() => setImgErr(true)} />}
 
-        <button
-          className={`br-poster-wish ${inWishlist ? "active" : ""}`}
-          onClick={(e) => { e.stopPropagation(); onWishlist(anime.id); }}
-          aria-label={inWishlist ? "Remove from watchlist" : "Add to watchlist"}
-        >
-          <Bookmark size={14} fill={inWishlist ? "currentColor" : "none"} />
-        </button>
+        <div className="relative">
+          <button
+            className={`br-poster-wish ${inWishlist ? "active" : ""}`}
+            onClick={(e) => { e.stopPropagation(); onWishlist(anime.id); }}
+            aria-label={inWishlist ? "Remove from watchlist" : "Add to watchlist"}
+          >
+            <Bookmark size={14} fill={inWishlist ? "currentColor" : "none"} />
+          </button>
+          {statusMenuOpen === anime.id && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); onAddWithStatus(anime.id, ''); }} />
+              <div className="absolute top-8 left-0 bg-zinc-900 border border-zinc-700 rounded-xl py-1 min-w-[130px] shadow-2xl z-50"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {["Planning","Watching","Completed","Paused","Dropped"].map(s => (
+                  <button
+                    key={s}
+                    className="w-full text-left px-3 py-1.5 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
+                    onClick={(e) => { e.stopPropagation(); onAddWithStatus(anime.id, s); }}
+                  >{s}</button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
 
         <div className="br-poster-hover">
           {anime.rating > 0 && (
@@ -189,18 +207,24 @@ export default function Browse() {
     }
   };
 
+  const [showStatusMenu, setShowStatusMenu] = useState(null);
+
   const toggleWishlist = (id) => {
-    setWatchlist(p => {
-      if (p.some(i => i.id === id)) {
-        addNotification({ title: "Removed from Watchlist", type: "save" });
-        return removeFromWatchlist(id);
-      }
-      const anime = items.find(a => a.id === id);
-      if (!anime) return p;
-      const item = { id: anime.id, name: anime.name, img: anime.img, rating: anime.rating, episodes: anime.episodes, year: anime.year, genres: anime.genres, status: anime.status };
-      addNotification({ title: "Added to Watchlist", body: anime.name, type: "save" });
-      return addToWatchlist(item);
-    });
+    if (watchlist.some(i => String(i.id) === String(id))) {
+      addNotification({ title: "Removed from Watchlist", type: "save" });
+      setWatchlist(removeFromWatchlist(id));
+    } else {
+      setShowStatusMenu(id);
+    }
+  };
+
+  const addWithStatus = (id, status) => {
+    const anime = items.find(a => a.id === id);
+    if (!anime) return;
+    const item = { id: anime.id, name: anime.name, img: anime.img, rating: anime.rating, episodes: anime.episodes, year: anime.year, genres: anime.genres, status: anime.status, listStatus: status };
+    addNotification({ title: "Added to Watchlist", body: anime.name, type: "save" });
+    setWatchlist(addToWatchlist(item));
+    setShowStatusMenu(null);
   };
 
   const resetAll = useCallback(() => {
@@ -362,15 +386,21 @@ export default function Browse() {
                 : activeCount > 0 && <button className="br-retry-btn" onClick={resetAll}>Clear filters</button>}
             </div>
           ) : (
-            <div className="br-grid">
+            <motion.div
+              className="br-grid"
+              variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+              initial="hidden"
+              animate="visible"
+            >
               <AnimatePresence mode="popLayout">
                 {items.map((anime) => (
                   <motion.article
                     key={anime.id}
                     className="br-card"
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
+                    layout
+                    variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}
+                    whileHover={{ y: -4, transition: { type: "spring", stiffness: 300 } }}
+                    whileTap={{ scale: 0.97 }}
                     onClick={() => navigate(`/anime/${anime.id}/info`)}
                     onMouseEnter={() => prefetch.onMouseEnter(anime.id)}
                     onMouseLeave={prefetch.onMouseLeave}
@@ -381,11 +411,13 @@ export default function Browse() {
                       onWishlist={toggleWishlist}
                       onWatch={openWatch}
                       watchLoading={watchLoading}
+                      statusMenuOpen={showStatusMenu}
+                      onAddWithStatus={(id, s) => s ? addWithStatus(id, s) : setShowStatusMenu(null)}
                     />
                   </motion.article>
                 ))}
               </AnimatePresence>
-            </div>
+            </motion.div>
           )}
         </main>
 

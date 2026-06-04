@@ -34,7 +34,32 @@ export default function TopUpcoming() {
     return () => { cancelled = true; };
   }, []);
 
-  if (loading || items.length === 0) return null;
+  if (loading) {
+    return (
+      <section className="tu-section">
+        <header className="tu-header">
+          <h2 className="tu-title">Top Upcoming</h2>
+          <div className="tu-arrow" style={{ width: 32, height: 32 }} />
+        </header>
+        <div className="tu-scroll">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="tu-card tu-card--skeleton">
+              <div className="tu-card-cover">
+                <div className="tu-shimmer" style={{ width: '100%', height: '100%' }} />
+              </div>
+              <div className="tu-card-body">
+                <div className="tu-shimmer" style={{ width: '60%', height: 12, borderRadius: 4, marginBottom: 8 }} />
+                <div className="tu-shimmer" style={{ width: '90%', height: 10, borderRadius: 4, marginBottom: 6 }} />
+                <div className="tu-shimmer" style={{ width: '40%', height: 10, borderRadius: 4 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (items.length === 0) return null;
 
   return (
     <section className="tu-section">

@@ -60,7 +60,11 @@ function AppLayout() {
   const token = localStorage.getItem('token');
 
   useEffect(() => {
-    if (token) syncFromBackend();
+    if (token) {
+      syncFromBackend();
+      const interval = setInterval(syncFromBackend, 2 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
   }, [token]);
 
   useEffect(() => {

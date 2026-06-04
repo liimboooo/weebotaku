@@ -45,4 +45,5 @@ class AnimeService {
   }
 }
 
-export default new AnimeService();
+const animeService = new AnimeService();
+export default animeService;

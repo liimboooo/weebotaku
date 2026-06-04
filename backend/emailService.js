@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const path = require('path');
 const fs = require('fs');
+const { CLIENT_URL } = require('./config/constants');
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -31,7 +32,7 @@ async function sendEmail({ to, subject, html }) {
 }
 
 async function sendVerificationEmail(email, token, username) {
-  const link = `${process.env.CLIENT_URL || 'http://localhost:3000'}/auth/verify-email/${token}`;
+  const link = `${CLIENT_URL}/auth/verify-email/${token}`;
   const html = loadTemplate('verify-email', { username, link }) || `
     <div style="max-width:480px;margin:0 auto;padding:32px;background:#0a0a0a;color:#fff;font-family:sans-serif;border-radius:12px;border:1px solid rgba(102,126,234,0.15);">
       <h1 style="font-size:24px;margin:0 0 8px;">Verify your email</h1>
@@ -44,7 +45,7 @@ async function sendVerificationEmail(email, token, username) {
 }
 
 async function sendPasswordResetEmail(email, token, username) {
-  const link = `${process.env.CLIENT_URL || 'http://localhost:3000'}/auth/reset-password/${token}`;
+  const link = `${CLIENT_URL}/auth/reset-password/${token}`;
   const html = loadTemplate('reset-password', { username, link }) || `
     <div style="max-width:480px;margin:0 auto;padding:32px;background:#0a0a0a;color:#fff;font-family:sans-serif;border-radius:12px;border:1px solid rgba(102,126,234,0.15);">
       <h1 style="font-size:24px;margin:0 0 8px;">Reset your password</h1>

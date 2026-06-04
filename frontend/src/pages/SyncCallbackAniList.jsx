@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import AuthImage from "../components/AuthImage";
 import authService from "../services/authService";
+import { syncFromBackend } from "../services/storage";
 import { CheckCircle, XCircle, Loader } from "lucide-react";
 import "../pages/AuthPage.css";
 
@@ -12,6 +13,9 @@ export default function SyncCallbackAniList() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) { setStatus("error"); setMessage(`AniList denied access: ${searchParams.get("error_description") || error}`); return; }
+
     const code = searchParams.get("code");
     if (!code) { setStatus("error"); setMessage("No authorization code received"); return; }
 
@@ -19,6 +23,7 @@ export default function SyncCallbackAniList() {
       try {
         const res = await authService.syncAniListCallback(code);
         if (res?.success) {
+          await syncFromBackend();
           setStatus("success");
           setMessage(`Connected to AniList! Synced ${res.imported || 0} titles.`);
           setTimeout(() => navigate("/settings?page=integrations", { replace: true }), 2500);

@@ -223,6 +223,7 @@ function ContinueWatchingRow() {
   const navigate = useNavigate();
   const prefetch = usePrefetchAnime();
   const [items, setItems] = useState([]);
+  const [enriched, setEnriched] = useState({});
 
   const handleRemove = (item) => {
     removeFromWatchHistory(item.timestamp);
@@ -232,39 +233,42 @@ function ContinueWatchingRow() {
   };
 
   useEffect(() => {
-    const stored = loadWatchHistory();
-    const seen = new Set();
-    const recent = stored.filter(item => {
-      if (seen.has(item.animeId)) return false;
-      seen.add(item.animeId);
-      return true;
-    }).slice(0, 6);
-    Promise.allSettled(
-      recent.map(async item => {
+    function load() {
+      const stored = loadWatchHistory();
+      if (stored.length === 0) { setItems([]); return; }
+      const seen = new Set();
+      const recent = stored.filter(item => {
+        if (seen.has(item.animeId)) return false;
+        seen.add(item.animeId);
+        return true;
+      }).slice(0, 6);
+      setItems(recent);
+      recent.forEach(async (item) => {
         try {
           const data = await fetchAnimeById(item.animeId);
-          if (data) {
-            return {
-              animeId: item.animeId,
-              episode: item.episode,
-              position: item.position || 0,
-              timestamp: item.timestamp,
-              id: data.id,
-              name: data.name,
-              img: data.img,
-              rating: data.rating,
-              episodes: data.episodes,
-            };
-          }
+          if (data) setEnriched(prev => ({ ...prev, [item.animeId]: data }));
         } catch {}
-        return null;
-      })
-    ).then(results => {
-      setItems(results.map(r => r.status === "fulfilled" ? r.value : null).filter(Boolean));
-    });
+      });
+    }
+    load();
+    window.addEventListener("storage", load);
+    window.addEventListener("history-updated", load);
+    return () => {
+      window.removeEventListener("storage", load);
+      window.removeEventListener("history-updated", load);
+    };
   }, []);
 
-  if (items.length === 0) return (
+  const rowItems = items.map(item => {
+    const details = enriched[item.animeId];
+    return {
+      ...item,
+      img: details?.img || item.animeImg || "",
+      name: details?.name || item.animeName || "Unknown",
+    };
+  });
+
+  if (rowItems.length === 0) return (
     <section className="home-section">
       <SectionHeader icon={Clock} title="Continue Watching" subtitle="Pick up where you left off" />
       <div className="home-empty-state">
@@ -289,8 +293,8 @@ function ContinueWatchingRow() {
       </div>
       <div className="cw-scroll-wrap">
        <div className="cw-scroll">
-        {items.map((item) => {
-          const total = item.duration || 24 * 60; // fallback: 24:00
+        {rowItems.map((item) => {
+          const total = 24 * 60;
           const current = Math.min(item.position || 0, total);
           const pct = total ? Math.min(100, (current / total) * 100) : 0;
           return (
@@ -427,17 +431,28 @@ function GenreBar({ genres }) {
   };
   return (
     <div className="genre-bar">
-      <div className="genre-bar-inner">
+      <motion.div
+        className="genre-bar-inner"
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
         {genres.slice(0, 14).map(g => {
           const Icon = genreIcons[g] || Film;
           return (
-            <button key={g} className="genre-bar-chip" onClick={() => navigate(`/browse/anime?genre=${encodeURIComponent(g)}`)}>
+            <motion.button
+              key={g}
+              className="genre-bar-chip"
+              whileHover={{ y: -2, scale: 1.04 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate(`/browse/anime?genre=${encodeURIComponent(g)}`)}
+            >
               <Icon size={14} />
               <span>{g}</span>
-            </button>
+            </motion.button>
           );
         })}
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -677,11 +692,19 @@ export default function Home() {
               subtitle="All-time fan favorites everyone's watching"
               action={() => navigate("/browse/anime?sort=POPULARITY_DESC")}
             />
-            <div className="upcoming-grid">
+            <motion.div
+              className="upcoming-grid"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-40px" }}
+            >
               {popularList.map((anime) => (
-                <div
+                <motion.div
                   key={anime.id}
                   className="upcoming-card"
+                  variants={cardSlideUp}
+                  whileHover={{ y: -6, transition: { type: "spring", stiffness: 300 } }}
                   onClick={() => navigate(`/anime/${anime.id}/info`)}
                 >
                   <div className="upcoming-card-img">
@@ -697,9 +720,9 @@ export default function Home() {
                       <span className="upcoming-card-type">{anime.status || "TV"}</span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </section>
         )}
 

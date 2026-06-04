@@ -56,7 +56,12 @@ export default function Sidebar() {
         )}
       </AnimatePresence>
 
-      <aside className={`sd-drawer${open ? ' open' : ''}`}>
+      <motion.aside
+        className="sd-drawer"
+        initial={{ x: "-100%" }}
+        animate={{ x: open ? 0 : "-100%" }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
         <div className="sd-header">
           <button className="sd-brand" onClick={() => go('/home')}>
             <span className="sd-brand-dot" />
@@ -113,7 +118,7 @@ export default function Sidebar() {
             </>
           )}
         </div>
-      </aside>
+      </motion.aside>
     </>
   );
 }

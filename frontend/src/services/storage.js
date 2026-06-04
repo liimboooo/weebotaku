@@ -35,8 +35,9 @@ export function saveWatchlist(list) {
 
 export function addToWatchlist(item) {
   const current = loadWatchlist();
-  if (current.some(i => i.id === item.id)) return current;
-  const entry = { ...item, type: "anime", listStatus: item.listStatus || "Watch Later" };
+  const strId = String(item.id);
+  if (current.some(i => String(i.id) === strId)) return current;
+  const entry = { ...item, id: strId, type: "anime", listStatus: item.listStatus || "Planning" };
   const next = [...current, entry];
   saveWatchlist(next);
 
@@ -58,7 +59,8 @@ export function addToWatchlist(item) {
 
 export function removeFromWatchlist(id) {
   const current = loadWatchlist();
-  const next = current.filter(i => i.id !== id);
+  const strId = String(id);
+  const next = current.filter(i => String(i.id) !== strId);
   saveWatchlist(next);
 
   if (isLoggedIn()) {
@@ -69,12 +71,14 @@ export function removeFromWatchlist(id) {
 }
 
 export function isInWatchlist(id) {
-  return loadWatchlist().some(i => i.id === id);
+  const strId = String(id);
+  return loadWatchlist().some(i => String(i.id) === strId);
 }
 
 export function updateListStatus(animeId, listStatus) {
   const current = loadWatchlist();
-  const item = current.find(i => i.id === animeId);
+  const strId = String(animeId);
+  const item = current.find(i => String(i.id) === strId);
   if (item) {
     item.listStatus = listStatus;
     saveWatchlist(current);
@@ -89,8 +93,18 @@ export function updateListStatus(animeId, listStatus) {
 
 export function loadWatchHistory() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEYS.WATCH_HISTORY) || "[]");
-  } catch { return []; }
+    const raw = localStorage.getItem(STORAGE_KEYS.WATCH_HISTORY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      localStorage.removeItem(STORAGE_KEYS.WATCH_HISTORY);
+      return [];
+    }
+    return parsed;
+  } catch {
+    localStorage.removeItem(STORAGE_KEYS.WATCH_HISTORY);
+    return [];
+  }
 }
 
 export function saveWatchHistory(history) {
@@ -108,15 +122,17 @@ export function removeFromWatchHistory(timestamp) {
   return updated;
 }
 
-export function addToWatchHistory(animeId, episode, animeName, animeImg, position = 0) {
+export function addToWatchHistory(animeId, episode, animeName, animeImg, position = 0, totalEpisodes = 0) {
   let history = loadWatchHistory();
-  const existingIdx = history.findIndex(h => h.animeId === animeId && h.episode === episode);
+  const strId = String(animeId);
+  const existingIdx = history.findIndex(h => String(h.animeId) === strId && h.episode === episode);
   if (existingIdx !== -1) {
     history.splice(existingIdx, 1);
   }
-  history.unshift({ animeId, episode, position, timestamp: Date.now(), animeName: animeName || "", animeImg: animeImg || "" });
+  history.unshift({ animeId, episode, position, timestamp: Date.now(), animeName: animeName || "", animeImg: animeImg || "", totalEpisodes });
   if (history.length > 100) history.length = 100;
   localStorage.setItem(STORAGE_KEYS.WATCH_HISTORY, JSON.stringify(history));
+  try { window.dispatchEvent(new CustomEvent("history-updated")); } catch {}
 
   if (isLoggedIn()) {
     api.post(`/anime/${animeId}/history`, {
@@ -196,21 +212,29 @@ export async function syncFromBackend() {
     if (u.memberSince) localStorage.setItem(STORAGE_KEYS.MEMBER_SINCE, String(u.memberSince));
     if (u.socialLinks) localStorage.setItem(STORAGE_KEYS.SOCIAL_LINKS, JSON.stringify(u.socialLinks));
 
-    // Watchlist
+    // Watchlist — merge remote into local (remote wins on conflict, but keeps local additions)
     if (u.watchlist && u.watchlist.length > 0) {
-      const mapped = u.watchlist.map(item => ({
-        id: item.animeId,
-        name: item.name,
-        img: item.img,
-        rating: item.rating,
-        episodes: item.episodes,
-        year: item.year,
-        status: item.status,
-        genres: item.genres || [],
-        listStatus: item.listStatus || 'Watch Later',
-        type: 'anime',
-      }));
-      saveWatchlist(mapped);
+      const local = loadWatchlist();
+      const remoteMap = {};
+      u.watchlist.forEach(item => {
+        const id = String(item.animeId);
+        remoteMap[id] = {
+          id,
+          name: item.name,
+          img: item.img,
+          rating: item.rating,
+          episodes: item.episodes,
+          year: item.year,
+          status: item.status,
+          genres: item.genres || [],
+          listStatus: item.listStatus || 'Planning',
+          type: 'anime',
+        };
+      });
+      // Keep local items not on remote, override with remote items
+      const merged = local.filter(i => !remoteMap[String(i.id)]);
+      Object.values(remoteMap).forEach(r => merged.push(r));
+      saveWatchlist(merged);
     }
 
     // Watch history

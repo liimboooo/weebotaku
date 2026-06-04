@@ -7,6 +7,8 @@ import settingsService from "../services/settingsService";
 import { clearNotifications } from "../services/notificationService";
 import AnimatedPage from "../components/AnimatedPage";
 import SyncCard from "../components/SyncCard";
+import FavoritesSyncCard from "../components/FavoritesSyncCard";
+import { TOAST_DURATION_MS } from "../utils/constants";
 import {
   User, Settings, Bell, Shield, Link2,
   Eye, EyeOff, LogOut, Sun, Moon, Monitor,
@@ -79,7 +81,7 @@ export default function SettingsPage() {
   const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
     if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 3000);
+    toastTimer.current = setTimeout(() => setToast(null), TOAST_DURATION_MS);
   }, []);
 
   const [settings, setSettings] = useState(() => {
@@ -90,7 +92,6 @@ export default function SettingsPage() {
     return {};
   });
   const [settingsReady, setSettingsReady] = useState(false);
-  const syncInit = useRef(settingsService.loadSync());
 
   useEffect(() => {
     (async () => {
@@ -103,6 +104,7 @@ export default function SettingsPage() {
 
   const [syncStatus, setSyncStatus] = useState({ mal: { connected: false }, anilist: { connected: false } });
   const [syncLoading, setSyncLoading] = useState({ mal: false, anilist: false });
+  const [favorites, setFavorites] = useState([]);
 
   const [profile, setProfile] = useState(() => settingsService.loadUserProfile() || {
     username: currentUser?.username || "formula09",
@@ -156,6 +158,12 @@ export default function SettingsPage() {
         setSyncStatus({ mal: res.mal, anilist: res.anilist });
       }
     }).catch(() => {});
+    
+    authService.getMe().then(res => {
+      if (res?.success && res?.user?.favorites) {
+        setFavorites(res.user.favorites);
+      }
+    }).catch(() => {});
   }, [settingsReady]);
 
   const avatar = currentUser?.avatar || "";
@@ -207,11 +215,26 @@ export default function SettingsPage() {
   const handleConnectMAL = async () => {
     try {
       const res = await authService.connectMAL();
-      if (!res?.authUrl) {
+      if (res?.authUrl) {
+        window.location.href = res.authUrl;
+      } else {
         showToast("Failed to get MAL auth URL", "error");
       }
     } catch {
       showToast("Failed to connect MAL", "error");
+    }
+  };
+
+  const handleConnectAniList = async () => {
+    try {
+      const res = await authService.connectAniList();
+      if (res?.authUrl) {
+        window.location.href = res.authUrl;
+      } else {
+        showToast("Failed to get AniList auth URL", "error");
+      }
+    } catch {
+      showToast("Failed to connect AniList", "error");
     }
   };
 
@@ -242,17 +265,6 @@ export default function SettingsPage() {
       showToast("Sync failed. Try again.", "error");
     }
     setSyncLoading(prev => ({ ...prev, anilist: false }));
-  };
-
-  const handleConnectAniList = async () => {
-    try {
-      const res = await authService.connectAniList();
-      if (!res?.authUrl) {
-        showToast("Failed to get AniList auth URL", "error");
-      }
-    } catch {
-      showToast("Failed to connect AniList", "error");
-    }
   };
 
   const handleDisconnectAniList = async () => {
@@ -846,6 +858,13 @@ export default function SettingsPage() {
         <p><strong>AniList</strong> uses AniList OAuth v2 + GraphQL API</p>
         <p className="st-info-ok"><CheckCircle size={14} /> Data synced with your authorization</p>
       </div>
+
+      <div className="st-divider" />
+      {renderSectionHeader("Favorites Backup")}
+      <FavoritesSyncCard
+        favorites={favorites}
+        onUpdateFavorites={setFavorites}
+      />
 
       <div className="st-divider" />
       {renderSectionHeader("Need Credentials?")}

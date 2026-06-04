@@ -306,6 +306,11 @@ function CommentItem({ comment, isOPCheck, isVerifiedCheck, onLike, onDislike, o
     }
   }, [editing, editText.length]);
 
+  useEffect(() => {
+    setLikes(comment.likes || 0);
+    setDislikes(comment.dislikes || 0);
+  }, [comment.likes, comment.dislikes]);
+
   const handleLike = () => {
     if (disliked) { setDisliked(false); setDislikes(d => d - 1); }
     if (!liked) {
@@ -332,7 +337,7 @@ function CommentItem({ comment, isOPCheck, isVerifiedCheck, onLike, onDislike, o
 
   const handleSaveEdit = () => {
     if (!editText.trim()) return;
-    onEditComment?.(comment.id, editText, depth > 0);
+    onEditComment?.(comment.id, editText);
     setEditing(false);
   };
 
@@ -353,8 +358,10 @@ function CommentItem({ comment, isOPCheck, isVerifiedCheck, onLike, onDislike, o
       dislikes: 0,
       replies: [],
     };
-    await onPostReply(comment.id, newReply);
-    setReplyingTo(null);
+    try {
+      const ok = await onPostReply(comment.id, newReply);
+      if (ok) setReplyingTo(null);
+    } catch {}
   };
 
   const spoilerMatch = !comment.hasSpoiler && comment.text.match(/\|\|(.+?)\|\|/);
@@ -598,8 +605,10 @@ function Comments({ comments: externalComments, setComments, currentUser = "You"
   const handlePostReply = useCallback(async (parentId, reply) => {
     if (onReplyComment) {
       const res = await onReplyComment(parentId, reply.text || reply.content);
-      if (res?.success) return;
+      if (res?.success) return true;
+      return false;
     }
+    return true;
   }, [onReplyComment]);
 
   const handleLike = useCallback(async (id) => {

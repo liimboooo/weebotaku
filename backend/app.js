@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const hpp = require('hpp');
 const rateLimit = require('express-rate-limit');
+const { FRONTEND_URL } = require('./config/constants');
 
 const app = express();
 
@@ -18,8 +19,9 @@ app.use(helmet({
 app.use(hpp());
 
 // ─── CORS ────────────────────────────────────────────────
+const allowedOrigins = [FRONTEND_URL, 'https://frontend-beryl-theta-14.vercel.app'].filter(Boolean);
 app.use(cors({
-  origin: ['https://frontend-beryl-theta-14.vercel.app', 'http://localhost:3000'],
+  origin: allowedOrigins,
   credentials: true,
 }));
 

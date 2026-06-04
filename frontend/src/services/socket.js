@@ -1,5 +1,6 @@
 import { io } from 'socket.io-client';
 import api from './api';
+import { STORAGE_KEYS } from '../utils/constants';
 
 const SOCKET_URL = process.env.REACT_APP_API_URL
   ? process.env.REACT_APP_API_URL.replace('/api', '')
@@ -55,8 +56,12 @@ export function connectSocket() {
   }
 
   if (socket?.connected) return socket;
+  if (socket && !socket.connected) {
+    socket.disconnect();
+    socket = null;
+  }
 
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
   if (!token) return null;
 
   socket = io(SOCKET_URL, {

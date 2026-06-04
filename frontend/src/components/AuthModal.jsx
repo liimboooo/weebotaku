@@ -14,6 +14,7 @@ export default function AuthModal() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [pending2FA, setPending2FA] = useState(null);
@@ -24,23 +25,7 @@ export default function AuthModal() {
   const [resending, setResending] = useState(false);
   const [resentMsg, setResentMsg] = useState("");
   const overlayRef = useRef(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      setMode(initialMode);
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => { document.body.style.overflow = ""; };
-  }, [isOpen, initialMode]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handler = (e) => { if (e.key === "Escape") handleClose(); };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [isOpen]);
+  const handleCloseRef = useRef(null);
 
   const handleClose = useCallback(() => {
     setError("");
@@ -56,6 +41,25 @@ export default function AuthModal() {
     setLoading(false);
     closeAuth();
   }, [closeAuth]);
+
+  useEffect(() => { handleCloseRef.current = handleClose; }, [handleClose]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isOpen, initialMode]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e) => { if (e.key === "Escape") handleCloseRef.current(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [isOpen]);
 
   const onAuthSuccess = useCallback(() => {
     syncFromBackend().catch(() => {});
@@ -82,7 +86,7 @@ export default function AuthModal() {
 
     try {
       const response = mode === "register"
-        ? await authService.register(u, e, p, p)
+        ? await authService.register(u, e, p, confirmPassword)
         : await authService.login(u, p);
 
       if (response.success) {
@@ -107,7 +111,7 @@ export default function AuthModal() {
     } finally {
       setLoading(false);
     }
-  }, [username, email, password, mode, onAuthSuccess]);
+  }, [username, email, password, confirmPassword, mode, onAuthSuccess]);
 
   const handleResendVerify = useCallback(async () => {
     setResending(true);
@@ -277,6 +281,7 @@ export default function AuthModal() {
           setUsername={setUsername}
           setEmail={setEmail}
           setPassword={setPassword}
+          setConfirmPassword={setConfirmPassword}
           onSubmit={handleSubmit}
           onModeChange={switchMode}
           error={error}

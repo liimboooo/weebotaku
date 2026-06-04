@@ -21,10 +21,12 @@ export function useAPI(apiFunction, params = {}, dependencies = []) {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiFunction, JSON.stringify(params)]);
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchData, ...dependencies]);
 
   const refetch = useCallback(() => {
@@ -112,6 +114,7 @@ export function usePaginated(apiFunction, limit = 20) {
 
   useEffect(() => {
     loadPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { data, page, setPage, loading, hasMore, total, loadMore, reset };

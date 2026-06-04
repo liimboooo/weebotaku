@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { removeFromWatchlist, updateListStatus } from "../services/storage";
+import { removeFromWatchlist, updateListStatus, loadWatchlist, loadWatchHistory } from "../services/storage";
 import authService from "../services/authService";
 import { setPolledRemoteUserId } from "../services/socket";
 import AnimatedPage from "../components/AnimatedPage";
+import { MAX_FAVORITES } from "../utils/constants";
 import {
   Bookmark, Eye, Clock, CheckCircle, Pause, XCircle,
   Share2, Plus, Star, Edit3, Trash2,
@@ -56,6 +57,7 @@ export default function ProfilePage() {
   const [socialLinks, setSocialLinks] = useState({});
   const [userResults, setUserResults] = useState([]);
   const [remoteUserId, setRemoteUserId] = useState(null);
+  const [recentHistory, setRecentHistory] = useState([]);
 
   const loadProfileData = useCallback(async () => {
     if (isRemoteProfile) return;
@@ -66,13 +68,25 @@ export default function ProfilePage() {
         const u = res.user;
         setUsername(u.username || "Anime Fan");
         if (u.avatar) { setAvatar(u.avatar); setAvatarPreview(u.avatar); }
-        if (u.watchlist) {
-          setWatchlist(u.watchlist.map(item => ({
+        // Merge backend watchlist with localStorage for immediate sync
+        const localWatchlist = loadWatchlist();
+        if (u.watchlist && u.watchlist.length > 0) {
+          const merged = u.watchlist.map(item => ({
             id: item.animeId, name: item.name, img: item.img,
             rating: item.rating, episodes: item.episodes,
             year: item.year, status: item.status, genres: item.genres || [],
-            listStatus: item.listStatus || "Watch Later", type: "anime",
-          })));
+            listStatus: item.listStatus || "Planning", type: "anime",
+          }));
+          // Add local-only items not yet on backend
+          localWatchlist.forEach(local => {
+            if (!merged.some(m => String(m.id) === String(local.id))) {
+              merged.push(local);
+            }
+          });
+          setWatchlist(merged);
+        } else {
+          // No backend data, use localStorage directly
+          setWatchlist(localWatchlist);
         }
         if (u.ratings) setRated(u.ratings);
         if (u.favorites) setFavorites(u.favorites);
@@ -84,8 +98,11 @@ export default function ProfilePage() {
             setJoinDate(`${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`);
           }
         }
+      } else {
+        // Not logged in — fallback to localStorage
+        setWatchlist(loadWatchlist());
       }
-    } catch {}
+    } catch { setWatchlist(loadWatchlist()); }
     setLoading(false);
   }, [isRemoteProfile]);
 
@@ -108,7 +125,7 @@ export default function ProfilePage() {
                 id: item.animeId, name: item.name, img: item.img,
                 rating: item.rating, episodes: item.episodes,
                 year: item.year, status: item.status, genres: item.genres || [],
-                listStatus: item.listStatus || "Watch Later", type: "anime",
+                listStatus: item.listStatus || "Planning", type: "anime",
               })));
             }
             if (u.ratings) setRated(u.ratings);
@@ -125,13 +142,16 @@ export default function ProfilePage() {
       })();
     } else {
       loadProfileData();
+      setRecentHistory(loadWatchHistory().slice(0, 5));
       window.addEventListener("watchlist-updated", loadProfileData);
       window.addEventListener("profile-data-changed", loadProfileData);
       window.addEventListener("profile-avatar-updated", loadProfileData);
+      window.addEventListener("history-updated", () => setRecentHistory(loadWatchHistory().slice(0, 5)));
       return () => {
         window.removeEventListener("watchlist-updated", loadProfileData);
         window.removeEventListener("profile-data-changed", loadProfileData);
         window.removeEventListener("profile-avatar-updated", loadProfileData);
+        window.removeEventListener("history-updated", () => setRecentHistory(loadWatchHistory().slice(0, 5)));
       };
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -162,7 +182,7 @@ export default function ProfilePage() {
     if (exists) {
       updated = favorites.filter(f => f.animeId !== anime.animeId);
     } else {
-      if (favorites.length >= 5) return;
+      if (favorites.length >= MAX_FAVORITES) return;
       updated = [...favorites, { animeId: anime.animeId, name: anime.name, img: anime.img }];
     }
     setFavorites(updated);
@@ -291,11 +311,81 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          {/* ── FAVORITES ── */}
+          {favorites.length > 0 && (
+            <div className="upp-section">
+              <div className="upp-section-inner">
+                <h2 className="upp-section-title">
+                  <Heart size={16} /> Favorites
+                </h2>
+                <div className="upp-fav-row">
+                  {favorites.map((f, i) => (
+                    <motion.button
+                      key={f.animeId || i}
+                      className="upp-fav-card"
+                      onClick={() => navigate(`/anime/${f.animeId}/info`)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <div className="upp-fav-img-wrap">
+                        <img src={f.img} alt={f.name} loading="lazy" />
+                      </div>
+                      <span className="upp-fav-name">{f.name}</span>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── RECENT ACTIVITY ── */}
+          {recentHistory.length > 0 && (
+            <div className="upp-section">
+              <div className="upp-section-inner">
+                <h2 className="upp-section-title">
+                  <Film size={16} /> Recently Watched
+                </h2>
+                <div className="upp-history-row">
+                  {recentHistory.map((item, i) => (
+                    <motion.button
+                      key={`${item.animeId}-${item.episode}-${i}`}
+                      className="upp-history-item"
+                      onClick={() => navigate(`/anime/${item.animeId}?ep=${item.episode}`)}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <div className="upp-history-img">
+                        <img src={item.animeImg} alt={item.animeName} loading="lazy" />
+                      </div>
+                      <div className="upp-history-info">
+                        <span className="upp-history-name">{item.animeName}</span>
+                        <span className="upp-history-ep">Episode {item.episode}</span>
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ── WATCHLIST ── */}
           <div className="upp-watchlist-section">
             <div className="upp-watchlist-inner">
               <div className="upp-watchlist-header">
-                <h2 className="upp-watchlist-title">Watchlist</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <h2 className="upp-watchlist-title" style={{ margin: 0 }}>Watchlist</h2>
+                  {isOwnProfile && (
+                    <button className="upp-action-btn" onClick={() => navigate("/watchlist")} style={{ padding: '6px 14px', fontSize: '0.8rem' }}>
+                      <Eye size={14} /> Full Library View
+                    </button>
+                  )}
+                </div>
                 <div className="upp-watchlist-header-right">
                   <span className="upp-watchlist-count">{filteredAnime.length} anime</span>
                     <div className="upp-search-box">
@@ -380,7 +470,7 @@ export default function ProfilePage() {
                     {filteredAnime.map((item, i) => {
                       const userRating = rated[item.id];
                       return (
-                        <motion.button
+                        <motion.div
                           key={item.id}
                           className="upp-list-row"
                           layout
@@ -389,6 +479,9 @@ export default function ProfilePage() {
                           exit={{ opacity: 0 }}
                           transition={{ delay: i * 0.02, duration: 0.2 }}
                           onClick={() => navigate(`/anime/${item.id}/info`)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => e.key === 'Enter' && navigate(`/anime/${item.id}/info`)}
                         >
                           <div className="upp-list-img">
                             <img src={item.img} alt={item.name} loading="lazy" decoding="async" />
@@ -424,7 +517,7 @@ export default function ProfilePage() {
                                 aria-label="Toggle favorite"
                                 title={favorites.find(f => f.animeId === item.id) ? "Remove from favorites" : "Add to favorites"}
                               >
-                                <Heart size={14} fill={favorites.find(f => f.animeId === item.id) ? "#ffffff" : "none"} color={favorites.find(f => f.animeId === item.id) ? "#ffffff" : "#000000"} />
+                                <Heart size={14} fill={favorites.find(f => f.animeId === item.id) ? "#ffffff" : "none"} color={favorites.find(f => f.animeId === item.id) ? "#ffffff" : "rgba(255,255,255,0.3)"} />
                               </button>
                               <button
                                 className="upp-list-action upp-list-action--delete"
@@ -448,7 +541,7 @@ export default function ProfilePage() {
                               )}
                             </div>
                           )}
-                        </motion.button>
+                        </motion.div>
                       );
                     })}
                   </AnimatePresence>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import AuthImage from "../components/AuthImage";
 import authService from "../services/authService";
+import { syncFromBackend } from "../services/storage";
 import { CheckCircle, XCircle, Loader } from "lucide-react";
 import "../pages/AuthPage.css";
 
@@ -11,16 +12,21 @@ export default function SyncCallbackMAL() {
   const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("");
   useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) { setStatus("error"); setMessage(`MAL denied access: ${searchParams.get("error_description") || error}`); return; }
+
     const code = searchParams.get("code");
     if (!code) { setStatus("error"); setMessage("No authorization code received"); return; }
 
     const codeVerifier = localStorage.getItem("mal_code_verifier");
     localStorage.removeItem("mal_code_verifier");
+    if (!codeVerifier) { setStatus("error"); setMessage("Session expired — please reconnect from Settings"); return; }
 
     (async () => {
       try {
         const res = await authService.syncMALCallback(code, codeVerifier);
         if (res?.success) {
+          await syncFromBackend();
           setStatus("success");
           setMessage(`Connected to MAL! Synced ${res.imported || 0} titles.`);
           setTimeout(() => navigate("/settings?page=integrations", { replace: true }), 2500);

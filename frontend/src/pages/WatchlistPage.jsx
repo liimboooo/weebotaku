@@ -1,13 +1,33 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Search, Star, Play, Sparkles, X, ArrowUpDown } from "lucide-react";
+import { Heart, Search, Star, Play, X, SlidersHorizontal, Layers, Bookmark, CheckCircle2, CircleDashed, Clock, MonitorPlay, XCircle } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import { loadWatchlist, removeFromWatchlist, loadWatchHistory } from "../services/storage";
 import authService from "../services/authService";
 import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./WatchlistPage.css";
+
+const statusConfig = [
+  { id: "All", label: "All", icon: Layers },
+  { id: "Watching", label: "Watching", icon: MonitorPlay },
+  { id: "Planning", label: "Planning", icon: CircleDashed },
+  { id: "Completed", label: "Completed", icon: CheckCircle2 },
+  { id: "Paused", label: "Paused", icon: Clock },
+  { id: "Dropped", label: "Dropped", icon: XCircle }
+];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.1 } }
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 30, scale: 0.95 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 120, damping: 15 } },
+  exit: { opacity: 0, scale: 0.9, transition: { duration: 0.2 } }
+};
 
 export default function WatchlistPage() {
   useDocumentTitle("My Library");
@@ -17,225 +37,272 @@ export default function WatchlistPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [sortBy, setSortBy] = useState("recent");
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  const refresh = () => {
-    setAnimeList(loadWatchlist());
-  };
+  const refresh = () => setAnimeList(loadWatchlist());
 
   useEffect(() => {
     refresh();
     const handler = () => refresh();
     window.addEventListener("storage", handler);
     window.addEventListener("watchlist-updated", handler);
+    const scrollHandler = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", scrollHandler);
     return () => {
       window.removeEventListener("storage", handler);
       window.removeEventListener("watchlist-updated", handler);
+      window.removeEventListener("scroll", scrollHandler);
     };
   }, []);
 
-  const removeAnime = (id) => {
-    setAnimeList(removeFromWatchlist(id));
-  };
+  const removeAnime = (id) => setAnimeList(removeFromWatchlist(id));
 
   const progressMap = useMemo(() => {
     const history = loadWatchHistory();
     const map = {};
-    history.forEach(h => { if (!map[h.animeId]) map[h.animeId] = h.episode; });
+    history.forEach(h => { 
+      if (h.animeId) map[String(h.animeId)] = h;
+      if (h.animeName) map[h.animeName.toLowerCase()] = h;
+    });
     return map;
-  }, [animeList]);
-
-  const getProgress = (id) => progressMap[id] || 0;
-
-  const sortList = (list, key, getName, getRating, getProgress) => {
-    const sorted = [...list];
-    if (key === "title") sorted.sort((a, b) => (getName(a) || "").localeCompare(getName(b) || ""));
-    else if (key === "rating") sorted.sort((a, b) => (getRating(b) || 0) - (getRating(a) || 0));
-    else if (key === "progress") sorted.sort((a, b) => (getProgress(b) || 0) - (getProgress(a) || 0));
-    return sorted;
-  };
+  }, []);
 
   const filteredAnime = useMemo(() => {
     let list = animeList;
-    if (statusFilter !== "All") {
-      list = list.filter(a => (a.listStatus || "Watch Later") === statusFilter);
-    }
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(a => (a.name || '').toLowerCase().includes(q));
-    }
-    return sortList(list, sortBy, a => a.name, a => a.rating, a => progressMap[a.id] || 0);
+    if (statusFilter !== "All") list = list.filter(a => (a.listStatus || "Planning") === statusFilter);
+    if (search) { const q = search.toLowerCase(); list = list.filter(a => (a.name || '').toLowerCase().includes(q)); }
+    const sorted = [...list];
+    if (sortBy === "title") sorted.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    else if (sortBy === "rating") sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    else if (sortBy === "progress") sorted.sort((a, b) => ((progressMap[String(b.id)]?.episode || progressMap[(b.name || '').toLowerCase()]?.episode) || 0) - ((progressMap[String(a.id)]?.episode || progressMap[(a.name || '').toLowerCase()]?.episode) || 0));
+    return sorted;
   }, [animeList, search, statusFilter, sortBy, progressMap]);
 
-  const lastWatched = useMemo(() => {
+  const watchStats = useMemo(() => {
     const history = loadWatchHistory();
-    const wlIds = new Set(animeList.map(a => a.id));
-    const recent = history.find(h => wlIds.has(h.animeId));
-    if (!recent) return null;
-    const wlItem = animeList.find(a => a.id === recent.animeId);
-    return wlItem ? { ...wlItem, episode: recent.episode, timestamp: recent.timestamp } : null;
+    let totalSecs = 0;
+    let totalEps = 0;
+
+    animeList.forEach(a => {
+      const h = progressMap[String(a.id)] || progressMap[(a.name || '').toLowerCase()];
+      if (h) {
+        totalEps += h.episode;
+        const completedEps = Math.max(0, h.episode - 1);
+        totalSecs += (completedEps * 24 * 60) + (Math.floor(h.position) || 0);
+      }
+    });
+
+    const hours = Math.floor(totalSecs / 3600);
+    const minutes = Math.floor((totalSecs % 3600) / 60);
+    const seconds = Math.floor(totalSecs % 60);
+
+    let timeString = '';
+    if (hours > 0) timeString += `${hours}h `;
+    if (minutes > 0 || hours > 0) timeString += `${minutes}m `;
+    timeString += `${seconds}s watched`;
+
+    return { totalEps, timeString };
   }, [animeList]);
-  const totalItems = animeList.length;
-  const totalEps = animeList.reduce((s, a) => s + (a.episodes || 0), 0);
 
   return (
     <AnimatedPage>
-      <div className="wl">
-        <div className="wl-bg-ornament" />
+      <div className="watchlist-layout">
+        {/* Premium Animated Background */}
+        <div className="wl-ambient-bg">
+          <div className="wl-ambient-orb orb-1"></div>
+          <div className="wl-ambient-orb orb-2"></div>
+        </div>
 
-        <main className="wl-shell">
-          <motion.section className="wl-hero" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="wl-hero-bg" />
-            <div className="wl-hero-gradient" />
-            <div className="wl-hero-content">
-              <span className="wl-eyebrow"><Sparkles size={14} /> YOUR COLLECTION</span>
-              <h1>
-                <span className="wl-hero-main">MY</span>
-                <span className="wl-hero-accent">LIBRARY</span>
-              </h1>
-              <p className="wl-hero-desc">
-                Every anime you are watching, all in one place.
-                Track your progress and discover what is next.
-              </p>
-              <div className="wl-hero-metrics">
-                <div className="wl-metric"><strong>{totalItems}</strong><span>Total Items</span></div>
-                <div className="wl-metric"><strong>{totalEps}</strong><span>Episodes</span></div>
+        <main className="wl-container">
+          {/* Header Section */}
+          <header className={`wl-header ${isScrolled ? 'scrolled' : ''}`}>
+            <div className="wl-header-content">
+              <div className="wl-title-area">
+                <h1 className="wl-title">My Library</h1>
+                <p className="wl-subtitle">Your curated collection of {animeList.length} anime series</p>
+                {animeList.length > 0 && (
+                  <div className="wl-hero-stats" style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '12px', fontSize: '0.85rem', color: 'var(--text-tertiary)', fontWeight: '600' }}>
+                    <span>{watchStats.timeString}</span>
+                    <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>•</span>
+                    <span>{watchStats.totalEps} episodes</span>
+                  </div>
+                )}
+              </div>
+
+              {!authService.isLoggedIn() && (
+                <div className="wl-auth-prompt" onClick={() => navigate('/auth?next=/watchlist')}>
+                  <div className="wl-auth-icon">✨</div>
+                  <div className="wl-auth-text">
+                    <strong>Sync your library</strong>
+                    <span>Sign in to save across devices</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Premium Controls */}
+            <div className="wl-controls-bar glass-panel">
+              <div className="wl-status-tabs">
+                {statusConfig.map(status => {
+                  const Icon = status.icon;
+                  const count = animeList.filter(a => status.id === "All" || (status.id === "Planning" ? (!a.listStatus || a.listStatus === status.id) : a.listStatus === status.id)).length;
+                  
+                  return (
+                    <button
+                      key={status.id}
+                      className={`wl-tab-btn ${statusFilter === status.id ? 'active' : ''}`}
+                      onClick={() => setStatusFilter(status.id)}
+                    >
+                      <Icon size={14} className="wl-tab-icon" />
+                      <span>{status.label}</span>
+                      <span className="wl-tab-count">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="wl-tools">
+                <div className="wl-searchbox">
+                  <Search size={16} className="wl-search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Search library..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                  />
+                  {search && (
+                    <button className="wl-clear-btn" onClick={() => setSearch('')}>
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                
+                <div className="wl-sort-dropdown">
+                  <SlidersHorizontal size={16} className="wl-sort-icon" />
+                  <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                    <option value="recent">Recently Added</option>
+                    <option value="title">Title A–Z</option>
+                    <option value="rating">Highest Rated</option>
+                    <option value="progress">Most Progress</option>
+                  </select>
+                </div>
               </div>
             </div>
-            {(lastWatched || filteredAnime.length > 0) && (
-              <div
-                className="wl-hero-hud"
-                onClick={() => lastWatched ? navigate(`/anime/${lastWatched.id}?ep=${lastWatched.episode}`) : navigate(`/anime/${filteredAnime[0].id}/info`)}
-                style={{ cursor: 'pointer' }}
+          </header>
+
+          {/* Grid Section */}
+          <section className="wl-content">
+            {filteredAnime.length > 0 ? (
+              <motion.div 
+                className="wl-anime-grid"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
               >
-                <div className="wl-hud-img">
-                  <img src={lastWatched?.img || filteredAnime[0]?.img} alt="" />
-                </div>
-                <div className="wl-hud-info">
-                  <span className="wl-hud-label">{lastWatched ? `CONTINUE EP ${lastWatched.episode}` : "IN YOUR LIST"}</span>
-                  <span className="wl-hud-title">{lastWatched?.name || filteredAnime[0]?.name}</span>
-                  <span className="wl-hud-rating">
-                    <Star size={12} fill="currentColor" /> {(lastWatched?.rating || filteredAnime[0]?.rating)?.toFixed?.(1) || "?"}
-                  </span>
-                </div>
-              </div>
-            )}
-          </motion.section>
+                {/* Note: Removed mode="popLayout" as it breaks CSS Grid completely and causes cards to vanish */}
+                <AnimatePresence>
+                  {filteredAnime.map((anime) => {
+                    const h = progressMap[String(anime.id)] || progressMap[(anime.name || '').toLowerCase()];
+                    const progress = h?.episode || 0;
+                    const totalEps = anime.episodes || 1;
+                    const progressPercent = Math.min((progress / totalEps) * 100, 100);
+                    const statusStr = (anime.status || '').toLowerCase();
+                    const isUpcoming = statusStr.includes('upcoming') || statusStr.includes('not yet') || statusStr.includes('tba') || statusStr === 'not_yet_released';
 
-          {!authService.isLoggedIn() && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 16px', margin: '0 0 16px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, fontSize: 13, color: '#ffffff' }}>
-              <span>Saved locally on this device. <strong>Sign in</strong> to sync across devices.</span>
-              <button onClick={() => navigate('/auth?next=/watchlist')} style={{ background: 'linear-gradient(135deg,#000000,#ffffff)', border: 'none', color: '#fff', padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Sign In</button>
-            </div>
-          )}
-
-          <div className="wl-tabs">
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <ArrowUpDown size={13} style={{ color: 'rgba(255,255,255,0.5)' }} />
-              <select
-                value={sortBy}
-                onChange={e => setSortBy(e.target.value)}
-                aria-label="Sort by"
-                style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none', cursor: 'pointer', appearance: 'none' }}
-              >
-                <option value="recent" style={{ background: '#000000' }}>Recently Added</option>
-                <option value="title" style={{ background: '#000000' }}>Title A–Z</option>
-                <option value="rating" style={{ background: '#000000' }}>Highest Rated</option>
-                <option value="progress" style={{ background: '#000000' }}>Most Progress</option>
-              </select>
-            </div>
-            <div className="wl-search-wrap" style={{ position: 'relative' }}>
-              <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
-              <input
-                className="wl-search-input"
-                type="text"
-                placeholder="Search watchlist..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                style={{ padding: '8px 32px 8px 34px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none', width: 200 }}
-              />
-              {search && <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><X size={14} /></button>}
-            </div>
-          </div>
-
-          <div className="wl-status-filters">
-            {["All", "Watch Later", "Watching", "Completed", "On Hold", "Dropped"].map(s => (
-              <button key={s} className={`wl-status-pill ${statusFilter === s ? "active" : ""}`} onClick={() => setStatusFilter(s)}>
-                {s}{s !== "All" && <span className="wl-status-count">{animeList.filter(a => s === "Watch Later" ? (!a.listStatus || a.listStatus === s) : a.listStatus === s).length}</span>}
-              </button>
-            ))}
-          </div>
-
-          <AnimatePresence mode="wait">
-            <motion.div key="anime" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              {filteredAnime.length > 0 ? (
-                <div className="wl-grid">
-                  <AnimatePresence mode="popLayout">
-                    {filteredAnime.map((anime, i) => (
+                    return (
                       <motion.article
-                        className="wl-card"
                         key={anime.id}
                         layout
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{ delay: (i % 12) * 0.03, type: "spring", stiffness: 100, damping: 14 }}
-                        whileHover={{ y: -8, boxShadow: "0 20px 40px rgba(255,255,255,0.3)", borderColor: "#ffffff" }}
-                        whileTap={{ scale: 0.98 }}
+                        variants={cardVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        className="wl-anime-card"
                         onClick={() => navigate(`/anime/${anime.id}/info`)}
                         onMouseEnter={() => prefetch.onMouseEnter(anime.id)}
                         onMouseLeave={prefetch.onMouseLeave}
                       >
-                        <div className="wl-card-thumb">
-                          <img src={anime.img} alt={anime.name} loading="lazy" decoding="async" />
-                          <div className="wl-card-overlay">
-                            <div className="wl-card-play"><Play size={20} fill="currentColor" /></div>
-                            <div className="wl-card-tech">
-                              <span>{anime.episodes} eps</span>
-                              {getProgress(anime.id) > 0 && <span>Ep {getProgress(anime.id)}</span>}
+                        <div className="wl-card-poster">
+                          <img src={anime.img} alt={anime.name} loading="lazy" />
+                          <div className="wl-poster-overlay">
+                            {isUpcoming ? (
+                               <div className="wl-play-btn" style={{ width: 'auto', padding: '0 16px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>Upcoming</div>
+                            ) : (
+                               <div className="wl-play-btn"><Play fill="currentColor" size={24} /></div>
+                            )}
+                          </div>
+                          
+                          <div className="wl-card-badges">
+                            <span className={`wl-status-badge ${statusStr}`}>
+                              {isUpcoming ? 'Upcoming' : (anime.status || 'Unknown')}
+                            </span>
+                            <div className="wl-rating-badge">
+                              <Star size={10} fill="currentColor" />
+                              {anime.rating?.toFixed(1) || '?'}
                             </div>
                           </div>
-                          {getProgress(anime.id) > 0 && (
-                            <div className="wl-card-progress" style={{ width: `${(getProgress(anime.id) / (anime.episodes || 1)) * 100}%` }} />
-                          )}
-                          <span className={`wl-badge ${(anime.status || "").toLowerCase()}`}>{anime.status || "Unknown"}</span>
-                          <button
-                            className="wl-card-wish active"
-                            onClick={e => { e.stopPropagation(); removeAnime(anime.id); }}
+
+                          <button 
+                            className="wl-wish-btn"
+                            title="Remove from library"
+                            onClick={(e) => { e.stopPropagation(); removeAnime(anime.id); }}
                           >
-                            <Heart size={13} fill="currentColor" />
+                            <X size={16} strokeWidth={2.5} />
                           </button>
+
+                          {progress > 0 && (
+                            <div className="wl-progress-bar">
+                              <div className="wl-progress-fill" style={{ width: `${progressPercent}%` }}></div>
+                            </div>
+                          )}
                         </div>
-                        <div className="wl-card-body">
-                          <h3>{anime.name}</h3>
-                          <div className="wl-card-meta">
-                            <span>{anime.year}</span><span>•</span><span>{anime.episodes} eps</span>
-                          </div>
-                          <div className="wl-card-rating">
-                            <Star size={11} fill="currentColor" /> {anime.rating?.toFixed(1) || "?"}
+
+                        <div className="wl-card-info">
+                          <h3 className="wl-card-title">{anime.name}</h3>
+                          <div className="wl-card-stats">
+                            <span>{anime.year || 'TBA'}</span>
+                            <span className="dot">•</span>
+                            <span>{anime.episodes ? `${anime.episodes} EPS` : '?? EPS'}</span>
+                            {progress > 0 && (
+                              <>
+                                <span className="dot">•</span>
+                                <span className="wl-progress-text">EP {progress}</span>
+                              </>
+                            )}
                           </div>
                           {anime.genres && anime.genres.length > 0 && (
                             <div className="wl-card-tags">
-                              {anime.genres.slice(0, 3).map(g => <span key={g} className="wl-tag">{g}</span>)}
+                              {anime.genres.slice(0, 2).map(g => (
+                                <span key={g}>{g}</span>
+                              ))}
                             </div>
                           )}
                         </div>
-                        <div className="wl-card-glow" />
                       </motion.article>
-                    ))}
-                  </AnimatePresence>
+                    );
+                  })}
+                </AnimatePresence>
+              </motion.div>
+            ) : (
+              <motion.div 
+                className="wl-empty-state"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
+                <div className="wl-empty-icon-wrap">
+                  <Bookmark size={48} className="wl-empty-icon" />
+                  <div className="wl-empty-glow"></div>
                 </div>
-              ) : (
-                <div className="wl-empty">
-                  <Heart size={48} />
-                  <h3>{search ? 'No matches' : 'Watchlist is empty'}</h3>
-                  <p>{search ? `No anime matching "${search}"` : 'Browse anime and save them to your watchlist.'}</p>
-                  {!search && <button className="wl-browse-btn" onClick={() => navigate("/browse/anime")}>
-                    <Search size={14} /> Browse Anime
-                  </button>}
-                </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
+                <h2>{search ? 'No anime found' : 'Your library is empty'}</h2>
+                <p>{search ? `No results match "${search}" in your watchlist.` : 'Start exploring and add some amazing anime to your collection.'}</p>
+                {!search && (
+                  <button className="wl-cta-btn" onClick={() => navigate('/browse/anime')}>
+                    Explore Anime <Search size={16} />
+                  </button>
+                )}
+              </motion.div>
+            )}
+          </section>
         </main>
       </div>
     </AnimatedPage>
