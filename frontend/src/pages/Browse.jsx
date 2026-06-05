@@ -157,8 +157,8 @@ export default function Browse() {
   const [watchLoading, setWatchLoading] = useState(false);
 
   useEffect(() => {
-    fetchAnimeGenres().then(setGenres).catch(() => {});
-    fetchAnimeTags().then(setTags).catch(() => {});
+    fetchAnimeGenres().then(setGenres).catch(err => console.error('[AnimeWch] Failed to load genres:', err));
+    fetchAnimeTags().then(setTags).catch(err => console.error('[AnimeWch] Failed to load tags:', err));
   }, []);
 
   // debounce search box

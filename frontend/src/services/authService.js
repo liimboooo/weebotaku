@@ -177,7 +177,7 @@ class AuthService {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       if (payload.exp && Date.now() >= payload.exp * 1000) {
-        this.logout().catch(() => {});
+        this.logout().catch(err => console.error('[AnimeWch] Auto-logout on expired token failed:', err));
         return false;
       }
       return true;

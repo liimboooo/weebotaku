@@ -186,7 +186,7 @@ export default function ProfilePage() {
       updated = [...favorites, { animeId: anime.animeId, name: anime.name, img: anime.img }];
     }
     setFavorites(updated);
-    await authService.updateFavorites(updated).catch(() => {});
+    await authService.updateFavorites(updated).catch(err => console.error('[AnimeWch] Failed to update favorites:', err));
   };
 
   const counts = useMemo(() => ({

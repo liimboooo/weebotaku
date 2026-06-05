@@ -148,7 +148,7 @@ export default function SettingsPage() {
     if (!settingsReady) return;
     settingsService.get2FAStatus().then(status => {
       if (status?.enabled) setTwoFAEnabled(true);
-    }).catch(() => {});
+    }).catch(err => console.error('[AnimeWch] Failed to load 2FA status:', err));
   }, [settingsReady]);
 
   useEffect(() => {
@@ -157,13 +157,13 @@ export default function SettingsPage() {
       if (res?.success) {
         setSyncStatus({ mal: res.mal, anilist: res.anilist });
       }
-    }).catch(() => {});
+    }).catch(err => console.error('[AnimeWch] Failed to load sync status:', err));
     
     authService.getMe().then(res => {
       if (res?.success && res?.user?.favorites) {
         setFavorites(res.user.favorites);
       }
-    }).catch(() => {});
+    }).catch(err => console.error('[AnimeWch] Failed to load user data:', err));
   }, [settingsReady]);
 
   const avatar = currentUser?.avatar || "";

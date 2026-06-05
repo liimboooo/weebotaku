@@ -621,7 +621,7 @@ export default function Home() {
   const [quoteLoading, setQuoteLoading] = useState(false);
 
   useEffect(() => {
-    fetchRandomQuote().then(setQuote).catch(() => {});
+    fetchRandomQuote().then(setQuote).catch(err => console.error('[AnimeWch] Failed to load quote:', err));
   }, []);
 
   const refreshQuote = useCallback(() => {

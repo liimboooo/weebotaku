@@ -28,7 +28,7 @@ export default function AnimeChatch() {
         // increment views
         fetch(`/api/watch/${id}/views`, { method: 'POST' }).then(r => r.json()).then(j => {
           if (j?.views) setViews(j.views);
-        }).catch(() => {});
+        }).catch(err => console.error('[AnimeWch] Failed to increment views:', err));
       } catch (e) {
         console.error(e);
       }

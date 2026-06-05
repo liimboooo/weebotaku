@@ -10,6 +10,7 @@ export default function Reviews({ animeId, selectedEp }) {
   const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState("");
   const [reviewRating, setReviewRating] = useState(0);
+  const [reviewsError, setReviewsError] = useState(false);
 
   useEffect(() => {
     reviewService.getReviews("anime", animeId)
@@ -27,7 +28,7 @@ export default function Reviews({ animeId, selectedEp }) {
           })));
         }
       })
-      .catch(() => {});
+      .catch(err => { console.error('[AnimeWch] Failed to load reviews:', err); setReviewsError(true); });
   }, [animeId]);
 
   const addReview = async () => {

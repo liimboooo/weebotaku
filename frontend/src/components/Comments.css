@@ -304,8 +304,8 @@
 
 .awc-action:hover { color: #ffffff; }
 .awc-action:focus-visible { outline: 1px solid rgba(255,255,255,0.5); }
-.awc-action.liked { color: #ffffff; }
-.awc-action.disliked { color: #ffffff; }
+.awc-action.liked { color: #4ade80; }
+.awc-action.disliked { color: #f87171; }
 .awc-action-count { font-size: 12px; font-weight: 500; }
 
 /* ─── OPTIONS ─── */
@@ -594,7 +594,7 @@
 .awc-dialog-overlay {
   position: fixed;
   inset: 0;
-  z-index: 99999;
+  z-index: 100000;
   background: rgba(0,0,0,0.6);
   display: grid;
   place-items: center;

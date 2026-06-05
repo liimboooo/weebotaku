@@ -341,6 +341,14 @@
   color: #ffffff;
 }
 
+.ad-status-item .value.purple {
+  color: #c084fc;
+}
+
+.ad-status-item .value.green {
+  color: #4ade80;
+}
+
 /* ═══ RATING ROW ═══ */
 .ad-rating-row {
   display: flex;

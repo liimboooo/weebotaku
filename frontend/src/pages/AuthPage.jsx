@@ -30,7 +30,7 @@ export default function AuthPage() {
   const [resentMsg, setResentMsg] = useState("");
 
   const onAuthSuccess = useCallback(() => {
-    syncFromBackend().catch(() => {});
+    syncFromBackend().catch(err => console.error('[AnimeWch] Backend sync after login failed:', err));
     navigate(from, { replace: true });
   }, [navigate, from]);
 

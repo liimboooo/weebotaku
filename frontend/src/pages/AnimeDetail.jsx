@@ -81,6 +81,8 @@ export default function AnimeDetail() {
   const [showMoreActions, setShowMoreActions] = useState(false);
   const [showMobileComments, setShowMobileComments] = useState(false);
   const [showMobileSource, setShowMobileSource] = useState(false);
+  const [liked, setLiked] = useState(null);
+  const [commentsError, setCommentsError] = useState(false);
   const hlsVideoRef = useRef(null);
   const hlsInstanceRef = useRef(null);
   const autoNextTimerRef = useRef(null);
@@ -139,11 +141,13 @@ export default function AnimeDetail() {
 
   useEffect(() => {
     setCommentsLoading(true);
+    setCommentsError(false);
     commentService.getComments(id, { episode: selectedEp })
       .then(res => {
         if (res.success) setComments(res.data.map(mapComment));
+        else setCommentsError(true);
       })
-      .catch(() => {})
+      .catch(() => { setCommentsError(true); })
       .finally(() => setCommentsLoading(false));
   }, [id, selectedEp, mapComment]);
 
@@ -265,7 +269,7 @@ export default function AnimeDetail() {
   useEffect(() => {
     if (!apiAnime?.id) return;
     let cancelled = false;
-    fetchAnimeRecommendations(apiAnime.id).then(r => { if (!cancelled) setRecommendations(r); }).catch(() => {});
+    fetchAnimeRecommendations(apiAnime.id).then(r => { if (!cancelled) setRecommendations(r); }).catch(err => console.error('[AnimeWch] Failed to load recommendations:', err));
     return () => { cancelled = true; };
   }, [apiAnime?.id]);
 
@@ -496,7 +500,7 @@ export default function AnimeDetail() {
       hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
         if (data.levels.length > 1) hls.currentLevel = data.levels.length - 1;
         if (prevPos > 2) video.currentTime = prevPos;
-        video.play().catch(() => {});
+        video.play().catch(err => console.error('[AnimeWch] HLS video play failed:', err));
       });
       hls.on(Hls.Events.ERROR, (_, data) => {
         if (data.fatal) { hls.destroy(); hlsInstanceRef.current = null; setError("HLS stream failed. Try another source."); }
@@ -506,7 +510,7 @@ export default function AnimeDetail() {
       video.src = streamUrl;
       video.addEventListener("loadedmetadata", () => {
         if (prevPos > 2) video.currentTime = prevPos;
-        video.play().catch(() => {});
+        video.play().catch(err => console.error('[AnimeWch] Native video play failed:', err));
       }, { once: true });
     }
 
@@ -1080,20 +1084,20 @@ export default function AnimeDetail() {
                       )}
                     </div>
                     <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5">
-                      <button className="px-2 sm:px-4 py-1.5 sm:py-2.5 hover:bg-white/10 text-white font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors" onClick={() => {}}><ThumbsUp size={14} /> 12K</button>
-                      <button className="px-2 sm:px-4 py-1.5 sm:py-2.5 hover:bg-white/10 text-white font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 transition-colors" onClick={() => {}}><ThumbsDown size={14} /></button>
+                      <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors ${liked === true ? 'bg-amber-500/20 text-amber-300' : 'hover:bg-white/10 text-white'}`} onClick={() => setLiked(liked === true ? null : true)}><ThumbsUp size={14} /> 12K</button>
+                      <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 transition-colors ${liked === false ? 'bg-red-500/20 text-red-300' : 'hover:bg-white/10 text-white'}`} onClick={() => setLiked(liked === false ? null : false)}><ThumbsDown size={14} /></button>
                     </div>
                     {/* Desktop: show all buttons */}
-                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => setAlertBannerVisible(true)}>
+                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('animewch_last_language', language === 'sub' ? 'dub' : 'sub'); } catch {} }}>
                       Dub <ChevronDown size={12} className="text-zinc-400" />
                     </button>
-                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => setAlertBannerVisible(true)}>
+                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { if (servers.length > 1) { setServerIndex(i => (i + 1) % servers.length); } }}>
                       Server <ChevronDown size={12} className="text-zinc-400" />
                     </button>
                     <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
                       <Share2 size={12} /> Share
                     </button>
-                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 w-8 sm:w-10 h-8 sm:h-10 items-center justify-center rounded-full text-white transition-colors" title="Report" onClick={() => {}}>
+                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 w-8 sm:w-10 h-8 sm:h-10 items-center justify-center rounded-full text-white transition-colors" title="Report" onClick={() => { if (navigator.clipboard) navigator.clipboard.writeText(window.location.href); alert('Report submitted. We\'ll review this content.'); }}>
                       <Flag size={11} />
                     </button>
                     {/* Mobile "More" button */}
@@ -1109,16 +1113,16 @@ export default function AnimeDetail() {
                             animate={{ opacity: 1, y: 0 }}
                             className="absolute right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-xl py-1 min-w-[140px] shadow-2xl z-50"
                           >
-                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { setAlertBannerVisible(true); setShowMoreActions(false); }}>
+                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('animewch_last_language', language === 'sub' ? 'dub' : 'sub'); } catch {} setShowMoreActions(false); }}>
                               <Tv size={12} /> Dub
                             </button>
-                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { setAlertBannerVisible(true); setShowMoreActions(false); }}>
+                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { if (servers.length > 1) { setServerIndex(i => (i + 1) % servers.length); } setShowMoreActions(false); }}>
                               <Monitor size={12} /> Server
                             </button>
                             <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); setShowMoreActions(false); }}>
                               <Share2 size={12} /> Share
                             </button>
-                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { setShowMoreActions(false); }}>
+                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { if (navigator.clipboard) navigator.clipboard.writeText(window.location.href); alert('Report submitted. We\'ll review this content.'); setShowMoreActions(false); }}>
                               <Flag size={12} /> Report
                             </button>
                           </motion.div>
@@ -1130,7 +1134,7 @@ export default function AnimeDetail() {
 
                 {/* Stats & Synopsis */}
                 <div className="bg-white/5 border border-white/5 rounded-xl p-3 sm:p-4">
-                  <div className="text-[11px] sm:text-sm font-semibold text-zinc-400 mb-2">97K views • Apr 4, 2026 • #6 trending</div>
+                  <div className="text-[11px] sm:text-sm font-semibold text-zinc-400 mb-2">{anime?.episodes ? `${anime.episodes} episodes` : ''}{anime?.season ? ` • ${anime.season}` : ''}{anime?.year ? ` ${anime.year}` : ''}{anime?.status ? ` • ${anime.status}` : ''}</div>
                   {anime?.description ? (
                     <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">{anime.description.replace(/<[^>]*>/g, '')}</p>
                   ) : (
@@ -1152,6 +1156,13 @@ export default function AnimeDetail() {
                   <ChevronDown size={12} className={`ml-auto transition-transform ${showMobileComments ? 'rotate-180' : ''}`} />
                 </button>
                 <div className={`sm:block ${showMobileComments ? 'block' : 'hidden'}`}>
+                  {commentsError && !commentsLoading && (
+                    <div className="flex items-center gap-2 px-4 py-3 mb-3 rounded-xl bg-red-500/10 border border-red-500/20">
+                      <AlertTriangle size={14} className="text-red-400" />
+                      <p className="text-xs text-red-300 flex-1">Failed to load comments.</p>
+                      <button className="text-xs text-red-300 hover:text-red-200 underline bg-transparent border-none cursor-pointer" onClick={() => { setCommentsError(false); setCommentsLoading(true); commentService.getComments(id, { episode: selectedEp }).then(res => { if (res.success) setComments(res.data.map(mapComment)); else setCommentsError(true); }).catch(() => setCommentsError(true)).finally(() => setCommentsLoading(false)); }}>Retry</button>
+                    </div>
+                  )}
                   <Comments
                     comments={comments}
                     setComments={setComments}

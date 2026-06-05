@@ -10,7 +10,7 @@ export default function AuthImage() {
   useEffect(() => {
     configService.getFeatures().then(res => {
       if (res.success) setFeatures(res.data);
-    }).catch(() => {});
+    }).catch(err => console.error('[AnimeWch] Failed to load auth page features:', err));
   }, []);
 
   return (

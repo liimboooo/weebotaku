@@ -9,17 +9,15 @@ connectDB().catch(err => {
 });
 
 module.exports = async (req, res) => {
-  delete req.headers.cookie;
-  delete req.headers['x-vercel-proxy-signature'];
-  delete req.headers['x-vercel-forwarded-for'];
   const origin = req.headers.origin;
-  res.setHeader('Access-Control-Allow-Origin', origin || '*');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,Range');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Range,Accept-Ranges');
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
+    res.writeHead(204);
+    res.end();
     return;
   }
 

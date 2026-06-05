@@ -223,7 +223,7 @@ export default function Header({ isHome = false }) {
         </div>
 
         <div className="top-nav-right">
-          <div className="top-nav-search" onClick={handleSpotlightOpen} style={{ cursor: 'pointer' }}>
+          <div className="top-nav-search" onClick={handleSpotlightOpen} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSpotlightOpen(); } }} style={{ cursor: 'pointer' }}>
             <Search size={13} className="top-nav-search-icon" strokeWidth={1.75} />
             <input
               ref={inputRef}

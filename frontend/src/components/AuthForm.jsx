@@ -76,7 +76,9 @@ export default function AuthForm({ type, username, email, password, setUsername,
         {type === "register" && (
           <div className="auth-input-wrap">
             <Mail size={16} className="auth-input-icon" />
+            <label htmlFor="auth-email" className="sr-only">Email</label>
             <input
+              id="auth-email"
               className="auth-input"
               placeholder="Email"
               type="email"
@@ -89,7 +91,9 @@ export default function AuthForm({ type, username, email, password, setUsername,
         )}
         <div className="auth-input-wrap">
           <User size={16} className="auth-input-icon" />
+          <label htmlFor="auth-username" className="sr-only">Username</label>
           <input
+            id="auth-username"
             className="auth-input"
             placeholder="Username"
             value={username}
@@ -101,7 +105,9 @@ export default function AuthForm({ type, username, email, password, setUsername,
         </div>
         <div className="auth-input-wrap">
           <Lock size={16} className="auth-input-icon" />
+          <label htmlFor="auth-password" className="sr-only">Password</label>
           <input
+            id="auth-password"
             className="auth-input auth-input-pw"
             type={showPw ? "text" : "password"}
             placeholder="Password"
@@ -117,7 +123,9 @@ export default function AuthForm({ type, username, email, password, setUsername,
         {type === "register" && (
           <div className="auth-input-wrap">
             <Lock size={16} className="auth-input-icon" />
+            <label htmlFor="auth-confirm-pw" className="sr-only">Confirm password</label>
             <input
+              id="auth-confirm-pw"
               className="auth-input"
               type={showPw ? "text" : "password"}
               placeholder="Confirm password"

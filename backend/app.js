@@ -3,7 +3,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const hpp = require('hpp');
 const rateLimit = require('express-rate-limit');
-const { FRONTEND_URL } = require('./config/constants');
 
 const app = express();
 
@@ -19,23 +18,16 @@ app.use(helmet({
 app.use(hpp());
 
 // ─── CORS ────────────────────────────────────────────────
-const isDev = process.env.NODE_ENV !== 'production';
-const allowedOrigins = [
-  FRONTEND_URL,
-  'https://frontend-beryl-theta-14.vercel.app',
-  ...(isDev ? ['http://localhost:3000', 'http://127.0.0.1:3000'] : []),
-].filter(Boolean);
-console.log('CORS allowed origins:', allowedOrigins);
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, origin);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-}));
+app.use(cors({ origin: '*' }));
+
+// Handle OPTIONS preflight at Express level (fallback)
+app.options('*', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,Range');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Range,Accept-Ranges');
+  res.sendStatus(204);
+});
 
 // ─── Body Parsing ────────────────────────────────────────
 app.use(express.json({ limit: '2mb' }));
@@ -109,9 +101,6 @@ app.use((req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  if (err.message === 'Not allowed by CORS') {
-    return res.status(403).json({ success: false, message: 'CORS not allowed' });
-  }
   console.error('Server error:', err.stack || err);
   res.status(500).json({ success: false, message: 'Internal server error' });
 });

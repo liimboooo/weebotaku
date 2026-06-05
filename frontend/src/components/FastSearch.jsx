@@ -44,7 +44,7 @@ export default function FastSearch() {
 
   useEffect(() => {
     if (open && trending.length === 0) {
-      fetchTopAnime(1, 'airing').then(r => setTrending(r.data.slice(0, 5))).catch(() => {});
+      fetchTopAnime(1, 'airing').then(r => setTrending(r.data.slice(0, 5))).catch(err => console.error('[AnimeWch] Failed to load trending for fast search:', err));
     }
   }, [open, trending.length]);
 

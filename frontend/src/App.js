@@ -76,7 +76,7 @@ function AppLayout() {
   useEffect(() => {
     const api = process.env.REACT_APP_API_URL;
     if (!api) return;
-    const ping = () => { if (!document.hidden) fetch(`${api}/health`).catch(() => {}); };
+    const ping = () => { if (!document.hidden) fetch(`${api}/health`).catch(err => console.error('[AnimeWch] Health check ping failed:', err)); };
     ping();
     const interval = setInterval(ping, 4 * 60 * 1000);
     return () => clearInterval(interval);
