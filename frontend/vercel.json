@@ -3,15 +3,6 @@
   "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "CI=false npx react-scripts build",
   "outputDirectory": "build",
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Set-Cookie", "value": "__vercel_live_token=; Path=/; Max-Age=0; Secure; HttpOnly; SameSite=Lax" },
-        { "key": "Clear-Site-Data", "value": "\"cookies\"" }
-      ]
-    }
-  ],
   "rewrites": [
     { "source": "/api/:path*", "destination": "https://backend-delta-eight-70.vercel.app/api/:path*" }
   ]
