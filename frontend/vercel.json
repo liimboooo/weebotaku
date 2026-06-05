@@ -12,5 +12,7 @@
       ]
     }
   ],
-  "rewrites": []
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://backend-delta-eight-70.vercel.app/api/:path*" }
+  ]
 }
