@@ -48,3 +48,9 @@
 .sk-group {
   width: 100%;
 }
+
+@media (max-width: 320px) {
+  .sk-card { height: 200px; }
+  .sk-avatar { width: 36px; height: 36px; }
+  .sk-title { height: 18px; }
+}

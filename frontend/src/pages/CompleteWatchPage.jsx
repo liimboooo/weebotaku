@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import { ThumbsUp } from "lucide-react";
+import { ThumbsUp, User, Play } from "lucide-react";
 import "./CompleteWatchPage.css";
 
 const MOCK_EPISODES = [
@@ -12,9 +12,9 @@ const MOCK_EPISODES = [
 ];
 
 const MOCK_COMMENTS = [
-  { id: 1, user: "OtakuGamer", avatar: "🔮", text: "The animation in this episode was insane! Witch Hat Atelier is easily AOTY.", time: "2 hours ago", likes: 42 },
-  { id: 2, user: "MangaReader99", avatar: "🦊", text: "They adapted Chapter 4 perfectly. Qifrey's entrance gave me chills.", time: "5 hours ago", likes: 19 },
-  { id: 3, user: "Satoru_GoJo", avatar: "🕶️", text: "Is it just me or is the pacing getting better and better?", time: "1 day ago", likes: 8 }
+  { id: 1, user: "OtakuGamer", avatar: "OG", text: "The animation in this episode was insane! Witch Hat Atelier is easily AOTY.", time: "2 hours ago", likes: 42 },
+  { id: 2, user: "MangaReader99", avatar: "MR", text: "They adapted Chapter 4 perfectly. Qifrey's entrance gave me chills.", time: "5 hours ago", likes: 19 },
+  { id: 3, user: "Satoru_GoJo", avatar: "SG", text: "Is it just me or is the pacing getting better and better?", time: "1 day ago", likes: 8 }
 ];
 
 const RECOMMENDED_ANIME = [
@@ -69,7 +69,7 @@ export default function CompleteWatchPage() {
             <h3 style={{ margin: 0 }}>Comments ({MOCK_COMMENTS.length})</h3>
 
             <div className="comment-input">
-              <div className="comment-avatar">👤</div>
+              <div className="comment-avatar"><User size={18} /></div>
               <input placeholder="Add a comment" />
               <button className="btn-pill">Send</button>
             </div>
@@ -120,7 +120,7 @@ export default function CompleteWatchPage() {
                         <div className="episode-title">{ep.title}</div>
                         <div className="episode-meta">{ep.views} • {ep.date}</div>
                       </div>
-                      {isActive && <div style={{ color: 'var(--primary)' }}>▶️</div>}
+                      {isActive && <div style={{ color: 'var(--primary)' }}><Play size={14} fill="currentColor" /></div>}
                     </div>
                   );
                 })}

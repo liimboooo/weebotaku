@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Search, Star, Play, X, SlidersHorizontal, Layers, Bookmark, CheckCircle2, CircleDashed, Clock, MonitorPlay, XCircle } from "lucide-react";
+import { Search, Star, Play, X, SlidersHorizontal, Layers, Bookmark, CheckCircle2, CircleDashed, Clock, MonitorPlay, XCircle } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
 import { loadWatchlist, removeFromWatchlist, loadWatchHistory } from "../services/storage";
 import authService from "../services/authService";
