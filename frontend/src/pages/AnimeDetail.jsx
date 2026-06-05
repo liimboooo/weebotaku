@@ -81,6 +81,7 @@ export default function AnimeDetail() {
   const [showMoreActions, setShowMoreActions] = useState(false);
   const [showMobileComments, setShowMobileComments] = useState(false);
   const [showMobileSource, setShowMobileSource] = useState(false);
+  const [showServerSelector, setShowServerSelector] = useState(false);
   const [liked, setLiked] = useState(null);
   const [commentsError, setCommentsError] = useState(false);
   const hlsVideoRef = useRef(null);
@@ -998,24 +999,32 @@ export default function AnimeDetail() {
             </div>
 
             <div className="ad-content-container w-full lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] px-0 sm:px-0">
-              {/* ─── SERVER TOGGLE ─── */}
-              {servers.length > 0 && (
+              {/* ─── SERVER SELECTOR ─── */}
+              {servers.length > 0 && langServers().length > 1 && (
                 <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 border-b border-white/5">
-                  <span className="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-medium">Source</span>
-                  {/* Desktop: show both buttons */}
-                  <button className={`hidden sm:inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold transition-all ${language === 'sub' ? 'bg-[#2a1a08] text-[#e2a856]' : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('sub'); try { localStorage.setItem('animewch_last_language', 'sub'); } catch {} }} disabled={!servers.some(s => s.type === 'sub')}>SUB</button>
-                  <button className={`hidden sm:inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold transition-all ${language === 'dub' ? 'bg-[#2a1a08] text-[#e2a856]' : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('dub'); try { localStorage.setItem('animewch_last_language', 'dub'); } catch {} }} disabled={!servers.some(s => s.type === 'dub')}>DUB</button>
-                  {/* Mobile: dropdown */}
-                  <div className="relative sm:hidden">
-                    <button className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold ${language === 'sub' ? 'bg-[#2a1a08] text-[#e2a856]' : 'bg-[#1a082a] text-[#a856e2]'}`} onClick={() => setShowMobileSource(p => !p)}>
-                      {language === 'sub' ? 'SUB' : 'DUB'} <ChevronDown size={10} />
+                  <span className="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-medium">Server</span>
+                  <div className="relative">
+                    <button className="flex items-center gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors" onClick={() => setShowServerSelector(p => !p)}>
+                      {langServers()[serverIndex]?.label || 'Auto'} <ChevronDown size={10} />
                     </button>
-                    {showMobileSource && (
+                    {showServerSelector && (
                       <>
-                        <div className="fixed inset-0 z-40" onClick={() => setShowMobileSource(false)} />
-                        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="absolute top-full left-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl py-1 min-w-[80px] shadow-2xl z-50">
-                          <button className={`w-full text-left px-3 py-1.5 text-xs ${language === 'sub' ? 'text-amber-400' : 'text-zinc-400 hover:text-white'}`} onClick={() => { setLanguage('sub'); setShowMobileSource(false); try { localStorage.setItem('animewch_last_language', 'sub'); } catch {} }} disabled={!servers.some(s => s.type === 'sub')}>SUB</button>
-                          <button className={`w-full text-left px-3 py-1.5 text-xs ${language === 'dub' ? 'text-amber-400' : 'text-zinc-400 hover:text-white'}`} onClick={() => { setLanguage('dub'); setShowMobileSource(false); try { localStorage.setItem('animewch_last_language', 'dub'); } catch {} }} disabled={!servers.some(s => s.type === 'dub')}>DUB</button>
+                        <div className="fixed inset-0 z-40" onClick={() => setShowServerSelector(false)} />
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="absolute top-full left-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl py-1 min-w-[160px] sm:min-w-[180px] max-w-[220px] shadow-2xl z-50"
+                        >
+                          {langServers().map((srv, idx) => (
+                            <button
+                              key={`${srv.url}-${idx}`}
+                              className={`w-full text-left px-3 py-1.5 text-[11px] sm:text-xs flex items-center gap-2 ${idx === serverIndex ? 'bg-amber-500/10 text-amber-400' : 'text-zinc-300 hover:text-white hover:bg-zinc-800'}`}
+                              onClick={() => { switchServerFn(idx); setShowServerSelector(false); }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M21 12a9 9 0 00-9-9 9 9 0 00-9 9 9 9 0 009 9 9 9 0 009-9"/></svg>
+                              {srv.label}
+                            </button>
+                          ))}
                         </motion.div>
                       </>
                     )}
@@ -1046,8 +1055,14 @@ export default function AnimeDetail() {
                       {anime?.img && <img src={anime.img} alt="" className="w-full h-full object-cover" />}
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-bold text-white text-sm sm:text-base leading-tight">{anime?.name || "Anime"}</span>
-                      <span className="text-[10px] sm:text-xs text-zinc-400 font-medium mt-0.5">6.4K users</span>
+                      <button className="font-bold text-white text-sm sm:text-base leading-tight hover:text-amber-400 transition-colors text-left" onClick={() => navigate(`/anime/${id}/info`)}>
+                        {anime?.name || "Anime"}
+                      </button>
+                      {anime?.myAnimeListUrl && (
+                        <a href={anime.myAnimeListUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] sm:text-xs text-zinc-400 font-medium mt-0.5 hover:text-zinc-300 transition-colors">
+                          View on MAL
+                        </a>
+                      )}
                     </div>
                   </div>
 
@@ -1090,9 +1105,6 @@ export default function AnimeDetail() {
                     {/* Desktop: show all buttons */}
                     <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('animewch_last_language', language === 'sub' ? 'dub' : 'sub'); } catch {} }}>
                       Dub <ChevronDown size={12} className="text-zinc-400" />
-                    </button>
-                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { if (servers.length > 1) { setServerIndex(i => (i + 1) % servers.length); } }}>
-                      Server <ChevronDown size={12} className="text-zinc-400" />
                     </button>
                     <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
                       <Share2 size={12} /> Share
@@ -1138,7 +1150,7 @@ export default function AnimeDetail() {
                   {anime?.description ? (
                     <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">{anime.description.replace(/<[^>]*>/g, '')}</p>
                   ) : (
-                    <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">In a world where certain humans command mighty daemons, a young boy discovers his hidden power. The true battle begins now.</p>
+                    <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed">No synopsis available.</p>
                   )}
                 </div>
               </div>
