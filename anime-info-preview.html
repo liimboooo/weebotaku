@@ -25,6 +25,10 @@ body {
   overflow: hidden;
 }
 
+@media (max-width: 768px) {
+  .hero { min-height: auto; }
+}
+
 .hero-bg {
   position: absolute;
   inset: 0;
@@ -312,6 +316,15 @@ body {
   border-bottom: 1px solid rgba(255,255,255,0.06);
   margin-top: auto;
   position: relative;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 1px;
+}
+
+.tab-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-btn {
@@ -645,37 +658,158 @@ body {
 .related-section .mlt-grid { grid-template-columns: repeat(3, 1fr); }
 
 /* ═══ RESPONSIVE ═══ */
+@media (max-width: 1200px) {
+  .hero-inner { padding: 32px 32px 48px; gap: 40px; }
+  .tab-content { padding: 28px 32px 56px; }
+}
+
 @media (max-width: 1000px) {
-  .hero-inner { flex-direction: column; align-items: center; padding: 20px 20px 32px; gap: 24px; }
-  .hero-left { width: 180px; }
-  .hero-right { padding-top: 0; align-items: center; text-align: center; }
-  .title { font-size: 28px; }
+  .hero-inner { flex-direction: column; align-items: center; padding: 24px 20px 32px; gap: 24px; }
+  .hero-left { width: 200px; }
+  .hero-right { padding-top: 0; align-items: center; text-align: center; width: 100%; }
+  .title { font-size: 32px; }
   .genre-row { justify-content: center; }
   .action-row { justify-content: center; }
   .synopsis { text-align: center; max-width: 100%; }
-  .tab-bar { justify-content: center; width: 100%; }
-  .ep-grid { grid-template-columns: repeat(2, 1fr); }
-  .char-grid { grid-template-columns: repeat(3, 1fr); }
-  .mlt-grid { grid-template-columns: repeat(2, 1fr); }
+  .tab-bar { justify-content: center; width: 100%; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; padding-bottom: 2px; }
+  .tab-bar::-webkit-scrollbar { display: none; }
+  .ep-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .char-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .mlt-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .tab-content { padding: 24px 20px 40px; }
   .metadata-box { display: none; }
+}
+
+@media (max-width: 768px) {
+  .hero-inner { padding: 20px 16px 28px; gap: 20px; }
+  .hero-left { width: 180px; }
+  .title { font-size: 28px; }
+  .season-label { font-size: 10px; letter-spacing: 0.12em; }
+  .genre-pill { padding: 5px 14px; font-size: 11px; }
+  .btn-play { padding: 11px 24px; font-size: 14px; }
+  .btn-circle { width: 40px; height: 40px; font-size: 10px; }
+  .synopsis { font-size: 13px; line-height: 1.6; }
+  .tab-btn { padding: 14px 18px; font-size: 12px; }
+  .tab-content { padding: 20px 16px 36px; }
+  .ep-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .ep-thumb { aspect-ratio: 16/9; }
+  .ep-title { font-size: 12px; padding: 0 12px 10px; }
+  .ep-info { padding: 8px 12px; }
+  .char-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .char-img-wrap { width: 75px; height: 75px; }
+  .char-name { font-size: 13px; }
+  .char-role { font-size: 10px; }
+  .char-va { font-size: 9px; }
+  .mlt-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .mlt-card-body { padding: 12px; }
+  .mlt-card-title { font-size: 13px; }
+  .mlt-tag { padding: 2px 7px; font-size: 9px; }
+  .mlt-reason { font-size: 11px; }
+  .trailer-btn { padding: 9px 16px; font-size: 12px; }
+  .next-ep-badge { padding: 6px 14px; font-size: 11px; }
 }
 
 @media (max-width: 640px) {
   .hero { min-height: auto; }
   .hero-inner { padding: 16px 12px 24px; gap: 16px; }
-  .hero-left { width: 140px; }
-  .title { font-size: 22px; }
-  .trailer-btn, .next-ep-badge { font-size: 11px; padding: 5px 12px; }
-  .synopsis { font-size: 13px; }
-  .tab-btn { padding: 12px 14px; font-size: 12px; }
-  .btn-play { padding: 10px 22px; font-size: 13px; }
-  .btn-circle { width: 38px; height: 38px; }
+  .hero-left { width: 150px; }
+  .title { font-size: 24px; }
+  .season-label { font-size: 9px; }
+  .genre-pill { padding: 4px 12px; font-size: 10px; }
+  .btn-play { padding: 10px 20px; font-size: 13px; }
+  .btn-circle { width: 38px; height: 38px; font-size: 9px; }
+  .synopsis { font-size: 12px; line-height: 1.6; }
+  .tab-btn { padding: 12px 14px; font-size: 11px; min-width: fit-content; }
   .tab-content { padding: 16px 12px 32px; }
   .ep-grid { grid-template-columns: 1fr; }
   .char-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .char-img-wrap { width: 70px; height: 70px; }
-  .mlt-grid { grid-template-columns: 1fr; gap: 12px; }
+  .char-name { font-size: 12px; }
+  .char-role { font-size: 9px; }
+  .char-va { font-size: 8px; }
+  .mlt-grid { grid-template-columns: 1fr; gap: 10px; }
+  .mlt-card-body { padding: 12px; }
+  .mlt-card-title { font-size: 14px; }
+  .trailer-btn, .next-ep-badge { font-size: 11px; padding: 5px 12px; }
+}
+
+@media (max-width: 480px) {
+  .hero-inner { padding: 14px 10px 20px; gap: 14px; }
+  .hero-left { width: 130px; }
+  .title { font-size: 20px; line-height: 1.15; }
+  .genre-pill { padding: 3px 10px; font-size: 9px; }
+  .action-row { gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .btn-play { padding: 9px 18px; font-size: 12px; gap: 8px; }
+  .btn-circle { width: 36px; height: 36px; }
+  .synopsis { font-size: 11px; }
+  .tab-btn { padding: 10px 12px; font-size: 10px; }
+  .tab-content { padding: 14px 10px 28px; }
+  .ep-grid { gap: 10px; }
+  .ep-thumb { aspect-ratio: 16/9; }
+  .ep-title { font-size: 12px; padding: 0 10px 8px; }
+  .ep-info { padding: 6px 10px; }
+  .ep-number { font-size: 11px; }
+  .ep-views { font-size: 10px; }
+  .ep-overlay-btn { width: 40px; height: 40px; }
+  .char-grid { gap: 8px; }
+  .char-img-wrap { width: 60px; height: 60px; }
+  .char-name { font-size: 11px; }
+  .char-role { font-size: 8px; }
+  .char-va { font-size: 7px; }
+  .mlt-grid { gap: 8px; }
+  .mlt-card-body { padding: 10px; }
+  .mlt-card-title { font-size: 13px; }
+  .mlt-tag { padding: 1px 6px; font-size: 8px; }
+  .mlt-reason { font-size: 10px; }
+  .trailer-btn { padding: 6px 10px; font-size: 10px; }
+  .next-ep-badge { padding: 5px 10px; font-size: 10px; }
+  .poster-wrap { border-radius: 10px; }
+}
+
+@media (max-width: 380px) {
+  .action-row { flex-direction: column; align-items: stretch; gap: 8px; }
+  .btn-play { justify-content: center; width: 100%; }
+  .btn-circle { width: 100%; height: 44px; border-radius: 100px; }
+}
+
+@media (max-width: 360px) {
+  .hero-left { width: 110px; }
+  .title { font-size: 18px; }
+  .btn-play { padding: 8px 16px; font-size: 11px; }
+  .btn-circle { width: 34px; height: 34px; }
+  .tab-btn { padding: 8px 10px; font-size: 9px; }
+  .char-grid { gap: 6px; }
+  .char-img-wrap { width: 55px; height: 55px; }
+  .mlt-card-title { font-size: 12px; }
+}
+
+@media (max-width: 320px) {
+  .hero-inner { padding: 12px 8px 16px; gap: 12px; }
+  .hero-left { width: 90px; }
+  .title { font-size: 16px; }
+  .genre-pill { padding: 2px 8px; font-size: 8px; }
+  .btn-play { padding: 7px 12px; font-size: 10px; gap: 6px; }
+  .btn-circle { width: 30px; height: 30px; }
+  .synopsis { font-size: 10px; }
+  .tab-btn { padding: 6px 8px; font-size: 8px; }
+  .tab-content { padding: 10px 8px 20px; }
+  .char-grid { gap: 4px; }
+  .char-img-wrap { width: 48px; height: 48px; }
+  .char-name { font-size: 9px; }
+  .char-role { font-size: 7px; }
+  .mlt-card-body { padding: 8px; }
+  .mlt-card-title { font-size: 11px; }
+  .mlt-tag { padding: 1px 5px; font-size: 7px; }
+  .trailer-btn { padding: 5px 8px; font-size: 9px; }
+  .next-ep-badge { padding: 4px 8px; font-size: 9px; }
+  .poster-wrap { border-radius: 8px; }
+  .ep-grid { gap: 8px; }
+  .ep-thumb { aspect-ratio: 16/9; }
+  .ep-title { font-size: 11px; padding: 0 8px 6px; }
+  .ep-info { padding: 5px 8px; }
+  .ep-number { font-size: 10px; }
+  .ep-views { font-size: 9px; }
+  .ep-overlay-btn { width: 36px; height: 36px; }
 }
 </style>
 </head>

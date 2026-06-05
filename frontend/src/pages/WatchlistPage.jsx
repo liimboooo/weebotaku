@@ -121,7 +121,7 @@ export default function WatchlistPage() {
                 <h1 className="wl-title">My Library</h1>
                 <p className="wl-subtitle">Your curated collection of {animeList.length} anime series</p>
                 {animeList.length > 0 && (
-                  <div className="wl-hero-stats" style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '12px', fontSize: '0.85rem', color: 'var(--text-tertiary)', fontWeight: '600' }}>
+                  <div className="wl-hero-stats">
                     <span>{watchStats.timeString}</span>
                     <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>•</span>
                     <span>{watchStats.totalEps} episodes</span>
@@ -226,7 +226,7 @@ export default function WatchlistPage() {
                           <img src={anime.img} alt={anime.name} loading="lazy" />
                           <div className="wl-poster-overlay">
                             {isUpcoming ? (
-                               <div className="wl-play-btn" style={{ width: 'auto', padding: '0 16px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>Upcoming</div>
+                               <div className="wl-play-btn wl-play-upcoming">Upcoming</div>
                             ) : (
                                <div className="wl-play-btn"><Play fill="currentColor" size={24} /></div>
                             )}

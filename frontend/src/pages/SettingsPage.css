@@ -355,9 +355,11 @@
   color: #fff;
   font-size: 14px;
   font-family: inherit;
-  outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
+
+.st-input-code { width: 160px; }
+
+.st-input-disable-pw { width: 200px; }
 
 .st-input:focus {
   border-color: #ffffff;
@@ -1267,4 +1269,86 @@
 @media (max-width: 480px) {
   .st-dnd-row { flex-direction: column; }
   .st-theme-group { flex-wrap: wrap; }
+  .st-body { padding: 1rem; }
+  .st-page-title { font-size: 28px; }
+  .st-dash-card { padding: 1rem; }
+  .st-dash-card-title { font-size: 16px; }
+  .st-dash-card-desc { font-size: 12px; }
+  .st-section-heading { font-size: 18px; }
+  .st-profile-card { padding: 1rem; gap: 1rem; }
+  .st-avatar-lg { width: 64px; height: 64px; font-size: 22px; }
+  .st-profile-name { font-size: 20px; }
+  .st-sync-card { padding: 1rem; }
+  .st-sync-name { font-size: 16px; }
+  .st-sync-logo { width: 40px; height: 40px; font-size: 12px; }
+  .st-other-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  .st-other-card { padding: 1rem; }
+}
+
+@media (max-width: 380px) {
+  .st-body { padding: 0.75rem; }
+  .st-page-title { font-size: 24px; }
+  .st-page-sub { font-size: 13px; }
+  .st-section-heading { font-size: 16px; }
+  .st-section-sub { font-size: 12px; }
+  .st-dash-card { padding: 0.75rem; }
+  .st-dash-card-title { font-size: 14px; }
+  .st-dash-card-desc { font-size: 11px; }
+  .st-dash-card-icon { width: 36px; height: 36px; }
+  .st-card-grid { gap: 0.75rem; }
+  .st-profile-card { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .st-profile-left { width: 100%; }
+  .st-avatar-lg { width: 56px; height: 56px; font-size: 18px; }
+  .st-profile-name { font-size: 18px; }
+  .st-sync-card { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .st-sync-card-right { width: 100%; }
+  .st-sync-actions { flex-direction: row; }
+  .st-toggle-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .st-radio { font-size: 12px; padding: 0.3rem 0.7rem; }
+  .st-other-grid { grid-template-columns: 1fr; }
+  .st-input-row { flex-direction: column; }
+  .st-modal { max-width: calc(100vw - 24px); }
+  .st-modal-body { padding: 1rem; }
+  .st-2fa-card { padding: 1rem; }
+}
+
+@media (max-width: 320px) {
+  .st-body { padding: 0.5rem; }
+  .st-page-title { font-size: 20px; }
+  .st-dash-card { padding: 0.5rem; }
+  .st-dash-card-title { font-size: 13px; }
+  .st-section-heading { font-size: 15px; }
+  .st-avatar-lg { width: 48px; height: 48px; }
+  .st-profile-name { font-size: 16px; }
+  .st-btn { font-size: 12px; padding: 0.4rem 0.8rem; }
+  .st-input { font-size: 13px; padding: 0.5rem 0.7rem; }
+  .st-textarea { font-size: 13px; padding: 0.5rem 0.7rem; }
+  .st-page-sub { font-size: 12px; }
+  .st-section-sub { font-size: 11px; }
+  .st-theme-group { flex-direction: column; }
+  .st-theme-btn { padding: 0.35rem 0.6rem; font-size: 11px; }
+  .st-accent-group { gap: 6px; }
+  .st-accent-btn { width: 32px; height: 32px; }
+  .st-toggle { width: 40px; height: 22px; }
+  .st-toggle-knob { width: 16px; height: 16px; top: 3px; left: 3px; }
+  .st-toggle.active .st-toggle-knob { transform: translateX(18px); }
+  .st-backup-code { font-size: 12px; padding: 4px 8px; }
+  .st-other-grid { grid-template-columns: 1fr; }
+  .st-input-code { width: 100% !important; }
+  .st-input-disable-pw { width: 100% !important; }
+  .st-modal-overlay { padding: 8px; }
+  .st-modal-head { padding: 0.75rem 1rem; }
+  .st-modal-head h3 { font-size: 15px; }
+  .st-modal-close { padding: 4px; }
+  .st-modal-desc { font-size: 0.8rem; }
+  .st-modal-foot { flex-direction: column; gap: 0.5rem; }
+  .st-modal-icon { width: 36px; height: 36px; }
+  .st-field-label { font-size: 11px; }
+  .st-field-hint { font-size: 10px; }
+  .st-2fa-card { padding: 0.75rem; }
+  .st-2fa-desc { font-size: 0.75rem; }
+  .st-2fa-key { font-size: 10px; }
+  .st-2fa-verify-row .st-input { width: 100% !important; }
+  .st-danger-desc { font-size: 0.75rem; }
+  .st-pw-wrap .st-input { font-size: 13px; padding: 0.5rem 0.7rem; }
 }

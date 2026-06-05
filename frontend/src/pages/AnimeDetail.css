@@ -978,8 +978,90 @@
 }
 
 @media (max-width: 480px) {
-  .ad-hero-title { font-size: 1.4rem; }
+  .ad-shell { padding: 8px; }
+  .ad-hero { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+  .ad-hero-content { padding: 16px 14px; gap: 12px; }
+  .ad-hero-title { font-size: 1.3rem; }
+  .ad-hero-synopsis { font-size: 0.75rem; -webkit-line-clamp: 1; }
+  .ad-hero-metrics { gap: 10px; margin-top: 10px; }
+  .ad-metric { font-size: 0.7rem; }
+  .ad-hero-watch-btn { padding: 12px 20px; font-size: 0.85rem; border-radius: 10px; }
+  .ad-hero-action-btn { width: 36px; height: 36px; }
+  .ad-body { padding: 14px; }
+  .ad-tabs { padding: 4px; gap: 2px; }
+  .ad-tab { padding: 8px 12px; font-size: 0.72rem; }
+  .ad-episodes-grid { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 5px; }
+  .ad-episode-btn { padding: 8px 4px; border-radius: 8px; gap: 2px; }
+  .ad-episode-num { font-size: 0.85rem; }
+  .ad-episode-label { font-size: 0.5rem; }
+  .ad-status-bar { flex-wrap: wrap; gap: 0; }
+  .ad-status-item { min-width: 70px; padding: 10px 6px; }
+  .ad-status-item .value { font-size: 0.75rem; }
+  .ad-characters-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+  .ad-recommendations-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
+  .ad-synopsis { padding: 12px; }
+  .ad-synopsis p { font-size: 0.8rem; }
+  .ad-rating-row { padding: 10px 12px; flex-wrap: wrap; gap: 8px; }
+  .ad-rating-info { font-size: 0.78rem; }
+  .ad-genre-tag { padding: 4px 12px; font-size: 0.65rem; }
+  .ad-back-btn { font-size: 11px; padding: 5px 12px; }
   .ad-hero-metrics { gap: 12px; }
   .ad-episode-btn { padding: 10px 4px; border-radius: 10px; }
   .ad-episode-num { font-size: 0.9rem; }
+  .ad-recommendation-card img { width: 70px; height: 100px; }
+  .ad-rec-fallback { width: 70px; height: 100px; }
+}
+
+@media (max-width: 380px) {
+  .ad-shell { padding: 6px; }
+  .ad-hero { min-height: auto; max-height: none; }
+  .ad-hero-content { padding: 12px 10px; }
+  .ad-hero-title { font-size: 1.1rem; }
+  .ad-hero-desc { font-size: 0.7rem; }
+  .ad-hero-watch-btn { padding: 10px 16px; font-size: 0.8rem; }
+  .ad-body { padding: 10px; }
+  .ad-tab { padding: 6px 10px; font-size: 0.68rem; }
+  .ad-episodes-grid { grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 4px; }
+  .ad-episode-btn { padding: 6px 2px; border-radius: 6px; }
+  .ad-episode-num { font-size: 0.78rem; }
+  .ad-status-item { min-width: 60px; padding: 8px 4px; }
+  .ad-characters-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; }
+  .ad-character-info { padding: 6px 8px; }
+  .ad-character-name { font-size: 0.7rem; }
+  .ad-synopsis { padding: 10px; }
+  .ad-synopsis p { font-size: 0.75rem; }
+  .ad-rating-row { flex-direction: column; align-items: flex-start; }
+  .ad-recommendation-card img { width: 60px; height: 84px; }
+  .ad-rec-fallback { width: 60px; height: 84px; }
+  .ad-recommendation-name { font-size: 0.65rem; }
+}
+
+.ad-player-container { max-width: 1050px; }
+
+.ad-content-container { max-width: 1050px; }
+
+@media (max-width: 320px) {
+  .ad-shell { padding: 4px; }
+  .ad-player-container { max-width: 100%; }
+  .ad-content-container { max-width: 100%; }
+  .ad-hero-content { padding: 10px 8px; }
+  .ad-hero-title { font-size: 1rem; }
+  .ad-hero-watch-btn { padding: 8px 12px; font-size: 0.75rem; border-radius: 8px; }
+  .ad-hero-action-btn { width: 32px; height: 32px; }
+  .ad-body { padding: 8px; }
+  .ad-episodes-grid { grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 3px; }
+  .ad-episode-btn { padding: 5px 2px; }
+  .ad-episode-num { font-size: 0.7rem; }
+  .ad-status-item { min-width: 50px; padding: 6px 3px; }
+  .ad-status-item .label { font-size: 0.5rem; }
+  .ad-status-item .value { font-size: 0.65rem; }
+  .ad-genre-tag { padding: 3px 8px; font-size: 0.6rem; }
+  .ad-tab { padding: 5px 8px; font-size: 0.62rem; }
+  .ad-tab-empty { padding: 32px 16px; font-size: 0.75rem; }
+  .ad-error-state-text { font-size: 14px; }
+  .ad-error-state-btn { padding: 8px 18px; font-size: 11px; }
+  .ad-trailer-overlay { padding: 8px; }
+  .ad-trailer-modal { max-width: 100%; }
+  .ad-trailer-close { width: 32px; height: 32px; font-size: 15px; }
+  .ad-rating-global { font-size: 0.95rem; }
 }

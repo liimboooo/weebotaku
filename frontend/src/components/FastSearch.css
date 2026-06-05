@@ -540,3 +540,56 @@
   .fs-group-header { padding: 6px 16px 8px; }
   .fs-footer { padding: 6px 8px 8px; }
 }
+
+@media (max-width: 480px) {
+  .fs-trigger { padding: 0 8px; margin: 0 4px; height: 32px; }
+  .fs-input-row { padding: 10px 12px; gap: 8px; }
+  .fs-input-row input { font-size: 14px; }
+  .fs-input-esc { display: none; }
+  .fs-result-item { padding: 6px 12px; gap: 8px; }
+  .fs-result-poster { width: 30px; height: 44px; }
+  .fs-result-title { font-size: 12px; }
+  .fs-result-meta { font-size: 10px; }
+  .fs-recent-item { padding: 7px 12px; font-size: 12px; }
+  .fs-trending-card { padding: 6px 12px; gap: 8px; }
+  .fs-trending-name { font-size: 12px; }
+  .fs-group-header { padding: 4px 12px 6px; font-size: 9px; }
+  .fs-footer { padding: 4px 8px 6px; }
+  .fs-view-all { font-size: 11px; padding: 8px; }
+}
+
+@media (max-width: 380px) {
+  .fs-input-row { padding: 8px 10px; }
+  .fs-input-row input { font-size: 13px; }
+  .fs-result-item { padding: 5px 10px; gap: 6px; }
+  .fs-result-poster { width: 26px; height: 38px; }
+  .fs-result-title { font-size: 11px; }
+  .fs-group-header { padding: 4px 10px 4px; }
+  .fs-trending-card img { width: 28px; height: 38px; }
+}
+
+@media (max-width: 320px) {
+  .fs-modal { border-radius: 0; }
+  .fs-input-row { padding: 6px 8px; gap: 6px; }
+  .fs-input-row input { font-size: 12px; }
+  .fs-input-clear { width: 20px; height: 20px; }
+  .fs-result-item { padding: 4px 8px; gap: 6px; }
+  .fs-result-poster { width: 22px; height: 32px; }
+  .fs-result-title { font-size: 10px; }
+  .fs-result-meta { font-size: 9px; }
+  .fs-result-rating { display: none; }
+  .fs-result-arrow { display: none; }
+  .fs-result-avatar { width: 28px; height: 28px; }
+  .fs-result-avatar span { font-size: 11px; }
+  .fs-recent-item { padding: 5px 8px; font-size: 11px; }
+  .fs-trending-card { padding: 5px 8px; gap: 6px; }
+  .fs-trending-card img { width: 24px; height: 34px; }
+  .fs-trending-name { font-size: 11px; }
+  .fs-trending-meta { font-size: 10px; }
+  .fs-group-header { padding: 3px 8px 4px; font-size: 8px; }
+  .fs-footer { padding: 4px 6px 6px; }
+  .fs-view-all { font-size: 10px; padding: 6px; }
+  .fs-empty { padding: 24px 12px; font-size: 11px; }
+  .fs-empty-action { padding: 6px 12px; font-size: 10px; }
+  .fs-loading { padding: 24px 12px; font-size: 11px; }
+}

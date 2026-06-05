@@ -326,3 +326,31 @@
   .footer-badge { font-size: 9px; padding: 2px 8px; }
   .footer-glow { display: none; }
 }
+
+@media (max-width: 380px) {
+  .footer { padding: 24px 10px 16px; }
+  .footer-inner { gap: 16px; }
+  .footer-brand strong { font-size: 14px; }
+  .footer-brand span { font-size: 11px; }
+  .footer-links { gap: 16px; flex-direction: column; }
+  .footer-links-col { gap: 4px; }
+  .footer-links button { font-size: 11px; }
+  .footer-newsletter p { font-size: 11px; }
+  .footer-newsletter-form { flex-direction: column; gap: 6px; }
+  .footer-newsletter-form button { width: 100%; height: 34px; }
+  .footer-bottom { flex-direction: column; gap: 6px; }
+  .footer-badges { flex-wrap: wrap; }
+}
+
+@media (max-width: 320px) {
+  .footer { padding: 20px 8px 14px; }
+  .footer-brand strong { font-size: 13px; }
+  .footer-brand span { font-size: 10px; }
+  .footer-social { width: 28px; height: 28px; }
+  .footer-links button { font-size: 10px; }
+  .footer-newsletter p { font-size: 10px; }
+  .footer-newsletter-form input { font-size: 11px; padding: 6px 10px; }
+  .footer-badge { font-size: 8px; padding: 1px 6px; }
+  .footer-copy { font-size: 9px; }
+  .footer-made { font-size: 9px; }
+}

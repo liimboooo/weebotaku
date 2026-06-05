@@ -348,6 +348,16 @@
   background: rgba(0,0,0,0.4);
 }
 
+.wl-hero-stats {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  font-weight: 600;
+}
+
 .wl-play-btn {
   width: 56px;
   height: 56px;
@@ -363,14 +373,35 @@
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.wl-play-upcoming {
+  width: auto;
+  padding: 0 16px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  opacity: 1;
+  transform: none;
+}
+
 .wl-anime-card:hover .wl-play-btn {
   opacity: 1;
   transform: scale(1);
 }
+
+.wl-anime-card:hover .wl-play-upcoming {
+  transform: none;
+}
+
 .wl-play-btn:hover {
   background: white;
   color: black;
   transform: scale(1.1) !important;
+}
+
+.wl-play-upcoming:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  transform: none !important;
 }
 
 /* Badges */
@@ -583,4 +614,80 @@
   .wl-anime-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
   .wl-tools { flex-direction: column; }
   .wl-sort-dropdown, .wl-searchbox { width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .wl-container { padding: 0 16px; }
+  .wl-header { padding: 40px 0 24px; gap: 20px; }
+  .wl-title { font-size: clamp(1.8rem, 7vw, 2.2rem); }
+  .wl-subtitle { font-size: 0.9rem; }
+  .wl-anime-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .wl-card-info { padding: 10px; gap: 6px; }
+  .wl-card-title { font-size: 0.85rem; }
+  .wl-card-stats { font-size: 0.7rem; gap: 6px; }
+  .wl-card-tags span { font-size: 0.6rem; padding: 2px 8px; }
+  .wl-tab-btn { padding: 8px 12px; font-size: 0.78rem; }
+  .wl-searchbox input { width: 100%; font-size: 0.8rem; }
+  .wl-controls-bar { flex-direction: column; align-items: stretch; gap: 12px; padding: 10px 12px; }
+  .wl-tools { flex-direction: column; align-items: stretch; }
+  .wl-searchbox { width: 100%; }
+  .wl-sort-dropdown { width: 100%; }
+  .wl-wish-btn { width: 32px; height: 32px; top: 8px; right: 8px; }
+  .wl-play-btn { width: 44px; height: 44px; }
+  .wl-empty-state { padding: 60px 16px; }
+  .wl-empty-state h2 { font-size: 1.3rem; }
+  .wl-empty-icon-wrap { width: 72px; height: 72px; }
+  .wl-cta-btn { padding: 10px 24px; font-size: 0.85rem; }
+  .wl-card-badges { top: 8px; left: 8px; gap: 4px; }
+  .wl-status-badge { font-size: 0.55rem; padding: 2px 8px; }
+  .wl-rating-badge { font-size: 0.65rem; padding: 2px 8px; }
+}
+
+@media (max-width: 380px) {
+  .wl-container { padding: 0 10px; }
+  .wl-header { padding: 32px 0 16px; }
+  .wl-title { font-size: 1.6rem; }
+  .wl-anime-grid { gap: 8px; }
+  .wl-card-title { font-size: 0.75rem; }
+  .wl-card-info { padding: 8px; }
+  .wl-card-stats { font-size: 0.65rem; }
+  .wl-tab-btn { padding: 6px 10px; font-size: 0.72rem; }
+  .wl-tab-count { font-size: 0.65rem; padding: 1px 6px; }
+  .wl-empty-icon-wrap { width: 60px; height: 60px; }
+  .wl-empty-state h2 { font-size: 1.1rem; }
+}
+
+@media (max-width: 320px) {
+  .wl-container { padding: 0 8px; }
+  .wl-anime-grid { grid-template-columns: 1fr; gap: 10px; }
+  .wl-title { font-size: 1.4rem; }
+  .wl-subtitle { font-size: 0.8rem; }
+  .wl-header { padding: 20px 0 10px; }
+  .wl-hero-stats { font-size: 0.75rem; gap: 6px; margin-top: 8px; }
+  .wl-status-tabs { gap: 4px; }
+  .wl-tab-btn { font-size: 0.68rem; padding: 5px 8px; }
+  .wl-tab-count { font-size: 0.6rem; padding: 1px 5px; }
+  .wl-controls-bar { padding: 8px; gap: 8px; }
+  .wl-auth-prompt { padding: 10px 12px; gap: 10px; }
+  .wl-auth-icon { font-size: 20px; }
+  .wl-tools { gap: 6px; }
+  .wl-sort-dropdown { padding: 0 10px; }
+  .wl-sort-dropdown select { font-size: 0.75rem; padding: 6px 0; }
+  .wl-card-info { padding: 6px; gap: 4px; }
+  .wl-card-title { font-size: 0.7rem; }
+  .wl-card-stats { font-size: 0.6rem; gap: 4px; }
+  .wl-card-tags { gap: 4px; }
+  .wl-card-tags span { font-size: 0.55rem; padding: 1px 6px; }
+  .wl-progress-text { font-size: 0.55rem; }
+  .wl-wish-btn { width: 28px; height: 28px; top: 6px; right: 6px; }
+  .wl-card-badges { top: 6px; left: 6px; gap: 3px; }
+  .wl-status-badge { font-size: 0.5rem; padding: 1px 6px; }
+  .wl-rating-badge { font-size: 0.55rem; padding: 1px 6px; }
+  .wl-empty-state { padding: 40px 12px; }
+  .wl-empty-state h2 { font-size: 1rem; }
+  .wl-empty-icon-wrap { width: 52px; height: 52px; }
+  .wl-cta-btn { padding: 8px 16px; font-size: 0.75rem; }
+  .wl-play-upcoming { font-size: 0.7rem; padding: 0 12px; }
+  .wl-searchbox input { font-size: 0.75rem; padding: 6px 10px 6px 32px; }
+  .wl-searchbox input:focus { width: 100%; }
 }

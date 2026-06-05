@@ -732,7 +732,7 @@ export default function SettingsPage() {
           </div>
           <p className="st-2fa-desc" style={{ fontSize: "12px" }}>Or enter this key manually: <code className="st-2fa-key">{twoFASecret}</code></p>
           <div className="st-2fa-verify-row">
-            <input className="st-input" style={{ width: "160px", textAlign: "center", letterSpacing: "4px" }} type="text" inputMode="numeric" maxLength={6} placeholder="000000" value={twoFACode} onChange={e => setTwoFACode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+            <input className="st-input st-input-code" style={{ textAlign: "center", letterSpacing: "4px" }} type="text" inputMode="numeric" maxLength={6} placeholder="000000" value={twoFACode} onChange={e => setTwoFACode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
             <button className="st-btn st-btn--green" onClick={handleVerify2FA} disabled={twoFALoading || twoFACode.length < 6}>
               {twoFALoading ? "Verifying..." : "Verify & Enable"}
             </button>
@@ -760,7 +760,7 @@ export default function SettingsPage() {
             <CheckCircle size={20} color="#4ade80" />
             <span style={{ color: "#4ade80", fontWeight: 600 }}>2FA is enabled</span>
           </div>
-          <input className="st-input" style={{ width: "200px", marginBottom: "0.5rem" }} type="password" placeholder="Enter password to disable" value={twoFADisablePw} onChange={e => setTwoFADisablePw(e.target.value)} />
+          <input className="st-input st-input-disable-pw" style={{ marginBottom: "0.5rem" }} type="password" placeholder="Enter password to disable" value={twoFADisablePw} onChange={e => setTwoFADisablePw(e.target.value)} />
           <button className="st-btn st-btn--danger" onClick={handleDisable2FA} disabled={twoFALoading || !twoFADisablePw}>
             {twoFALoading ? "Disabling..." : "Disable 2FA"}
           </button>

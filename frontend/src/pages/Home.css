@@ -1023,6 +1023,70 @@
   .category-chip { padding: 7px 14px; font-size: 12px; }
 }
 
+@media (max-width: 380px) {
+  .home-container { padding: 0 8px 24px; }
+  .home-hero {
+    height: 55vh;
+    min-height: 320px;
+    max-height: 420px;
+    padding: 0 8px;
+  }
+  .home-hero-content { padding-top: 44px; }
+  .home-hero-content h1 { font-size: clamp(1.1rem, 6vw, 1.5rem); }
+  .home-hero-desc { font-size: 11px; }
+  .spotlight-kicker { font-size: 9px; padding: 4px 8px; }
+  .hero-pills { gap: 4px; }
+  .hero-pill { font-size: 8px; padding: 2px 6px; }
+  .hero-btn-main { padding: 7px 12px; font-size: 11px; }
+  .hero-btn-icon { width: 28px; height: 28px; }
+  .home-section { margin: 20px 0; }
+  .title-with-icon h2 { font-size: clamp(1rem, 4vw, 1.2rem); }
+  .home-stats-bar { grid-template-columns: 1fr; gap: 6px; }
+  .home-stat-card { padding: 8px 10px; gap: 8px; }
+  .home-stat-icon { width: 28px; height: 28px; }
+  .home-stat-value { font-size: 14px; }
+  .cw-card { flex: 0 0 140px; width: 140px; }
+  .cw-card-img { height: 85px; }
+  .cw-card-body { padding: 6px 8px 8px; }
+  .upcoming-grid { grid-template-columns: 1fr; gap: 8px; }
+  .upcoming-card-body { padding: 6px 8px 8px; }
+  .upcoming-card-body h3 { font-size: 10px; }
+  .home-cta-banner { padding: 16px 12px; }
+  .home-cta-content strong { font-size: 13px; }
+  .home-cta-content span { font-size: 11px; }
+  .genre-bar-chip { padding: 5px 10px; font-size: 10px; }
+}
+
+@media (max-width: 320px) {
+  .home-container { padding: 0 6px 20px; }
+  .home-hero {
+    height: 50vh;
+    min-height: 280px;
+    max-height: 380px;
+    padding: 0 6px;
+  }
+  .home-hero-content { padding-top: 36px; }
+  .home-hero-content h1 { font-size: clamp(1rem, 5.5vw, 1.3rem); line-height: 1.15; }
+  .home-hero-desc { font-size: 10px; -webkit-line-clamp: 1; }
+  .spotlight-kicker { font-size: 8px; padding: 3px 6px; }
+  .hero-pill { font-size: 7px; padding: 1px 5px; }
+  .hero-btn-main { padding: 6px 10px; font-size: 10px; gap: 4px; }
+  .hero-btn-icon { width: 26px; height: 26px; }
+  .home-section { margin: 16px 0; }
+  .title-with-icon h2 { font-size: 0.95rem; }
+  .home-stat-card { padding: 6px 8px; }
+  .home-stat-icon { width: 26px; height: 26px; }
+  .home-stat-value { font-size: 13px; }
+  .cw-card { flex: 0 0 120px; width: 120px; }
+  .cw-card-img { height: 70px; }
+  .home-cta-btn { font-size: 11px; padding: 8px 14px; }
+  .upcoming-card-body h3 { font-size: 9px; }
+  .category-chip { padding: 5px 10px; font-size: 10px; }
+  .genre-bar-chip { padding: 4px 8px; font-size: 9px; }
+  .home-empty-state { padding: 32px 16px; }
+  .home-empty-state p { max-width: 100%; }
+}
+
 /* ─── Empty State ────────────────────────────────────── */
 .home-empty-state {
   display: flex;

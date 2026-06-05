@@ -36,14 +36,13 @@ export default class ErrorBoundary extends React.Component {
       const message = this.props.fallbackMessage || (isChunk ? "New version deployed" : "Something went wrong");
 
       return (
-        <div style={{
+        <div className="error-boundary" style={{
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
           minHeight: this.props.minHeight || "300px",
           gap: "16px",
-          padding: "40px",
           color: "#ffffff",
           textAlign: "center",
           background: "rgba(0,0,0,0.95)",
@@ -51,18 +50,18 @@ export default class ErrorBoundary extends React.Component {
         }}>
           <AlertTriangle size={40} style={{ opacity: 0.4, color: "#000000" }} />
           <h2 style={{ color: "#fff", margin: 0, fontSize: "1.1rem", fontWeight: 600 }}>{message}</h2>
-          <p style={{ margin: 0, fontSize: "0.85rem", maxWidth: "400px", lineHeight: 1.5, color: "#ffffff" }}>
+          <p className="error-boundary-message" style={{ margin: 0, fontSize: "0.85rem", lineHeight: 1.5, color: "#ffffff" }}>
             {isChunk
               ? "The app was updated. Please reload to get the latest version."
               : (this.state.error?.message || "An unexpected error occurred")}
           </p>
           <button
             onClick={this.handleReset}
+            className="error-boundary-btn"
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "8px",
-              padding: "10px 24px",
               borderRadius: "10px",
               border: "1px solid #000000",
               background: "#000000",

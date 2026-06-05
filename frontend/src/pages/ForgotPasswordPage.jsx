@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
           <>
             <div style={{ textAlign: "center", padding: "1rem 0" }}>
               <CheckCircle size={48} color="#4ade80" style={{ marginBottom: "1rem" }} />
-              <h2 className="auth-title" style={{ fontSize: "22px" }}>Check your email</h2>
+              <h2 className="auth-title">Check your email</h2>
               <p className="auth-subtitle">If an account with <strong style={{ color: "#ffffff" }}>{email}</strong> exists, you'll get a reset link shortly.</p>
             </div>
             {cooldown > 0 ? (

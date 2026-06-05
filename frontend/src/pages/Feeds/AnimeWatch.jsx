@@ -702,14 +702,14 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
               {showShortcutsHelp && (
                 <div
                   onClick={() => setShowShortcutsHelp(false)}
-                  style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 24 }}
+                  className="watch-shortcuts-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}
                 >
-                  <div onClick={e => e.stopPropagation()} style={{ background: 'rgba(0,0,0,0.95)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 14, padding: '24px 28px', maxWidth: 480, width: '100%', color: '#fff' }}>
+                  <div                   onClick={e => e.stopPropagation()} className="watch-shortcuts-modal" style={{ background: 'rgba(0,0,0,0.95)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 14, padding: '24px 28px', width: '100%', color: '#fff' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
                       <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, letterSpacing: '0.02em' }}>Keyboard Shortcuts</h3>
                       <button onClick={() => setShowShortcutsHelp(false)} style={{ background: 'none', border: 'none', color: '#ffffff', cursor: 'pointer', padding: 4 }}>✕</button>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 24px', fontSize: '0.82rem' }}>
+                    <div className="watch-shortcuts-grid">
                       {[
                         ['Space / K', 'Play / Pause'],
                         ['J / ←', 'Back 10s'],
@@ -763,10 +763,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
             >
               {rightCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
             </button>
-            <div style={{position: 'absolute', right: 44, top: 12, color: '#fff', fontSize: 11, opacity: 0.8}}>
-              {rightCollapsed ? 'collapsed' : 'open'}
-            </div>
-              <button
+            <button
                 className="watch-side-head watch-accordion-header"
                 id="episodes-header"
                 aria-controls="episodes-content"
@@ -788,9 +785,9 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                 </div>
                 <div className="watch-side-scroll" ref={scrollRef} onScroll={handleSideScroll}>
               {loading ? (
-                <div className="watch-center" style={{ padding: 40 }}><Loader size={18} className="watch-spin" /></div>
+                <div className="watch-center"><Loader size={18} className="watch-spin" /></div>
               ) : filteredEpisodes.length === 0 ? (
-                <div className="watch-center" style={{ padding: 40 }}><p className="watch-muted">{epSearch ? "No matching episodes" : "No episodes"}</p></div>
+                <div className="watch-center"><p className="watch-muted">{epSearch ? "No matching episodes" : "No episodes"}</p></div>
               ) : (
                 <>
                   {filteredEpisodes.slice(0, visibleCount).map((ep, i) => {

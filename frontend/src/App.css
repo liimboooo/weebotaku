@@ -749,3 +749,41 @@ html, body {
     display: none;
   }
 }
+
+@media (max-width: 480px) {
+  .container { padding: 12px; }
+  .auth-card { padding: 28px 20px; max-width: 100%; max-height: calc(100vh - 24px); }
+  .auth-title { font-size: 1.4rem; }
+  .auth-subtitle { font-size: 0.78rem; }
+  .auth-input { height: 44px; font-size: 0.82rem; padding: 0 12px 0 40px; }
+  .auth-input-icon { left: 12px; }
+  .auth-button { height: 44px; font-size: 0.82rem; }
+  .auth-actions { flex-direction: column; gap: 8px; }
+  .auth-forgot { font-size: 0.72rem; padding: 6px 8px; }
+}
+
+@media (max-width: 380px) {
+  .container { padding: 8px; }
+  .auth-card { padding: 20px 14px; gap: 16px; }
+  .auth-header { gap: 6px; }
+  .auth-title { font-size: 1.2rem; gap: 8px; }
+  .auth-form { gap: 10px; }
+  .auth-input { height: 40px; font-size: 0.78rem; padding: 0 10px 0 34px; }
+  .auth-input-icon { left: 10px; width: 16px; height: 16px; }
+  .auth-button { height: 40px; font-size: 0.78rem; }
+  .google-button { height: 40px; font-size: 0.75rem; }
+  .auth-toggle { font-size: 0.72rem; }
+  .auth-error { font-size: 0.72rem; padding: 8px 12px; }
+}
+
+@media (max-width: 320px) {
+  .container { padding: 6px; }
+  .auth-card { padding: 16px 10px; border-radius: var(--radius-lg); }
+  .auth-title { font-size: 1.05rem; }
+  .auth-subtitle { font-size: 0.7rem; }
+  .auth-input { height: 36px; font-size: 0.72rem; padding: 0 8px 0 30px; }
+  .auth-input-icon { left: 8px; }
+  .auth-button { height: 36px; font-size: 0.72rem; padding: 0 12px; }
+  .google-button { height: 36px; font-size: 0.7rem; }
+  .auth-toggle { font-size: 0.65rem; }
+}

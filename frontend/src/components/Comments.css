@@ -643,6 +643,56 @@
 
 .awc-dialog-btn-danger:hover { background: rgba(255, 255, 255,0.15); }
 
+/* ─── RESPONSIVE ─── */
+@media (max-width: 480px) {
+  .awc { padding: 12px 0; }
+  .awc-header { margin-bottom: 14px; }
+  .awc-header-left { font-size: 13px; gap: 6px; }
+  .awc-input-box { gap: 8px; margin-bottom: 16px; }
+  .awc-input-field { font-size: 13px; padding: 12px 14px; }
+  .awc-submit-btn { padding: 8px 16px; font-size: 12px; }
+  .awc-format-bar { padding: 4px 8px; }
+  .awc-item { gap: 8px; padding: 6px 0; }
+  .awc-item-gutter { width: 32px; }
+  .awc-avatar { width: 32px; height: 32px; font-size: 12px; }
+  .awc-user { font-size: 12px; max-width: 120px; }
+  .awc-time { font-size: 10px; }
+  .awc-text { font-size: 13px; margin: 6px 0; }
+  .awc-actions { gap: 8px; }
+  .awc-action { font-size: 11px; padding: 3px 6px; gap: 3px; }
+  .awc-action-count { font-size: 10px; }
+  .awc-item.awc-reply { padding: 4px 0 4px 8px; gap: 6px; }
+  .awc-item.awc-reply .awc-text { font-size: 12px; }
+}
+
+@media (max-width: 380px) {
+  .awc { padding: 8px 0; }
+  .awc-header-left { font-size: 12px; }
+  .awc-input-field { font-size: 12px; padding: 10px 12px; }
+  .awc-submit-btn { padding: 6px 14px; font-size: 11px; }
+  .awc-item { gap: 6px; }
+  .awc-item-gutter { width: 28px; }
+  .awc-avatar { width: 28px; height: 28px; font-size: 11px; }
+  .awc-text { font-size: 12px; }
+  .awc-actions { gap: 6px; flex-wrap: wrap; }
+  .awc-reply-input-field { font-size: 12px; padding: 8px 10px; }
+  .awc-reply-input-main { border-radius: 8px; }
+}
+
+@media (max-width: 320px) {
+  .awc-header-left { font-size: 11px; }
+  .awc-count-badge { min-width: 16px; height: 16px; font-size: 9px; }
+  .awc-input-box { flex-direction: column; gap: 6px; }
+  .awc-input-field { font-size: 11px; padding: 8px 10px; }
+  .awc-item-gutter { display: none; }
+  .awc-text { font-size: 11px; }
+  .awc-action { font-size: 10px; padding: 2px 4px; }
+  .awc-sort-btn { font-size: 10px; padding: 4px 8px; }
+  .awc-reply-input-field { font-size: 11px; padding: 6px 8px; }
+  .awc-modal-action { min-width: 120px; }
+  .awc-more-dropdown { min-width: 120px; }
+}
+
 /* ─── MISC ─── */
 .awc-copied-hint {
   display: inline-flex;

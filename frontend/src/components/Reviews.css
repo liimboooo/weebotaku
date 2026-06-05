@@ -134,3 +134,39 @@
   color: #ffffff;
   line-height: 1.5;
 }
+
+@media (max-width: 480px) {
+  .reviews-section { margin: 24px 0; }
+  .reviews-section h3 { font-size: 17px; }
+  .review-input-row { flex-direction: column; gap: 8px; }
+  .review-input-row input { font-size: 13px; padding: 10px 14px; }
+  .review-input-row button { padding: 10px 14px; font-size: 13px; width: 100%; }
+  .review-item { padding: 10px; gap: 8px; }
+  .review-avatar { width: 30px; height: 30px; font-size: 12px; }
+  .review-head strong { font-size: 12px; }
+  .review-head span { font-size: 10px; }
+  .review-body p { font-size: 12px; }
+  .review-star-picker { font-size: 17px; }
+}
+
+@media (max-width: 380px) {
+  .reviews-section h3 { font-size: 15px; }
+  .review-item { padding: 8px; flex-direction: column; }
+  .review-head { flex-wrap: wrap; gap: 6px; }
+  .review-body p { font-size: 11px; }
+}
+
+@media (max-width: 320px) {
+  .reviews-section { margin: 16px 0; }
+  .reviews-section h3 { font-size: 14px; }
+  .review-input-row { gap: 6px; }
+  .review-input-row input { font-size: 12px; padding: 8px 12px; }
+  .review-input-row button { padding: 8px 12px; font-size: 12px; }
+  .review-star-picker { font-size: 15px; }
+  .review-item { padding: 6px; gap: 6px; }
+  .review-avatar { width: 26px; height: 26px; font-size: 10px; }
+  .review-head strong { font-size: 11px; }
+  .review-head span { font-size: 9px; }
+  .review-body p { font-size: 10px; }
+  .reviews-empty { padding: 20px; font-size: 12px; }
+}

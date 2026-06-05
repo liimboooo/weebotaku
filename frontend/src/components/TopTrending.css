@@ -328,6 +328,30 @@
   .stats-capsule { display: none; }
 }
 
+@media (max-width: 380px) {
+  .trending-sidebar { padding: 10px; border-radius: 14px; }
+  .sidebar-title { font-size: 14px; }
+  .tab-btn { font-size: 8px; padding: 4px 6px; }
+  .trending-card { height: 64px; padding: 0 8px; }
+  .rank-wrapper { width: 30px; height: 30px; }
+  .rank-outline-huge { font-size: 26px; }
+  .rank-solid-mini { font-size: 12px; left: 8px; top: 6px; }
+  .info-cluster { gap: 6px; }
+  .anime-title { font-size: 11px; }
+  .sub-meta-row { gap: 4px; font-size: 9px; }
+}
+
+@media (max-width: 320px) {
+  .trending-sidebar { padding: 8px; border-radius: 12px; }
+  .sidebar-title { font-size: 13px; }
+  .trending-card { height: 56px; padding: 0 6px; border-radius: 10px; }
+  .rank-wrapper { width: 26px; height: 26px; }
+  .rank-outline-huge { font-size: 22px; }
+  .rank-solid-mini { font-size: 10px; left: 6px; top: 5px; }
+  .anime-title { font-size: 10px; }
+  .sub-meta-row { display: none; }
+}
+
 /* ─── Skeleton shimmer (loading state) ───────────────── */
 .trending-card--skeleton {
   cursor: default;

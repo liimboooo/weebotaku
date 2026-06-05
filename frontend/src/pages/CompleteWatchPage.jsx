@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
+import { ThumbsUp } from "lucide-react";
 import "./CompleteWatchPage.css";
 
 const MOCK_EPISODES = [
@@ -54,7 +55,7 @@ export default function CompleteWatchPage() {
 
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 <button className="btn-pill">Add to List</button>
-                <div style={{ color: 'var(--text-secondary)' }}>👍 467</div>
+                <div style={{ color: 'var(--text-secondary)' }}><ThumbsUp size={13} /> 467</div>
               </div>
             </div>
 
@@ -68,7 +69,7 @@ export default function CompleteWatchPage() {
             <h3 style={{ margin: 0 }}>Comments ({MOCK_COMMENTS.length})</h3>
 
             <div className="comment-input">
-              <div style={{ fontSize: 22 }}>👤</div>
+              <div className="comment-avatar">👤</div>
               <input placeholder="Add a comment" />
               <button className="btn-pill">Send</button>
             </div>
@@ -76,14 +77,14 @@ export default function CompleteWatchPage() {
             <div className="comments-list">
               {MOCK_COMMENTS.map(comment => (
                 <div key={comment.id} className="comment">
-                  <div style={{ fontSize: 22 }}>{comment.avatar}</div>
+                  <div className="comment-avatar">{comment.avatar}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                       <strong>{comment.user}</strong>
                       <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{comment.time}</span>
                     </div>
                     <div className="comment-text">{comment.text}</div>
-                    <div style={{ marginTop: 8, color: 'var(--text-secondary)', fontSize: 13 }}>👍 {comment.likes} • Reply</div>
+                    <div style={{ marginTop: 8, color: 'var(--text-secondary)', fontSize: 13 }}><ThumbsUp size={13} /> {comment.likes} • Reply</div>
                   </div>
                 </div>
               ))}
@@ -134,7 +135,7 @@ export default function CompleteWatchPage() {
                 <div key={a.id} className="recommend-item">
                   <img src={a.cover} alt={a.title} />
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</div>
+                    <div className="recommend-title">{a.title}</div>
                     <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>{a.type} • {a.season} • {a.year}</div>
                   </div>
                 </div>

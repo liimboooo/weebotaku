@@ -48,5 +48,56 @@
 /* Ensure left column stacks content vertically and doesn't compress */
 .watch-left { display:flex; flex-direction:column; gap:14px; }
 
+.comment-avatar { font-size: 22px; flex-shrink: 0; }
+.recommend-title { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* Utility rows */
 .flex-row { display:flex; align-items:center; }
+
+@media (max-width: 768px) {
+  .watch-grid { grid-template-columns: 1fr; }
+  .watch-sidebar { order: 2; }
+}
+
+@media (max-width: 480px) {
+  .complete-watch { padding-top: 16px; }
+  .watch-grid { gap: 12px; }
+  .controls-bar { flex-direction: column; gap: 8px; }
+  .controls-left { width: 100%; justify-content: center; }
+  .meta-title { font-size: 14px; }
+  .comment-input { flex-direction: column; }
+  .episode-thumb { width: 48px; height: 32px; }
+  .episode-title { font-size: 12px; }
+}
+
+@media (max-width: 380px) {
+  .watch-grid { gap: 8px; }
+  .player-card { padding: 8px; }
+  .controls-bar { gap: 6px; }
+  .btn-pill { font-size: 10px; padding: 4px 8px; }
+  .episode-item { gap: 6px; padding: 6px; }
+  .episode-thumb { width: 40px; height: 28px; }
+  .episode-title { font-size: 11px; }
+  .recommend-item img { width: 40px; height: 28px; }
+}
+
+@media (max-width: 320px) {
+  .complete-watch { padding-top: 12px; }
+  .watch-grid { gap: 6px; }
+  .player-card { padding: 6px; }
+  .controls-bar { gap: 4px; }
+  .controls-left { gap: 4px; }
+  .btn-pill { font-size: 9px; padding: 3px 6px; }
+  .meta-title { font-size: 12px; }
+  .comment-avatar { font-size: 16px; }
+  .comment-input input { font-size: 12px; }
+  .comment-text { font-size: 12px; }
+  .episode-item { gap: 4px; padding: 4px; }
+  .episode-thumb { width: 34px; height: 24px; }
+  .episode-title { font-size: 10px; }
+  .recommend-title { font-size: 12px; }
+  .recommend-item img { width: 34px; height: 24px; }
+  .sidebar-card { padding: 8px; }
+  .episode-search input { padding: 6px 8px 6px 32px; font-size: 11px; }
+  .episode-list { gap: 4px; }
+}

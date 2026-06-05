@@ -94,3 +94,52 @@
   .ac-sugg img{ width:140px; height:80px }
 }
 
+@media (max-width: 480px){
+  .animechatch-page{ padding: 8px; gap: 12px }
+  .ac-title{ font-size: 18px }
+  .ac-stats{ font-size: 11px }
+  .ac-actions{ gap: 6px }
+  .ac-btn{ padding: 6px 10px; font-size: 11px }
+  .ac-avatar{ width: 40px; height: 40px; font-size: 14px }
+  .ac-channel{ gap: 8px }
+  .ac-channel-name{ font-size: 13px }
+  .ac-subs{ font-size: 11px }
+  .ac-subscribe{ padding: 7px 10px; font-size: 12px }
+  .ac-sugg{ gap: 8px; padding: 6px }
+  .ac-sugg img{ width: 100px; height: 60px }
+  .ac-sugg-title{ font-size: 12px }
+  .ac-sugg-info{ font-size: 11px }
+}
+
+@media (max-width: 380px){
+  .animechatch-page{ padding: 6px; gap: 8px }
+  .ac-title{ font-size: 16px }
+  .ac-subrow{ flex-direction: column; align-items: flex-start; gap: 6px }
+  .ac-avatar{ width: 36px; height: 36px; font-size: 12px }
+  .ac-description{ padding: 10px }
+  .ac-desc-text{ font-size: 12px }
+  .ac-sugg img{ width: 80px; height: 50px }
+  .ac-right{ order: 2 }
+}
+
+@media (max-width: 320px){
+  .animechatch-page{ padding: 4px; gap: 6px }
+  .ac-title{ font-size: 14px }
+  .ac-stats{ font-size: 10px }
+  .ac-meta{ margin-top: 8px }
+  .ac-subrow{ gap: 4px }
+  .ac-actions{ gap: 4px }
+  .ac-btn{ font-size: 10px; padding: 5px 8px }
+  .ac-channel{ gap: 6px; margin-top: 10px }
+  .ac-avatar{ width: 32px; height: 32px; font-size: 11px }
+  .ac-channel-name{ font-size: 12px }
+  .ac-subs{ font-size: 10px }
+  .ac-subscribe{ padding: 6px 8px; font-size: 11px }
+  .ac-description{ padding: 8px }
+  .ac-desc-text{ font-size: 11px }
+  .ac-sugg{ gap: 6px; padding: 4px }
+  .ac-sugg img{ width: 70px; height: 44px }
+  .ac-sugg-title{ font-size: 11px }
+  .ac-sugg-info{ font-size: 10px }
+}
+

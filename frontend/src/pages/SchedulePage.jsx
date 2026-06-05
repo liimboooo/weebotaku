@@ -370,9 +370,9 @@ export default function SchedulePage() {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => { setWeekOffset((o) => o - 1); setActiveDay(0); }}
-            className="shrink-0 flex items-center justify-center w-9 h-9 rounded-xl border border-white/[0.06] bg-white/[0.02] text-neutral-500 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.12] transition-colors"
+            className="shrink-0 flex items-center justify-center w-8 sm:w-9 h-8 sm:h-9 rounded-xl border border-white/[0.06] bg-white/[0.02] text-neutral-500 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.12] transition-colors"
           >
-            <ChevronLeft size={16} />
+            <ChevronLeft size={14} />
           </motion.button>
 
           <div className="flex flex-1 gap-1.5">
@@ -385,7 +385,7 @@ export default function SchedulePage() {
                   layout
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setActiveDay(i)}
-                  className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-xl border font-sans transition-colors text-[11px] ${
+                  className={`flex-1 flex flex-col items-center gap-0.5 py-2 sm:py-2.5 rounded-xl border font-sans transition-colors text-[11px] ${
                     isActive
                       ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.06)]"
                       : isTodayDay
@@ -396,9 +396,9 @@ export default function SchedulePage() {
                   <span className={`tracking-wider ${isActive ? "opacity-80" : "opacity-70"}`}>
                     {d.date.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()}
                   </span>
-                  <span className="text-lg font-black leading-none">{d.date.getDate()}</span>
+                  <span className="max-[480px]:text-xs max-[480px]:leading-none sm:text-lg font-black leading-none">{d.date.getDate()}</span>
                   {d.count !== undefined && (
-                    <span className={`text-[8px] ${isActive ? "text-black/50" : "text-neutral-600"}`}>
+                    <span className={`max-[380px]:hidden text-[8px] ${isActive ? "text-black/50" : "text-neutral-600"}`}>
                       {d.count || "\u2014"}
                     </span>
                   )}
@@ -410,9 +410,9 @@ export default function SchedulePage() {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => { setWeekOffset((o) => o + 1); setActiveDay(0); }}
-            className="shrink-0 flex items-center justify-center w-9 h-9 rounded-xl border border-white/[0.06] bg-white/[0.02] text-neutral-500 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.12] transition-colors"
+            className="shrink-0 flex items-center justify-center w-8 sm:w-9 h-8 sm:h-9 rounded-xl border border-white/[0.06] bg-white/[0.02] text-neutral-500 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.12] transition-colors"
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={14} />
           </motion.button>
         </motion.div>
 

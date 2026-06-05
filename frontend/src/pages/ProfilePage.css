@@ -768,6 +768,66 @@
   }
 }
 
+@media (max-width: 480px) {
+  .upp-top-inner { padding: 1rem 1rem 0.5rem; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+  .upp-avatar { width: 80px; height: 80px; }
+  .upp-username { font-size: 1.2rem; }
+}
+
+@media (max-width: 380px) {
+  .upp-top-inner { padding: 1rem 0.75rem 0.5rem; gap: 1rem; }
+  .upp-avatar { width: 64px; height: 64px; }
+  .upp-avatar-initial { font-size: 28px; }
+  .upp-username { font-size: 22px; }
+  .upp-joined { font-size: 11px; }
+  .upp-stats { gap: 1rem; }
+  .upp-stat-number { font-size: 22px; }
+  .upp-stat-label { font-size: 10px; }
+  .upp-actions { padding: 0.5rem 0.75rem; gap: 0.3rem; flex-wrap: wrap; }
+  .upp-action-btn { font-size: 11px; padding: 5px 10px; }
+  .upp-watchlist-inner { padding: 1rem 0.75rem; }
+  .upp-watchlist-title { font-size: 18px; }
+  .upp-tab { font-size: 12px; padding: 6px 10px; }
+  .upp-list-row { padding: 8px 10px; gap: 8px; }
+  .upp-list-img { width: 32px; height: 44px; border-radius: 6px; }
+  .upp-list-title { font-size: 12px; }
+  .upp-list-meta { font-size: 10px; }
+  .upp-list-status { font-size: 10px; padding: 2px 8px; }
+  .upp-fav-card { width: 100px; }
+  .upp-fav-name { font-size: 0.7rem; }
+  .upp-section-inner { padding: 1rem 0.75rem; }
+  .upp-history-item { width: 130px; }
+}
+
+@media (max-width: 320px) {
+  .upp-top-inner { padding: 0.75rem 0.5rem 0.5rem; }
+  .upp-avatar { width: 56px; height: 56px; border-width: 2px; }
+  .upp-avatar-initial { font-size: 24px; }
+  .upp-username { font-size: 18px; }
+  .upp-stats { gap: 0.75rem; flex-wrap: wrap; justify-content: center; }
+  .upp-stat-number { font-size: 18px; }
+  .upp-watchlist-inner { padding: 0.75rem 0.5rem; }
+  .upp-watchlist-title { font-size: 16px; }
+  .upp-tab { font-size: 11px; padding: 5px 8px; gap: 4px; }
+  .upp-list-row { padding: 6px 8px; gap: 6px; }
+  .upp-list-img { width: 28px; height: 40px; }
+  .upp-list-title { font-size: 11px; }
+  .upp-empty { padding: 2rem 0.5rem; }
+  .upp-empty-title { font-size: 16px; }
+  .upp-empty-icon-bg { width: 64px; height: 64px; }
+  .upp-input { font-size: 0.85rem; padding: 0.5rem 0.7rem; }
+  .upp-modal-overlay { padding: 8px; }
+  .upp-modal { max-width: 100%; padding: 1rem; }
+  .upp-modal-head { padding: 0 0 12px; }
+  .upp-modal-head h3 { font-size: 14px; }
+  .upp-modal-body { padding: 12px 0; }
+  .upp-modal-title { font-size: 1rem; }
+  .upp-modal-desc { font-size: 0.8rem; }
+  .upp-modal-foot { flex-direction: column; }
+  .upp-btn-ghost { width: 100%; text-align: center; font-size: 0.8rem; padding: 0.5rem 1rem; }
+  .upp-btn-primary { width: 100%; text-align: center; font-size: 0.8rem; padding: 0.5rem 1rem; }
+}
+
 /* ─── Watch Together Modal ───────────────── */
 .upp-modal-overlay {
   position: fixed;

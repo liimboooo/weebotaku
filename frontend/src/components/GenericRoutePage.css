@@ -95,3 +95,32 @@
 @media (max-width: 768px) {
   .generic-page { padding: 80px 20px 40px; }
 }
+
+@media (max-width: 480px) {
+  .generic-page { padding: 70px 14px 32px; }
+  .generic-header h1 { font-size: 24px; }
+  .generic-desc { font-size: 13px; }
+  .generic-eyebrow { font-size: 9px; padding: 4px 10px; }
+  .generic-item { padding: 14px 16px; }
+  .generic-section h2 { font-size: 16px; }
+}
+
+@media (max-width: 380px) {
+  .generic-page { padding: 60px 10px 24px; }
+  .generic-header { margin-bottom: 24px; }
+  .generic-header h1 { font-size: 20px; }
+  .generic-desc { font-size: 12px; }
+  .generic-item { padding: 12px; }
+  .generic-section h2 { font-size: 14px; }
+  .generic-item h3 { font-size: 13px; }
+  .generic-item p { font-size: 12px; }
+}
+
+@media (max-width: 320px) {
+  .generic-page { padding: 56px 8px 20px; }
+  .generic-header h1 { font-size: 18px; }
+  .generic-desc { font-size: 11px; }
+  .generic-item { padding: 10px; }
+  .generic-item h3 { font-size: 12px; }
+  .generic-item p { font-size: 11px; }
+}

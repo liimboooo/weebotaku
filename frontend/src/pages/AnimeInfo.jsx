@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -215,7 +215,7 @@ export default function AnimeInfo() {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-gradient-to-b from-[#070708] to-[#0b0c10] flex flex-col items-center justify-center gap-4 text-white">
         <div className="text-lg text-neutral-500">{error || "Anime not found."}</div>
-        <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.95 }} className="px-6 py-2 bg-neutral-800 rounded-full hover:bg-neutral-700 transition" onClick={fetchData}>Retry</motion.button>
+        <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.95 }} className="px-6 py-2 sm:px-8 sm:py-3 bg-neutral-800 rounded-full hover:bg-neutral-700 transition" onClick={fetchData}>Retry</motion.button>
       </motion.div>
     );
   }
@@ -232,7 +232,7 @@ export default function AnimeInfo() {
           <div className="absolute inset-0 bg-gradient-to-r from-[#070708] via-transparent to-[#070708]"></div>
         </div>
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-12 flex flex-col md:flex-row gap-10 items-start">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex flex-col md:flex-row gap-6 sm:gap-10 items-start">
           
           {/* Left Column: Poster & Meta */}
           <div className="flex-shrink-0 w-56 md:w-64 flex flex-col gap-4 mx-auto md:mx-0">
@@ -242,14 +242,14 @@ export default function AnimeInfo() {
             
             <div className="flex flex-col gap-3 mt-2">
               {isAiring && (
-                <div className="w-full bg-[#0c2d1c] text-emerald-400 py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm font-bold shadow-lg shadow-emerald-900/20 ring-1 ring-emerald-500/20">
+                <div className="w-full bg-[#0c2d1c] text-emerald-400 py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm font-bold shadow-lg shadow-emerald-900/20 ring-1 ring-emerald-500/20">
                   <Bell size={16} />
                   <span>Next ep airing {nextEpText || "in 4 days"}</span>
                 </div>
               )}
               
               {anime.trailerUrl && (
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setTrailerOpen(true)} className="w-full bg-neutral-800 hover:bg-neutral-700 transition-colors text-white py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold shadow-lg ring-1 ring-white/5">
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setTrailerOpen(true)} className="w-full bg-neutral-800 hover:bg-neutral-700 transition-colors text-white py-2 sm:py-3 px-3 sm:px-5 rounded-xl flex items-center justify-center gap-1.5 sm:gap-3 text-xs sm:text-base font-semibold shadow-lg ring-1 ring-white/5">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#e53935]"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
                   <span>Watch Trailer</span>
                 </motion.button>
@@ -276,7 +276,7 @@ export default function AnimeInfo() {
 
             <div className="flex flex-wrap gap-2 mb-8">
               {(anime.genres || []).map(g => (
-                <Link key={g} to={`/browse/anime?genre=${encodeURIComponent(g)}`} className="bg-[#e2a856] hover:bg-[#cf9649] transition-colors text-black px-4 py-1.5 rounded-full text-xs font-extrabold tracking-wide">
+                <Link key={g} to={`/browse/anime?genre=${encodeURIComponent(g)}`} className="bg-[#e2a856] hover:bg-[#cf9649] transition-colors text-black px-3 sm:px-5 py-1 sm:py-2 rounded-full text-[10px] sm:text-sm font-extrabold tracking-wide">
                   {g}
                 </Link>
               ))}
@@ -284,17 +284,17 @@ export default function AnimeInfo() {
 
             <div className="flex flex-wrap items-center gap-4 mb-8">
               {isUpcoming || anime.status === "CANCELLED" ? (
-                <span className="bg-neutral-800 text-neutral-500 px-8 py-3.5 rounded-full font-bold flex items-center gap-3 cursor-not-allowed">
+                <span className="bg-neutral-800 text-neutral-500 px-5 sm:px-8 py-2 sm:py-3.5 rounded-full font-bold flex items-center gap-2 sm:gap-3 cursor-not-allowed text-xs sm:text-sm">
                   {isUpcoming ? "Coming Soon" : "Cancelled"}
                 </span>
               ) : resumeInfo && !resumeInfo.isFinished ? (
-                <Link to={`/anime/${anime.id}?ep=${resumeInfo.episode}`} className="bg-white hover:bg-neutral-200 text-black px-8 py-3.5 rounded-full font-extrabold flex items-center gap-3 transition-transform hover:scale-105 active:scale-95 shadow-xl shadow-white/10">
-                  <Play size={20} fill="currentColor" />
+                <Link to={`/anime/${anime.id}?ep=${resumeInfo.episode}`} className="bg-white hover:bg-neutral-200 text-black px-5 sm:px-10 py-2.5 sm:py-4 rounded-full font-extrabold flex items-center gap-2 sm:gap-4 transition-transform hover:scale-105 active:scale-95 shadow-xl shadow-white/10 text-xs sm:text-base">
+                  <Play size={16} fill="currentColor" />
                   <span>Continue Ep {resumeInfo.episode}</span>
                 </Link>
               ) : (
-                <Link to={`/anime/${anime.id}?ep=1`} className="bg-white hover:bg-neutral-200 text-black px-8 py-3.5 rounded-full font-extrabold flex items-center gap-3 transition-transform hover:scale-105 active:scale-95 shadow-xl shadow-white/10">
-                  <Play size={20} fill="currentColor" />
+                <Link to={`/anime/${anime.id}?ep=1`} className="bg-white hover:bg-neutral-200 text-black px-5 sm:px-10 py-2.5 sm:py-4 rounded-full font-extrabold flex items-center gap-2 sm:gap-4 transition-transform hover:scale-105 active:scale-95 shadow-xl shadow-white/10 text-xs sm:text-base">
+                  <Play size={16} fill="currentColor" />
                   <span>Play</span>
                 </Link>
               )}
@@ -302,7 +302,7 @@ export default function AnimeInfo() {
               <div className="relative">
                 <button
                   onClick={() => { if (!bookmarked) setShowStatusMenu(s => !s); else { removeFromWatchlist(id); setBookmarked(false); } }}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${bookmarked ? "bg-white text-black" : "bg-neutral-800/80 hover:bg-neutral-700 text-white border border-neutral-700"}`}
+                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all ${bookmarked ? "bg-white text-black" : "bg-neutral-800/80 hover:bg-neutral-700 text-white border border-neutral-700"}`}
                   aria-label="Bookmark"
                 >
                   <Bookmark size={18} fill={bookmarked ? "currentColor" : "none"} />
@@ -318,7 +318,7 @@ export default function AnimeInfo() {
                       {["Planning","Watching","Completed","Paused","Dropped"].map(s => (
                         <button
                           key={s}
-                          className="w-full text-left px-4 py-2 text-sm text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors"
+                          className="w-full text-left px-4 py-2 sm:px-5 sm:py-2.5 text-sm sm:text-base text-neutral-300 hover:text-white hover:bg-neutral-800 transition-colors"
                           onClick={() => {
                             addToWatchlist({ id, name: anime?.name, img: anime?.img, type: 'anime', listStatus: s });
                             setBookmarked(true);
@@ -333,14 +333,14 @@ export default function AnimeInfo() {
               
               <a
                 href={`https://anilist.co/anime/${anime.id}`} target="_blank" rel="noopener noreferrer"
-                className="w-12 h-12 rounded-full flex items-center justify-center transition-all bg-neutral-800/80 hover:bg-neutral-700 text-white border border-neutral-700"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all bg-neutral-800/80 hover:bg-neutral-700 text-white border border-neutral-700"
                 aria-label="AniList"
               >
                 <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"><path d="M24 17.53v2.421c0 .71-.391 1.101-1.1 1.101h-8.913c-.71 0-1.1-.391-1.1-1.101v-2.422c0-.71.39-1.101 1.1-1.101h6.67l-2.071-8.563H15.5c-.71 0-1.101-.391-1.101-1.101V4.343c0-.71.391-1.101 1.101-1.101h2.518c.552 0 .964.316 1.077.854l4.8 12.336c.1.282.105.696-.067 1.099zM2.87 21.052c-.71 0-1.101-.391-1.101-1.101v-2.421c0-.71.391-1.101 1.101-1.101h3.69l3.32-9.664H7.26c-.71 0-1.101-.39-1.101-1.1V4.343c0-.71.391-1.101 1.101-1.101h3.04c.54 0 .942.31 1.05.83l5.05 15.879c.121.385-.145.88-.535 1.101z"/></svg>
               </a>
 
               <div className="relative" ref={shareRef}>
-                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }} onClick={() => setShareOpen(o => !o)} className="w-12 h-12 rounded-full flex items-center justify-center bg-neutral-800/80 hover:bg-neutral-700 text-white border border-neutral-700 transition-all">
+                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }} onClick={() => setShareOpen(o => !o)} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-neutral-800/80 hover:bg-neutral-700 text-white border border-neutral-700 transition-all">
                   <Share2 size={18} />
                 </motion.button>
                 <AnimatePresence>
@@ -358,7 +358,7 @@ export default function AnimeInfo() {
               </div>
 
               {anime.malId && (
-                <a href={`https://myanimelist.net/anime/${anime.malId}`} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full flex items-center justify-center bg-[#2e51a2] hover:bg-[#345bbb] text-white font-bold text-xs transition-all shadow-lg shadow-[#2e51a2]/20">
+                <a href={`https://myanimelist.net/anime/${anime.malId}`} target="_blank" rel="noopener noreferrer" className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-[#2e51a2] hover:bg-[#345bbb] text-white font-bold text-[10px] sm:text-xs transition-all shadow-lg shadow-[#2e51a2]/20">
                   MAL
                 </a>
               )}
@@ -384,7 +384,7 @@ export default function AnimeInfo() {
       </section>
 
       {/* ═══════════ MAIN CONTENT TABS & GRID ═══════════ */}
-      <section className="w-full max-w-7xl mx-auto px-6 lg:px-12 pb-24">
+      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 pb-16 sm:pb-24">
         
         {/* Navigation Tabs */}
         <div className="relative border-b border-neutral-800/80 mb-6">
@@ -487,13 +487,13 @@ export default function AnimeInfo() {
         {activeTab === "characters" && (
           <div className="animate-in fade-in duration-500">
             {characters.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                 {characters.map((ch, i) => (
-                  <div key={ch.id || i} className="bg-[#111216] border border-neutral-800 rounded-2xl p-4 flex flex-col items-center text-center hover:bg-[#1a1c23] hover:border-neutral-700 transition-colors">
-                    <img src={ch.image || ch.img || posterImg} alt={ch.name} className="w-20 h-20 rounded-full object-cover mb-3 ring-2 ring-neutral-800" loading="lazy" />
-                    <span className="text-white font-bold text-sm mb-1">{ch.name}</span>
-                    <span className="text-neutral-500 text-xs font-semibold">{ch.role || ch.title || "Character"}</span>
-                    {ch.voiceActor && <span className="text-neutral-600 text-[10px] uppercase tracking-wider mt-2">{ch.voiceActor}</span>}
+                  <div key={ch.id || i} className="bg-[#111216] border border-neutral-800 rounded-2xl p-3 sm:p-4 flex flex-col items-center text-center hover:bg-[#1a1c23] hover:border-neutral-700 transition-colors">
+                    <img src={ch.image || ch.img || posterImg} alt={ch.name} className="w-14 sm:w-20 h-14 sm:h-20 rounded-full object-cover mb-2 sm:mb-3 ring-2 ring-neutral-800" loading="lazy" />
+                    <span className="text-white font-bold text-[11px] sm:text-sm mb-0.5 sm:mb-1">{ch.name}</span>
+                    <span className="text-neutral-500 text-[10px] sm:text-xs font-semibold">{ch.role || ch.title || "Character"}</span>
+                    {ch.voiceActor && <span className="text-neutral-400 text-[9px] sm:text-[10px] uppercase tracking-wider mt-1 sm:mt-2 line-clamp-1">{ch.voiceActor}</span>}
                   </div>
                 ))}
               </div>
@@ -509,17 +509,17 @@ export default function AnimeInfo() {
             {(() => {
               const list = activeTab === "related" ? (anime.related || []) : related;
               return list.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-5">
                   {list.map((r, i) => (
                     <Link key={r.id || i} to={`/anime/${r.id}/info`} className="group flex flex-col bg-[#111216] border border-neutral-800 rounded-2xl overflow-hidden hover:bg-[#1a1c23] hover:border-neutral-700 transition-all duration-300">
                       <div className="w-full aspect-[3/4] relative overflow-hidden">
                         <img src={r.img || r.image || posterImg} alt={r.title || r.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                          <Play size={32} fill="white" className="text-white drop-shadow-xl" />
+                          <Play size={20} fill="white" className="text-white drop-shadow-xl" />
                         </div>
                       </div>
-                      <div className="p-3.5 flex flex-col gap-1.5">
-                        <h3 className="text-sm font-bold text-white line-clamp-1 group-hover:text-neutral-200 transition-colors">{r.title || r.name}</h3>
+                      <div className="p-2.5 sm:p-3.5 flex flex-col gap-1 sm:gap-1.5">
+                        <h3 className="text-[11px] sm:text-sm font-bold text-white line-clamp-1 group-hover:text-neutral-200 transition-colors">{r.title || r.name}</h3>
                         <div className="flex flex-wrap gap-1.5">
                           {(r.genres || []).slice(0, 2).map(g => (
                             <span key={g} className="text-[10px] bg-neutral-800 text-neutral-400 px-1.5 py-0.5 rounded uppercase font-semibold tracking-wider">{g}</span>

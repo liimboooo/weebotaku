@@ -1806,7 +1806,113 @@ video.watch-frame:fullscreen {
   .watch-action-bar { gap: 3px; }
   .watch-action-btn { font-size: 9px; padding: 4px 7px; }
   .watch-servers-list { overflow-x: auto; }
+}
 
+@media (max-width: 480px) {
+  .watch-player-stage { min-height: 160px; border-radius: 12px; }
+  .watch-topbar { padding: 0 0 8px; }
+  .watch-back-label { max-width: 60px; }
+  .watch-back { font-size: 10px; }
+  .watch-topbar-btn { padding: 3px 6px; font-size: 9px; }
+  .watch-info-card { padding: 10px; }
+  .watch-poster-wrap { width: 48px; height: 64px; }
+  .watch-info-title { font-size: 12px; }
+  .watch-info-synopsis { -webkit-line-clamp: 2; font-size: 9px; }
+  .watch-action-btn { font-size: 8px; padding: 3px 6px; }
+  .watch-info-bar { padding: 8px 0 4px; }
+  .watch-info-bar-ep { font-size: 11px; }
+  .watch-lang-btn { font-size: 9px; padding: 4px 8px; }
+  .watch-server-chip { font-size: 9px; padding: 2px 7px; }
+  .watch-section { padding: 14px; margin-top: 14px; }
+  .watch-reaction-btn { padding: 6px 10px; }
+  .watch-reaction-emoji { font-size: 12px; }
+  .watch-reaction-label { font-size: 9px; }
+  .watch-rec-card { width: 130px; }
+  .watch-char-card { width: 90px; }
+  .watch-info-close { width: 24px; height: 24px; }
+  .watch-side-box { padding: 6px; }
+  .yt-suggestion-thumb { width: 100px; }
+  .yt-suggestion-title { font-size: 11px; }
+  .yt-suggestion-channel { font-size: 10px; }
+  .yt-suggestion-meta { font-size: 10px; }
+  .auto-next-card { padding: 24px 32px; }
+  .auto-next-timer { font-size: 36px; }
+}
+
+@media (max-width: 380px) {
+  .watch-player-stage { min-height: 140px; border-radius: 10px; }
+  .watch-back-label { max-width: 50px; }
+  .watch-topbar-right { gap: 3px; }
+  .watch-topbar-btn { font-size: 8px; padding: 2px 5px; }
+  .watch-poster-wrap { width: 40px; height: 54px; }
+  .watch-info-title { font-size: 11px; }
+  .watch-info-jp { display: none; }
+  .watch-info-meta { display: none; }
+  .watch-info-bar-ep { font-size: 10px; }
+  .watch-info-bar-total { font-size: 9px; }
+  .watch-section-head > span { font-size: 10px; }
+  .watch-reaction-btn { padding: 5px 8px; gap: 4px; }
+  .watch-rec-card { width: 110px; }
+  .watch-char-card { width: 80px; }
+  .yt-suggestion-thumb { width: 80px; }
+  .yt-suggestion-card { gap: 4px; padding: 4px; }
+  .yt-suggestion-title { font-size: 10px; }
+  .auto-next-card { padding: 20px 24px; }
+  .auto-next-timer { font-size: 32px; }
+  .auto-next-label { font-size: 11px; }
+  .auto-next-play { padding: 8px 16px; font-size: 11px; }
+  .auto-next-cancel { padding: 8px 14px; font-size: 11px; }
+}
+
+@media (max-width: 320px) {
+  .watch-player-stage { min-height: 120px; border-radius: 8px; }
+  .watch-topbar { flex-wrap: wrap; gap: 4px; }
+  .watch-back-label { max-width: 40px; }
+  .watch-center-col { padding: 0 6px 6px; }
+  .watch-center { padding: 24px 12px; }
+  .watch-poster-wrap { width: 36px; height: 48px; }
+  .watch-info-title { font-size: 10px; }
+  .watch-right-col { width: auto; flex-shrink: 1; padding: 6px; }
+  .watch-side-box { padding: 8px; }
+  .watch-search-input { padding: 5px 22px 5px 24px; font-size: 10px; }
+  .watch-action-btn { font-size: 7px; padding: 2px 5px; }
+  .watch-section { padding: 10px; margin-top: 10px; }
+  .watch-rec-card { width: 90px; }
+  .watch-char-card { width: 70px; }
+  .yt-suggestion-thumb { width: 70px; }
+  .yt-suggestion-title { font-size: 9px; }
+  .auto-next-card { padding: 16px 20px; }
+  .auto-next-timer { font-size: 28px; }
+}
+
+.watch-shortcuts-modal {
+  max-width: 480px;
+}
+
+.watch-shortcuts-overlay {
+  padding: 24px;
+}
+
+.watch-shortcuts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 24px;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 320px) {
+  .watch-shortcuts-overlay {
+    padding: 12px;
+  }
+  .watch-shortcuts-modal {
+    max-width: 100%;
+    padding: 16px 16px !important;
+  }
+  .watch-shortcuts-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    font-size: 0.75rem;
+  }
 }
 
 /* ══════════════════════════════════════════════
@@ -2019,4 +2125,14 @@ video.watch-frame:fullscreen {
   .skip-btn { bottom: 60px; right: 12px; padding: 8px 14px; font-size: 11px; }
   .auto-next-card { padding: 24px 32px; }
   .auto-next-timer { font-size: 36px; }
+}
+
+@media (max-width: 320px) {
+  .skip-btn { bottom: 50px; right: 8px; padding: 6px 10px; font-size: 10px; gap: 4px; }
+  .auto-next-overlay { padding: 12px; }
+  .auto-next-card { padding: 16px 16px; }
+  .auto-next-timer { font-size: 24px; }
+  .auto-next-label { font-size: 10px; }
+  .auto-next-play { padding: 6px 12px; font-size: 10px; }
+  .auto-next-cancel { padding: 6px 10px; font-size: 10px; }
 }

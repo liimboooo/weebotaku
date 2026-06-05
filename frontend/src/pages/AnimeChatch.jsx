@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { ThumbsUp, MessageCircle, Share2, Bookmark } from "lucide-react";
 import PosterCard from "../components/PosterCard";
 import "./AnimeChatch.css";
 
@@ -64,10 +65,10 @@ export default function AnimeChatch() {
           <div className="ac-subrow">
             <div className="ac-stats">{views.toLocaleString()} views · {data?.episodes ? `${data.episodes} eps` : ''}</div>
             <div className="ac-actions">
-              <button className="ac-btn">👍 Like</button>
-              <button className="ac-btn">💬 Comment</button>
-              <button className="ac-btn">🔗 Share</button>
-              <button className="ac-btn">💾 Save</button>
+              <button className="ac-btn"><ThumbsUp size={16} /> Like</button>
+              <button className="ac-btn"><MessageCircle size={16} /> Comment</button>
+              <button className="ac-btn"><Share2 size={16} /> Share</button>
+              <button className="ac-btn"><Bookmark size={16} /> Save</button>
             </div>
           </div>
 

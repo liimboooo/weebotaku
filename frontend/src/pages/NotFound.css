@@ -26,3 +26,29 @@
   .nf-char{font-size:5rem}
   .nf-container{padding:110px 16px 40px}
 }
+
+@media(max-width:480px){
+  .nf-container{padding:90px 12px 32px}
+  .nf-char{font-size:4rem}
+  .nf-title{font-size:1.2rem}
+  .nf-desc{font-size:0.85rem;margin-bottom:28px}
+  .nf-btn{padding:10px 18px;font-size:0.8rem}
+  .nf-divider{margin:10px 0 18px;width:36px}
+}
+
+@media(max-width:380px){
+  .nf-container{padding:80px 8px 24px}
+  .nf-char{font-size:3.5rem}
+  .nf-title{font-size:1.1rem}
+  .nf-desc{font-size:0.8rem}
+  .nf-btn{padding:8px 14px;font-size:0.75rem;gap:5px}
+  .nf-actions{gap:6px}
+}
+
+@media(max-width:320px){
+  .nf-container{padding:70px 6px 20px}
+  .nf-char{font-size:3rem}
+  .nf-title{font-size:1rem}
+  .nf-desc{font-size:0.75rem;margin-bottom:20px}
+  .nf-btn{font-size:0.7rem;padding:6px 12px}
+}

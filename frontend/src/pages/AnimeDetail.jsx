@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Loader, Play, Star, Tv, Calendar, Clock, Monitor, Film,
   X, SkipForward, RefreshCw, AlertTriangle, Bell, ChevronDown, ChevronUp,
-  Share2, Bookmark, Flag, LayoutGrid, List, ArrowUp, ArrowDown
+  Share2, Bookmark, Flag, LayoutGrid, List, ArrowUp, ArrowDown, MessageCircle,
+  ThumbsUp, ThumbsDown
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { getAnimeById } from "../data/animeData";
@@ -47,7 +48,7 @@ export default function AnimeDetail() {
   const [iframeError, setIframeError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [streamRetryCount, setStreamRetryCount] = useState(0);
-  const [isEpisodesExpanded, setIsEpisodesExpanded] = useState(true);
+  const [isEpisodesExpanded, setIsEpisodesExpanded] = useState(() => window.innerWidth >= 640);
   const [bookmarked, setBookmarked] = useState(() => id ? isInWatchlist(id) : false);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [sidebarView, setSidebarView] = useState('thumbnail');
@@ -77,6 +78,9 @@ export default function AnimeDetail() {
   const [playbackSpeed, setPlaybackSpeed] = useState(() => loadSettings().playbackSpeed || 1);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const [showMoreActions, setShowMoreActions] = useState(false);
+  const [showMobileComments, setShowMobileComments] = useState(false);
+  const [showMobileSource, setShowMobileSource] = useState(false);
   const hlsVideoRef = useRef(null);
   const hlsInstanceRef = useRef(null);
   const autoNextTimerRef = useRef(null);
@@ -824,7 +828,7 @@ export default function AnimeDetail() {
     return (
       <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
         <p style={{ color: "#ffffff", fontSize: 14 }}>{animeError || "Anime not found"}</p>
-        <button onClick={() => navigate(-1)} style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", color: "#ffffff", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>Go back</button>
+        <button onClick={() => navigate(-1)} className="px-4 py-1.5 sm:px-5 sm:py-2 rounded-lg border border-white/20 bg-white/10 text-white cursor-pointer text-xs sm:text-sm font-bold hover:bg-white/20 transition-colors">Go back</button>
       </div>
     );
   }
@@ -842,13 +846,13 @@ export default function AnimeDetail() {
         }}
       />
       <div className="relative z-10 w-full min-h-screen flex flex-col bg-black/95">
-        <div className="flex-1 flex min-h-0 relative">
+          <div className="flex-1 flex flex-col lg:flex-row min-h-0 relative">
 
           {/* ─── CENTER COLUMN ─── */}
           <div className="flex-1 flex flex-col min-w-0">
 
             {/* ─── VIDEO PLAYER ─── */}
-            <div className="relative bg-gradient-to-b from-zinc-900/50 to-black overflow-hidden mt-8 mb-5" style={{ aspectRatio: '16/9', maxHeight: '65vh', maxWidth: '1050px', borderRadius: '24px', marginLeft: '40px', marginRight: '0', width: 'calc(100% - 40px)' }}>
+            <div className="ad-player-container relative bg-gradient-to-b from-zinc-900/50 to-black overflow-hidden mt-3 sm:mt-8 mb-3 sm:mb-5 lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] w-full mx-0 sm:rounded-3xl rounded-xl" style={{ aspectRatio: '16/9', maxHeight: '65vh' }}>
               {/* loading */}
               {loading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
@@ -858,11 +862,11 @@ export default function AnimeDetail() {
               )}
               {/* error */}
               {!loading && error && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 text-xl font-bold">!</div>
-                  <p className="text-sm text-zinc-400">{error}</p>
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 sm:gap-4 px-4 sm:px-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 text-lg sm:text-xl font-bold">!</div>
+                  <p className="text-[11px] sm:text-sm text-zinc-400 text-center">{error}</p>
                   {(retryCount + streamRetryCount) < 3 ? (
-                    <button className="px-5 py-2 rounded-full bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors" onClick={() => { if (episodes.length === 0) setRetryCount(c => c + 1); else setStreamRetryCount(c => c + 1); }}>
+                    <button className="px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-white/10 text-white text-[11px] sm:text-sm font-medium hover:bg-white/20 transition-colors" onClick={() => { if (episodes.length === 0) setRetryCount(c => c + 1); else setStreamRetryCount(c => c + 1); }}>
                       Retry
                     </button>
                   ) : (
@@ -880,53 +884,53 @@ export default function AnimeDetail() {
               )}
               {/* iframe error */}
               {!loading && !error && iframeError && streamUrl && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 text-xl font-bold">!</div>
-                  <p className="text-sm text-zinc-400">Episode not available on this source.</p>
-                  <div className="flex gap-3">
-                    {serverIndex < langServers().length - 1 && <button className="px-5 py-2 rounded-full bg-amber-500/20 text-amber-300 text-sm font-medium hover:bg-amber-500/30 transition-colors" onClick={tryNextServer}>Try Next Source</button>}
-                    {epIndex < episodes.length - 1 && <button className="px-5 py-2 rounded-full bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors" onClick={() => { setIframeError(false); failedServers.current = new Set(); setEpIndex(i => i + 1); }}>Skip to Next Episode</button>}
-                    <button className="px-5 py-2 rounded-full bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors" onClick={() => { setIframeError(false); failedServers.current = new Set(); setStreamRetryCount(c => c + 1); }}>Retry</button>
-                  </div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 sm:gap-4 px-4 sm:px-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 text-lg sm:text-xl font-bold">!</div>
+                  <p className="text-[11px] sm:text-sm text-zinc-400">Episode not available on this source.</p>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {serverIndex < langServers().length - 1 && <button className="px-4 py-1.5 max-[480px]:px-3 max-[480px]:py-1 max-[480px]:text-xs sm:px-5 sm:py-2 sm:text-sm rounded-full bg-amber-500/20 text-amber-300 text-sm font-medium hover:bg-amber-500/30 transition-colors" onClick={tryNextServer}>Try Next Source</button>}
+                      {epIndex < episodes.length - 1 && <button className="px-4 py-1.5 max-[480px]:px-3 max-[480px]:py-1 max-[480px]:text-xs sm:px-5 sm:py-2 sm:text-sm rounded-full bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors" onClick={() => { setIframeError(false); failedServers.current = new Set(); setEpIndex(i => i + 1); }}>Skip to Next Episode</button>}
+                      <button className="px-4 py-1.5 max-[480px]:px-3 max-[480px]:py-1 max-[480px]:text-xs sm:px-5 sm:py-2 sm:text-sm rounded-full bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors" onClick={() => { setIframeError(false); failedServers.current = new Set(); setStreamRetryCount(c => c + 1); }}>Retry</button>
+                    </div>
                 </div>
               )}
               {/* stream loading */}
               {!loading && !error && streamLoading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                   <div className="w-8 h-8 rounded-full border-2 border-amber-500/30 border-t-amber-400 animate-spin" />
-                  <p className="text-sm text-zinc-500">Loading stream...</p>
+                  <p className="text-xs sm:text-sm text-zinc-500">Loading stream...</p>
                 </div>
               )}
               {/* preparing */}
               {!loading && !error && !streamLoading && !streamUrl && episode && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <p className="text-sm text-zinc-500">Preparing stream...</p>
+                  <p className="text-xs sm:text-sm text-zinc-500">Preparing stream...</p>
                 </div>
               )}
 
               {/* skip buttons */}
               {streamMode === "hls" && showSkipIntro && (
-                <button className="absolute bottom-20 right-4 z-10 flex items-center gap-1.5 px-4 py-2 rounded-full bg-amber-500/80 text-white text-xs font-semibold backdrop-blur-sm hover:bg-amber-500 transition-colors shadow-lg" onClick={handleSkipIntro}>
-                  <SkipForward size={14} /> Skip Intro
+                <button className="absolute bottom-16 sm:bottom-20 right-2 sm:right-4 z-10 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-amber-500/80 text-white text-[11px] sm:text-xs font-semibold backdrop-blur-sm hover:bg-amber-500 transition-colors shadow-lg" onClick={handleSkipIntro}>
+                  <SkipForward size={12} /> Skip Intro
                 </button>
               )}
               {streamMode === "hls" && showSkipOutro && (
-                <button className="absolute bottom-20 right-4 z-10 flex items-center gap-1.5 px-4 py-2 rounded-full bg-amber-500/80 text-white text-xs font-semibold backdrop-blur-sm hover:bg-amber-500 transition-colors shadow-lg" onClick={handleSkipOutro}>
-                  <SkipForward size={14} /> {epIndex < episodes.length - 1 ? "Next Episode" : "Skip Outro"}
+                <button className="absolute bottom-16 sm:bottom-20 right-2 sm:right-4 z-10 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-amber-500/80 text-white text-[11px] sm:text-xs font-semibold backdrop-blur-sm hover:bg-amber-500 transition-colors shadow-lg" onClick={handleSkipOutro}>
+                  <SkipForward size={12} /> {epIndex < episodes.length - 1 ? "Next Episode" : "Skip Outro"}
                 </button>
               )}
 
               {/* auto next overlay */}
               {autoNextCountdown !== null && (
                 <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                  <div className="bg-zinc-900/90 border border-white/10 rounded-2xl p-6 text-center shadow-2xl">
-                    <p className="text-xs text-zinc-400 uppercase tracking-widest mb-2">Next episode in</p>
-                    <div className="text-5xl font-bold text-white mb-4">{autoNextCountdown}</div>
-                    <div className="flex gap-3 justify-center">
-                      <button className="flex items-center gap-1.5 px-5 py-2 rounded-full bg-amber-500 text-white text-sm font-semibold hover:bg-amber-400 transition-colors" onClick={() => { cancelAutoNext(); setEpIndex(i => i + 1); setSelectedEp(episodes[epIndex + 1]?.episode || (epIndex + 2)); }}>
-                        <Play size={14} /> Play Now
+                  <div className="bg-zinc-900/90 border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center shadow-2xl mx-3 sm:mx-0">
+                    <p className="text-[10px] sm:text-xs text-zinc-400 uppercase tracking-widest mb-2">Next episode in</p>
+                    <div className="text-3xl sm:text-5xl font-bold text-white mb-3 sm:mb-4">{autoNextCountdown}</div>
+                    <div className="flex gap-2 sm:gap-3 justify-center">
+                      <button className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full bg-amber-500 text-white text-[11px] sm:text-sm font-semibold hover:bg-amber-400 transition-colors" onClick={() => { cancelAutoNext(); setEpIndex(i => i + 1); setSelectedEp(episodes[epIndex + 1]?.episode || (epIndex + 2)); }}>
+                        <Play size={12} /> Play Now
                       </button>
-                      <button className="px-5 py-2 rounded-full bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors" onClick={cancelAutoNext}>Cancel</button>
+                      <button className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-full bg-white/10 text-white text-[11px] sm:text-sm font-medium hover:bg-white/20 transition-colors" onClick={cancelAutoNext}>Cancel</button>
                     </div>
                   </div>
                 </div>
@@ -936,18 +940,18 @@ export default function AnimeDetail() {
               {streamMode === "hls" && !loading && !error && streamUrl && !streamLoading && (
                 <>
                   <button
-                    className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/50 text-white text-sm font-bold backdrop-blur-sm hover:bg-black/70 transition-colors cursor-pointer border-none"
+                    className="absolute top-2 sm:top-3 right-2 sm:right-3 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/50 text-white text-[11px] sm:text-sm font-bold backdrop-blur-sm hover:bg-black/70 transition-colors cursor-pointer border-none"
                     onClick={() => setShowShortcutsHelp(s => !s)}
                     title="Keyboard shortcuts (press ?)"
                   >?</button>
-                  <div className="absolute top-3 left-3 z-20">
-                    <button className="px-3 py-1.5 rounded-full bg-black/50 text-white text-xs font-medium backdrop-blur-sm hover:bg-black/70 transition-colors cursor-pointer border-none" onClick={() => setShowSpeedMenu(p => !p)}>
+                  <div className="absolute top-2 sm:top-3 left-2 sm:left-3 z-20">
+                    <button className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/50 text-white text-[10px] sm:text-xs font-medium backdrop-blur-sm hover:bg-black/70 transition-colors cursor-pointer border-none" onClick={() => setShowSpeedMenu(p => !p)}>
                       {playbackSpeed}x
                     </button>
                     {showSpeedMenu && (
-                      <div className="absolute top-full left-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl py-1 z-10 min-w-[80px]">
+                      <div className="absolute top-full left-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl py-1 z-10 min-w-[70px] sm:min-w-[80px]">
                         {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(s => (
-                          <button key={s} className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${playbackSpeed === s ? "text-amber-400 bg-amber-500/10" : "text-zinc-400 hover:text-white hover:bg-white/5"}`} onClick={() => handleSpeedChange(s)}>
+                          <button key={s} className={`w-full text-left px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs transition-colors ${playbackSpeed === s ? "text-amber-400 bg-amber-500/10" : "text-zinc-400 hover:text-white hover:bg-white/5"}`} onClick={() => handleSpeedChange(s)}>
                             {s}x
                           </button>
                         ))}
@@ -959,13 +963,13 @@ export default function AnimeDetail() {
 
               {/* shortcuts help */}
               {showShortcutsHelp && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-6" onClick={() => setShowShortcutsHelp(false)}>
-                  <div className="bg-zinc-900/95 border border-white/20 rounded-2xl p-6 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-base font-bold text-white tracking-wide">Keyboard Shortcuts</h3>
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-6" onClick={() => setShowShortcutsHelp(false)}>
+                  <div className="bg-zinc-900/95 border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-md w-full shadow-2xl mx-2 sm:mx-0" onClick={e => e.stopPropagation()}>
+                    <div className="flex justify-between items-center mb-3 sm:mb-4">
+                      <h3 className="text-sm sm:text-base font-bold text-white tracking-wide">Keyboard Shortcuts</h3>
                       <button className="text-zinc-400 hover:text-white cursor-pointer bg-transparent border-none p-1" onClick={() => setShowShortcutsHelp(false)}>✕</button>
                     </div>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-1.5 sm:gap-y-2 text-[11px] sm:text-xs">
                       {[
                         ['Space / K', 'Play / Pause'],
                         ['J / ←', 'Back 10s'],
@@ -978,9 +982,9 @@ export default function AnimeDetail() {
                         ['P', 'Previous episode'],
                         ['?', 'Toggle this help'],
                       ].map(([k, v]) => (
-                        <div key={k} className="flex justify-between gap-3 border-b border-white/5 pb-1.5">
-                          <kbd className="bg-white/10 border border-white/20 rounded px-1.5 py-0.5 font-mono text-[11px] text-white whitespace-nowrap">{k}</kbd>
-                          <span className="text-zinc-400">{v}</span>
+                        <div key={k} className="flex justify-between gap-2 sm:gap-3 border-b border-white/5 pb-1 sm:pb-1.5">
+                          <kbd className="bg-white/10 border border-white/20 rounded px-1 sm:px-1.5 py-0.5 font-mono text-[10px] sm:text-[11px] text-white whitespace-nowrap">{k}</kbd>
+                          <span className="text-zinc-400 text-[11px] sm:text-xs">{v}</span>
                         </div>
                       ))}
                     </div>
@@ -989,52 +993,68 @@ export default function AnimeDetail() {
               )}
             </div>
 
-            <div style={{ maxWidth: '1050px', marginLeft: '40px', marginRight: '0', width: 'calc(100% - 40px)' }}>
+            <div className="ad-content-container w-full lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] px-0 sm:px-0">
               {/* ─── SERVER TOGGLE ─── */}
               {servers.length > 0 && (
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
-                  <span className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Source</span>
-                  <button className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${language === 'sub' ? 'bg-[#2a1a08] text-[#e2a856]' : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('sub'); try { localStorage.setItem('animewch_last_language', 'sub'); } catch {} }} disabled={!servers.some(s => s.type === 'sub')}>SUB</button>
-                  <button className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${language === 'dub' ? 'bg-[#2a1a08] text-[#e2a856]' : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('dub'); try { localStorage.setItem('animewch_last_language', 'dub'); } catch {} }} disabled={!servers.some(s => s.type === 'dub')}>DUB</button>
+                <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 border-b border-white/5">
+                  <span className="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-medium">Source</span>
+                  {/* Desktop: show both buttons */}
+                  <button className={`hidden sm:inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold transition-all ${language === 'sub' ? 'bg-[#2a1a08] text-[#e2a856]' : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('sub'); try { localStorage.setItem('animewch_last_language', 'sub'); } catch {} }} disabled={!servers.some(s => s.type === 'sub')}>SUB</button>
+                  <button className={`hidden sm:inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold transition-all ${language === 'dub' ? 'bg-[#2a1a08] text-[#e2a856]' : 'bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white'}`} onClick={() => { setLanguage('dub'); try { localStorage.setItem('animewch_last_language', 'dub'); } catch {} }} disabled={!servers.some(s => s.type === 'dub')}>DUB</button>
+                  {/* Mobile: dropdown */}
+                  <div className="relative sm:hidden">
+                    <button className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold ${language === 'sub' ? 'bg-[#2a1a08] text-[#e2a856]' : 'bg-[#1a082a] text-[#a856e2]'}`} onClick={() => setShowMobileSource(p => !p)}>
+                      {language === 'sub' ? 'SUB' : 'DUB'} <ChevronDown size={10} />
+                    </button>
+                    {showMobileSource && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setShowMobileSource(false)} />
+                        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="absolute top-full left-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl py-1 min-w-[80px] shadow-2xl z-50">
+                          <button className={`w-full text-left px-3 py-1.5 text-xs ${language === 'sub' ? 'text-amber-400' : 'text-zinc-400 hover:text-white'}`} onClick={() => { setLanguage('sub'); setShowMobileSource(false); try { localStorage.setItem('animewch_last_language', 'sub'); } catch {} }} disabled={!servers.some(s => s.type === 'sub')}>SUB</button>
+                          <button className={`w-full text-left px-3 py-1.5 text-xs ${language === 'dub' ? 'text-amber-400' : 'text-zinc-400 hover:text-white'}`} onClick={() => { setLanguage('dub'); setShowMobileSource(false); try { localStorage.setItem('animewch_last_language', 'dub'); } catch {} }} disabled={!servers.some(s => s.type === 'dub')}>DUB</button>
+                        </motion.div>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
 
               {/* ─── BANNER ─── */}
               {alertBannerVisible && (
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-[#3d1a04] border-b border-orange-500/20">
-                  <AlertTriangle size={13} className="text-orange-400 flex-none" />
-                  <p className="text-xs text-orange-400 flex-1">If the current server doesn't work, feel free to try the other available servers.</p>
-                  <button className="text-orange-400/70 hover:text-orange-300 cursor-pointer bg-transparent border-none p-1 flex-none" onClick={() => setAlertBannerVisible(false)}><X size={12} /></button>
+                <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-[#3d1a04] border-b border-orange-500/20">
+                  <AlertTriangle size={11} className="text-orange-400 flex-none sm:inline hidden" />
+                  <p className="text-[11px] sm:text-xs text-orange-400 flex-1">If the current server doesn't work, feel free to try the other available servers.</p>
+                  <button className="text-orange-400/70 hover:text-orange-300 cursor-pointer bg-transparent border-none p-1 flex-none" onClick={() => setAlertBannerVisible(false)}><X size={10} /></button>
                 </div>
               )}
 
               {/* ─── VIDEO METADATA ─── */}
-              <div className="px-4 py-4 flex flex-col gap-4 border-b border-white/5">
+              <div className="px-3 sm:px-4 py-3 sm:py-4 flex flex-col gap-3 sm:gap-4 border-b border-white/5">
                 {/* Episode Title */}
-                <h1 className="text-2xl md:text-3xl font-bold text-white">
+                <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-white leading-tight">
                   {episode?.title || episodeTitles?.[selectedEp] || `Episode ${selectedEp}`}
                 </h1>
 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
                   {/* Anime Info Row */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-full bg-zinc-800 ring-2 ring-white/10 shrink-0 overflow-hidden">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-zinc-800 ring-2 ring-white/10 shrink-0 overflow-hidden">
                       {anime?.img && <img src={anime.img} alt="" className="w-full h-full object-cover" />}
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-bold text-white text-base leading-tight">{anime?.name || "Anime"}</span>
-                      <span className="text-xs text-zinc-400 font-medium mt-0.5">6.4K users</span>
+                      <span className="font-bold text-white text-sm sm:text-base leading-tight">{anime?.name || "Anime"}</span>
+                      <span className="text-[10px] sm:text-xs text-zinc-400 font-medium mt-0.5">6.4K users</span>
                     </div>
                   </div>
 
                   {/* Actions Row */}
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                     <div className="relative">
                       <button
-                        className={`px-5 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 transition-colors ${bookmarked ? 'bg-white/10 text-white' : 'bg-white text-black hover:bg-zinc-200'}`}
+                        className={`px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full font-bold text-[11px] sm:text-sm flex items-center gap-1.5 sm:gap-2 transition-colors ${bookmarked ? 'bg-white/10 text-white' : 'bg-white text-black hover:bg-zinc-200'}`}
                         onClick={() => { if (!bookmarked) { setShowStatusMenu(s => !s); } else { removeFromWatchlist(id); setBookmarked(false); } }}
                       >
-                        <Bookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} /> {bookmarked ? 'In List' : 'Add to List'}
+                        <Bookmark size={11} fill={bookmarked ? 'currentColor' : 'none'} /> {bookmarked ? 'In List' : 'Add to List'}
                       </button>
                       {showStatusMenu && (
                         <>
@@ -1042,12 +1062,12 @@ export default function AnimeDetail() {
                           <motion.div
                             initial={{ opacity: 0, y: -4 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="absolute top-full left-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl py-1 min-w-[140px] shadow-2xl z-50"
+                            className="absolute top-full left-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl py-1 min-w-[130px] sm:min-w-[140px] shadow-2xl z-50"
                           >
                             {["Planning","Watching","Completed","Paused","Dropped"].map(s => (
                               <button
                                 key={s}
-                                className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
+                                className="w-full text-left px-3 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
                                 onClick={() => {
                                   addToWatchlist({ id, name: anime?.name || episode?.title || `Episode ${selectedEp}`, img: anime?.img, type: 'anime', listStatus: s });
                                   setBookmarked(true);
@@ -1060,103 +1080,145 @@ export default function AnimeDetail() {
                       )}
                     </div>
                     <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5">
-                      <button className="px-4 py-2.5 hover:bg-white/10 text-white font-medium text-sm flex items-center gap-2 border-r border-white/10 transition-colors" onClick={() => {}}>👍 12K</button>
-                      <button className="px-4 py-2.5 hover:bg-white/10 text-white font-medium text-sm flex items-center gap-2 transition-colors" onClick={() => {}}>👎</button>
+                      <button className="px-2 sm:px-4 py-1.5 sm:py-2.5 hover:bg-white/10 text-white font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors" onClick={() => {}}><ThumbsUp size={14} /> 12K</button>
+                      <button className="px-2 sm:px-4 py-1.5 sm:py-2.5 hover:bg-white/10 text-white font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 transition-colors" onClick={() => {}}><ThumbsDown size={14} /></button>
                     </div>
-                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors" onClick={() => setAlertBannerVisible(true)}>
-                      Dub <ChevronDown size={14} className="text-zinc-400" />
+                    {/* Desktop: show all buttons */}
+                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => setAlertBannerVisible(true)}>
+                      Dub <ChevronDown size={12} className="text-zinc-400" />
                     </button>
-                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors" onClick={() => setAlertBannerVisible(true)}>
-                      Server <ChevronDown size={14} className="text-zinc-400" />
+                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => setAlertBannerVisible(true)}>
+                      Server <ChevronDown size={12} className="text-zinc-400" />
                     </button>
-                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 px-4 py-2.5 rounded-full font-medium text-sm text-white flex items-center gap-2 transition-colors" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
-                      <Share2 size={14} /> Share
+                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
+                      <Share2 size={12} /> Share
                     </button>
-                    <button className="bg-white/5 border border-white/5 hover:bg-white/10 w-10 h-10 flex items-center justify-center rounded-full text-white transition-colors" title="Report" onClick={() => {}}>
-                      <Flag size={14} />
+                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 w-8 sm:w-10 h-8 sm:h-10 items-center justify-center rounded-full text-white transition-colors" title="Report" onClick={() => {}}>
+                      <Flag size={11} />
                     </button>
+                    {/* Mobile "More" button */}
+                    <div className="relative sm:hidden">
+                      <button className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/5 hover:bg-white/10 text-white transition-colors" onClick={() => setShowMoreActions(p => !p)}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                      </button>
+                      {showMoreActions && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowMoreActions(false)} />
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="absolute right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-xl py-1 min-w-[140px] shadow-2xl z-50"
+                          >
+                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { setAlertBannerVisible(true); setShowMoreActions(false); }}>
+                              <Tv size={12} /> Dub
+                            </button>
+                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { setAlertBannerVisible(true); setShowMoreActions(false); }}>
+                              <Monitor size={12} /> Server
+                            </button>
+                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); setShowMoreActions(false); }}>
+                              <Share2 size={12} /> Share
+                            </button>
+                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { setShowMoreActions(false); }}>
+                              <Flag size={12} /> Report
+                            </button>
+                          </motion.div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Stats & Synopsis */}
-                <div className="bg-white/5 border border-white/5 rounded-xl p-4">
-                  <div className="text-sm font-semibold text-zinc-400 mb-2">97K views • Apr 4, 2026 • #6 trending</div>
+                <div className="bg-white/5 border border-white/5 rounded-xl p-3 sm:p-4">
+                  <div className="text-[11px] sm:text-sm font-semibold text-zinc-400 mb-2">97K views • Apr 4, 2026 • #6 trending</div>
                   {anime?.description ? (
-                    <p className="text-sm text-zinc-300 leading-relaxed">{anime.description.replace(/<[^>]*>/g, '')}</p>
+                    <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">{anime.description.replace(/<[^>]*>/g, '')}</p>
                   ) : (
-                    <p className="text-sm text-zinc-300 leading-relaxed">In a world where certain humans command mighty daemons, a young boy discovers his hidden power. The true battle begins now.</p>
+                    <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">In a world where certain humans command mighty daemons, a young boy discovers his hidden power. The true battle begins now.</p>
                   )}
                 </div>
               </div>
 
               {/* ─── COMMENTS ─── */}
-              <div className="px-4">
-                <Comments
-                  comments={comments}
-                  setComments={setComments}
-                  currentUser={currentUsername}
-                  isLoggedIn={authService.isLoggedIn()}
-                  onSeek={handleSeek}
-                  onAdd={handleAddComment}
-                  onLikeComment={handleLikeComment}
-                  onDislikeComment={handleDislikeComment}
-                  onReplyComment={handleReplyComment}
-                  onEditComment={handleEditComment}
-                  onDeleteComment={handleDeleteComment}
-                  loading={commentsLoading}
-                />
+              <div className="px-3 sm:px-4">
+                {/* Mobile: collapsible comments */}
+                <button
+                  className="flex sm:hidden items-center gap-2 w-full py-3 px-4 rounded-xl bg-white/5 border border-white/5 text-white text-sm font-semibold mb-3"
+                  onClick={() => setShowMobileComments(p => !p)}
+                >
+                  <MessageCircle size={14} />
+                  <span>Comments</span>
+                  <span className="text-xs text-zinc-500 ml-1">({comments?.length || 0})</span>
+                  <ChevronDown size={12} className={`ml-auto transition-transform ${showMobileComments ? 'rotate-180' : ''}`} />
+                </button>
+                <div className={`sm:block ${showMobileComments ? 'block' : 'hidden'}`}>
+                  <Comments
+                    comments={comments}
+                    setComments={setComments}
+                    currentUser={currentUsername}
+                    isLoggedIn={authService.isLoggedIn()}
+                    onSeek={handleSeek}
+                    onAdd={handleAddComment}
+                    onLikeComment={handleLikeComment}
+                    onDislikeComment={handleDislikeComment}
+                    onReplyComment={handleReplyComment}
+                    onEditComment={handleEditComment}
+                    onDeleteComment={handleDeleteComment}
+                    loading={commentsLoading}
+                  />
+                </div>
               </div>
             </div>
           </div>
 
           {/* ─── RIGHT SIDEBAR ─── */}
-          <aside className="w-[380px] shrink-0 overflow-y-auto overflow-x-hidden rounded-3xl mr-4 my-4 bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/[0.06] shadow-2xl shadow-black/50">
-            <div className="p-4">
+          <aside className="w-full lg:w-[380px] shrink-0 overflow-y-auto overflow-x-hidden rounded-2xl sm:rounded-3xl lg:mr-4 mx-2 sm:mx-4 my-2 sm:my-4 bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/[0.06] shadow-2xl shadow-black/50">
+            <div className="p-3 sm:p-4">
               {/* ─── HEADER ─── */}
-              <div className="flex items-center justify-between mb-4 px-1">
+              <div className="flex items-center justify-between mb-3 sm:mb-4 px-1">
                 <div className="min-w-0">
-                  <div className="text-base font-semibold text-white/90 truncate">
+                  <div className="text-sm sm:text-base font-semibold text-white/90 truncate">
                     Up Next{episodeTitles?.[selectedEp] || episode?.title ? ` - ${episodeTitles?.[selectedEp] || episode?.title || ''}` : ''}
                   </div>
-                  <div className="text-xs text-[#777] mt-0.5 truncate">
+                  <div className="text-[11px] sm:text-xs text-[#777] mt-0.5 truncate">
                     Playing - Episode {selectedEp || 1}{anime?.name ? ` - ${anime?.name || ''}` : ''}
                   </div>
                 </div>
-                <button className="flex items-center justify-center w-8 h-8 rounded-2xl hover:bg-white/[0.06] transition-all text-[#777] hover:text-white cursor-pointer border-none bg-transparent shrink-0 ml-2" onClick={() => setIsEpisodesExpanded(p => !p)} title={isEpisodesExpanded ? 'Collapse' : 'Expand'}>
-                  <ChevronUp size={15} className="transition-transform duration-200" style={{ transform: isEpisodesExpanded ? 'rotate(0deg)' : 'rotate(180deg)' }} />
+                <button className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-2xl hover:bg-white/[0.06] transition-all text-[#777] hover:text-white cursor-pointer border-none bg-transparent shrink-0 ml-2" onClick={() => setIsEpisodesExpanded(p => !p)} title={isEpisodesExpanded ? 'Collapse' : 'Expand'}>
+                  <ChevronUp size={13} className="transition-transform duration-200" style={{ transform: isEpisodesExpanded ? 'rotate(0deg)' : 'rotate(180deg)' }} />
                 </button>
               </div>
 
               {/* ─── EPISODES ─── */}
-              <div className={`overflow-hidden transition-[max-height] duration-400 ease-out ${isEpisodesExpanded ? 'max-h-[70vh]' : 'max-h-0'}`}>
+              <div className={`overflow-hidden transition-[max-height] duration-400 ease-out ${isEpisodesExpanded ? 'max-h-[40vh] lg:max-h-[70vh]' : 'max-h-0'}`}>
                 {/* search & filters bar */}
-                <div className="flex items-center gap-1.5 mb-4">
-                  <div className="relative flex items-center flex-1 bg-white/[0.04] rounded-full px-3 border border-white/[0.06] focus-within:border-white/20 transition-all" style={{ height: '34px' }}>
-                    <svg className="text-[#555] shrink-0" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                    <input className="flex-1 bg-transparent text-xs text-white/80 outline-none placeholder-[#555] border-none py-0 ml-2" type="text" placeholder="Search" value={epSearch} onChange={e => { setEpSearch(e.target.value); if (!e.target.value) setVisibleCount(50); }} />
-                    {epSearch && <button className="text-[#555] hover:text-white cursor-pointer bg-transparent border-none p-0.5 shrink-0" onClick={() => { setEpSearch(""); setVisibleCount(50); }}><X size={12} /></button>}
+                <div className="flex items-center gap-1 sm:gap-1.5 mb-3 sm:mb-4">
+                  <div className="relative flex items-center flex-1 bg-white/[0.04] rounded-full px-2 sm:px-3 border border-white/[0.06] focus-within:border-white/20 transition-all" style={{ height: '30px' }}>
+                    <svg className="text-[#555] shrink-0" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <input className="flex-1 bg-transparent text-[11px] sm:text-xs text-white/80 outline-none placeholder-[#555] border-none py-0 ml-1.5 sm:ml-2" type="text" placeholder="Search" value={epSearch} onChange={e => { setEpSearch(e.target.value); if (!e.target.value) setVisibleCount(50); }} />
+                    {epSearch && <button className="text-[#555] hover:text-white cursor-pointer bg-transparent border-none p-0.5 shrink-0" onClick={() => { setEpSearch(""); setVisibleCount(50); }}><X size={10} /></button>}
                   </div>
-                  <button className="flex items-center justify-center w-10 h-10 rounded-2xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] transition-all text-[#666] hover:text-white cursor-pointer bg-transparent shrink-0" title="Refresh" onClick={() => setRetryCount(c => c + 1)}>
-                    <RefreshCw size={13} />
+                  <button className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] transition-all text-[#666] hover:text-white cursor-pointer bg-transparent shrink-0" title="Refresh" onClick={() => setRetryCount(c => c + 1)}>
+                    <RefreshCw size={11} />
                   </button>
                   <button
-                    className={`flex items-center justify-center w-10 h-10 rounded-2xl border transition-all cursor-pointer bg-transparent shrink-0 ${sortOrder === 'desc' ? 'bg-white/[0.08] border-white/[0.12] text-white' : 'bg-white/[0.04] border-white/[0.06] text-[#666] hover:text-white hover:bg-white/[0.08]'}`}
+                    className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-2xl border transition-all cursor-pointer bg-transparent shrink-0 ${sortOrder === 'desc' ? 'bg-white/[0.08] border-white/[0.12] text-white' : 'bg-white/[0.04] border-white/[0.06] text-[#666] hover:text-white hover:bg-white/[0.08]'}`}
                     title={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`}
                     onClick={() => setSortOrder(p => p === 'asc' ? 'desc' : 'asc')}
                   >
-                    {sortOrder === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />}
+                    {sortOrder === 'asc' ? <ArrowUp size={11} /> : <ArrowDown size={11} />}
                   </button>
                   <button
-                    className={`flex items-center justify-center w-10 h-10 rounded-2xl border transition-all cursor-pointer bg-transparent shrink-0 ${sidebarView === 'list' ? 'bg-white/[0.08] border-white/[0.12] text-white' : 'bg-white/[0.04] border-white/[0.06] text-[#666] hover:text-white hover:bg-white/[0.08]'}`}
+                    className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-2xl border transition-all cursor-pointer bg-transparent shrink-0 ${sidebarView === 'list' ? 'bg-white/[0.08] border-white/[0.12] text-white' : 'bg-white/[0.04] border-white/[0.06] text-[#666] hover:text-white hover:bg-white/[0.08]'}`}
                     title={sidebarView === 'thumbnail' ? 'List view' : 'Thumbnail view'}
                     onClick={() => setSidebarView(p => p === 'thumbnail' ? 'list' : 'thumbnail')}
                   >
-                    {sidebarView === 'thumbnail' ? <List size={13} /> : <LayoutGrid size={13} />}
+                    {sidebarView === 'thumbnail' ? <List size={11} /> : <LayoutGrid size={11} />}
                   </button>
                 </div>
 
                 {/* list */}
-                <div className="flex flex-col overflow-y-auto overflow-x-hidden max-h-[400px]">
+                <div className="flex flex-col overflow-y-auto overflow-x-hidden max-h-[240px] lg:max-h-[400px]">
                   {loading ? (
                     <div className="flex items-center justify-center py-12">
                       <Loader size={16} className="text-zinc-500 animate-spin" />
@@ -1187,7 +1249,7 @@ export default function AnimeDetail() {
                               {isActive && <div className="absolute left-0 top-3 bottom-3 w-[3.5px] rounded-r-[4px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.3)] z-[2]" />}
                               {sidebarView === 'thumbnail' ? (
                                 <>
-                                  <div className="relative w-36 aspect-video flex-shrink-0 rounded-xl overflow-hidden bg-neutral-900 shadow-lg ring-1 ring-white/[0.03] group-hover:ring-white/10 transition-all duration-300">
+                                  <div className="relative w-28 sm:w-36 aspect-video flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden bg-neutral-900 shadow-lg ring-1 ring-white/[0.03] group-hover:ring-white/10 transition-all duration-300">
                                     {ep?.thumbnail && !brokenThumbs.has(ep?.id || realIdx) ? (
                                       <>
                                         <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src={ep.thumbnail} alt="" loading="lazy" onError={() => setBrokenThumbs(prev => new Set(prev).add(ep?.id || realIdx))} />
@@ -1199,19 +1261,19 @@ export default function AnimeDetail() {
                                         <Film size={18} className="text-neutral-600" />
                                       </div>
                                     )}
-                                    <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2 flex items-center justify-between">
-                                      <span className="text-[11px] font-bold text-white/90 drop-shadow-lg">Ep {epNum}</span>
-                                      <div className="w-6 h-6 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0">
-                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
+                                    <div className="absolute bottom-0 left-0 right-0 px-1.5 sm:px-2.5 py-1 sm:py-2 flex items-center justify-between">
+                                      <span className="text-[10px] sm:text-[11px] font-bold text-white/90 drop-shadow-lg">Ep {epNum}</span>
+                                      <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0">
+                                        <svg width="8" height="8" viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
                                       </div>
                                     </div>
                                     {isActive && <div className="absolute inset-0 ring-1 ring-inset ring-white/20 rounded-xl pointer-events-none" />}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <div className={`text-sm font-bold truncate transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
+                                    <div className={`text-[11px] sm:text-sm font-bold truncate transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
                                       {epTitle}
                                     </div>
-                                    <div className="text-[11px] text-[#555] mt-0.5 truncate">
+                                    <div className="text-[10px] sm:text-[11px] text-[#555] mt-0.5 truncate">
                                       {views || '88K'} views • {timeAgo || '1 month ago'}
                                     </div>
                                   </div>
@@ -1253,7 +1315,7 @@ export default function AnimeDetail() {
 
               {/* ─── NEXT AIRING ─── */}
               {nextAiring && (
-                <div className="flex items-center gap-3 -mx-4 mt-0 px-4 py-3.5 bg-[#0a1f12] border-t border-emerald-500/20">
+                <div className="flex items-center gap-2 sm:gap-3 -mx-4 mt-0 px-3 sm:px-4 py-2.5 sm:py-3.5 bg-[#0a1f12] border-t border-emerald-500/20">
                   <div className="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse shrink-0 shadow-[0_0_8px_#4caf50]/50" />
                   <Bell size={14} className="text-[#4caf50]/70 shrink-0" />
                   <span className="text-xs text-[#4caf50]/90">Next ep airing in <strong className="text-[#4caf50] font-semibold">{nextAiring?.text || '3 days'}</strong></span>
@@ -1270,7 +1332,7 @@ export default function AnimeDetail() {
                         <div className="card-bg-artwork" style={{ backgroundImage: `url(${rec?.image || ''})` }} />
                         <div className="card-gradient-mask" />
                         <div className="info-cluster" style={{ maxWidth: '100%', gap: '12px' }}>
-                          <div className="rank-wrapper" style={{ width: '80px', height: '80px' }}>
+                          <div className="rank-wrapper">
                             {rec?.image ? (
                               <img className="w-full h-full object-cover rounded-xl ring-1 ring-white/[0.08] shadow-lg" src={rec.image} alt="" />
                             ) : (
@@ -1278,7 +1340,7 @@ export default function AnimeDetail() {
                             )}
                           </div>
                           <div className="meta-text-block">
-                            <h3 className="anime-title" style={{ fontSize: '14px' }}>{rec?.name || 'Unknown'}</h3>
+                            <h3 className="anime-title">{rec?.name || 'Unknown'}</h3>
                             <div className="sub-meta-row">
                               {rec?.rating && <span className="rating-block"><Star size={10} /> {rec.rating}%</span>}
                               <span className="type-label">{rec?.genres?.slice(0, 2).join(' • ') || rec?.format || 'Anime'}</span>

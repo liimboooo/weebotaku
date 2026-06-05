@@ -763,4 +763,33 @@
   .top-nav-right { gap: 6px; }
   .brand-text { font-size: 12px; }
   .top-nav-divider { display: none; }
+  .top-nav-hamburger { width: 28px; height: 28px; }
+  .top-nav-search { width: 90px; padding: 5px 6px 5px 8px; }
+  .top-nav-search-icon { width: 14px; height: 14px; }
+  .top-nav-notif { width: 32px; height: 32px; }
+  .top-nav-signin { padding: 5px 8px; font-size: 11px; }
+}
+
+@media (max-width: 320px) {
+  .top-nav { padding: 0 6px; height: 50px; }
+  :root { --top-nav-h: 50px; }
+  .top-nav-search { width: 70px; }
+  .top-nav-search input { font-size: 11px; }
+  .top-nav-left { gap: 4px; }
+  .top-nav-right { gap: 4px; }
+  .brand-text { display: none; }
+  .brand-dot { width: 5px; height: 5px; }
+  .search-popout, .notif-popout { width: calc(100vw - 16px); right: -4px; }
+  .notif-popout-header { padding: 8px 8px 8px 10px; }
+  .notif-item { padding: 8px 10px; gap: 6px; }
+  .notif-title { font-size: 12px; }
+  .notif-body { font-size: 11px; }
+  .notif-time { font-size: 9px; }
+  .notif-empty { padding: 24px 12px; }
+  .notif-empty span { font-size: 12px; }
+  .notif-empty small { font-size: 10px; }
+  .search-popout-header { padding: 8px 8px; }
+  .search-popout-item { padding: 6px 10px; gap: 6px; }
+  .search-popout-footer { padding: 8px 10px; font-size: 11px; }
+  .search-popout-footer-arrow { width: 14px; height: 14px; }
 }

@@ -381,7 +381,7 @@ export default function ProfilePage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   <h2 className="upp-watchlist-title" style={{ margin: 0 }}>Watchlist</h2>
                   {isOwnProfile && (
-                    <button className="upp-action-btn" onClick={() => navigate("/watchlist")} style={{ padding: '6px 14px', fontSize: '0.8rem' }}>
+                    <button className="upp-action-btn" onClick={() => navigate("/watchlist")}>
                       <Eye size={14} /> Full Library View
                     </button>
                   )}

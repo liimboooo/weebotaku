@@ -17,7 +17,8 @@
   top: calc(var(--top-nav-h) + 10px);
   left: 50%;
   width: 520px;
-  max-height: 540px;
+  max-width: calc(100vw - 24px);
+  max-height: min(540px, calc(100vh - var(--top-nav-h) - 20px));
   border-radius: 16px;
   background: #0d0d0d;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -319,9 +320,47 @@
     width: calc(100vw - 16px);
     max-height: calc(100vh - var(--top-nav-h) - 16px);
     top: calc(var(--top-nav-h) + 8px);
+    border-radius: 12px;
   }
 
   .ss-empty-prompt {
     font-size: 17px;
   }
+
+  .ss-input-row { padding: 12px; }
+  .ss-input-row input { font-size: 14px; }
+  .ss-suggestion-item { padding: 8px 12px; gap: 8px; }
+  .ss-suggestion-title { font-size: 13px; }
+  .ss-suggestion-tag { font-size: 9px; padding: 2px 8px; }
+  .ss-trending-item { padding: 8px 10px; gap: 8px; }
+  .ss-trending-name { font-size: 13px; }
+}
+
+@media (max-width: 380px) {
+  .ss-panel { width: calc(100vw - 12px); border-radius: 10px; }
+  .ss-input-row { padding: 10px; gap: 6px; }
+  .ss-input-row input { font-size: 13px; }
+  .ss-filter-btn { width: 28px; height: 28px; }
+  .ss-empty-prompt { font-size: 15px; }
+  .ss-suggestion-item { padding: 6px 10px; }
+  .ss-suggestion-title { font-size: 12px; }
+  .ss-trending-name { font-size: 12px; }
+}
+
+@media (max-width: 320px) {
+  .ss-panel { width: calc(100vw - 8px); border-radius: 8px; }
+  .ss-input-row { padding: 6px 8px; gap: 4px; }
+  .ss-input-row input { font-size: 12px; }
+  .ss-filter-btn { width: 24px; height: 24px; }
+  .ss-clear-btn { width: 20px; height: 20px; }
+  .ss-empty-prompt { font-size: 14px; padding: 20px 12px; margin-bottom: 16px; }
+  .ss-suggestion-item { padding: 6px 8px; gap: 6px; }
+  .ss-suggestion-title { font-size: 11px; }
+  .ss-suggestion-tag { font-size: 8px; padding: 2px 6px; }
+  .ss-trending-item { padding: 6px 8px; gap: 8px; }
+  .ss-trending-name { font-size: 11px; }
+  .ss-trending-header { padding: 0 4px 8px; font-size: 9px; }
+  .ss-trending-rank { width: 18px; font-size: 10px; }
+  .ss-loading { padding: 20px 12px; font-size: 11px; }
+  .ss-no-results { padding: 20px 12px; font-size: 11px; }
 }

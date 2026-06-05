@@ -434,3 +434,36 @@
   .sched-more { font-size: 10px; }
   .sched-empty { font-size: 10px; padding: 14px 4px; }
 }
+
+@media (max-width: 380px) {
+  .sched { padding: 10px; border-radius: 14px; }
+  .sched-days { gap: 3px; }
+  .sched-chips { gap: 3px; }
+  .sched-chip { padding: 4px 0; }
+  .sched-chip-day { font-size: 6px; }
+  .sched-chip-date { font-size: 11px; }
+  .sched-arrow { width: 22px; height: 22px; }
+  .sched-row { padding: 6px 1px; gap: 4px; }
+  .sched-time { width: 28px; font-size: 8px; }
+  .sched-title { font-size: 10px; }
+  .sched-type { font-size: 6px; padding: 1px 2px; }
+  .sched-ep { font-size: 7px; }
+  .sched-list .sched-row::before { left: 36px; }
+  .sched-header-title { font-size: 11px; }
+  .sched-header-clock { font-size: 10px; }
+}
+
+@media (max-width: 320px) {
+  .sched { padding: 8px; border-radius: 12px; }
+  .sched-days { gap: 2px; }
+  .sched-chip { padding: 3px 0; }
+  .sched-chip-day { font-size: 6px; }
+  .sched-chip-date { font-size: 10px; }
+  .sched-arrow { width: 20px; height: 20px; }
+  .sched-row { padding: 5px 1px; gap: 3px; }
+  .sched-time { width: 24px; font-size: 7px; }
+  .sched-title { font-size: 9px; }
+  .sched-type { display: none; }
+  .sched-ep { display: none; }
+  .sched-list .sched-row::before { left: 32px; }
+}
