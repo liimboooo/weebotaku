@@ -282,6 +282,29 @@
   transform: translateY(-1px);
 }
 
+.hero-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  backdrop-filter: blur(4px);
+}
+
+.hero-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
 /* ─── Glowing Card Border ──────────────────────────── */
 .glow-card-sidecard {
   position: relative;
@@ -954,6 +977,7 @@
   .hero-pills { gap: 6px; }
   .hero-pill { font-size: 10px; padding: 3px 8px; }
   .hero-btn-main { padding: 9px 18px; font-size: 13px; }
+  .hero-btn-secondary { padding: 9px 14px; font-size: 13px; }
   .hero-btn-icon { width: 36px; height: 36px; }
   .spotlight-quote { margin-top: 14px; padding: 10px 12px; max-width: 100%; }
   .spotlight-quote-text { font-size: 0.75rem; }
@@ -985,6 +1009,7 @@
   .hero-pill { font-size: 9px; padding: 2px 7px; }
   .hero-actions { gap: 8px; margin-top: 10px; }
   .hero-btn-main { padding: 8px 14px; font-size: 12px; gap: 6px; }
+  .hero-btn-secondary { padding: 8px 12px; font-size: 12px; gap: 5px; }
   .hero-btn-icon { width: 32px; height: 32px; }
   .spotlight-quote { margin-top: 10px; padding: 8px 10px; }
   .spotlight-quote-text { font-size: 0.7rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
@@ -1038,6 +1063,7 @@
   .hero-pills { gap: 4px; }
   .hero-pill { font-size: 8px; padding: 2px 6px; }
   .hero-btn-main { padding: 7px 12px; font-size: 11px; }
+  .hero-btn-secondary { padding: 7px 10px; font-size: 11px; gap: 4px; }
   .hero-btn-icon { width: 28px; height: 28px; }
   .home-section { margin: 20px 0; }
   .title-with-icon h2 { font-size: clamp(1rem, 4vw, 1.2rem); }
@@ -1071,6 +1097,7 @@
   .spotlight-kicker { font-size: 8px; padding: 3px 6px; }
   .hero-pill { font-size: 7px; padding: 1px 5px; }
   .hero-btn-main { padding: 6px 10px; font-size: 10px; gap: 4px; }
+  .hero-btn-secondary { padding: 6px 8px; font-size: 10px; gap: 3px; }
   .hero-btn-icon { width: 26px; height: 26px; }
   .home-section { margin: 16px 0; }
   .title-with-icon h2 { font-size: 0.95rem; }
