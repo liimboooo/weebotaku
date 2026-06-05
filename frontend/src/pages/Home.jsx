@@ -12,6 +12,7 @@ import {
   Film,
   Flame,
   Heart,
+  Info,
   Layers,
   Play,
   RefreshCw,
@@ -578,6 +579,9 @@ function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onWatch
               <Play size={16} fill="currentColor" /> Watch Now
             </button>
           )}
+          <button className="hero-btn-icon" onClick={onDetails} aria-label="View details">
+            <Info size={16} />
+          </button>
           <button className="hero-btn-icon" onClick={() => setInWatchlist(v => !v)} aria-label="Add to watchlist">
             <Bookmark size={16} fill={inWatchlist ? 'currentColor' : 'none'} />
           </button>
