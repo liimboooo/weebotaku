@@ -63,7 +63,7 @@ function AppLayout() {
   useEffect(() => {
     if (token) {
       syncFromBackend();
-      const interval = setInterval(syncFromBackend, 2 * 60 * 1000);
+      const interval = setInterval(syncFromBackend, 60 * 1000);
       return () => clearInterval(interval);
     }
   }, [token]);

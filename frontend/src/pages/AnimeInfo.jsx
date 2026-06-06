@@ -3,9 +3,10 @@ import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Play, Share2, X, Check, Copy, Globe, MessageCircle, AtSign,
-  Bookmark, ChevronDown, ChevronUp, Bell, Grid, List
+  Bookmark, ChevronDown, ChevronUp, Bell, Grid, List, Loader
 } from "lucide-react";
 import { fetchAnimeRecommendations, fetchAnimeCharacters } from "../services/anilistApi";
+import { getMiruroEpisodes, findStreamingSource, getEpisodePage } from "../services/animeApi";
 import api from "../services/api";
 import { loadWatchHistory, addToWatchlist, removeFromWatchlist, isInWatchlist } from "../services/storage";
 import useDocumentTitle from "../hooks/useDocumentTitle";
@@ -69,6 +70,8 @@ export default function AnimeInfo() {
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [synopsisExpanded, setSynopsisExpanded] = useState(false);
   const [epLayout, setEpLayout] = useState("grid");
+  const [episodes, setEpisodes] = useState([]);
+  const [epsLoading, setEpsLoading] = useState(true);
 
   const shareRef = useRef(null);
 
@@ -130,6 +133,61 @@ export default function AnimeInfo() {
     return () => document.removeEventListener("keydown", handler);
   }, [trailerOpen]);
 
+  useEffect(() => {
+    if (!anime?.id) return;
+    let cancelled = false;
+    (async () => {
+      setEpsLoading(true);
+      const miruro = await getMiruroEpisodes(anime.id).catch(() => null);
+      if (cancelled) return;
+      if (miruro?.providers) {
+        const provNames = Object.keys(miruro.providers);
+        for (const pname of provNames) {
+          const epList = miruro.providers[pname]?.sub || miruro.providers[pname]?.dub || [];
+          if (epList.length > 0) {
+            setEpisodes(epList.map(ep => ({
+              episode: ep.number,
+              title: ep.title || `Episode ${ep.number}`,
+              thumbnail: ep.image || null,
+              aired: null,
+            })).reverse());
+            setEpsLoading(false);
+            return;
+          }
+        }
+      }
+      const src = await findStreamingSource(anime.name, anime.id).catch(() => null);
+      if (cancelled) return;
+      if (src) {
+        const result = await getEpisodePage(
+          src.title || src.slug, src.tagSlug,
+          src.source, src.sourceBase, src.anilistId, 0
+        ).catch(() => null);
+        if (!cancelled && result?.episodes?.length > 0) {
+          setEpisodes(result.episodes.map(ep => ({
+            episode: ep.episode,
+            title: ep.title || `Episode ${ep.episode}`,
+            thumbnail: ep.thumbnail || null,
+            aired: ep.aired || null,
+          })).reverse());
+          setEpsLoading(false);
+          return;
+        }
+      }
+      if (!cancelled) {
+        const total = anime?.episodes || 0;
+        setEpisodes(Array.from({ length: total }, (_, i) => ({
+          episode: i + 1,
+          title: `Episode ${i + 1}`,
+          thumbnail: null,
+          aired: null,
+        })).reverse());
+        setEpsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [anime?.id, anime?.episodes, anime?.name]);
+
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -160,8 +218,15 @@ export default function AnimeInfo() {
   const isAiring = statusLower.includes("air") || statusLower === "releasing" || statusLower === "ongoing";
   const isUpcoming = statusLower.includes("upcoming") || statusLower.includes("not yet") || statusLower.includes("tba") || statusLower === "not_yet_released";
 
-  const totalEpisodes = isUpcoming ? 0 : (anime?.episodes || 0);
-  const epArray = Array.from({ length: totalEpisodes }, (_, i) => i + 1).reverse();
+  const displayEpisodes = episodes.length > 0 ? episodes : (() => {
+    const total = isUpcoming ? 0 : (anime?.episodes || 0);
+    return Array.from({ length: total }, (_, i) => ({
+      episode: i + 1,
+      title: `Episode ${i + 1}`,
+      thumbnail: null,
+      aired: null,
+    })).reverse();
+  })();
 
   const posterImg = anime?.img || "";
   const bannerImg = anime?.bannerImage || anime?.img || "";
@@ -476,7 +541,7 @@ export default function AnimeInfo() {
             {/* Filter Action Row */}
             <div className="flex justify-between items-center mb-6">
               <div className="bg-neutral-800/60 ring-1 ring-white/5 text-neutral-300 px-3.5 py-1.5 rounded-md text-sm font-semibold shadow-inner">
-                {totalEpisodes} Episodes
+                {displayEpisodes.length} Episodes
               </div>
               <div className="flex gap-1.5 bg-neutral-900/80 p-1.5 rounded-lg ring-1 ring-white/5">
                 <button onClick={() => setEpLayout("grid")} className={`p-1.5 rounded-md transition-colors ${epLayout === "grid" ? "bg-neutral-700 text-white shadow-sm" : "text-neutral-500 hover:text-white"}`}>
@@ -489,22 +554,33 @@ export default function AnimeInfo() {
             </div>
 
             {/* Episode Grid */}
-            {epArray.length === 0 ? (
+            {displayEpisodes.length === 0 && !epsLoading ? (
               <div className="text-center py-12 text-neutral-500 font-semibold bg-neutral-900/50 rounded-xl border border-neutral-800/50">
                 {isUpcoming ? "Episodes will be available once the anime airs." : "No episodes available."}
               </div>
+            ) : epsLoading && episodes.length === 0 ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader size={24} className="text-neutral-500 animate-spin" />
+              </div>
             ) : (
               <div className={epLayout === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5" : "flex flex-col gap-4 max-w-4xl"}>
-                {epArray.map((ep) => {
+                {displayEpisodes.map((ep) => {
+                  const epThumb = ep.thumbnail || ep.image || bannerImg;
                   return (
                     <Link
-                      key={ep}
-                      to={`/anime/${anime.id}?ep=${ep}`}
+                      key={ep.episode || ep.id}
+                      to={`/anime/${anime.id}?ep=${ep.episode}`}
                       className="group flex flex-col sm:flex-row gap-4 bg-[#111216] p-2.5 rounded-2xl border border-neutral-800 hover:bg-[#1a1c23] hover:border-neutral-700 transition-all duration-300 cursor-pointer shadow-lg shadow-black/20"
                     >
                       {/* Thumbnail */}
                       <div className={`relative flex-shrink-0 rounded-xl overflow-hidden bg-neutral-900 ${epLayout === "grid" ? "w-full sm:w-[170px] aspect-video" : "w-full sm:w-[240px] aspect-video"}`}>
-                        <img src={bannerImg} alt={`Episode ${ep}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        {epThumb ? (
+                          <img src={epThumb} alt={ep.title || `Episode ${ep.episode}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-neutral-800 text-neutral-600">
+                            <Play size={24} />
+                          </div>
+                        )}
                         <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300"></div>
                         
                         {/* Play Overlay */}
@@ -516,15 +592,25 @@ export default function AnimeInfo() {
 
                         {/* Badges */}
                         <div className="absolute bottom-2 left-2 bg-black/80 backdrop-blur-sm text-white px-2 py-0.5 rounded text-xs font-bold ring-1 ring-white/10 shadow-sm">
-                          Ep {ep}
+                          Ep {ep.episode}
                         </div>
+                        {ep.aired && (
+                          <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-sm text-neutral-300 px-2 py-0.5 rounded text-[10px] font-medium ring-1 ring-white/5">
+                            {ep.aired}
+                          </div>
+                        )}
                       </div>
 
                       {/* Info */}
                       <div className="flex-1 flex flex-col justify-center py-1 pr-2">
                         <h3 className="text-white font-bold text-[15px] leading-snug mb-1.5 group-hover:text-[#e3e3e3] transition-colors line-clamp-2">
-                          Episode {ep}
+                          {ep.title || `Episode ${ep.episode}`}
                         </h3>
+                        {ep.description && (
+                          <p className="text-neutral-400 text-[13px] leading-relaxed line-clamp-2">
+                            {ep.description}
+                          </p>
+                        )}
                       </div>
                     </Link>
                   );

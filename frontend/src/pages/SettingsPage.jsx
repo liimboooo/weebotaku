@@ -166,6 +166,24 @@ export default function SettingsPage() {
     }).catch(err => console.error('[AnimeWch] Failed to load user data:', err));
   }, [settingsReady]);
 
+  useEffect(() => {
+    if (!settingsReady) return;
+    const malConnected = syncStatus.mal?.connected;
+    const anilistConnected = syncStatus.anilist?.connected;
+    if (!malConnected && !anilistConnected) return;
+
+    const interval = setInterval(async () => {
+      if (malConnected) {
+        try { await authService.manualSyncMAL(); } catch {}
+      }
+      if (anilistConnected) {
+        try { await authService.manualSyncAniList(); } catch {}
+      }
+    }, 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [settingsReady, syncStatus.mal?.connected, syncStatus.anilist?.connected]);
+
   const avatar = currentUser?.avatar || "";
   const initial = (profile.username || "U").charAt(0).toUpperCase();
   const joinDate = currentUser?.memberSince

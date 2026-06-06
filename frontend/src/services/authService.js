@@ -150,6 +150,7 @@ class AuthService {
       STORAGE_KEYS.USER_RATINGS, STORAGE_KEYS.LIKED_ANIME, STORAGE_KEYS.MANGA_PROGRESS,
     ];
     keysToRemove.forEach(k => localStorage.removeItem(k));
+    window.dispatchEvent(new Event('auth-logout'));
   }
 
   async searchUsers(query) {
