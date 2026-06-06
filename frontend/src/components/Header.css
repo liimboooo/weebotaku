@@ -30,6 +30,10 @@
   will-change: transform;
 }
 
+.top-nav *:focus { outline: none !important; }
+.top-nav *:focus-visible { outline: none !important; }
+.top-nav *:focus-within { outline: none !important; }
+
 /* Hide when scrolling down — slides off-screen */
 .top-nav.is-hidden {
   transform: translateY(-100%);
@@ -78,6 +82,17 @@
 .top-nav.is-subpage.is-scrolled .top-nav-bg {
   background: rgba(0, 0, 0, 0.88);
   border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+/* TRANSPARENT — hero shows through until scrolled */
+.top-nav.is-transparent .top-nav-bg {
+  background: transparent;
+}
+
+.top-nav.is-transparent.is-scrolled .top-nav-bg {
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
 }
 
 /* ─── Left Cluster ────────────────────────────────────── */

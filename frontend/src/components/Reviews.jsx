@@ -69,7 +69,7 @@ export default function Reviews({ animeId, selectedEp }) {
           likes: r.likes?.length || 0,
         })));
       }
-    } catch {}
+    } catch (e) { console.error('[AnimeWch] Review submit failed:', e); }
 
     setNewReview("");
     setReviewRating(0);

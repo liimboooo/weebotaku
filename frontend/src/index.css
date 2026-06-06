@@ -116,6 +116,10 @@ html {
   color-scheme: dark;
 }
 
+* { outline: none !important; }
+*::-moz-focus-inner { border: 0 !important; }
+* { -webkit-tap-highlight-color: transparent; }
+
 body {
   background: #000;
   background-attachment: fixed;

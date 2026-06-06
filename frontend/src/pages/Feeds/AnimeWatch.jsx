@@ -143,21 +143,21 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     try {
       await commentService.replyToComment(parentId, content);
       await refetchComments();
-    } catch {}
+    } catch (e) { console.error('[AnimeWch] Failed to reply to comment:', e); }
   };
 
   const handleEditComment = async (id, content) => {
     try {
       await commentService.editComment(id, content);
       await refetchComments();
-    } catch {}
+    } catch (e) { console.error('[AnimeWch] Failed to edit comment:', e); }
   };
 
   const handleDeleteComment = async (id) => {
     try {
       await commentService.deleteComment(id);
       await refetchComments();
-    } catch {}
+    } catch (e) { console.error('[AnimeWch] Failed to delete comment:', e); }
   };
 
   useEffect(() => {
@@ -180,7 +180,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
           setLoading(false);
           return;
         }
-      } catch {}
+      } catch (e) { console.error('[AnimeWch] Failed to get streaming links:', e); }
       if (!timedOut) { clearTimeout(timer); setError("No streaming links available."); setLoading(false); }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -542,7 +542,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}
     >
       <div className="watch-bg-ornament" />
-      <button className="watch-side-collapse-outer" onClick={() => { console.log('outer toggle clicked'); setRightCollapsed(c => !c); }} title="Toggle sidebar">
+      <button className="watch-side-collapse-outer" onClick={() => { setRightCollapsed(c => !c); }} title="Toggle sidebar">
         {rightCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
       </button>
       <motion.div className="watch-shell" onClick={e => e.stopPropagation()}
@@ -757,7 +757,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
           <aside className={`watch-side-box ${rightCollapsed ? 'collapsed' : ''}`}>
             <button
               className="watch-side-collapse-tab"
-              onClick={() => { console.log('inner toggle clicked'); setRightCollapsed(c => !c); }}
+              onClick={() => { setRightCollapsed(c => !c); }}
               aria-label={rightCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               title={rightCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
@@ -839,7 +839,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                         {recommendations.map((rec, i) => (
                           <button key={rec.id || i} className="watch-rec-item" onClick={() => navigate(`/anime/${rec.id}/info`)}>
                             <div className="watch-rec-thumb">
-                              <img src={rec.image} alt="" />
+                              <img src={rec.image} alt={rec?.title || rec?.name || ''} />
                             </div>
                             <div className="watch-rec-info">
                               <span className="watch-rec-name">{rec.name}</span>

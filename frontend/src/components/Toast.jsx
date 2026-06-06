@@ -59,7 +59,7 @@ export default function ToastContainer() {
                 {body && <span className="toast-text">{body}</span>}
               </div>
               {t.label && <span className="toast-xp-label">{t.label}</span>}
-              <motion.button className="toast-close" whileTap={{ scale: 0.8 }} onClick={() => remove(t.id)}>
+              <motion.button className="toast-close" whileTap={{ scale: 0.8 }} onClick={() => remove(t.id)} aria-label="Dismiss notification">
                 <X size={14} />
               </motion.button>
             </motion.div>

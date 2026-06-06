@@ -312,7 +312,7 @@ export default function SettingsPage() {
     setShowDeleteModal(false);
     showToast("Account deleted. Redirecting...", "info");
     setTimeout(() => {
-      window.location.href = "/";
+      navigate("/");
     }, 1500);
   };
 
@@ -879,9 +879,36 @@ export default function SettingsPage() {
     <AnimatedPage>
       <div className="st">
         {loading && (
-          <div className="st-loading">
-            <div className="st-loading-spinner" />
-            <span>Loading settings...</span>
+          <div className="st">
+            <div className="st-dashboard">
+              <div className="h-8 w-28 bg-[#14151a] animate-pulse rounded-lg mb-2" />
+              <div className="h-4 w-72 bg-[#14151a] animate-pulse rounded mb-8" />
+              {SECTIONS.map(section => (
+                <div key={section.title} className="st-section-group">
+                  <div className="st-section-header">
+                    <div className="st-section-header-text">
+                      <div className="h-5 w-40 bg-[#14151a] animate-pulse rounded" />
+                      {section.subtitle && <div className="h-3 w-56 bg-[#14151a] animate-pulse rounded mt-1.5" />}
+                    </div>
+                    <div className="st-section-divider" />
+                  </div>
+                  <div className={`st-card-grid st-card-grid--${section.cols}`}>
+                    {section.cards.map(({ key }) => (
+                      <div key={key} className="st-dash-card" style={{ pointerEvents: 'none', border: '1px solid rgba(255,255,255,0.03)' }}>
+                        <div className="st-dash-card-icon" style={{ background: 'rgba(255,255,255,0.03)', color: 'transparent' }}>
+                          <div className="w-8 h-8 bg-[#14151a] animate-pulse rounded-lg" />
+                        </div>
+                        <div className="st-dash-card-body">
+                          <div className="h-4 w-28 bg-[#14151a] animate-pulse rounded mb-1" />
+                          <div className="h-3 w-44 bg-[#14151a] animate-pulse rounded" />
+                        </div>
+                        <div className="h-4 w-4 bg-[#14151a] animate-pulse rounded" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

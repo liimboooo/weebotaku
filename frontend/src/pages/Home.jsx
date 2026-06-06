@@ -3,39 +3,28 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Bookmark,
   Calendar,
   ChevronRight,
   Clock,
-  Crown,
-  Eye,
-  Film,
   Flame,
-  Heart,
   Info,
-  Layers,
   Play,
-  RefreshCw,
   Sparkles,
   Star,
-  Sword,
-  Trophy,
   Users,
   Volume2,
   VolumeX,
   X,
-  Zap,
 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
-import Skeleton from "../components/Skeleton";
+
 import Categories from "../components/Categories";
 import TopUpcoming from "../components/TopUpcoming";
 import TopTrending from "../components/TopTrending";
 import Schedule from "../components/Schedule";
 import Footer from "../components/Footer";
 import { fetchHomeBundle, fetchTopAnime, fetchAnimeById } from "../services/anilistApi";
-import { fetchRandomQuote } from "../services/communityApi";
-import { loadWatchlist, loadWatchHistory, loadRatings, removeFromWatchHistory } from "../services/storage";
+import { loadWatchHistory, removeFromWatchHistory } from "../services/storage";
 import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./Home.css";
@@ -78,7 +67,7 @@ function useAnimeData() {
         setCategories(bundle.genres);
         setUpcomingList(take(bundle.upcoming, 12));
         setPopularList(take(bundle.popular, 20));
-      } catch {}
+      } catch (e) { console.error('[AnimeWch] Failed to load continue watching:', e); }
       setLoading(false);
     }
     load();
@@ -112,7 +101,7 @@ function useAnimeData() {
         const used = new Set(topTen.map(a => a.id));
         setTrendingList(r.data.filter(a => !used.has(a.id)).slice(0, 15));
       }
-    } catch {}
+    } catch (e) { console.error('[AnimeWch] Failed to load top ten:', e); }
   }, [topTen]);
 
   return { spotlight, topTen, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending };
@@ -135,82 +124,6 @@ const cardSlideUp = {
     transition: { type: "spring", stiffness: 260, damping: 24 },
   },
 };
-
-function StatsBar() {
-  const [stats, setStats] = useState([]);
-
-  useEffect(() => {
-    function compute() {
-      const wl = loadWatchlist();
-      const history = loadWatchHistory();
-      const ratings = Object.keys(loadRatings()).length;
-      const items = [
-        { icon: Bookmark, label: "Watchlist", value: wl.length, cls: "bookmark" },
-        { icon: Eye, label: "Episodes Watched", value: history.length, cls: "eye" },
-        { icon: Star, label: "Anime Rated", value: ratings, cls: "trophy" },
-      ];
-      setStats(items);
-    }
-    compute();
-    window.addEventListener("storage", compute);
-    window.addEventListener("profile-data-changed", compute);
-    window.addEventListener("watchlist-updated", compute);
-    return () => {
-      window.removeEventListener("storage", compute);
-      window.removeEventListener("profile-data-changed", compute);
-      window.removeEventListener("watchlist-updated", compute);
-    };
-  }, []);
-
-  return (
-    <motion.div
-      className="home-stats-bar"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      {stats.map((s) => (
-        <motion.div
-          key={s.label}
-          className="home-stat-card"
-          variants={cardSlideUp}
-            whileHover={{ boxShadow: "0 16px 48px rgba(255,255,255,0.12)", transition: { type: "spring", stiffness: 300 } }}
-        >
-          <div className={`home-stat-icon ${s.cls}`}>
-            <s.icon size={18} />
-          </div>
-          <div className="home-stat-info">
-            <span className="home-stat-value">{s.value}</span>
-            <span className="home-stat-label">{s.label}</span>
-          </div>
-        </motion.div>
-      ))}
-    </motion.div>
-  );
-}
-
-function SpotlightQuote({ quote, onRefresh, loading }) {
-  if (!quote) return null;
-  return (
-    <motion.div
-      className="spotlight-quote"
-      initial={{ opacity: 0, y: 16, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ type: "spring", stiffness: 180, damping: 22, delay: 0.6 }}
-    >
-      <p className="spotlight-quote-text">"{quote.quote}"</p>
-      <div className="spotlight-quote-attribution">
-        <span className="spotlight-quote-char">{quote.character}</span>
-        <span className="spotlight-quote-dash">—</span>
-        <span className="spotlight-quote-anime">{quote.anime}</span>
-        <button className="spotlight-quote-refresh" onClick={onRefresh} disabled={loading}>
-          <RefreshCw size={12} />
-        </button>
-      </div>
-    </motion.div>
-  );
-}
-
 
 // Seconds -> "m:ss" (e.g. 112 -> "1:52")
 function formatClock(totalSeconds) {
@@ -248,7 +161,7 @@ function ContinueWatchingRow() {
         try {
           const data = await fetchAnimeById(item.animeId);
           if (data) setEnriched(prev => ({ ...prev, [item.animeId]: data }));
-        } catch {}
+        } catch (e) { console.error('[AnimeWch] Failed to enrich data:', e); }
       });
     }
     load();
@@ -422,42 +335,6 @@ function SeasonGrid({ animeList }) {
   );
 }
 
-function GenreBar({ genres }) {
-  const navigate = useNavigate();
-  if (!genres?.length) return null;
-  const genreIcons = {
-    Action: Sword, Adventure: Layers, Comedy: Sparkles, Drama: Heart,
-    Fantasy: Crown, Horror: Flame, Romance: Heart, "Sci-Fi": Zap,
-    Sports: Trophy, Mystery: Eye, "Slice of Life": Film,
-  };
-  return (
-    <div className="genre-bar">
-      <motion.div
-        className="genre-bar-inner"
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-      >
-        {genres.slice(0, 14).map(g => {
-          const Icon = genreIcons[g] || Film;
-          return (
-            <motion.button
-              key={g}
-              className="genre-bar-chip"
-              whileHover={{ y: -2, scale: 1.04 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => navigate(`/browse/anime?genre=${encodeURIComponent(g)}`)}
-            >
-              <Icon size={14} />
-              <span>{g}</span>
-            </motion.button>
-          );
-        })}
-      </motion.div>
-    </div>
-  );
-}
-
 function UpcomingSection({ animeList }) {
   const navigate = useNavigate();
   if (!animeList?.length) return null;
@@ -515,20 +392,28 @@ const heroItem = {
   },
 };
 
-function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onWatch, onDetails }) {
+function HeroSpotlight({ spotlight, onWatch, onDetails }) {
   const [muted, setMuted] = useState(true);
-  const [inWatchlist, setInWatchlist] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
 
-  if (!spotlight) return null;
+  if (!spotlight) {
+    return (
+      <section className="home-hero" style={{ minHeight: '55vh', background: 'linear-gradient(to bottom, #0b0c10, #070708)' }}>
+        <div className="home-hero-content" style={{ padding: '80px 24px', textAlign: 'center' }}>
+          <p className="text-neutral-500 text-sm">No featured anime available</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="home-hero">
       <div className="home-hero-bg">
-        {spotlight.trailerUrl ? (
+          {spotlight.trailerUrl ? (
           <div className="home-hero-video-wrap">
             <iframe
-              src={`${spotlight.trailerUrl}${spotlight.trailerUrl.includes("?") ? "&" : "?"}autoplay=1&mute=1&controls=0&loop=1&playlist=${spotlight.trailerUrl.split("/").pop().split("?" )[0]}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0`}
+              key={muted ? "muted" : "unmuted"}
+              src={`${spotlight.trailerUrl}${spotlight.trailerUrl.includes("?") ? "&" : "?"}autoplay=1&mute=${muted ? 1 : 0}&controls=0&loop=1&playlist=${spotlight.trailerUrl.split("/").pop().split("?" )[0]}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&fs=0`}
               title={spotlight.name}
               allow="autoplay; encrypted-media"
               className="home-hero-video"
@@ -539,7 +424,7 @@ function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onWatch
         ) : (
           <img
             src={spotlight.img}
-            alt=""
+            alt={spotlight?.name || ''}
             className="home-hero-img"
             onLoad={() => setImgLoaded(true)}
             style={{ opacity: imgLoaded ? 1 : 0 }}
@@ -555,9 +440,6 @@ function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onWatch
         initial="hidden"
         animate="visible"
       >
-        <motion.div className="spotlight-kicker" variants={heroItem}>
-          <Sparkles size={14} /> Featured
-        </motion.div>
         <motion.h1 className="home-hero-title" variants={heroItem}>{spotlight.name}</motion.h1>
         <motion.p variants={heroItem} className="home-hero-desc">{(spotlight.synopsis || '').replace(/<[^>]*>/g, '').slice(0, 280)}</motion.p>
         <motion.div variants={heroItem} className="hero-pills">
@@ -582,14 +464,10 @@ function HeroSpotlight({ spotlight, quote, onQuoteRefresh, quoteLoading, onWatch
           <button className="hero-btn-secondary" onClick={onDetails}>
             <Info size={16} /> More Info
           </button>
-          <button className="hero-btn-icon" onClick={() => setInWatchlist(v => !v)} aria-label="Add to watchlist">
-            <Bookmark size={16} fill={inWatchlist ? 'currentColor' : 'none'} />
-          </button>
           <button className="hero-btn-icon" onClick={() => setMuted(v => !v)} aria-label="Toggle audio">
             {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
           </button>
         </motion.div>
-        <SpotlightQuote quote={quote} onRefresh={onQuoteRefresh} loading={quoteLoading} />
       </motion.div>
 
       <motion.div
@@ -621,33 +499,26 @@ export default function Home() {
   useDocumentTitle("Home");
   const navigate = useNavigate();
   const { spotlight, seasonPicks, upcomingList, popularList, categories, loading } = useAnimeData();
-  const [quote, setQuote] = useState(null);
-  const [quoteLoading, setQuoteLoading] = useState(false);
-
-  useEffect(() => {
-    fetchRandomQuote().then(setQuote).catch(err => console.error('[AnimeWch] Failed to load quote:', err));
-  }, []);
-
-  const refreshQuote = useCallback(() => {
-    setQuoteLoading(true);
-    fetchRandomQuote().then(q => { setQuote(q); setQuoteLoading(false); }).catch(() => setQuoteLoading(false));
-  }, []);
 
   if (loading) {
     return (
       <AnimatedPage>
         <div className="home-container">
-          <div className="home-loading">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="home-loading-section">
-                <Skeleton variant="title" width="180px" />
-                <div className="home-loading-grid">
-                  {[1, 2, 3, 4].map(j => (
-                    <Skeleton key={j} variant="card" />
-                  ))}
+          <div className="home-layout">
+            <div className="home-feed">
+              {[1,2,3].map(s => (
+                <div key={s} className="mb-10 mt-6">
+                  <div className="h-5 w-44 bg-[#14151a] animate-pulse rounded mb-5" />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {[1,2,3,4].map(i => (
+                      <div key={i} className="bg-[#111115] animate-pulse rounded-2xl overflow-hidden ring-1 ring-white/5">
+                        <div className="aspect-[3/4] bg-[#14151a]" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </AnimatedPage>
@@ -658,9 +529,6 @@ export default function Home() {
     <AnimatedPage>
       <HeroSpotlight
         spotlight={spotlight}
-        quote={quote}
-        onQuoteRefresh={refreshQuote}
-        quoteLoading={quoteLoading}
         onWatch={() => spotlight && navigate(`/anime/${spotlight.id}?ep=1`)}
         onDetails={() => spotlight && navigate(`/anime/${spotlight.id}/info`)}
       />
@@ -672,10 +540,6 @@ export default function Home() {
           <Schedule />
         </aside>
         <div className="home-feed">
-        <StatsBar />
-
-        <GenreBar genres={categories} />
-
         <ContinueWatchingRow />
 
         <TopUpcoming />

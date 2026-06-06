@@ -6,7 +6,8 @@ import { fetchDailySchedule } from "../services/anilistApi";
 import "./Schedule.css";
 
 const DAY_NAMES = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-const COLLAPSED = 9;
+const COLLAPSED = 7;
+const EXPANDED_MAX = 20;
 
 const dayKey = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 const startOfDay = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
@@ -83,7 +84,7 @@ export default function Schedule() {
 
   const colon = now.getSeconds() % 2 === 0 ? ":" : " ";
   const fmtNow = `${String(now.getHours()).padStart(2, "0")}${colon}${String(now.getMinutes()).padStart(2, "0")}`;
-  const visible = expanded ? items : items.slice(0, COLLAPSED);
+  const visible = expanded ? items.slice(0, EXPANDED_MAX) : items.slice(0, COLLAPSED);
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   return (
@@ -188,7 +189,7 @@ export default function Schedule() {
             whileTap={{ scale: 0.95 }}
             onClick={() => setExpanded((e) => !e)}
           >
-            {expanded ? "Less" : `${items.length - COLLAPSED} more`}
+            {expanded ? "Less" : `${Math.min(items.length, EXPANDED_MAX) - COLLAPSED} more`}
             <motion.span
               animate={{ rotate: expanded ? 180 : 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}

@@ -361,7 +361,7 @@ function CommentItem({ comment, isOPCheck, isVerifiedCheck, onLike, onDislike, o
     try {
       const ok = await onPostReply(comment.id, newReply);
       if (ok) setReplyingTo(null);
-    } catch {}
+    } catch (e) { console.error('[AnimeWch] Reply post failed:', e); }
   };
 
   const spoilerMatch = !comment.hasSpoiler && comment.text.match(/\|\|(.+?)\|\|/);
@@ -598,7 +598,7 @@ function Comments({ comments: externalComments, setComments, currentUser = "You"
       setText("");
       setPosted(true);
       setTimeout(() => setPosted(false), 3000);
-    } catch {}
+    } catch (e) { console.error('[AnimeWch] Comment post failed:', e); }
     setPosting(false);
   };
 

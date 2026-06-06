@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronLeft, ChevronRight, RotateCcw, Star, Clock, Play } from "lucide-react";
 import { fetchDailySchedule } from "../services/anilistApi";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 
 const SECOND = 1000;
 const DAY_MS = 86400000;
@@ -236,6 +237,7 @@ function SkeletonRow({ side }) {
 
 /* ─── Main Page ──────────────────────────────── */
 export default function SchedulePage() {
+  useDocumentTitle("Schedule");
   const navigate = useNavigate();
   const [weekOffset, setWeekOffset] = useState(0);
   const [activeDay, setActiveDay] = useState(() => {

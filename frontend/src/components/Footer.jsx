@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Film, Users, Settings, Heart, Send } from "lucide-react";
+import { Film, Users, Settings, Heart, Send, Check } from "lucide-react";
 import "./Footer.css";
 
 /* Brand logos as inline SVG (lucide-react v1 dropped brand icons) */
@@ -32,8 +32,18 @@ const SOCIALS = [
   { label: "YouTube", href: "https://youtube.com", Icon: YoutubeIcon },
 ];
 
+function loadSubscribedEmails() {
+  try { return JSON.parse(localStorage.getItem('newsletter_emails') || '[]'); } catch { return []; }
+}
+function saveSubscribedEmail(email) {
+  const list = loadSubscribedEmails();
+  if (!list.includes(email)) { list.push(email); localStorage.setItem('newsletter_emails', JSON.stringify(list)); }
+}
+
 export default function Footer() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
   return (
     <footer className="footer" role="contentinfo">
       <div className="footer-glow" />
@@ -86,15 +96,20 @@ export default function Footer() {
             <p>New episodes, seasonal picks, and community highlights.</p>
             <form
               className="footer-newsletter-form"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (email) { saveSubscribedEmail(email); setSubscribed(true); setEmail(""); setTimeout(() => setSubscribed(false), 5000); }
+              }}
             >
               <input
                 type="email"
                 placeholder="your@email.com"
                 aria-label="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
               <button type="submit" aria-label="Subscribe">
-                <Send size={15} />
+                {subscribed ? <Check size={15} /> : <Send size={15} />}
               </button>
             </form>
           </div>

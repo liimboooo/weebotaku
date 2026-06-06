@@ -2,7 +2,7 @@
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Play, Share2, X, Check, Copy, Globe, MessageCircle, AtSign, Eye,
+  Play, Share2, X, Check, Copy, Globe, MessageCircle, AtSign,
   Bookmark, ChevronDown, ChevronUp, Bell, Grid, List
 } from "lucide-react";
 import { fetchAnimeRecommendations, fetchAnimeCharacters } from "../services/anilistApi";
@@ -47,14 +47,9 @@ function getNextEpText(anime) {
         if (days === 1) return "in 1 day";
         return `in ${days} days`;
       }
-    } catch {}
+    } catch (e) { console.error('[AnimeWch] Date parse error:', e); }
   }
   return null;
-}
-
-function seededRandom(seed) {
-  let x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
 }
 
 export default function AnimeInfo() {
@@ -94,11 +89,11 @@ export default function AnimeInfo() {
     try {
       const recs = await fetchAnimeRecommendations(id);
       setRelated(recs);
-    } catch {}
+    } catch (e) { console.error('[AnimeWch] Failed to fetch recommendations:', e); }
     try {
       const chars = await fetchAnimeCharacters(id);
       setCharacters(chars.slice(0, 8));
-    } catch {}
+    } catch (e) { console.error('[AnimeWch] Failed to fetch characters:', e); }
     setLoading(false);
   }, [id]);
 
@@ -140,7 +135,7 @@ export default function AnimeInfo() {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    } catch (e) { console.error('[AnimeWch] Copy to clipboard failed:', e); }
   };
 
   const handleShare = (key) => {
@@ -173,40 +168,49 @@ export default function AnimeInfo() {
 
   const nextEpText = getNextEpText(anime);
 
-  const epTitles = [
-    "What is Evil? Whatever Springs from Weakness.", 
-    "It Takes a Great Deal of History to Produce a Little Literature.",
-    "The Highest Reward for a Person's Toil is Not What They Get for It, but What They Become by It.",
-    "We Should Not Be Upset That Others Hide the Truth from Us, When We Hide It from Ourselves.",
-    "Every Failure is a Step to Success.",
-    "There are Two Kinds of Lies...",
-    "Nothing is as Dangerous as an Ignorant Friend.",
-    "The Wound is the Place Where the Light Enters You.",
-    "Man is Condemned to be Free.",
-    "The Best Way to Predict the Future is to Create It.",
-    "He Who Cannot Obey Himself Will Be Commanded.",
-    "Only in the Darkness Can You See the Stars."
-  ];
-
-  const epDescriptions = [
-    "Ayanokoji and the Class D students face their next major special exam on a deserted island, where teamwork is put to the ultimate test.",
-    "Ryuen begins his aggressive psychological attacks against Class D, forcing Horikita to confront her own vulnerabilities.",
-    "Secrets within the student council begin to surface as Nagumo makes a bold move to consolidate his power over the school.",
-    "A traitor is suspected within Class D, leading to widespread paranoia and fractured alliances during the voting exam.",
-    "Karuizawa's past trauma is exploited, pushing Ayanokoji to intervene from the shadows with a ruthless strategy.",
-    "The paper shuffle exam results in unexpected pairings, forcing students with deep rivalries to cooperate to avoid expulsion.",
-    "Ayanokoji's father makes an unexpected appearance, threatening the very foundation of Kiyotaka's peaceful school life.",
-    "Class C mounts a desperate counterattack, relying on a risky gamble that could change the entire grade hierarchy.",
-    "Sakayanagi finally confronts Ayanokoji directly, setting the stage for a clash between natural genius and artificial perfection.",
-    "The winter break brings temporary relief, but hidden agendas continue to unravel in the background.",
-    "A special exam forces the students to make heart-wrenching sacrifices, testing their morality and ambition.",
-    "The season concludes with a decisive confrontation, reshaping the entire power dynamic of Advanced Nurturing High School."
-  ];
-
   if (loading) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-[#070708] flex flex-col pt-20">
-        <div className="w-full h-[50vh] bg-[#0b0c10] animate-pulse" />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-gradient-to-b from-[#070708] to-[#0b0c10] text-[#e3e3e3] font-sans antialiased overflow-x-hidden">
+        {/* Banner skeleton */}
+        <div className="relative w-full min-h-[55vh] flex items-end justify-center pt-48 pb-12">
+          <div className="absolute inset-0 z-0 bg-[#0b0c10]" />
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex flex-col md:flex-row gap-6 sm:gap-10 items-start">
+            {/* Poster skeleton */}
+            <div className="flex-shrink-0 w-56 md:w-64 flex flex-col gap-4 mx-auto md:mx-0">
+              <div className="rounded-2xl overflow-hidden aspect-[3/4] bg-[#14151a] animate-pulse ring-1 ring-white/5" />
+              <div className="flex flex-col gap-3 mt-2">
+                <div className="w-full h-11 bg-[#14151a] animate-pulse rounded-xl ring-1 ring-white/5" />
+                <div className="w-full h-11 bg-[#14151a] animate-pulse rounded-xl ring-1 ring-white/5" />
+                <div className="w-full h-16 bg-[#14151a] animate-pulse rounded-xl ring-1 ring-white/5" />
+              </div>
+            </div>
+            {/* Content skeleton */}
+            <div className="flex-1 flex flex-col md:pt-4 gap-5">
+              <div className="w-32 h-4 bg-[#14151a] animate-pulse rounded-full" />
+              <div className="w-3/4 h-10 bg-[#14151a] animate-pulse rounded-lg" />
+              <div className="flex flex-wrap gap-2">
+                {[1,2,3,4].map(i => <div key={i} className="w-20 h-7 bg-[#14151a] animate-pulse rounded-full" />)}
+              </div>
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="w-36 h-12 bg-[#14151a] animate-pulse rounded-full" />
+                <div className="w-14 h-14 bg-[#14151a] animate-pulse rounded-full" />
+                <div className="w-14 h-14 bg-[#14151a] animate-pulse rounded-full" />
+                <div className="w-14 h-14 bg-[#14151a] animate-pulse rounded-full" />
+              </div>
+              <div className="flex flex-col gap-2 mt-2">
+                <div className="w-full h-4 bg-[#14151a] animate-pulse rounded" />
+                <div className="w-full h-4 bg-[#14151a] animate-pulse rounded" />
+                <div className="w-3/4 h-4 bg-[#14151a] animate-pulse rounded" />
+              </div>
+              {/* Details grid skeleton */}
+              <div className="w-full mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[1,2,3,4,5,6].map(i => (
+                  <div key={i} className="bg-[#14151a] animate-pulse rounded-xl px-4 py-3 ring-1 ring-white/5 h-16" />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </motion.div>
     );
   }
@@ -223,7 +227,7 @@ export default function AnimeInfo() {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }} className="min-h-screen bg-gradient-to-b from-[#070708] to-[#0b0c10] text-[#e3e3e3] font-sans antialiased overflow-x-hidden selection:bg-neutral-800 selection:text-white">
       {/* ═══════════ HERO SECTION ═══════════ */}
-      <section className="relative w-full min-h-[55vh] flex items-end justify-center pt-32 pb-12">
+      <section className="relative w-full min-h-[55vh] flex items-end justify-center pt-48 pb-12">
         {/* Banner Image & Gradient Masks */}
         <div className="absolute inset-0 z-0 select-none pointer-events-none">
           <img src={bannerImg} alt="Banner" className="w-full h-full object-cover opacity-[0.35]" />
@@ -379,6 +383,65 @@ export default function AnimeInfo() {
               )}
             </div>
 
+            {/* Details Grid */}
+            <div className="w-full mt-12">
+              <div className="flex items-center gap-4 mb-5">
+                <span className="text-[11px] text-neutral-600 font-semibold uppercase tracking-[0.2em]">Details</span>
+                <div className="flex-1 h-px bg-neutral-800/60" />
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {anime.rating > 0 && (
+                  <div className="bg-neutral-900/40 rounded-xl px-4 py-3 ring-1 ring-white/[0.04] hover:ring-white/10 hover:bg-neutral-900/60 transition-all duration-300">
+                    <span className="text-[10px] text-neutral-600 font-semibold uppercase tracking-widest">Score</span>
+                    <div className="flex items-baseline gap-1 mt-1.5">
+                      <span className="text-xl font-extrabold text-white tracking-tight">{anime.rating.toFixed(1)}</span>
+                      <span className="text-[11px] text-neutral-600">/ 10</span>
+                    </div>
+                  </div>
+                )}
+                {anime.popularity > 0 && (
+                  <div className="bg-neutral-900/40 rounded-xl px-4 py-3 ring-1 ring-white/[0.04] hover:ring-white/10 hover:bg-neutral-900/60 transition-all duration-300">
+                    <span className="text-[10px] text-neutral-600 font-semibold uppercase tracking-widest">Popularity</span>
+                    <p className="text-xl font-extrabold text-white tracking-tight mt-1.5">{formatCount(anime.popularity)}</p>
+                  </div>
+                )}
+                {anime.status && (
+                  <div className="bg-neutral-900/40 rounded-xl px-4 py-3 ring-1 ring-white/[0.04] hover:ring-white/10 hover:bg-neutral-900/60 transition-all duration-300">
+                    <span className="text-[10px] text-neutral-600 font-semibold uppercase tracking-widest">Status</span>
+                    <p className="text-xl font-extrabold text-white tracking-tight mt-1.5">{anime.status}</p>
+                  </div>
+                )}
+                {anime.episodes > 0 && (
+                  <div className="bg-neutral-900/40 rounded-xl px-4 py-3 ring-1 ring-white/[0.04] hover:ring-white/10 hover:bg-neutral-900/60 transition-all duration-300">
+                    <span className="text-[10px] text-neutral-600 font-semibold uppercase tracking-widest">Episodes</span>
+                    <p className="text-xl font-extrabold text-white tracking-tight mt-1.5">{anime.episodes}</p>
+                  </div>
+                )}
+                {anime.studios?.length > 0 && (
+                  <div className="bg-neutral-900/40 rounded-xl px-4 py-3 ring-1 ring-white/[0.04] hover:ring-white/10 hover:bg-neutral-900/60 transition-all duration-300">
+                    <span className="text-[10px] text-neutral-600 font-semibold uppercase tracking-widest">Studio</span>
+                    <p className="text-xl font-extrabold text-white tracking-tight mt-1.5 truncate">{anime.studios[0]}</p>
+                  </div>
+                )}
+                {anime.startDate?.year && (
+                  <div className="bg-neutral-900/40 rounded-xl px-4 py-3 ring-1 ring-white/[0.04] hover:ring-white/10 hover:bg-neutral-900/60 transition-all duration-300">
+                    <span className="text-[10px] text-neutral-600 font-semibold uppercase tracking-widest">Aired</span>
+                    <p className="text-xl font-extrabold text-white tracking-tight mt-1.5 truncate">
+                      {anime.startDate.month && anime.startDate.day
+                        ? new Date(anime.startDate.year, anime.startDate.month - 1, anime.startDate.day).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+                        : anime.season || String(anime.startDate.year)}
+                    </p>
+                  </div>
+                )}
+                {anime.romaji && anime.romaji !== anime.name && (
+                  <div className="bg-neutral-900/40 rounded-xl px-4 py-3 ring-1 ring-white/[0.04] hover:ring-white/10 hover:bg-neutral-900/60 transition-all duration-300">
+                    <span className="text-[10px] text-neutral-600 font-semibold uppercase tracking-widest">Japanese Title</span>
+                    <p className="text-xl font-extrabold text-white tracking-tight mt-1.5 truncate">{anime.romaji}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
@@ -433,11 +496,6 @@ export default function AnimeInfo() {
             ) : (
               <div className={epLayout === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5" : "flex flex-col gap-4 max-w-4xl"}>
                 {epArray.map((ep) => {
-                  const titleIndex = (ep - 1) % epTitles.length;
-                  const descIndex = (ep - 1) % epDescriptions.length;
-                  const base = anime.popularity || 32000;
-                  const views = Math.floor(base * (0.5 + seededRandom(ep * 137 + (anime.id || 0)) * 0.8));
-
                   return (
                     <Link
                       key={ep}
@@ -460,20 +518,13 @@ export default function AnimeInfo() {
                         <div className="absolute bottom-2 left-2 bg-black/80 backdrop-blur-sm text-white px-2 py-0.5 rounded text-xs font-bold ring-1 ring-white/10 shadow-sm">
                           Ep {ep}
                         </div>
-                        <div className="absolute bottom-2 right-2 bg-black/80 backdrop-blur-sm text-white px-2 py-0.5 rounded text-xs font-semibold flex items-center gap-1.5 ring-1 ring-white/10 shadow-sm">
-                          <Eye size={12} className="text-neutral-400" />
-                          {formatCount(views)}
-                        </div>
                       </div>
 
                       {/* Info */}
                       <div className="flex-1 flex flex-col justify-center py-1 pr-2">
                         <h3 className="text-white font-bold text-[15px] leading-snug mb-1.5 group-hover:text-[#e3e3e3] transition-colors line-clamp-2">
-                          {epTitles[titleIndex]}
+                          Episode {ep}
                         </h3>
-                        <p className="text-[13px] text-neutral-400 leading-relaxed line-clamp-2">
-                          {epDescriptions[descIndex]}
-                        </p>
                       </div>
                     </Link>
                   );

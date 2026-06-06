@@ -53,7 +53,7 @@ const SOURCES = [
 const CUR_YEAR = new Date().getFullYear() + 1;
 const YEARS = Array.from({ length: CUR_YEAR - 1960 + 1 }, (_, i) => CUR_YEAR - i);
 
-function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchLoading, statusMenuOpen, onAddWithStatus }) {
+function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchingId, statusMenuOpen, onAddWithStatus }) {
   const inWishlist = wishlist.some(i => String(i.id) === String(anime.id));
   const [imgErr, setImgErr] = useState(false);
   return (
@@ -96,7 +96,7 @@ function AnimeCard({ anime, wishlist, onWishlist, onWatch, watchLoading, statusM
           <button
             className="br-poster-play"
             onClick={(e) => { e.stopPropagation(); onWatch(anime); }}
-            disabled={watchLoading}
+            disabled={watchingId === anime.id}
             aria-label={`Play ${anime.name}`}
           >
             <Play size={18} fill="currentColor" />
@@ -154,7 +154,7 @@ export default function Browse() {
 
   const [watchlist, setWatchlist] = useState(loadWatchlist());
   const [watchAnime, setWatchAnime] = useState(null);
-  const [watchLoading, setWatchLoading] = useState(false);
+  const [watchingId, setWatchingId] = useState(null);
 
   useEffect(() => {
     fetchAnimeGenres().then(setGenres).catch(err => console.error('[AnimeWch] Failed to load genres:', err));
@@ -192,10 +192,10 @@ export default function Browse() {
   }, [page]);
 
   const openWatch = async (anime) => {
-    setWatchLoading(true);
+    setWatchingId(anime.id);
     try {
       const src = await findStreamingSource(anime.name, anime.id);
-      if (!src) { addNotification({ title: "Not Available", body: "No streaming source for this title.", type: "error" }); return; }
+      if (!src) { addNotification({ title: "Not Available", body: "No streaming source for this title.", type: "error" }); setWatchingId(null); return; }
       const history = loadWatchHistory();
       const found = history.find(h => h.animeId === anime.id);
       setWatchAnime({ ...src, _name: anime.name, _episodes: anime.episodes || 12, startEp: found?.episode || 1 });
@@ -203,7 +203,7 @@ export default function Browse() {
     } catch {
       addNotification({ title: "Stream Error", body: "Failed to find streaming source.", type: "error" });
     } finally {
-      setWatchLoading(false);
+      setWatchingId(null);
     }
   };
 
@@ -410,7 +410,7 @@ export default function Browse() {
                       wishlist={watchlist}
                       onWishlist={toggleWishlist}
                       onWatch={openWatch}
-                      watchLoading={watchLoading}
+                          watchingId={watchingId}
                       statusMenuOpen={showStatusMenu}
                       onAddWithStatus={(id, s) => s ? addWithStatus(id, s) : setShowStatusMenu(null)}
                     />

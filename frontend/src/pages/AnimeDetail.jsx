@@ -15,6 +15,7 @@ import { fetchAnimeRecommendations } from "../services/anilistApi";
 import commentService from "../services/commentService";
 import authService from "../services/authService";
 import { getSocket, joinAnimeRoom, leaveAnimeRoom } from "../services/socket";
+import reportService from "../services/reportService";
 import Comments from "../components/Comments";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./Feeds/AnimeWatch.css";
@@ -83,7 +84,9 @@ export default function AnimeDetail() {
   const [showMobileSource, setShowMobileSource] = useState(false);
   const [showServerSelector, setShowServerSelector] = useState(false);
   const [liked, setLiked] = useState(null);
+  const [likesCount, setLikesCount] = useState(null);
   const [commentsError, setCommentsError] = useState(false);
+  const [reportMsg, setReportMsg] = useState(null);
   const hlsVideoRef = useRef(null);
   const hlsInstanceRef = useRef(null);
   const autoNextTimerRef = useRef(null);
@@ -91,6 +94,22 @@ export default function AnimeDetail() {
   const handleSeek = useCallback((seconds) => {
     setSeekTo(seconds);
   }, []);
+
+  const handleReport = useCallback(async () => {
+    setReportMsg('Submitting report...');
+    try {
+      await reportService.submit({
+        targetType: 'anime',
+        targetId: id,
+        url: window.location.href,
+      });
+      setReportMsg('Report submitted. We\'ll review this content.');
+      setTimeout(() => setReportMsg(null), 3000);
+    } catch {
+      setReportMsg('Failed to submit report. Try again.');
+      setTimeout(() => setReportMsg(null), 3000);
+    }
+  }, [id]);
 
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
@@ -224,6 +243,9 @@ export default function AnimeDetail() {
   const anime = apiAnime;
   useDocumentTitle(anime ? `${anime.name} - Ep ${selectedEp}` : "Loading...");
   useEffect(() => {
+    if (anime && likesCount === null) setLikesCount(anime.popularity || 0);
+  }, [anime, likesCount]);
+  useEffect(() => {
     const epFromUrl = searchParams.get("ep");
     if (epFromUrl) {
       const epNum = parseInt(epFromUrl, 10);
@@ -325,7 +347,7 @@ export default function AnimeDetail() {
             setLoading(false);
             return;
           }
-        } catch {}
+        } catch (e) { console.error('[AnimeWch] Failed to get direct stream:', e); }
       }
 
       try {
@@ -344,7 +366,7 @@ export default function AnimeDetail() {
             }
           }
         }
-      } catch {}
+      } catch (e) { console.error('[AnimeWch] Failed to get Miruro episodes:', e); }
 
       const epCount = anime?.episodes || 0;
       if (epCount > 0) {
@@ -441,7 +463,7 @@ export default function AnimeDetail() {
                   outro: prev.outro || direct.outro,
                 }));
               }
-            } catch {}
+            } catch (e) { console.error('[AnimeWch] Failed to get stream URLs:', e); }
           }
         }
 
@@ -635,7 +657,7 @@ export default function AnimeDetail() {
       const s = loadSettings();
       s.playbackSpeed = speed;
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
-    } catch {}
+    } catch (e) { console.error('[AnimeWch] Failed to save settings:', e); }
   }, []);
 
   useEffect(() => {
@@ -765,28 +787,10 @@ export default function AnimeDetail() {
     if (!id) return;
     let cancelled = false;
     (async () => {
-      const episodeNames = [
-        'Hare and Tortoise', 'Jin and Yuru', 'Dera and Hana', 'The Gate Opens',
-        'Whispers in the Dark', 'Shattered Peace', 'The Awakening', 'Crossroads',
-        'Hidden Truths', 'Bonds of Fate', 'The Edge of Dawn', 'Echoes of the Past',
-        'Into the Abyss', 'Reckoning', 'The Turning Point', 'Ashes and Dust',
-        'A New Horizon', 'Sands of Time', 'The Final Piece', 'Beyond the Veil',
-        'The Lost Chapter', 'Crimson Skies', 'Iron Resolve', 'The Calm Before',
-        'Storm Rising', 'Fractured Mirrors', 'The Heart of the Matter', 'Legacy',
-        'Convergence', 'The Long Road', 'Twilight\'s Edge', 'The Unseen Hand',
-        'Reclamation', 'The Price of Power', 'Moment of Truth', 'Departure',
-        'The Other Side', 'Requiem', 'Resurgence', 'Homecoming',
-        'The Infinite Hour', 'Glass and Steel', 'The Wandering Star', 'Collision Course',
-        'The Breaking Point', 'Luminous', 'The Final Stand', 'Epilogue',
-        'Promise', 'Dawn of Tomorrow'
-      ];
       const titleMap = {};
       if (anime?.episodes) {
-        for (let i = 1; i <= Math.min(anime.episodes, episodeNames.length); i++) {
-          titleMap[i] = episodeNames[i - 1];
-        }
-        for (let i = episodeNames.length + 1; i <= anime.episodes; i++) {
-          titleMap[i] = `Beyond the Dawn — Part ${i - episodeNames.length}`;
+        for (let i = 1; i <= anime.episodes; i++) {
+          titleMap[i] = `Episode ${i}`;
         }
       }
       if (!cancelled && titleMap) setEpisodeTitles(titleMap);
@@ -822,9 +826,67 @@ export default function AnimeDetail() {
 
   if (animeLoading) {
     return (
-      <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
-        <div style={{ width: 40, height: 40, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.08)", borderTopColor: "#ffffff", animation: "watch-spin 0.8s linear infinite" }} />
-        <p style={{ color: "#ffffff", fontSize: 13 }}>Loading anime...</p>
+      <div className="w-full min-h-screen bg-[#0a0a0a] overflow-x-hidden">
+        <div className="fixed inset-0 pointer-events-none z-0"
+          style={{
+            background: `
+              radial-gradient(ellipse at 75% 0%, rgba(217,119,6,0.12), transparent 60%),
+              radial-gradient(ellipse at 25% 100%, rgba(234,88,12,0.08), transparent 50%),
+              repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 4px)
+            `
+          }}
+        />
+        <div className="relative z-10 w-full min-h-screen flex flex-col bg-black/95">
+          <div className="flex-1 flex flex-col lg:flex-row min-h-0 relative">
+            {/* Center column skeleton */}
+            <div className="flex-1 flex flex-col min-w-0">
+              {/* Player skeleton */}
+              <div className="relative mt-3 sm:mt-8 mb-3 sm:mb-5 lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] w-full mx-0 sm:rounded-3xl rounded-xl bg-[#111115] animate-pulse" style={{ aspectRatio: '16/9', maxHeight: '65vh' }} />
+              {/* Content area skeleton */}
+              <div className="w-full lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] px-3 sm:px-4 py-4 flex flex-col gap-4">
+                <div className="h-7 sm:h-9 w-3/4 bg-[#14151a] animate-pulse rounded-lg" />
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-[#14151a] animate-pulse shrink-0" />
+                    <div className="flex flex-col gap-2">
+                      <div className="h-4 w-32 bg-[#14151a] animate-pulse rounded" />
+                      <div className="h-3 w-20 bg-[#14151a] animate-pulse rounded" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="h-8 w-24 bg-[#14151a] animate-pulse rounded-full" />
+                    <div className="h-8 w-20 bg-[#14151a] animate-pulse rounded-full" />
+                    <div className="h-8 w-20 bg-[#14151a] animate-pulse rounded-full hidden sm:block" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Sidebar skeleton */}
+            <div className="w-full lg:w-[380px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-white/5 mt-4 lg:mt-8">
+              <div className="p-4 sm:p-5 flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-5 w-5 bg-[#14151a] animate-pulse rounded" />
+                    <div className="h-5 w-24 bg-[#14151a] animate-pulse rounded" />
+                  </div>
+                  <div className="h-6 w-6 bg-[#14151a] animate-pulse rounded" />
+                </div>
+                <div className="h-8 w-full bg-[#14151a] animate-pulse rounded-lg" />
+                <div className="flex flex-col gap-2">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className="flex gap-3 p-2 bg-[#111115] animate-pulse rounded-xl">
+                      <div className="w-24 aspect-video bg-[#14151a] rounded-lg" />
+                      <div className="flex-1 flex flex-col gap-2 justify-center">
+                        <div className="h-3 w-full bg-[#14151a] rounded" />
+                        <div className="h-3 w-2/3 bg-[#14151a] rounded" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1052,7 +1114,7 @@ export default function AnimeDetail() {
                   {/* Anime Info Row */}
                   <div className="flex items-center gap-2 sm:gap-3">
                     <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-zinc-800 ring-2 ring-white/10 shrink-0 overflow-hidden">
-                      {anime?.img && <img src={anime.img} alt="" className="w-full h-full object-cover" />}
+                      {anime?.img && <img src={anime.img} alt={anime?.name || ''} className="w-full h-full object-cover" />}
                     </div>
                     <div className="flex flex-col">
                       <button className="font-bold text-white text-sm sm:text-base leading-tight hover:text-amber-400 transition-colors text-left" onClick={() => navigate(`/anime/${id}/info`)}>
@@ -1099,19 +1161,22 @@ export default function AnimeDetail() {
                       )}
                     </div>
                     <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5">
-                      <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors ${liked === true ? 'bg-amber-500/20 text-amber-300' : 'hover:bg-white/10 text-white'}`} onClick={() => setLiked(liked === true ? null : true)}><ThumbsUp size={14} /> 12K</button>
+                      <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors ${liked === true ? 'bg-amber-500/20 text-amber-300' : 'hover:bg-white/10 text-white'}`} onClick={() => { if (liked === true) { setLiked(null); setLikesCount(c => c - 1); } else { setLiked(true); setLikesCount(c => c + 1); } }}><ThumbsUp size={14} /> {likesCount != null ? (likesCount >= 1000 ? `${(likesCount / 1000).toFixed(1)}K` : likesCount) : '—'}</button>
                       <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 transition-colors ${liked === false ? 'bg-red-500/20 text-red-300' : 'hover:bg-white/10 text-white'}`} onClick={() => setLiked(liked === false ? null : false)}><ThumbsDown size={14} /></button>
                     </div>
                     {/* Desktop: show all buttons */}
-                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('animewch_last_language', language === 'sub' ? 'dub' : 'sub'); } catch {} }}>
+                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('animewch_last_language', language === 'sub' ? 'dub' : 'sub'); } catch (e) { console.error('[AnimeWch] Failed to save language pref:', e); } }}>
                       Dub <ChevronDown size={12} className="text-zinc-400" />
                     </button>
                     <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
                       <Share2 size={12} /> Share
                     </button>
-                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 w-8 sm:w-10 h-8 sm:h-10 items-center justify-center rounded-full text-white transition-colors" title="Report" onClick={() => { if (navigator.clipboard) navigator.clipboard.writeText(window.location.href); alert('Report submitted. We\'ll review this content.'); }}>
+                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 w-8 sm:w-10 h-8 sm:h-10 items-center justify-center rounded-full text-white transition-colors" title="Report" onClick={handleReport}>
                       <Flag size={11} />
                     </button>
+                    {reportMsg && (
+                      <span className="hidden sm:inline text-[11px] text-zinc-400 ml-2">{reportMsg}</span>
+                    )}
                     {/* Mobile "More" button */}
                     <div className="relative sm:hidden">
                       <button className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/5 hover:bg-white/10 text-white transition-colors" onClick={() => setShowMoreActions(p => !p)}>
@@ -1125,7 +1190,7 @@ export default function AnimeDetail() {
                             animate={{ opacity: 1, y: 0 }}
                             className="absolute right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-xl py-1 min-w-[140px] shadow-2xl z-50"
                           >
-                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('animewch_last_language', language === 'sub' ? 'dub' : 'sub'); } catch {} setShowMoreActions(false); }}>
+                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('animewch_last_language', language === 'sub' ? 'dub' : 'sub'); } catch (e) { console.error('[AnimeWch] Failed to save language pref:', e); } setShowMoreActions(false); }}>
                               <Tv size={12} /> Dub
                             </button>
                             <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { if (servers.length > 1) { setServerIndex(i => (i + 1) % servers.length); } setShowMoreActions(false); }}>
@@ -1134,9 +1199,12 @@ export default function AnimeDetail() {
                             <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); setShowMoreActions(false); }}>
                               <Share2 size={12} /> Share
                             </button>
-                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { if (navigator.clipboard) navigator.clipboard.writeText(window.location.href); alert('Report submitted. We\'ll review this content.'); setShowMoreActions(false); }}>
-                              <Flag size={12} /> Report
-                            </button>
+                    <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { handleReport(); setShowMoreActions(false); }}>
+                      <Flag size={12} /> Report
+                    </button>
+                            {reportMsg && (
+                              <div className="px-4 py-2 text-[11px] text-zinc-400">{reportMsg}</div>
+                            )}
                           </motion.div>
                         </>
                       )}
@@ -1254,8 +1322,6 @@ export default function AnimeDetail() {
                         {sortedEpisodes.slice(0, visibleCount).map((ep, i) => {
                           const realIdx = episodes.indexOf(ep);
                           const isActive = realIdx === epIndex;
-                          const views = ((ep?.episode || 1) * 7 + 41) + 'K';
-                          const timeAgo = ['1 month ago', '2 weeks ago', '3 weeks ago', '1 month ago', '2 months ago', '3 months ago', '2 weeks ago', '4 weeks ago'][(ep?.episode || 1) % 8];
                           const epTitle = episodeTitles?.[ep?.episode] || ep?.title || 'Untitled';
                           const epNum = ep?.episode || realIdx + 1;
                           return (
@@ -1275,7 +1341,7 @@ export default function AnimeDetail() {
                                   <div className="relative w-28 sm:w-36 aspect-video flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden bg-neutral-900 shadow-lg ring-1 ring-white/[0.03] group-hover:ring-white/10 transition-all duration-300">
                                     {ep?.thumbnail && !brokenThumbs.has(ep?.id || realIdx) ? (
                                       <>
-                                        <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src={ep.thumbnail} alt="" loading="lazy" onError={() => setBrokenThumbs(prev => new Set(prev).add(ep?.id || realIdx))} />
+                                        <img className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src={ep.thumbnail} alt={ep.title || `Episode ${epNum}`} loading="lazy" onError={() => setBrokenThumbs(prev => new Set(prev).add(ep?.id || realIdx))} />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
                                       </>
@@ -1296,9 +1362,6 @@ export default function AnimeDetail() {
                                     <div className={`text-[11px] sm:text-sm font-bold truncate transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
                                       {epTitle}
                                     </div>
-                                    <div className="text-[10px] sm:text-[11px] text-[#555] mt-0.5 truncate">
-                                      {views || '88K'} views • {timeAgo || '1 month ago'}
-                                    </div>
                                   </div>
                                   {isActive && (
                                     <div className="shrink-0 w-7 h-7 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
@@ -1311,9 +1374,6 @@ export default function AnimeDetail() {
                                   <span className={`text-sm font-bold shrink-0 w-6 text-right ${isActive ? 'text-white' : 'text-[#555]'}`}>{epNum}.</span>
                                   <div className="min-w-0 flex-1">
                                     <span className={`text-sm font-bold truncate block transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>{epTitle}</span>
-                                    <div className="text-[11px] text-[#555] mt-0.5">
-                                      {views || '88K'} views • {timeAgo || '1 month ago'}
-                                    </div>
                                   </div>
                                   {isActive && (
                                     <div className="shrink-0 w-[18px] h-[18px] rounded-full bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center">
@@ -1341,7 +1401,7 @@ export default function AnimeDetail() {
                 <div className="flex items-center gap-2 sm:gap-3 -mx-4 mt-0 px-3 sm:px-4 py-2.5 sm:py-3.5 bg-[#0a1f12] border-t border-emerald-500/20">
                   <div className="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse shrink-0 shadow-[0_0_8px_#4caf50]/50" />
                   <Bell size={14} className="text-[#4caf50]/70 shrink-0" />
-                  <span className="text-xs text-[#4caf50]/90">Next ep airing in <strong className="text-[#4caf50] font-semibold">{nextAiring?.text || '3 days'}</strong></span>
+                  <span className="text-xs text-[#4caf50]/90">Next ep airing in <strong className="text-[#4caf50] font-semibold">{nextAiring?.text || ''}</strong></span>
                 </div>
               )}
 
@@ -1357,7 +1417,7 @@ export default function AnimeDetail() {
                         <div className="info-cluster" style={{ maxWidth: '100%', gap: '12px' }}>
                           <div className="rank-wrapper">
                             {rec?.image ? (
-                              <img className="w-full h-full object-cover rounded-xl ring-1 ring-white/[0.08] shadow-lg" src={rec.image} alt="" />
+                              <img className="w-full h-full object-cover rounded-xl ring-1 ring-white/[0.08] shadow-lg" src={rec.image} alt={rec?.title || rec?.name || ''} />
                             ) : (
                               <div className="w-full h-full rounded-xl bg-neutral-800 flex items-center justify-center text-[#555] text-sm font-bold">?</div>
                             )}

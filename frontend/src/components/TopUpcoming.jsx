@@ -28,7 +28,7 @@ export default function TopUpcoming() {
             tags: (a.genres || []).slice(0, 3),
           })));
         }
-      } catch {}
+      } catch (e) { console.error('[AnimeWch] Failed to load upcoming:', e); }
       if (!cancelled) setLoading(false);
     })();
     return () => { cancelled = true; };

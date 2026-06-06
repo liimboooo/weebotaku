@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from "react";
-import LoadingBar from "./LoadingBar";
 
 const LoadingContext = createContext();
 
@@ -24,7 +23,6 @@ export function LoadingProvider({ children }) {
   return (
     <LoadingContext.Provider value={{ loading, showLoading, hideLoading }}>
       {children}
-      <LoadingBar visible={loading} />
     </LoadingContext.Provider>
   );
 }

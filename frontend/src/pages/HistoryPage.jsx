@@ -133,7 +133,7 @@ export default function HistoryPage() {
         {/* ── HERO BANNER ── */}
         <section className="hp-banner">
           {last?.animeImg || last?.img
-            ? <img className="hp-banner-bg" src={last.animeImg || last.img} alt="" />
+            ? <img className="hp-banner-bg" src={last.animeImg || last.img} alt="" role="presentation" />
             : null}
           <div className="hp-banner-mask" />
 
@@ -178,7 +178,7 @@ export default function HistoryPage() {
               onClick={() => navigate(`/anime/${last.animeId}?ep=${last.episode || 1}`)}
             >
               <div className="hp-continue-poster">
-                <img src={last.animeImg || last.img || ""} alt="" />
+                <img src={last.animeImg || last.img || ""} alt="" role="presentation" />
                 <div className="hp-continue-play"><Play size={12} fill="currentColor" /></div>
               </div>
               <div className="hp-continue-info">

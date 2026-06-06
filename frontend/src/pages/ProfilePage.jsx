@@ -137,7 +137,7 @@ export default function ProfilePage() {
               setJoinDate(`${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`);
             }
           }
-        } catch {}
+        } catch (e) { console.error('[AnimeWch] Profile load failed:', e); }
         setLoading(false);
       })();
     } else {

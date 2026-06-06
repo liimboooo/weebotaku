@@ -16,6 +16,7 @@ import {
 } from '../services/notificationService';
 import './Header.css';
 
+const isMac = navigator.platform?.toLowerCase().includes('mac');
 function formatTime(ts) {
   const diff = Date.now() - ts;
   const s = Math.floor(diff / 1000);
@@ -29,7 +30,7 @@ function formatTime(ts) {
   return new Date(ts).toLocaleDateString();
 }
 
-export default function Header({ isHome = false }) {
+export default function Header({ isHome = false, transparentHeader = false }) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -208,7 +209,7 @@ export default function Header({ isHome = false }) {
 
   return (
     <>
-      <nav className={`top-nav${scrolled ? ' is-scrolled' : ''}${isHome ? ' is-home' : ' is-subpage'}${hidden ? ' is-hidden' : ''}`}>
+      <nav className={`top-nav${scrolled ? ' is-scrolled' : ''}${isHome ? ' is-home' : transparentHeader ? ' is-transparent' : ' is-subpage'}${hidden ? ' is-hidden' : ''}`}>
         <div className="top-nav-bg" />
 
         <div className="top-nav-left">
@@ -234,7 +235,7 @@ export default function Header({ isHome = false }) {
               onKeyDown={handleSearchKey}
               onFocus={handleSearchFocus}
             />
-            <span className="search-kbd">⌘K</span>
+            <span className="search-kbd">{isMac ? '⌘K' : 'Ctrl+K'}</span>
           </div>
 
           {showSearchPopout && searchResults.length > 0 && (
@@ -255,6 +256,7 @@ export default function Header({ isHome = false }) {
                   key={item.id}
                   className="search-popout-item"
                   onClick={() => { navigate(`/anime/${item.id}?ep=1`); setShowSearchPopout(false); setSearchQuery(''); inputRef.current?.blur(); }}
+                  aria-label={`View ${item.name}`}
                 >
                   <div className="spi-img">
                     <img src={item.img} alt={item.name} />
@@ -271,7 +273,7 @@ export default function Header({ isHome = false }) {
                   </div>
                 </button>
               ))}
-              <button className="search-popout-footer" onClick={() => doSearch(searchQuery)}>
+              <button className="search-popout-footer" onClick={() => doSearch(searchQuery)} aria-label="View all search results">
                 <Search size={12} strokeWidth={2} />
                 <span>View all results for "{searchQuery}"</span>
                 <span className="search-popout-footer-arrow">→</span>
@@ -281,7 +283,7 @@ export default function Header({ isHome = false }) {
 
           {/* Login CTA OR Notification bell */}
           {!isLoggedIn ? (
-            <button className="top-nav-signin" onClick={() => navigate('/auth')}>
+            <button className="top-nav-signin" onClick={() => navigate('/auth')} aria-label="Sign in">
               <LogIn size={13} strokeWidth={2} />
               <span>Sign in</span>
             </button>
@@ -307,7 +309,7 @@ export default function Header({ isHome = false }) {
                       {unread > 0 && <span className="notif-popout-count">{unread}</span>}
                     </span>
                     {notifs.length > 0 && unread > 0 && (
-                      <button className="notif-mark-all" onClick={handleMarkAllRead}>
+                      <button className="notif-mark-all" onClick={handleMarkAllRead} aria-label="Mark all notifications as read">
                         Mark all read
                       </button>
                     )}
@@ -326,6 +328,7 @@ export default function Header({ isHome = false }) {
                         key={key}
                         className={`notif-cat${notifCategory === key ? ' is-active' : ''}`}
                         onClick={() => setNotifCategory(key)}
+                        aria-label={`Filter by ${getCategoryLabel(key)}`}
                       >
                         {getCategoryLabel(key)}
                       </button>
@@ -345,6 +348,7 @@ export default function Header({ isHome = false }) {
                           key={n.id}
                           className={`notif-item${n.read ? '' : ' is-unread'}`}
                           onClick={() => handleNotifClick(n)}
+                          aria-label={n.title}
                         >
                           <span className="notif-dot" />
                           <div className="notif-info">
@@ -360,6 +364,7 @@ export default function Header({ isHome = false }) {
                   <button
                     className="search-popout-footer"
                     onClick={() => { setShowNotifPopout(false); navigate('/settings'); }}
+                    aria-label="Notification settings"
                   >
                     <Bell size={12} strokeWidth={2} />
                     <span>Notification settings</span>

@@ -52,7 +52,7 @@ export default function AuthImage() {
         </div>
 
         <div className="auth-image-cta-row">
-          <span className="trending-pill">1.2K watching now</span>
+          <span className="trending-pill">Anime streaming platform</span>
           <span className="trending-pill">Live rooms active</span>
         </div>
 
@@ -62,7 +62,7 @@ export default function AuthImage() {
             <span className="aif-dot" />
             <span className="aif-dot" />
           </div>
-          <span className="aif-stat">Join 10,000+ anime fans</span>
+          <span className="aif-stat">Join the community</span>
         </div>
       </div>
     </div>

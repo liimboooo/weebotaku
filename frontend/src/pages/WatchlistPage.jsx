@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Star, Play, X, SlidersHorizontal, Layers, Bookmark, CheckCircle2, CircleDashed, Clock, MonitorPlay, XCircle } from "lucide-react";
+import { Search, Play, X, SlidersHorizontal, Layers, Bookmark, CheckCircle2, CircleDashed, Clock, MonitorPlay, XCircle, Check, Pause, Tv, Star, Pen, Trash2 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
-import { loadWatchlist, removeFromWatchlist, loadWatchHistory } from "../services/storage";
+import { loadWatchlist, removeFromWatchlist, loadWatchHistory, updateListStatus } from "../services/storage";
 import authService from "../services/authService";
 import usePrefetchAnime from "../hooks/usePrefetchAnime";
 import useDocumentTitle from "../hooks/useDocumentTitle";
@@ -16,6 +16,14 @@ const statusConfig = [
   { id: "Completed", label: "Completed", icon: CheckCircle2 },
   { id: "Paused", label: "Paused", icon: Clock },
   { id: "Dropped", label: "Dropped", icon: XCircle }
+];
+
+const listStatusOptions = [
+  { id: "Watching", label: "Watching", icon: Play, color: "#22c55e" },
+  { id: "Planning", label: "Planning", icon: Clock, color: "#f97316" },
+  { id: "Completed", label: "Completed", icon: Check, color: "#a1a1aa" },
+  { id: "Paused", label: "Paused", icon: Pause, color: "#a855f7" },
+  { id: "Dropped", label: "Dropped", icon: X, color: "#ef4444" },
 ];
 
 const containerVariants = {
@@ -38,6 +46,7 @@ export default function WatchlistPage() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [sortBy, setSortBy] = useState("recent");
   const [isScrolled, setIsScrolled] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState(null);
 
   const refresh = () => setAnimeList(loadWatchlist());
 
@@ -56,6 +65,37 @@ export default function WatchlistPage() {
   }, []);
 
   const removeAnime = (id) => setAnimeList(removeFromWatchlist(id));
+
+const [openMenuCard, setOpenMenuCard] = useState(null);
+
+const handleStatusChange = useCallback((animeId, newStatus) => {
+  updateListStatus(animeId, newStatus);
+  setAnimeList(prev => prev.map(item => 
+    String(item.id) === String(animeId) ? { ...item, listStatus: newStatus } : item
+  ));
+  setOpenMenuCard(null);
+}, []);
+
+const handleMenuOpen = (animeId, e) => {
+  e.stopPropagation();
+  setOpenMenuCard(prev => prev === animeId ? null : animeId);
+};
+
+const handleMenuClose = (e) => {
+  e.stopPropagation();
+  setOpenMenuCard(null);
+};
+
+const handleCardClick = (animeId, e) => {
+  if (e.target.closest('.wl-wish-btn') || e.target.closest('.wl-add-btn') || e.target.closest('.wl-menu-overlay') || e.target.closest('.wl-menu-close') || e.target.closest('.wl-menu-option')) {
+    return;
+  }
+  if (openMenuCard === animeId) {
+    setOpenMenuCard(null);
+    return;
+  }
+  navigate(`/anime/${animeId}/info`);
+};
 
   const progressMap = useMemo(() => {
     const history = loadWatchHistory();
@@ -79,7 +119,6 @@ export default function WatchlistPage() {
   }, [animeList, search, statusFilter, sortBy, progressMap]);
 
   const watchStats = useMemo(() => {
-    const history = loadWatchHistory();
     let totalSecs = 0;
     let totalEps = 0;
 
@@ -102,7 +141,7 @@ export default function WatchlistPage() {
     timeString += `${seconds}s watched`;
 
     return { totalEps, timeString };
-  }, [animeList]);
+  }, [animeList, progressMap]);
 
   return (
     <AnimatedPage>
@@ -201,13 +240,14 @@ export default function WatchlistPage() {
               >
                 {/* Note: Removed mode="popLayout" as it breaks CSS Grid completely and causes cards to vanish */}
                 <AnimatePresence>
-                  {filteredAnime.map((anime) => {
+{filteredAnime.map((anime) => {
                     const h = progressMap[String(anime.id)] || progressMap[(anime.name || '').toLowerCase()];
-                    const progress = h?.episode || 0;
-                    const totalEps = anime.episodes || 1;
-                    const progressPercent = Math.min((progress / totalEps) * 100, 100);
+                    const totalEps = anime.episodes || 24;
                     const statusStr = (anime.status || '').toLowerCase();
                     const isUpcoming = statusStr.includes('upcoming') || statusStr.includes('not yet') || statusStr.includes('tba') || statusStr === 'not_yet_released';
+                    const currentListStatus = anime.listStatus || 'Planning';
+                    const statusOption = listStatusOptions.find(s => s.id === currentListStatus) || listStatusOptions[1];
+                    const isMenuOpen = openMenuCard === anime.id;
 
                     return (
                       <motion.article
@@ -217,66 +257,106 @@ export default function WatchlistPage() {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className="wl-anime-card"
-                        onClick={() => navigate(`/anime/${anime.id}/info`)}
-                        onMouseEnter={() => prefetch.onMouseEnter(anime.id)}
-                        onMouseLeave={prefetch.onMouseLeave}
+                        className="wl-card"
+                        onClick={(e) => handleCardClick(anime.id, e)}
+                        onMouseEnter={() => { prefetch.onMouseEnter(anime.id); setHoveredCard(anime.id); }}
+                        onMouseLeave={() => { prefetch.onMouseLeave(); setHoveredCard(null); }}
                       >
                         <div className="wl-card-poster">
                           <img src={anime.img} alt={anime.name} loading="lazy" />
-                          <div className="wl-poster-overlay">
+
+                          {/* Dark overlay for play hover */}
+                          <div className="wl-card-hover-overlay" />
+
+                          {/* Poster hover: Play button */}
+                          <div className="wl-card-play">
                             {isUpcoming ? (
-                               <div className="wl-play-btn wl-play-upcoming">Upcoming</div>
+                              <span className="wl-card-upcoming">Upcoming</span>
                             ) : (
-                               <div className="wl-play-btn"><Play fill="currentColor" size={24} /></div>
+                              <div className="wl-card-play-btn">
+                                <Play fill="currentColor" size={28} />
+                              </div>
                             )}
                           </div>
-                          
-                          <div className="wl-card-badges">
-                            <span className={`wl-status-badge ${statusStr}`}>
-                              {isUpcoming ? 'Upcoming' : (anime.status || 'Unknown')}
-                            </span>
-                            <div className="wl-rating-badge">
-                              <Star size={10} fill="currentColor" />
-                              {anime.rating?.toFixed(1) || '?'}
+
+                          {/* Top-Left: Dynamic Status Text */}
+                          <span className="wl-card-status-text" style={{ color: statusOption.color }}>
+                            {currentListStatus}
+                          </span>
+
+                          {/* Top-Right: Edit (Pencil) Button */}
+                          <button
+                            className="wl-card-edit"
+                            onClick={(e) => { e.stopPropagation(); handleMenuOpen(anime.id, e); }}
+                            title="Edit status"
+                          >
+                            <Pen size={14} strokeWidth={2} />
+                          </button>
+
+                          {/* Bottom-Left: Stats Pill */}
+                          <div className="wl-card-stats-pill">
+                            <div className="wl-stat-item">
+                              <Tv size={11} />
+                              <span>{totalEps}</span>
+                            </div>
+                            <span className="wl-stat-divider" />
+                            <div className="wl-stat-item">
+                              <Play size={11} />
+                              <span>{h?.episode || 0}</span>
+                            </div>
+                            <span className="wl-stat-divider" />
+                            <div className="wl-stat-item">
+                              <Star size={11} />
+                              <span>{anime.rating?.toFixed(1) || '-'}</span>
                             </div>
                           </div>
 
-                          <button 
-                            className="wl-wish-btn"
-                            title="Remove from library"
-                            onClick={(e) => { e.stopPropagation(); removeAnime(anime.id); }}
-                          >
-                            <X size={16} strokeWidth={2.5} />
-                          </button>
-
-                          {progress > 0 && (
-                            <div className="wl-progress-bar">
-                              <div className="wl-progress-fill" style={{ width: `${progressPercent}%` }}></div>
+                          {/* Status Menu Overlay */}
+                          {isMenuOpen && (
+                            <div className="wl-menu-overlay" onClick={handleMenuClose}>
+                              <div className="wl-menu-content" onClick={(e) => e.stopPropagation()}>
+                                <div className="wl-menu-header">
+                                  <span className="wl-menu-title">ADD TO LIST</span>
+                                  <button className="wl-menu-close" onClick={handleMenuClose}>
+                                    <X size={16} strokeWidth={2.5} />
+                                  </button>
+                                </div>
+                                <div className="wl-menu-options">
+                                  {listStatusOptions.map(opt => (
+                                    <button
+                                      key={opt.id}
+                                      className={`wl-menu-option ${currentListStatus === opt.id ? 'active' : ''}`}
+                                      onClick={(e) => { e.stopPropagation(); handleStatusChange(anime.id, opt.id); }}
+                                    >
+                                      <opt.icon size={16} style={{ color: opt.color }} />
+                                      <span>{opt.label}</span>
+                                      {currentListStatus === opt.id && (
+                                        <Check size={16} style={{ color: opt.color, marginLeft: 'auto' }} />
+                                      )}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
                             </div>
                           )}
                         </div>
 
-                        <div className="wl-card-info">
-                          <h3 className="wl-card-title">{anime.name}</h3>
-                          <div className="wl-card-stats">
-                            <span>{anime.year || 'TBA'}</span>
-                            <span className="dot">•</span>
-                            <span>{anime.episodes ? `${anime.episodes} EPS` : '?? EPS'}</span>
-                            {progress > 0 && (
-                              <>
-                                <span className="dot">•</span>
-                                <span className="wl-progress-text">EP {progress}</span>
-                              </>
-                            )}
+                        {/* Bottom Title Section */}
+                        <div className="wl-card-body">
+                          <div className="wl-card-title-row">
+                            <span className="wl-title-dot" />
+                            <h3 className="wl-card-title">{anime.name}</h3>
+                            <button
+                              className="wl-card-delete"
+                              onClick={(e) => { e.stopPropagation(); removeAnime(anime.id); }}
+                              title="Remove from library"
+                            >
+                              <Trash2 size={14} strokeWidth={1.5} />
+                            </button>
                           </div>
-                          {anime.genres && anime.genres.length > 0 && (
-                            <div className="wl-card-tags">
-                              {anime.genres.slice(0, 2).map(g => (
-                                <span key={g}>{g}</span>
-                              ))}
-                            </div>
-                          )}
+                          <div className="wl-card-subtitle">
+                            {anime.type || 'TV'} &bull; {totalEps} ep
+                          </div>
                         </div>
                       </motion.article>
                     );

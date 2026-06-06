@@ -397,98 +397,6 @@
   font-weight: 600;
 }
 
-/* ─── Spotlight Quote ────────────────────────────────── */
-.spotlight-quote {
-  margin-top: 20px;
-  padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  border-left: 3px solid var(--primary);
-  max-width: 500px;
-  backdrop-filter: blur(8px);
-}
-
-.spotlight-quote-text {
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-  font-style: italic;
-  line-height: 1.6;
-  margin: 0 0 6px;
-}
-
-.spotlight-quote-attribution {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.spotlight-quote-char {
-  color: var(--text-primary);
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.spotlight-quote-dash {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-}
-
-.spotlight-quote-anime {
-  color: var(--primary);
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.spotlight-quote-refresh {
-  margin-left: auto;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
-  border-radius: 6px;
-  color: var(--text-tertiary);
-  padding: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--duration-fast);
-}
-
-.spotlight-quote-refresh:hover {
-  color: var(--primary);
-  background: var(--primary-surface);
-  border-color: var(--primary-border);
-}
-
-.spotlight-quote-refresh:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.spotlight-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 14px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-}
-
 /* ─── Stats Bar ──────────────────────────────────────── */
 .home-stats-bar {
   display: grid;
@@ -979,8 +887,6 @@
   .hero-btn-main { padding: 9px 18px; font-size: 13px; }
   .hero-btn-secondary { padding: 9px 14px; font-size: 13px; }
   .hero-btn-icon { width: 36px; height: 36px; }
-  .spotlight-quote { margin-top: 14px; padding: 10px 12px; max-width: 100%; }
-  .spotlight-quote-text { font-size: 0.75rem; }
   .cw-scroll-wrap { -webkit-mask-image: none; mask-image: none; }
   .home-cta-banner { padding: 24px 20px; border-radius: var(--radius-xl); }
   .home-cta-content { gap: 14px; }
@@ -1004,17 +910,12 @@
   .home-hero-gradient-side {
     background: linear-gradient(90deg, rgba(0, 0, 0, 0.98) 0%, rgba(0, 0, 0, 0.85) 50%, rgba(0, 0, 0, 0.5) 100%);
   }
-  .spotlight-kicker { font-size: 10px; padding: 5px 10px; }
   .hero-pills { gap: 5px; margin-bottom: 10px; }
   .hero-pill { font-size: 9px; padding: 2px 7px; }
   .hero-actions { gap: 8px; margin-top: 10px; }
   .hero-btn-main { padding: 8px 14px; font-size: 12px; gap: 6px; }
   .hero-btn-secondary { padding: 8px 12px; font-size: 12px; gap: 5px; }
   .hero-btn-icon { width: 32px; height: 32px; }
-  .spotlight-quote { margin-top: 10px; padding: 8px 10px; }
-  .spotlight-quote-text { font-size: 0.7rem; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
-  .spotlight-quote-char { font-size: 0.65rem; }
-  .spotlight-quote-anime { font-size: 0.6rem; }
   .home-section { margin: 28px 0; }
   .home-section .section-title { margin-bottom: 16px; }
   .title-with-icon { gap: 10px; }
@@ -1059,7 +960,6 @@
   .home-hero-content { padding-top: 44px; }
   .home-hero-content h1 { font-size: clamp(1.1rem, 6vw, 1.5rem); }
   .home-hero-desc { font-size: 11px; }
-  .spotlight-kicker { font-size: 9px; padding: 4px 8px; }
   .hero-pills { gap: 4px; }
   .hero-pill { font-size: 8px; padding: 2px 6px; }
   .hero-btn-main { padding: 7px 12px; font-size: 11px; }
@@ -1094,7 +994,6 @@
   .home-hero-content { padding-top: 36px; }
   .home-hero-content h1 { font-size: clamp(1rem, 5.5vw, 1.3rem); line-height: 1.15; }
   .home-hero-desc { font-size: 10px; -webkit-line-clamp: 1; }
-  .spotlight-kicker { font-size: 8px; padding: 3px 6px; }
   .hero-pill { font-size: 7px; padding: 1px 5px; }
   .hero-btn-main { padding: 6px 10px; font-size: 10px; gap: 4px; }
   .hero-btn-secondary { padding: 6px 8px; font-size: 10px; gap: 3px; }

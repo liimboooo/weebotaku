@@ -86,11 +86,11 @@ export default function AnimePreviewPanel({ anime, onClose, onPlay, onWatchlist,
             </div>
           ) : hasBanner ? (
             <div className="preview-panel-media">
-              <img src={anime.bannerImage || anime.backdrop} alt="" />
+              <img src={anime.bannerImage || anime.backdrop} alt="" role="presentation" />
             </div>
           ) : (
             <div className="preview-panel-media">
-              <img src={anime.img} alt="" style={{ objectFit: "cover" }} />
+              <img src={anime.img} alt={anime?.name || ''} style={{ objectFit: "cover" }} />
             </div>
           )}
           <div className="preview-panel-fade" />

@@ -56,7 +56,8 @@ function AppLayout() {
   const navigate = useNavigate();
   const isAuthPage = location.pathname === "/auth" || location.pathname.startsWith("/auth/sync/");
   const isHome = location.pathname === "/home" || location.pathname === "/";
-  const needsHeaderOffset = !isAuthPage && !isHome;
+  const isInfoPage = location.pathname.match(/^\/anime\/\d+\/info$/);
+  const needsHeaderOffset = !isAuthPage && !isHome && !isInfoPage;
   const token = localStorage.getItem('token');
 
   useEffect(() => {
@@ -84,7 +85,7 @@ function AppLayout() {
 
   return (
     <>
-      {!isAuthPage && <Header isHome={isHome} />}
+      {!isAuthPage && <Header isHome={isHome} transparentHeader={!!isInfoPage} />}
       {!isAuthPage && <Sidebar />}
       <AuthModal />
       <div className={`app-main${needsHeaderOffset ? ' app-main--padded' : ''}`}>
