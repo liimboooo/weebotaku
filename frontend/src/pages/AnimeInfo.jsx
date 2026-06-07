@@ -150,6 +150,7 @@ export default function AnimeInfo() {
               title: ep.title || `Episode ${ep.number}`,
               thumbnail: ep.image || null,
               aired: null,
+              description: ep.description || null,
             })).reverse());
             setEpsLoading(false);
             return;
@@ -169,6 +170,7 @@ export default function AnimeInfo() {
             title: ep.title || `Episode ${ep.episode}`,
             thumbnail: ep.thumbnail || null,
             aired: ep.aired || null,
+            description: ep.description || null,
           })).reverse());
           setEpsLoading(false);
           return;

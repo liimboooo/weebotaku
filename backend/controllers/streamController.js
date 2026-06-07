@@ -152,6 +152,7 @@ exports.getEpisodes = async (req, res) => {
           title: ep.title || `Episode ${ep.number}`,
           id: ep.id,
           image: ep.image || null,
+          description: ep.description || ep.overview || null,
         }));
       }
     }
