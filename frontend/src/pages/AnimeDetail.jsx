@@ -184,11 +184,13 @@ export default function AnimeDetail() {
   const iframeRef = useRef(null);
   const playerStageRef = useRef(null);
   const failedServers = useRef(new Set());
+  const serversRef = useRef(servers);
   const epIndexRef = useRef(epIndex);
   const episodesRef = useRef(episodes);
   const lastHistorySaveRef = useRef(false);
   useEffect(() => { epIndexRef.current = epIndex; }, [epIndex]);
   useEffect(() => { episodesRef.current = episodes; }, [episodes]);
+  useEffect(() => { serversRef.current = servers; }, [servers]);
 
   const toStreamUrl = (srv) => {
     if (!srv) return "";
@@ -596,7 +598,20 @@ export default function AnimeDetail() {
         video.play().catch(err => console.error('[AnimeWch] HLS video play failed:', err));
       });
       hls.on(Hls.Events.ERROR, (_, data) => {
-        if (data.fatal) { hls.destroy(); hlsInstanceRef.current = null; setError("HLS stream failed. Try another source."); }
+        if (!data.fatal) return;
+        hls.destroy();
+        hlsInstanceRef.current = null;
+        const currentUrl = streamUrl;
+        const allServers = serversRef.current;
+        const nextSrv = allServers.find(s => s.url !== currentUrl && !failedServers.current.has(s.url));
+        if (nextSrv) {
+          failedServers.current.add(currentUrl);
+          setStreamUrl(nextSrv.url);
+          const newIdx = allServers.findIndex(s => s.url === nextSrv.url);
+          if (newIdx !== -1) setServerIndex(newIdx);
+        } else {
+          setStreamRetryCount(c => c + 1);
+        }
       });
       hlsInstanceRef.current = hls;
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
@@ -604,6 +619,19 @@ export default function AnimeDetail() {
       video.addEventListener("loadedmetadata", () => {
         if (prevPos > 2) video.currentTime = prevPos;
         video.play().catch(err => console.error('[AnimeWch] Native video play failed:', err));
+      }, { once: true });
+      video.addEventListener("error", () => {
+        const currentUrl = streamUrl;
+        const allServers = serversRef.current;
+        const nextSrv = allServers.find(s => s.url !== currentUrl && !failedServers.current.has(s.url));
+        if (nextSrv) {
+          failedServers.current.add(currentUrl);
+          setStreamUrl(nextSrv.url);
+          const newIdx = allServers.findIndex(s => s.url === nextSrv.url);
+          if (newIdx !== -1) setServerIndex(newIdx);
+        } else {
+          setStreamRetryCount(c => c + 1);
+        }
       }, { once: true });
     }
 
