@@ -2,7 +2,7 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Loader, Play, Star, Tv, Calendar, Clock, Monitor, Film,
-  X, SkipForward, RefreshCw, AlertTriangle, Bell, ChevronDown, ChevronUp,
+  X, RefreshCw, AlertTriangle, Bell, ChevronDown, ChevronUp,
   Share2, Bookmark, Flag, LayoutGrid, List, ArrowUp, ArrowDown, MessageCircle,
   ThumbsUp, ThumbsDown
 } from "lucide-react";
@@ -18,7 +18,7 @@ import { getSocket, joinAnimeRoom, leaveAnimeRoom } from "../services/socket";
 import reportService from "../services/reportService";
 import Comments from "../components/Comments";
 import useDocumentTitle from "../hooks/useDocumentTitle";
-import "./Feeds/AnimeWatch.css";
+import VideoPlayer from "../components/VideoPlayer";
 import "../components/TopTrending.css";
 
 const SETTINGS_KEY = "animewch_settings";
@@ -87,6 +87,14 @@ export default function AnimeDetail() {
   const [likesCount, setLikesCount] = useState(null);
   const [commentsError, setCommentsError] = useState(false);
   const [reportMsg, setReportMsg] = useState(null);
+  const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const [hoveringTimeline, setHoveringTimeline] = useState(false);
+  const [timelineHoverTime, setTimelineHoverTime] = useState(0);
   const hlsVideoRef = useRef(null);
   const hlsInstanceRef = useRef(null);
   const autoNextTimerRef = useRef(null);
@@ -94,6 +102,67 @@ export default function AnimeDetail() {
   const handleSeek = useCallback((seconds) => {
     setSeekTo(seconds);
   }, []);
+
+  function formatTime(s) {
+    if (!s || !isFinite(s)) return "0:00";
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  }
+
+  const togglePlay = () => {
+    const video = hlsVideoRef.current;
+    if (!video) return;
+    video.paused ? video.play() : video.pause();
+  };
+
+  const handleTimelineClick = (e) => {
+    const video = hlsVideoRef.current;
+    if (!video || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    video.currentTime = pct * duration;
+  };
+
+  const handleTimelineHover = (e) => {
+    if (!duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    setTimelineHoverTime(pct * duration);
+  };
+
+  const skipBack = () => {
+    const video = hlsVideoRef.current;
+    if (!video) return;
+    video.currentTime = Math.max(0, video.currentTime - 10);
+  };
+
+  const skipForward = () => {
+    const video = hlsVideoRef.current;
+    if (!video) return;
+    video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 10);
+  };
+
+  const handleVolumeSlider = (e) => {
+    const video = hlsVideoRef.current;
+    if (!video) return;
+    const v = parseFloat(e.target.value);
+    video.volume = v;
+    if (v === 0) video.muted = true;
+    else video.muted = false;
+  };
+
+  const toggleMute = () => {
+    const video = hlsVideoRef.current;
+    if (!video) return;
+    video.muted = !video.muted;
+  };
+
+  const toggleFullscreen = () => {
+    const stage = playerStageRef.current;
+    if (!stage) return;
+    document.fullscreenElement ? document.exitFullscreen() : stage.requestFullscreen();
+  };
 
   const handleReport = useCallback(async () => {
     setReportMsg('Submitting report...');
@@ -113,6 +182,7 @@ export default function AnimeDetail() {
 
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
+  const playerStageRef = useRef(null);
   const failedServers = useRef(new Set());
   const epIndexRef = useRef(epIndex);
   const episodesRef = useRef(episodes);
@@ -411,7 +481,7 @@ export default function AnimeDetail() {
   const episode = episodes[epIndex] || null;
 
   useEffect(() => {
-    if (!episode) return;
+    if (!episode || !watchAnime) return;
     let cancelled = false;
     addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img, 0, anime?.episodes);
     setSeekTo(null);
@@ -482,7 +552,7 @@ export default function AnimeDetail() {
         if (cancelled) return;
         if (urls.length > 0) { setServers(urls); }
         else setError("No video servers found.");
-      } catch { if (!cancelled) setError("Failed to load stream."); }
+      } catch (e) { console.error('[AnimeWch] Stream load error:', e); if (!cancelled) setError("Failed to load stream."); }
       finally { if (!cancelled) setStreamLoading(false); }
     })();
     return () => { cancelled = true; };
@@ -545,6 +615,8 @@ export default function AnimeDetail() {
       const t = video.currentTime;
       const dur = video.duration;
       savedPositionRef.current = t;
+      setCurrentTime(t);
+      if (dur) setDuration(dur);
       const settings = loadSettings();
 
       if (introOutro.intro && t >= introOutro.intro.start && t < introOutro.intro.end) {
@@ -579,6 +651,7 @@ export default function AnimeDetail() {
     };
 
     const onEnded = () => {
+      setPlaying(false);
       addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img, video.duration || 0, anime?.episodes);
       const settings = loadSettings();
       const currentEpIdx = epIndexRef.current;
@@ -600,12 +673,32 @@ export default function AnimeDetail() {
       }
     };
 
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
+    const onVolumeChange = () => {
+      setVolume(video.volume);
+      setMuted(video.muted);
+    };
+    const onLoadedMeta = () => {
+      setDuration(video.duration);
+      setVolume(video.volume);
+      setMuted(video.muted);
+    };
+
     video.addEventListener("timeupdate", onTimeUpdate);
     video.addEventListener("ended", onEnded);
+    video.addEventListener("play", onPlay);
+    video.addEventListener("pause", onPause);
+    video.addEventListener("volumechange", onVolumeChange);
+    video.addEventListener("loadedmetadata", onLoadedMeta);
 
     return () => {
       video.removeEventListener("timeupdate", onTimeUpdate);
       video.removeEventListener("ended", onEnded);
+      video.removeEventListener("play", onPlay);
+      video.removeEventListener("pause", onPause);
+      video.removeEventListener("volumechange", onVolumeChange);
+      video.removeEventListener("loadedmetadata", onLoadedMeta);
       if (autoNextTimerRef.current) { clearInterval(autoNextTimerRef.current); autoNextTimerRef.current = null; }
       if (hlsInstanceRef.current) { hlsInstanceRef.current.destroy(); hlsInstanceRef.current = null; }
     };
@@ -647,6 +740,20 @@ export default function AnimeDetail() {
     }
     setAutoNextCountdown(null);
   }, []);
+
+  const handleToggleLanguage = useCallback(() => {
+    setLanguage(l => {
+      const next = l === 'sub' ? 'dub' : 'sub';
+      try { localStorage.setItem('animewch_last_language', next); } catch (e) { console.error('[AnimeWch] Failed to save language pref:', e); }
+      return next;
+    });
+  }, []);
+
+  const goToNextEpisode = useCallback(() => {
+    cancelAutoNext();
+    setEpIndex(i => i + 1);
+    setSelectedEp(episodes[epIndex + 1]?.episode || (epIndex + 2));
+  }, [cancelAutoNext, epIndex, episodes]);
 
   const handleSpeedChange = useCallback((speed) => {
     setPlaybackSpeed(speed);
@@ -699,6 +806,36 @@ export default function AnimeDetail() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [streamMode, showShortcutsHelp, epIndex, episodes]);
+
+  useEffect(() => {
+    const stage = playerStageRef.current;
+    if (!stage) return;
+    let timer = null;
+    const show = () => {
+      setShowControls(true);
+      stage.style.cursor = "default";
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        setShowControls(false);
+        stage.style.cursor = "none";
+      }, 3000);
+    };
+    const alwaysShow = () => {
+      clearTimeout(timer);
+      setShowControls(true);
+      stage.style.cursor = "default";
+    };
+    stage.addEventListener("mousemove", show);
+    stage.addEventListener("mouseenter", show);
+    stage.addEventListener("mouseleave", alwaysShow);
+    return () => {
+      stage.removeEventListener("mousemove", show);
+      stage.removeEventListener("mouseenter", show);
+      stage.removeEventListener("mouseleave", alwaysShow);
+      clearTimeout(timer);
+      stage.style.cursor = "default";
+    };
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current && episodes[epIndex]) {
@@ -919,7 +1056,7 @@ export default function AnimeDetail() {
           <div className="flex-1 flex flex-col min-w-0">
 
             {/* ─── VIDEO PLAYER ─── */}
-            <div className="ad-player-container sticky z-20 bg-zinc-900 overflow-hidden mt-3 sm:mt-8 mb-3 sm:mb-5 lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] w-full mx-0 sm:rounded-3xl rounded-xl shadow-2xl" style={{ aspectRatio: '16/9', maxHeight: '65vh', top: 'var(--top-nav-h, 64px)' }}>
+            <div ref={playerStageRef} className="ad-player-container sticky z-20 bg-zinc-900 overflow-hidden mt-3 sm:mt-8 mb-3 sm:mb-5 lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] w-full mx-0 sm:rounded-3xl rounded-xl shadow-2xl" style={{ aspectRatio: '16/9', maxHeight: '65vh', top: 'var(--top-nav-h, 64px)' }}>
               {/* loading */}
               {loading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
@@ -943,7 +1080,7 @@ export default function AnimeDetail() {
               )}
               {/* hls video */}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && streamMode === "hls" && (
-                <video ref={hlsVideoRef} key={`hls-${episode?.episode || 0}-${serverIndex}`} className="w-full h-full object-contain" controls autoPlay playsInline />
+                <video ref={hlsVideoRef} key={`hls-${episode?.episode || 0}-${serverIndex}`} className="w-full h-full object-contain" autoPlay playsInline style={{ background: '#000' }} />
               )}
               {/* iframe */}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && streamMode === "iframe" && (
@@ -975,88 +1112,48 @@ export default function AnimeDetail() {
                 </div>
               )}
 
-              {/* skip buttons */}
-              {streamMode === "hls" && showSkipIntro && (
-                <button className="absolute bottom-16 sm:bottom-20 right-2 sm:right-4 z-10 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-amber-500/80 text-white text-[11px] sm:text-xs font-semibold backdrop-blur-sm hover:bg-amber-500 transition-colors shadow-lg" onClick={handleSkipIntro}>
-                  <SkipForward size={12} /> Skip Intro
-                </button>
-              )}
-              {streamMode === "hls" && showSkipOutro && (
-                <button className="absolute bottom-16 sm:bottom-20 right-2 sm:right-4 z-10 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-amber-500/80 text-white text-[11px] sm:text-xs font-semibold backdrop-blur-sm hover:bg-amber-500 transition-colors shadow-lg" onClick={handleSkipOutro}>
-                  <SkipForward size={12} /> {epIndex < episodes.length - 1 ? "Next Episode" : "Skip Outro"}
-                </button>
-              )}
-
-              {/* auto next overlay */}
-              {autoNextCountdown !== null && (
-                <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                  <div className="bg-zinc-900/90 border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center shadow-2xl mx-3 sm:mx-0">
-                    <p className="text-[10px] sm:text-xs text-zinc-400 uppercase tracking-widest mb-2">Next episode in</p>
-                    <div className="text-3xl sm:text-5xl font-bold text-white mb-3 sm:mb-4">{autoNextCountdown}</div>
-                    <div className="flex gap-2 sm:gap-3 justify-center">
-                      <button className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full bg-amber-500 text-white text-[11px] sm:text-sm font-semibold hover:bg-amber-400 transition-colors" onClick={() => { cancelAutoNext(); setEpIndex(i => i + 1); setSelectedEp(episodes[epIndex + 1]?.episode || (epIndex + 2)); }}>
-                        <Play size={12} /> Play Now
-                      </button>
-                      <button className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-full bg-white/10 text-white text-[11px] sm:text-sm font-medium hover:bg-white/20 transition-colors" onClick={cancelAutoNext}>Cancel</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* player controls */}
-              {streamMode === "hls" && !loading && !error && streamUrl && !streamLoading && (
-                <>
-                  <button
-                    className="absolute top-2 sm:top-3 right-2 sm:right-3 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/50 text-white text-[11px] sm:text-sm font-bold backdrop-blur-sm hover:bg-black/70 transition-colors cursor-pointer border-none"
-                    onClick={() => setShowShortcutsHelp(s => !s)}
-                    title="Keyboard shortcuts (press ?)"
-                  >?</button>
-                  <div className="absolute top-2 sm:top-3 left-2 sm:left-3 z-20">
-                    <button className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/50 text-white text-[10px] sm:text-xs font-medium backdrop-blur-sm hover:bg-black/70 transition-colors cursor-pointer border-none" onClick={() => setShowSpeedMenu(p => !p)}>
-                      {playbackSpeed}x
-                    </button>
-                    {showSpeedMenu && (
-                      <div className="absolute top-full left-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl py-1 z-10 min-w-[70px] sm:min-w-[80px]">
-                        {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(s => (
-                          <button key={s} className={`w-full text-left px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs transition-colors ${playbackSpeed === s ? "text-amber-400 bg-amber-500/10" : "text-zinc-400 hover:text-white hover:bg-white/5"}`} onClick={() => handleSpeedChange(s)}>
-                            {s}x
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {/* shortcuts help */}
-              {showShortcutsHelp && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-6" onClick={() => setShowShortcutsHelp(false)}>
-                  <div className="bg-zinc-900/95 border border-white/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-md w-full shadow-2xl mx-2 sm:mx-0" onClick={e => e.stopPropagation()}>
-                    <div className="flex justify-between items-center mb-3 sm:mb-4">
-                      <h3 className="text-sm sm:text-base font-bold text-white tracking-wide">Keyboard Shortcuts</h3>
-                      <button className="text-zinc-400 hover:text-white cursor-pointer bg-transparent border-none p-1" onClick={() => setShowShortcutsHelp(false)}>✕</button>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-1.5 sm:gap-y-2 text-[11px] sm:text-xs">
-                      {[
-                        ['Space / K', 'Play / Pause'],
-                        ['J / ←', 'Back 10s'],
-                        ['L / →', 'Forward 10s'],
-                        ['↑ / ↓', 'Volume'],
-                        ['0-9', 'Jump to %'],
-                        ['F', 'Fullscreen'],
-                        ['M', 'Mute'],
-                        ['N', 'Next episode'],
-                        ['P', 'Previous episode'],
-                        ['?', 'Toggle this help'],
-                      ].map(([k, v]) => (
-                        <div key={k} className="flex justify-between gap-2 sm:gap-3 border-b border-white/5 pb-1 sm:pb-1.5">
-                          <kbd className="bg-white/10 border border-white/20 rounded px-1 sm:px-1.5 py-0.5 font-mono text-[10px] sm:text-[11px] text-white whitespace-nowrap">{k}</kbd>
-                          <span className="text-zinc-400 text-[11px] sm:text-xs">{v}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+              {streamUrl && !loading && !error && !streamLoading && (
+              <VideoPlayer
+                streamMode={streamMode}
+                playing={playing}
+                currentTime={currentTime}
+                duration={duration}
+                volume={volume}
+                muted={muted}
+                showControls={showControls}
+                episode={episode}
+                anime={anime}
+                showSkipIntro={showSkipIntro}
+                showSkipOutro={showSkipOutro}
+                playbackSpeed={playbackSpeed}
+                showSpeedMenu={showSpeedMenu}
+                hoveringTimeline={hoveringTimeline}
+                timelineHoverTime={timelineHoverTime}
+                autoNextCountdown={autoNextCountdown}
+                showShortcutsHelp={showShortcutsHelp}
+                togglePlay={togglePlay}
+                skipBack={skipBack}
+                skipForward={skipForward}
+                handleTimelineClick={handleTimelineClick}
+                handleTimelineHover={handleTimelineHover}
+                setHoveringTimeline={setHoveringTimeline}
+                toggleMute={toggleMute}
+                handleVolumeSlider={handleVolumeSlider}
+                toggleFullscreen={toggleFullscreen}
+                handleSpeedChange={handleSpeedChange}
+                setShowSpeedMenu={setShowSpeedMenu}
+                setShowShortcutsHelp={setShowShortcutsHelp}
+                handleSkipIntro={handleSkipIntro}
+                handleSkipOutro={handleSkipOutro}
+                cancelAutoNext={cancelAutoNext}
+                goToNextEpisode={goToNextEpisode}
+                formatTime={formatTime}
+                epIndex={epIndex}
+                episodesLength={episodes.length}
+                language={language}
+                onToggleLanguage={handleToggleLanguage}
+                servers={servers}
+              />
               )}
             </div>
 
