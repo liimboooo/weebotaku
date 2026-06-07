@@ -632,7 +632,7 @@ export default function AnimeInfo() {
                     <img src={ch.image || ch.img || posterImg} alt={ch.name} className="w-14 sm:w-20 h-14 sm:h-20 rounded-full object-cover mb-2 sm:mb-3 ring-2 ring-neutral-800" loading="lazy" />
                     <span className="text-white font-bold text-[11px] sm:text-sm mb-0.5 sm:mb-1">{ch.name}</span>
                     <span className="text-neutral-500 text-[10px] sm:text-xs font-semibold">{ch.role || ch.title || "Character"}</span>
-                    {ch.voiceActor && <span className="text-neutral-400 text-[9px] sm:text-[10px] uppercase tracking-wider mt-1 sm:mt-2 line-clamp-1">{ch.voiceActor}</span>}
+                    {ch.voiceActor?.name && <span className="text-neutral-400 text-[9px] sm:text-[10px] uppercase tracking-wider mt-1 sm:mt-2 line-clamp-1">{ch.voiceActor.name}</span>}
                   </div>
                 ))}
               </div>
