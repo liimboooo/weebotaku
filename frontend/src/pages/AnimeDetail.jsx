@@ -113,7 +113,7 @@ export default function AnimeDetail() {
   const togglePlay = () => {
     const video = hlsVideoRef.current;
     if (!video) return;
-    video.paused ? video.play() : video.pause();
+    video.paused ? video.play().catch(() => {}) : video.pause();
   };
 
   const handleTimelineClick = (e) => {
@@ -813,7 +813,7 @@ export default function AnimeDetail() {
       if (!video) return;
       switch (e.key) {
         case ' ':
-        case 'k': e.preventDefault(); video.paused ? video.play() : video.pause(); break;
+        case 'k': e.preventDefault(); video.paused ? video.play().catch(() => {}) : video.pause(); break;
         case 'j': e.preventDefault(); video.currentTime = Math.max(0, video.currentTime - 10); break;
         case 'l': e.preventDefault(); video.currentTime = Math.min(video.duration, video.currentTime + 10); break;
         case 'ArrowRight': e.preventDefault(); video.currentTime = Math.min(video.duration, video.currentTime + 10); break;
