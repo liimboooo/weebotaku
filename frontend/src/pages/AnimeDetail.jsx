@@ -540,10 +540,11 @@ export default function AnimeDetail() {
         }
 
         if (cancelled) return;
-        if (hlsServers.length > 0) {
+        const hlsServersFiltered = hlsServers.filter(s => !failedServers.current.has(s.url));
+        if (hlsServersFiltered.length > 0) {
           setStreamMode("hls");
           setServers(hlsServers);
-          const preferred = hlsServers.find(s => s.type === language) || hlsServers[0];
+          const preferred = hlsServersFiltered.find(s => s.type === language) || hlsServersFiltered[0];
           setStreamUrl(preferred.url);
           setStreamLoading(false);
           return;
