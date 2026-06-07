@@ -1181,6 +1181,8 @@ export default function AnimeDetail() {
                 episodesLength={episodes.length}
                 language={language}
                 onToggleLanguage={handleToggleLanguage}
+                serverIndex={serverIndex}
+                onSwitchServer={switchServerFn}
                 servers={servers}
               />
               )}

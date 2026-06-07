@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize2, ChevronsLeft, ChevronsRight, SkipForward, Settings } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Maximize2, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight, SkipForward, Settings } from "lucide-react";
 
 export default function VideoPlayer({
   streamMode,
@@ -38,6 +38,8 @@ export default function VideoPlayer({
   episodesLength,
   language,
   onToggleLanguage,
+  serverIndex,
+  onSwitchServer,
   servers,
   children,
 }) {
@@ -45,6 +47,8 @@ export default function VideoPlayer({
   const isHls = streamMode === "hls";
   const [showSettings, setShowSettings] = useState(false);
   const langs = servers ? [...new Set(servers.map(s => s.type))] : [];
+  const langServers = servers ? servers.filter(s => s.type === language) : [];
+  const hasMultipleServers = langServers.length > 1;
 
   return (
     <div className="absolute inset-0 group">
@@ -174,6 +178,47 @@ export default function VideoPlayer({
                   />
                 </div>
               </div>
+
+              {langs.length > 1 && (
+                <div className="flex items-center bg-black/50 backdrop-blur-sm rounded-full overflow-hidden border border-white/10">
+                  {langs.map(l => (
+                    <button
+                      key={l}
+                      disabled={!isHls}
+                      onClick={isHls ? onToggleLanguage : undefined}
+                      className={`px-2.5 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                        language === l
+                          ? "bg-amber-500/20 text-amber-400"
+                          : "text-white/60 hover:text-white hover:bg-white/10"
+                      }`}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {hasMultipleServers && (
+                <div className="flex items-center gap-0.5 bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-0.5 sm:px-2 sm:py-1 border border-white/5">
+                  <button
+                    disabled={!isHls || serverIndex <= 0}
+                    onClick={isHls ? () => onSwitchServer(serverIndex - 1) : undefined}
+                    className="p-0.5 sm:p-1 rounded text-white/60 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft size={10} className="sm:w-[12px] sm:h-[12px]" />
+                  </button>
+                  <span className="text-[10px] sm:text-[11px] text-white/80 font-medium min-w-[18px] sm:min-w-[22px] text-center select-none">
+                    {serverIndex + 1}/{langServers.length}
+                  </span>
+                  <button
+                    disabled={!isHls || serverIndex >= langServers.length - 1}
+                    onClick={isHls ? () => onSwitchServer(serverIndex + 1) : undefined}
+                    className="p-0.5 sm:p-1 rounded text-white/60 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight size={10} className="sm:w-[12px] sm:h-[12px]" />
+                  </button>
+                </div>
+              )}
 
               {goToNextEpisode && (
                 <button
