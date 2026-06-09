@@ -39,14 +39,17 @@ const BROADCAST_NOTIFS = [
   },
 ];
 
+const SUPPORTED_TYPES = new Set([
+  'episode', 'comment_reply', 'comment_like', 'review_like',
+  'system_update', 'new_feature', 'recommendation',
+]);
+
 const NOTIF_CATEGORIES = {
   All: { label: 'All', types: null },
   Replies: { label: 'Replies', types: ['comment_reply'] },
   Likes: { label: 'Likes', types: ['comment_like', 'review_like'] },
-  Friends: { label: 'Friends', types: [] },
-  Social: { label: 'Social', types: ['room_invite', 'room_activity', 'room_ended', 'recommendation'] },
-  Updates: { label: 'Updates', types: ['system_update', 'new_feature'] },
-  News: { label: 'News', types: ['trailer', 'trending', 'episode', 'info'] },
+  Recs: { label: 'Recs', types: ['recommendation'] },
+  Updates: { label: 'Updates', types: ['system_update', 'new_feature', 'episode'] },
 };
 
 export function getCategoryKeys() {
@@ -65,18 +68,10 @@ export function getNotificationsByCategory(notifs, categoryKey) {
 }
 
 const NOTIF_TYPE_SETTING_MAP = {
-  trailer: 'newsNotifications',
-  trending: 'newsNotifications',
-  episode: ['newsNotifications', 'newEpisodeAlerts', 'newEpisodes'],
-  comment_reply: ['communityActivity', 'commentReplies'],
+  episode: 'newEpisodes',
+  comment_reply: 'communityActivity',
   comment_like: 'communityActivity',
   review_like: 'communityActivity',
-  friend_request: 'friendRequests',
-  friend_accepted: 'friendsActivity',
-  friend_online: 'friendsActivity',
-  room_invite: 'friendsActivity',
-  room_activity: 'friendsActivity',
-  room_ended: 'friendsActivity',
   system_update: 'systemUpdates',
   new_feature: 'newFeatures',
   recommendation: ['weeklyRecs', 'animeRecs'],
@@ -212,14 +207,14 @@ export function invalidateCache() {
 
 export function getNotifications(settings) {
   const all = getCachedMerged();
-  if (!settings) return all;
-  return all.filter(n => isNotifTypeEnabled(n, settings));
+  if (!settings) return all.filter(n => SUPPORTED_TYPES.has(n.type));
+  return all.filter(n => SUPPORTED_TYPES.has(n.type) && isNotifTypeEnabled(n, settings));
 }
 
 export function getUnreadCount(settings) {
   const all = getCachedMerged();
-  if (!settings) return all.filter(n => !n.read).length;
-  return all.filter(n => !n.read && isNotifTypeEnabled(n, settings)).length;
+  if (!settings) return all.filter(n => !n.read && SUPPORTED_TYPES.has(n.type)).length;
+  return all.filter(n => !n.read && SUPPORTED_TYPES.has(n.type) && isNotifTypeEnabled(n, settings)).length;
 }
 
 export function addNotification({ title, body, type = "info", link = null }) {

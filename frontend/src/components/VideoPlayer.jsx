@@ -40,15 +40,23 @@ export default function VideoPlayer({
   onToggleLanguage,
   serverIndex,
   onSwitchServer,
+  onSelectServer,
+  autoNext,
+  onToggleAutoNext,
+  hlsLevels,
+  currentQuality,
+  onQualityChange,
   servers,
   children,
 }) {
   const progress = duration ? (currentTime / duration) * 100 : 0;
   const isHls = streamMode === "hls";
   const [showSettings, setShowSettings] = useState(false);
+  const [settingsView, setSettingsView] = useState('main');
   const langs = servers ? [...new Set(servers.map(s => s.type))] : [];
   const langServers = servers ? servers.filter(s => s.type === language) : [];
   const hasMultipleServers = langServers.length > 1;
+  const activeServer = servers?.find(s => s.type === language && servers.filter(x => x.type === language).indexOf(s) === serverIndex);
 
   return (
     <div className="absolute inset-0 group">
@@ -179,47 +187,6 @@ export default function VideoPlayer({
                 </div>
               </div>
 
-              {langs.length > 1 && (
-                <div className="flex items-center bg-black/50 backdrop-blur-sm rounded-full overflow-hidden border border-white/10">
-                  {langs.map(l => (
-                    <button
-                      key={l}
-                      disabled={!isHls}
-                      onClick={isHls ? onToggleLanguage : undefined}
-                      className={`px-2.5 py-1 sm:px-3 sm:py-1.5 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
-                        language === l
-                          ? "bg-amber-500/20 text-amber-400"
-                          : "text-white/60 hover:text-white hover:bg-white/10"
-                      }`}
-                    >
-                      {l}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {hasMultipleServers && (
-                <div className="flex items-center gap-0.5 bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-0.5 sm:px-2 sm:py-1 border border-white/5">
-                  <button
-                    disabled={!isHls || serverIndex <= 0}
-                    onClick={isHls ? () => onSwitchServer(serverIndex - 1) : undefined}
-                    className="p-0.5 sm:p-1 rounded text-white/60 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft size={10} className="sm:w-[12px] sm:h-[12px]" />
-                  </button>
-                  <span className="text-[10px] sm:text-[11px] text-white/80 font-medium min-w-[18px] sm:min-w-[22px] text-center select-none">
-                    {serverIndex + 1}/{langServers.length}
-                  </span>
-                  <button
-                    disabled={!isHls || serverIndex >= langServers.length - 1}
-                    onClick={isHls ? () => onSwitchServer(serverIndex + 1) : undefined}
-                    className="p-0.5 sm:p-1 rounded text-white/60 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight size={10} className="sm:w-[12px] sm:h-[12px]" />
-                  </button>
-                </div>
-              )}
-
               {goToNextEpisode && (
                 <button
                   onClick={goToNextEpisode}
@@ -240,49 +207,160 @@ export default function VideoPlayer({
                 </button>
                 {showSettings && (
                   <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowSettings(false)} />
-                    <div className="absolute bottom-full right-0 mb-2 bg-zinc-900/95 backdrop-blur-md border border-white/10 rounded-xl py-2 shadow-2xl z-50 min-w-[140px]">
-                      <div className="px-3 pb-1.5 mb-1 border-b border-white/10">
-                        <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Settings</span>
-                      </div>
-                      {langs.length > 1 && (
-                        <div className="px-3 py-1.5">
-                          <div className="text-[10px] text-zinc-500 mb-1 font-medium uppercase tracking-wider">Language</div>
-                          <div className="flex gap-1">
-                            {langs.map(l => (
+                    <div className="fixed inset-0 z-40" onClick={() => { setShowSettings(false); setSettingsView('main'); }} />
+                    <div className="absolute bottom-full right-0 mb-2 bg-zinc-900/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden min-w-[220px]">
+                      {settingsView === 'main' && (
+                        <div>
+                          <div className="px-3 py-2 border-b border-white/10">
+                            <span className="text-[11px] font-semibold text-zinc-300">Settings</span>
+                          </div>
+
+                          {servers && servers.length > 0 && (
+                            <button
+                              onClick={() => setSettingsView('source')}
+                              className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/5 transition-colors"
+                            >
+                              <span className="text-[12px] text-white">Language</span>
+                              <span className="text-[11px] text-zinc-400 flex items-center gap-1">
+                                {activeServer?.label || activeServer?.type || 'N/A'}
+                                <ChevronRight size={12} />
+                              </span>
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => setSettingsView('speed')}
+                            className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/5 transition-colors"
+                          >
+                            <span className="text-[12px] text-white">Speed</span>
+                            <span className="text-[11px] text-zinc-400 flex items-center gap-1">
+                              {playbackSpeed}x
+                              <ChevronRight size={12} />
+                            </span>
+                          </button>
+
+                          {hlsLevels.length > 0 && (
+                            <button
+                              onClick={() => setSettingsView('quality')}
+                              className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/5 transition-colors"
+                            >
+                              <span className="text-[12px] text-white">Quality</span>
+                              <span className="text-[11px] text-zinc-400 flex items-center gap-1">
+                                {currentQuality === -1 ? 'Auto' : (hlsLevels.find(l => l.index === currentQuality)?.name || `${currentQuality}`)}
+                                <ChevronRight size={12} />
+                              </span>
+                            </button>
+                          )}
+
+                          <div className="border-t border-white/5 my-1" />
+
+                          <button
+                            onClick={onToggleAutoNext}
+                            className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/5 transition-colors"
+                          >
+                            <span className="text-[12px] text-white">Auto next episode</span>
+                            <span className={`text-[11px] font-medium ${autoNext ? 'text-amber-400' : 'text-zinc-500'}`}>
+                              {autoNext ? 'On' : 'Off'}
+                            </span>
+                          </button>
+                        </div>
+                      )}
+
+                      {settingsView === 'source' && (
+                        <div>
+                          <button
+                            onClick={() => setSettingsView('main')}
+                            className="w-full flex items-center gap-2 px-3 py-2 border-b border-white/10 hover:bg-white/5 transition-colors"
+                          >
+                            <ChevronLeft size={14} />
+                            <span className="text-[11px] font-semibold text-zinc-300">Language</span>
+                          </button>
+                          <div className="max-h-[200px] overflow-y-auto">
+                            {servers.map((srv, i) => {
+                              const isActive = language === srv.type && servers.filter(s => s.type === srv.type).findIndex(s => s.url === srv.url) === serverIndex;
+                              return (
+                                <button
+                                  key={`${srv.url}-${i}`}
+                                  onClick={() => { onSelectServer(srv); setShowSettings(false); setSettingsView('main'); }}
+                                  className={`w-full flex items-center gap-2.5 px-3 py-2 transition-colors ${
+                                    isActive ? 'bg-amber-500/10' : 'hover:bg-white/5'
+                                  }`}
+                                >
+                                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? 'bg-amber-400' : 'bg-white/20'}`} />
+                                  <span className="text-[12px] text-white truncate">{srv.label || 'Server'}</span>
+                                  <span className="text-[10px] uppercase text-zinc-500 ml-auto flex-shrink-0">{srv.type}</span>
+                                  {isActive && <span className="text-[10px] text-amber-400 font-medium">Active</span>}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {settingsView === 'speed' && (
+                        <div>
+                          <button
+                            onClick={() => setSettingsView('main')}
+                            className="w-full flex items-center gap-2 px-3 py-2 border-b border-white/10 hover:bg-white/5 transition-colors"
+                          >
+                            <ChevronLeft size={14} />
+                            <span className="text-[11px] font-semibold text-zinc-300">Speed</span>
+                          </button>
+                          <div className="grid grid-cols-4 gap-1 p-2">
+                            {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(s => (
                               <button
-                                key={l}
-                                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors ${
-                                  language === l
-                                    ? "bg-amber-500/20 text-amber-400"
-                                    : "text-white/70 hover:text-white hover:bg-white/10"
+                                key={s}
+                                onClick={() => { handleSpeedChange(s); setSettingsView('main'); }}
+                                className={`px-2 py-1.5 rounded-md text-[11px] font-medium transition-colors ${
+                                  playbackSpeed === s
+                                    ? 'bg-amber-500/20 text-amber-400 ring-1 ring-amber-500/30'
+                                    : 'text-white/70 hover:text-white hover:bg-white/10'
                                 }`}
-                                onClick={() => { if (l !== language) onToggleLanguage(); setShowSettings(false); }}
                               >
-                                {l === "sub" ? "Sub" : l === "dub" ? "Dub" : l}
+                                {s}x
                               </button>
                             ))}
                           </div>
                         </div>
                       )}
-                      <div className="px-3 py-1.5">
-                        <div className="text-[10px] text-zinc-500 mb-1 font-medium uppercase tracking-wider">Speed</div>
-                        <div className="flex flex-wrap gap-1">
-                          {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(s => (
+
+                      {settingsView === 'quality' && hlsLevels.length > 0 && (
+                        <div>
+                          <button
+                            onClick={() => setSettingsView('main')}
+                            className="w-full flex items-center gap-2 px-3 py-2 border-b border-white/10 hover:bg-white/5 transition-colors"
+                          >
+                            <ChevronLeft size={14} />
+                            <span className="text-[11px] font-semibold text-zinc-300">Quality</span>
+                          </button>
+                          <div>
                             <button
-                              key={s}
-                              className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors ${
-                                playbackSpeed === s
-                                  ? "bg-amber-500/20 text-amber-400"
-                                  : "text-white/70 hover:text-white hover:bg-white/10"
+                              onClick={() => { onQualityChange(-1); setSettingsView('main'); }}
+                              className={`w-full flex items-center gap-2.5 px-3 py-2 transition-colors ${
+                                currentQuality === -1 ? 'bg-amber-500/10' : 'hover:bg-white/5'
                               }`}
-                              onClick={() => { handleSpeedChange(s); setShowSettings(false); }}
                             >
-                              {s}x
+                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${currentQuality === -1 ? 'bg-amber-400' : 'bg-white/20'}`} />
+                              <span className="text-[12px] text-white">Auto</span>
+                              {currentQuality === -1 && <span className="text-[10px] text-amber-400 ml-auto font-medium">Active</span>}
                             </button>
-                          ))}
+                            {hlsLevels.map(l => (
+                              <button
+                                key={l.index}
+                                onClick={() => { onQualityChange(l.index); setSettingsView('main'); }}
+                                className={`w-full flex items-center gap-2.5 px-3 py-2 transition-colors ${
+                                  currentQuality === l.index ? 'bg-amber-500/10' : 'hover:bg-white/5'
+                                }`}
+                              >
+                                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${currentQuality === l.index ? 'bg-amber-400' : 'bg-white/20'}`} />
+                                <span className="text-[12px] text-white">{l.name}</span>
+                                <span className="text-[10px] text-zinc-500 ml-auto">{l.bitrate ? `${(l.bitrate / 1000).toFixed(0)} kbps` : ''}</span>
+                                {currentQuality === l.index && <span className="text-[10px] text-amber-400 font-medium">Active</span>}
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </>
                 )}

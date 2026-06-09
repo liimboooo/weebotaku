@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, BellOff, LogIn, Menu, Search, Star, TrendingUp } from 'lucide-react';
+import { Bell, BellOff, LogIn, Menu, Search, Star, TrendingUp, User } from 'lucide-react';
 import { fetchSearchAnime } from '../services/anilistApi';
 import SpotlightSearch from './SpotlightSearch';
 import authService from '../services/authService';
+import settingsService from '../services/settingsService';
+import { useAuthModal } from '../contexts/AuthModalContext';
 import {
   getNotifications,
   getUnreadCount,
@@ -32,6 +34,7 @@ function formatTime(ts) {
 
 export default function Header({ isHome = false, transparentHeader = false }) {
   const navigate = useNavigate();
+  const { openAuth } = useAuthModal();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchPopout, setShowSearchPopout] = useState(false);
@@ -42,6 +45,8 @@ export default function Header({ isHome = false, transparentHeader = false }) {
   const [isLoggedIn, setIsLoggedIn] = useState(authService.isLoggedIn());
   const [notifs, setNotifs] = useState([]);
   const [unread, setUnread] = useState(0);
+  const [notifSettings, setNotifSettings] = useState(null);
+  const [userAvatar, setUserAvatar] = useState('');
   const [notifCategory, setNotifCategory] = useState('All');
   const notifCatKeys = getCategoryKeys();
   const filteredNotifs = getNotificationsByCategory(notifs, notifCategory);
@@ -53,9 +58,9 @@ export default function Header({ isHome = false, transparentHeader = false }) {
   const debounceRef = useRef(null);
 
   const refreshNotifs = useCallback(() => {
-    setNotifs(getNotifications());
-    setUnread(getUnreadCount());
-  }, []);
+    setNotifs(getNotifications(notifSettings));
+    setUnread(getUnreadCount(notifSettings));
+  }, [notifSettings]);
 
   useEffect(() => {
     let lastY = window.scrollY;
@@ -133,20 +138,40 @@ export default function Header({ isHome = false, transparentHeader = false }) {
   }, []);
 
   useEffect(() => {
+    settingsService.load().then(s => setNotifSettings(s));
+    const user = authService.getCurrentUser();
+    setUserAvatar(user?.avatar || '');
+  }, []);
+
+  useEffect(() => {
     refreshNotifs();
     const onUpdate = () => refreshNotifs();
-    const onLogout = () => setIsLoggedIn(false);
-    const onLogin = () => setIsLoggedIn(authService.isLoggedIn());
+    const onLogout = () => { setIsLoggedIn(false); setNotifSettings(null); setUserAvatar(''); };
+    const onLogin = () => {
+      setIsLoggedIn(authService.isLoggedIn());
+      settingsService.load().then(s => setNotifSettings(s));
+      const user = authService.getCurrentUser();
+      setUserAvatar(user?.avatar || '');
+    };
+    const onAvatarUpdate = () => {
+      const user = authService.getCurrentUser();
+      setUserAvatar(user?.avatar || '');
+    };
     const onSocketNotif = (e) => { handleSocketNotification(e.detail); refreshNotifs(); };
+    const onSettingsChanged = () => { settingsService.load().then(s => setNotifSettings(s)); };
     window.addEventListener('notification-added', onUpdate);
     window.addEventListener('server-notification', onSocketNotif);
     window.addEventListener('auth-logout', onLogout);
     window.addEventListener('auth-login', onLogin);
+    window.addEventListener('profile-avatar-updated', onAvatarUpdate);
+    window.addEventListener('settings-changed', onSettingsChanged);
     return () => {
       window.removeEventListener('notification-added', onUpdate);
       window.removeEventListener('server-notification', onSocketNotif);
       window.removeEventListener('auth-logout', onLogout);
       window.removeEventListener('auth-login', onLogin);
+      window.removeEventListener('profile-avatar-updated', onAvatarUpdate);
+      window.removeEventListener('settings-changed', onSettingsChanged);
     };
   }, [refreshNotifs]);
 
@@ -283,12 +308,20 @@ export default function Header({ isHome = false, transparentHeader = false }) {
 
           {/* Login CTA OR Notification bell */}
           {!isLoggedIn ? (
-            <button className="top-nav-signin" onClick={() => navigate('/auth')} aria-label="Sign in">
+            <button className="top-nav-signin" onClick={() => openAuth('login')} aria-label="Sign in">
               <LogIn size={13} strokeWidth={2} />
               <span>Sign in</span>
             </button>
           ) : (
-            <div className="top-nav-notif-wrap">
+            <>
+              <button className="top-nav-profile" onClick={() => navigate('/profile')} aria-label="Profile">
+                {userAvatar ? (
+                  <img src={userAvatar} alt="" className="top-nav-avatar" />
+                ) : (
+                  <User size={15} strokeWidth={1.75} />
+                )}
+              </button>
+              <div className="top-nav-notif-wrap">
               <button
                 ref={notifBtnRef}
                 className={`top-nav-notif${showNotifPopout ? ' is-open' : ''}`}
@@ -373,6 +406,7 @@ export default function Header({ isHome = false, transparentHeader = false }) {
                 </div>
               )}
             </div>
+            </>
           )}
         </div>
       </nav>

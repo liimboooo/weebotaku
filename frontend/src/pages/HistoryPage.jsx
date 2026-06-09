@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthModal } from "../contexts/AuthModalContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock, Trash2, Play, X, Compass, Timer,
@@ -77,6 +78,7 @@ const rowVariants = {
 export default function HistoryPage() {
   useDocumentTitle("Watch History");
   const navigate = useNavigate();
+  const { openAuth } = useAuthModal();
   const prefetch  = usePrefetchAnime();
   const [history, setHistory]       = useState([]);
   const [search,  setSearch]        = useState("");
@@ -200,7 +202,7 @@ export default function HistoryPage() {
               <span>History is saved locally. Sign in to sync across devices.</span>
               <button
                 className="hp-nudge-btn"
-                onClick={() => navigate("/auth?next=/history")}
+                onClick={() => openAuth('login', '/history')}
               >
                 Sign In
               </button>

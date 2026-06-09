@@ -16,6 +16,7 @@ import commentService from "../services/commentService";
 import authService from "../services/authService";
 import { getSocket, joinAnimeRoom, leaveAnimeRoom } from "../services/socket";
 import reportService from "../services/reportService";
+import settingsService from "../services/settingsService";
 import Comments from "../components/Comments";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import VideoPlayer from "../components/VideoPlayer";
@@ -76,13 +77,17 @@ export default function AnimeDetail() {
   const [showSkipIntro, setShowSkipIntro] = useState(false);
   const [showSkipOutro, setShowSkipOutro] = useState(false);
   const [autoNextCountdown, setAutoNextCountdown] = useState(null);
+  const [autoNext, setAutoNext] = useState(() => loadSettings().autoNext !== false);
   const [playbackSpeed, setPlaybackSpeed] = useState(() => loadSettings().playbackSpeed || 1);
+  const [hlsLevels, setHlsLevels] = useState([]);
+  const [currentQuality, setCurrentQuality] = useState(-1);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [showMoreActions, setShowMoreActions] = useState(false);
   const [showMobileComments, setShowMobileComments] = useState(false);
   const [showMobileSource, setShowMobileSource] = useState(false);
   const [showServerSelector, setShowServerSelector] = useState(false);
+
   const [liked, setLiked] = useState(null);
   const [likesCount, setLikesCount] = useState(null);
   const [commentsError, setCommentsError] = useState(false);
@@ -187,10 +192,12 @@ export default function AnimeDetail() {
   const serversRef = useRef(servers);
   const epIndexRef = useRef(epIndex);
   const episodesRef = useRef(episodes);
+  const autoNextRef = useRef(autoNext);
   const lastHistorySaveRef = useRef(false);
   useEffect(() => { epIndexRef.current = epIndex; }, [epIndex]);
   useEffect(() => { episodesRef.current = episodes; }, [episodes]);
   useEffect(() => { serversRef.current = servers; }, [servers]);
+  useEffect(() => { autoNextRef.current = autoNext; }, [autoNext]);
 
   const toStreamUrl = (srv) => {
     if (!srv) return "";
@@ -206,30 +213,41 @@ export default function AnimeDetail() {
 
   const currentUser = authService.getCurrentUser();
   const currentUsername = currentUser?.username || localStorage.getItem('username') || 'Guest';
+  const currentAvatar = currentUser?.avatar || localStorage.getItem('avatar') || '';
 
-  const mapComment = useCallback((c) => ({
+  const getCommentUser = (u) => {
+    if (!u) return { username: 'Unknown', avatar: '', role: 'user' };
+    if (typeof u === 'object') return { username: u.username || 'Unknown', avatar: u.avatar || '', role: u.role || 'user' };
+    return { username: 'Unknown', avatar: '', role: 'user' };
+  };
+
+  const mapComment = useCallback((c) => {
+    const u = getCommentUser(c.user);
+    return {
     id: c._id,
-    user: c.user?.username || 'Unknown',
-    avatar: c.user?.avatar || '',
-    role: c.user?.role || 'user',
+    user: u.username,
+    avatar: u.avatar,
+    role: u.role,
     text: c.content,
     time: new Date(c.createdAt).getTime().toString(),
     likes: c.likes?.length || 0,
     dislikes: c.dislikes?.length || 0,
-    replies: (c.replies || []).map(r => ({
+    replies: (c.replies || []).map(r => {
+      const ru = getCommentUser(r.user);
+      return {
       id: r._id,
-      user: r.user?.username || 'Unknown',
-      avatar: r.user?.avatar || '',
-      role: r.user?.role || 'user',
+      user: ru.username,
+      avatar: ru.avatar,
+      role: ru.role,
       text: r.content,
       time: new Date(r.createdAt).getTime().toString(),
       likes: r.likes?.length || 0,
       dislikes: r.dislikes?.length || 0,
       replies: [],
-    })),
+    }; }),
     pinned: c.pinned || false,
     hasSpoiler: c.isSpoiler || false,
-  }), []);
+  }; }, []);
 
   useEffect(() => {
     setCommentsLoading(true);
@@ -569,6 +587,8 @@ export default function AnimeDetail() {
         setServerIndex(0);
         setStreamUrl(streamMode === "hls" ? ls[0].url : toStreamUrl(ls[0]));
         setLangKey(k => k + 1);
+      } else {
+        setStreamRetryCount(c => c + 1);
       }
     }
   }, [servers, language, streamMode]);
@@ -594,7 +614,16 @@ export default function AnimeDetail() {
       hls.loadSource(streamUrl);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
-        if (data.levels.length > 1) hls.currentLevel = data.levels.length - 1;
+        setHlsLevels(data.levels.map((l, i) => ({
+          index: i, height: l.height, width: l.width, bitrate: l.bitrate,
+          name: l.name || (l.height ? `${l.height}p` : `Quality ${i}`),
+        })));
+        if (currentQuality >= 0 && currentQuality < data.levels.length) {
+          hls.currentLevel = currentQuality;
+        } else if (data.levels.length > 1) {
+          hls.currentLevel = data.levels.length - 1;
+          setCurrentQuality(data.levels.length - 1);
+        }
         if (prevPos > 2) video.currentTime = prevPos;
         video.play().catch(err => console.error('[AnimeWch] HLS video play failed:', err));
       });
@@ -682,23 +711,11 @@ export default function AnimeDetail() {
     const onEnded = () => {
       setPlaying(false);
       addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img, video.duration || 0, anime?.episodes);
-      const settings = loadSettings();
       const currentEpIdx = epIndexRef.current;
       const currentEps = episodesRef.current;
-      if (settings.autoNext !== false && currentEpIdx < currentEps.length - 1) {
-        setAutoNextCountdown(5);
-        let count = 5;
-        autoNextTimerRef.current = setInterval(() => {
-          count--;
-          setAutoNextCountdown(count);
-          if (count <= 0) {
-            clearInterval(autoNextTimerRef.current);
-            autoNextTimerRef.current = null;
-            setAutoNextCountdown(null);
-            setEpIndex(i => i + 1);
-            setSelectedEp(currentEps[currentEpIdx + 1]?.episode || (currentEpIdx + 2));
-          }
-        }, 1000);
+      if (autoNextRef.current && currentEpIdx < currentEps.length - 1) {
+        setEpIndex(i => i + 1);
+        setSelectedEp(currentEps[currentEpIdx + 1]?.episode || (currentEpIdx + 2));
       }
     };
 
@@ -749,8 +766,7 @@ export default function AnimeDetail() {
   }, [introOutro.intro]);
 
   const handleSkipOutro = useCallback(() => {
-    const settings = loadSettings();
-    if (settings.autoNext !== false && epIndex < episodes.length - 1) {
+    if (autoNext && epIndex < episodes.length - 1) {
       setEpIndex(i => i + 1);
       setSelectedEp(episodes[epIndex + 1]?.episode || (epIndex + 2));
     } else {
@@ -760,7 +776,7 @@ export default function AnimeDetail() {
         setShowSkipOutro(false);
       }
     }
-  }, [introOutro.outro, epIndex, episodes]);
+  }, [autoNext, introOutro.outro, epIndex, episodes]);
 
   const cancelAutoNext = useCallback(() => {
     if (autoNextTimerRef.current) {
@@ -790,11 +806,34 @@ export default function AnimeDetail() {
     const video = hlsVideoRef.current;
     if (video) video.playbackRate = speed;
     try {
-      const s = loadSettings();
+      const s = JSON.parse(localStorage.getItem("animewch_settings") || "{}");
       s.playbackSpeed = speed;
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+      localStorage.setItem("animewch_settings", JSON.stringify(s));
+      settingsService.save(s);
     } catch (e) { console.error('[AnimeWch] Failed to save settings:', e); }
   }, []);
+
+  const handleToggleAutoNext = useCallback(() => {
+    setAutoNext(p => {
+      const next = !p;
+      try {
+        const s = JSON.parse(localStorage.getItem("animewch_settings") || "{}");
+        s.autoNext = next;
+        localStorage.setItem("animewch_settings", JSON.stringify(s));
+        settingsService.save(s);
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const handleQualityChange = useCallback((levelIndex) => {
+    setCurrentQuality(levelIndex);
+    const hls = hlsInstanceRef.current;
+    if (hls) hls.currentLevel = levelIndex;
+  }, []);
+
+  const qualityRef = useRef(currentQuality);
+  useEffect(() => { qualityRef.current = currentQuality; }, [currentQuality]);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -898,6 +937,19 @@ export default function AnimeDetail() {
       setStreamUrl(toStreamUrl(srv));
     }
   };
+
+  const handleSelectServer = useCallback((srv) => {
+    const ls = servers.filter(s => s.type === srv.type);
+    const idx = ls.findIndex(s => s.url === srv.url);
+    if (idx !== -1) {
+      setLanguage(srv.type);
+      setServerIndex(idx);
+      setIframeError(false);
+      failedServers.current = new Set();
+      setStreamUrl(streamMode === "hls" ? srv.url : toStreamUrl(srv));
+      try { localStorage.setItem('animewch_last_language', srv.type); } catch {}
+    }
+  }, [servers, streamMode]);
 
   const tryNextServer = () => {
     const nextIdx = serverIndex + 1;
@@ -1183,6 +1235,12 @@ export default function AnimeDetail() {
                 onToggleLanguage={handleToggleLanguage}
                 serverIndex={serverIndex}
                 onSwitchServer={switchServerFn}
+                onSelectServer={handleSelectServer}
+                autoNext={autoNext}
+                onToggleAutoNext={handleToggleAutoNext}
+                hlsLevels={hlsLevels}
+                currentQuality={currentQuality}
+                onQualityChange={handleQualityChange}
                 servers={servers}
               />
               )}
@@ -1375,6 +1433,7 @@ export default function AnimeDetail() {
                     comments={comments}
                     setComments={setComments}
                     currentUser={currentUsername}
+                    currentAvatar={currentAvatar}
                     isLoggedIn={authService.isLoggedIn()}
                     onSeek={handleSeek}
                     onAdd={handleAddComment}

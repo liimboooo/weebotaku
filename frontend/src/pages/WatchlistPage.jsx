@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthModal } from "../contexts/AuthModalContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Play, X, SlidersHorizontal, Layers, Bookmark, CheckCircle2, CircleDashed, Clock, MonitorPlay, XCircle, Check, Pause, Tv, Star, Pen, Trash2 } from "lucide-react";
 import AnimatedPage from "../components/AnimatedPage";
@@ -40,6 +41,7 @@ const cardVariants = {
 export default function WatchlistPage() {
   useDocumentTitle("My Library");
   const navigate = useNavigate();
+  const { openAuth } = useAuthModal();
   const prefetch = usePrefetchAnime();
   const [animeList, setAnimeList] = useState([]);
   const [search, setSearch] = useState("");
@@ -169,7 +171,7 @@ const handleCardClick = (animeId, e) => {
               </div>
 
               {!authService.isLoggedIn() && (
-                <div className="wl-auth-prompt" onClick={() => navigate('/auth?next=/watchlist')}>
+                <div className="wl-auth-prompt" onClick={() => openAuth('login', '/watchlist')}>
                   <div className="wl-auth-icon">✨</div>
                   <div className="wl-auth-text">
                     <strong>Sync your library</strong>

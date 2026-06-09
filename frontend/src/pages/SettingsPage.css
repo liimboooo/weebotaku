@@ -635,75 +635,6 @@
   font-size: 15px;
 }
 
-/* ─── Theme Group ─── */
-
-.st-theme-group {
-  display: flex;
-  gap: 8px;
-}
-
-.st-theme-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0.6rem 1rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: transparent;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.st-theme-btn:hover {
-  border-color: rgba(255,255,255,0.3);
-  color: #ffffff;
-}
-
-.st-theme-btn.active {
-  background: #ffffff;
-  border-color: #ffffff;
-  color: #000;
-  box-shadow: 0 2px 10px rgba(255,255,255,0.2);
-}
-
-/* ─── Accent Group ─── */
-
-.st-accent-group {
-  display: flex;
-  gap: 10px;
-}
-
-.st-accent-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: all 0.2s ease;
-}
-
-.st-accent-btn.active {
-  border-color: #fff;
-  box-shadow: 0 0 0 2px #ffffff;
-}
-
-/* ─── Font Preview ─── */
-
-.st-font-preview {
-  margin-top: 8px;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #ffffff;
-}
-
 /* ─── Danger Card ─── */
 
 .st-danger-card {
@@ -1268,7 +1199,6 @@
 
 @media (max-width: 480px) {
   .st-dnd-row { flex-direction: column; }
-  .st-theme-group { flex-wrap: wrap; }
   .st-body { padding: 1rem; }
   .st-page-title { font-size: 28px; }
   .st-dash-card { padding: 1rem; }
@@ -1325,10 +1255,6 @@
   .st-textarea { font-size: 13px; padding: 0.5rem 0.7rem; }
   .st-page-sub { font-size: 12px; }
   .st-section-sub { font-size: 11px; }
-  .st-theme-group { flex-direction: column; }
-  .st-theme-btn { padding: 0.35rem 0.6rem; font-size: 11px; }
-  .st-accent-group { gap: 6px; }
-  .st-accent-btn { width: 32px; height: 32px; }
   .st-toggle { width: 40px; height: 22px; }
   .st-toggle-knob { width: 16px; height: 16px; top: 3px; left: 3px; }
   .st-toggle.active .st-toggle-knob { transform: translateX(18px); }
@@ -1351,4 +1277,54 @@
   .st-2fa-verify-row .st-input { width: 100% !important; }
   .st-danger-desc { font-size: 0.75rem; }
   .st-pw-wrap .st-input { font-size: 13px; padding: 0.5rem 0.7rem; }
+}
+
+/* ─── Avatar upload ─── */
+
+.st-avatar-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.st-avatar-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.st-avatar-preview {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+.st-avatar-placeholder {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+.st-avatar-upload-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.2s;
+}
+
+.st-avatar-upload-label:hover .st-avatar-upload-text {
+  color: #fff;
 }

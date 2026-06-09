@@ -1,5 +1,6 @@
 const zlib = require('zlib');
 const fetch = require('node-fetch');
+const { consumetStream, consumetDirectSource } = require('../services/consumetService');
 
 const MIRURO_PIPE = 'https://www.miruro.tv/api/secure/pipe';
 const ANILIST_URL = 'https://graphql.anilist.co';
@@ -8,7 +9,7 @@ const PIPE_HEADERS = {
   'Referer': 'https://www.miruro.tv/',
 };
 
-const PROVIDER_PRIORITY = ['ally', 'bee', 'animekai', 'kiwi', 'dune', 'hop'];
+const PROVIDER_PRIORITY = ['kiwi', 'bee', 'bonk', 'ally', 'moo', 'hop', 'ANIMEDUNYA', 'zoro', 'arc', 'telli', 'yugen', 'jet', 'neo'];
 const BLOCKED_CDN_HOSTS = ['uwucdn.top', 'owocdn.top'];
 const CORS_CDN_HOSTS = ['wixmp.com', 'wixstatic.com'];
 
@@ -18,6 +19,28 @@ const ARM_API = 'https://arm.haglund.dev/api/v2/ids';
 const tmdbCache = new Map();
 const episodesCache = new Map();
 const EP_CACHE_TTL = 5 * 60 * 1000;
+const MIRURO_JWKS = 'https://www.miruro.tv/.well-known/jwks.json';
+
+let protocolVersion = '0.1.0';
+let protoVersionPromise = null;
+
+async function getProtocolVersion() {
+  if (protoVersionPromise) return protoVersionPromise;
+  protoVersionPromise = (async () => {
+    try {
+      const res = await fetch(MIRURO_JWKS, {
+        headers: { 'User-Agent': PIPE_HEADERS['User-Agent'] },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok) {
+        const ver = res.headers.get('x-protocol-version');
+        if (ver) protocolVersion = ver;
+      }
+    } catch { /* keep default 0.1.0 */ }
+    return protocolVersion;
+  })();
+  return protoVersionPromise;
+}
 
 async function anilistToTmdb(anilistId) {
   if (tmdbCache.has(anilistId)) return tmdbCache.get(anilistId);
@@ -51,10 +74,24 @@ function encodePipeRequest(payload) {
   return Buffer.from(JSON.stringify(payload)).toString('base64url').replace(/=+$/, '');
 }
 
-function decodePipeResponse(encoded) {
+const PIPE_OBF_KEY = process.env.VITE_PIPE_OBF_KEY || '';
+
+function decodePipeResponse(encoded, obfuscationVersion) {
   const padded = encoded + '='.repeat((4 - (encoded.length % 4)) % 4);
-  const compressed = Buffer.from(padded, 'base64url');
-  return JSON.parse(zlib.gunzipSync(compressed).toString('utf-8'));
+  let bytes = Buffer.from(padded, 'base64url');
+
+  if (obfuscationVersion === '2' && PIPE_OBF_KEY) {
+    const keyBytes = Buffer.from(PIPE_OBF_KEY, 'utf-8');
+    for (let i = 0; i < bytes.length; i++) {
+      bytes[i] = bytes[i] ^ keyBytes[i % keyBytes.length];
+    }
+  }
+
+  if (obfuscationVersion) {
+    return JSON.parse(zlib.gunzipSync(bytes).toString('utf-8'));
+  }
+
+  return JSON.parse(bytes.toString('utf-8'));
 }
 
 function decodeEpId(b64) {
@@ -80,8 +117,9 @@ async function pipeFetch(payload) {
   const url = `${MIRURO_PIPE}?e=${encoded}`;
   const res = await fetch(url, { headers: PIPE_HEADERS, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`Pipe returned ${res.status}`);
+  const obfuscationVersion = res.headers.get('x-obfuscated') || '';
   const body = (await res.text()).trim();
-  return decodePipeResponse(body);
+  return decodePipeResponse(body, obfuscationVersion);
 }
 
 async function getEpisodesData(anilistId) {
@@ -89,7 +127,7 @@ async function getEpisodesData(anilistId) {
   if (cached && Date.now() - cached.time < EP_CACHE_TTL) return cached.data;
   const data = await pipeFetch({
     path: 'episodes', method: 'GET',
-    query: { anilistId }, body: null, version: '0.1.0',
+    query: { anilistId }, body: null, version: await getProtocolVersion(),
   });
   deepTranslateIds(data);
   episodesCache.set(anilistId, { data, time: Date.now() });
@@ -185,7 +223,7 @@ exports.getSources = async (req, res) => {
     const sources = await pipeFetch({
       path: 'sources', method: 'GET',
       query: { episodeId: encId, provider, category: category || 'sub', anilistId: aid },
-      body: null, version: '0.1.0',
+      body: null, version: await getProtocolVersion(),
     });
 
     const hlsStreams = (sources.streams || []).filter(s => s.type === 'hls' && s.url && !BLOCKED_CDN_HOSTS.some(h => s.url.includes(h)));
@@ -230,7 +268,10 @@ exports.autoSources = async (req, res) => {
     const providers = epData.providers || {};
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
-    for (const pname of PROVIDER_PRIORITY) {
+    const availableProviders = Object.keys(providers);
+    const providerOrder = [...new Set([...PROVIDER_PRIORITY, ...availableProviders])];
+
+    for (const pname of providerOrder) {
       const provData = providers[pname];
       if (!provData) continue;
       const epsList = provData.episodes?.[category] || [];
@@ -242,14 +283,10 @@ exports.autoSources = async (req, res) => {
         const sources = await pipeFetch({
           path: 'sources', method: 'GET',
           query: { episodeId: encId, provider: pname, category, anilistId: aid },
-          body: null, version: '0.1.0',
+          body: null, version: await getProtocolVersion(),
         });
 
-        const isBlocked = (url) => BLOCKED_CDN_HOSTS.some(h => url.includes(h));
-
-        const active = (sources.streams || []).find(s => s.type === 'hls' && s.url && s.isActive && !isBlocked(s.url));
-        const fallback = (sources.streams || []).find(s => s.type === 'hls' && s.url && !isBlocked(s.url));
-        const stream = active || fallback;
+        const stream = (sources.streams || []).find(s => s.type === 'hls' && s.url && !BLOCKED_CDN_HOSTS.some(h => s.url.includes(h)));
 
         if (stream) {
           const hasCors = CORS_CDN_HOSTS.some(h => stream.url.includes(h));
@@ -379,10 +416,94 @@ exports.testProviders = async (req, res) => {
   try {
     const data = await pipeFetch({
       path: 'episodes', method: 'GET',
-      query: { anilistId: 1535 }, body: null, version: '0.1.0',
+      query: { anilistId: 1535 }, body: null, version: await getProtocolVersion(),
     });
     results.miruro = { providers: Object.keys(data.providers || {}) };
   } catch (e) { results.miruro = { error: e.message }; }
 
   res.json({ success: true, data: results });
+};
+
+exports.consumetSources = async (req, res) => {
+  try {
+    const { anilistId, episodeNum } = req.params;
+    const aid = parseInt(anilistId, 10);
+    const epNum = parseInt(episodeNum, 10);
+    const title = req.query.title || '';
+    if (!aid || !epNum) return res.status(400).json({ success: false, message: 'Missing params' });
+
+    const result = await consumetStream(aid, epNum, req.query.cat || 'sub', title);
+    if (!result) return res.status(404).json({ success: false, message: 'No Consumet stream found' });
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.resolveEmbed = async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ success: false, message: 'url parameter required' });
+
+    const embedRes = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+      },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!embedRes.ok) throw new Error(`Embed returned ${embedRes.status}`);
+    const html = await embedRes.text();
+
+    const patterns = [
+      /(?:https?:)?\/\/[^"'\s]+\.m3u8[^"'\s]*/gi,
+      /file\s*:\s*["']([^"']+)["']/i,
+      /src\s*:\s*["']([^"']+\.m3u8[^"']*)["']/i,
+      /data-hls\s*=\s*["']([^"']+)["']/i,
+      /sources\s*:\s*\[\s*\{[^}]*src\s*:\s*["']([^"']+)["']/i,
+      /<source\s+[^>]*src\s*=\s*["']([^"']+\.m3u8[^"']*)["']/i,
+      /<video[^>]*>\s*<source\s+src\s*=\s*["']([^"']+)["']/i,
+    ];
+
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match) {
+        let videoUrl = match[1] || match[0];
+        if (videoUrl.startsWith('//')) videoUrl = 'https:' + videoUrl;
+        try { new URL(videoUrl); } catch { continue; }
+        return res.json({ success: true, data: { url: videoUrl, type: videoUrl.includes('.m3u8') ? 'hls' : 'mp4' } });
+      }
+    }
+
+    const iframeMatch = html.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+    if (iframeMatch) {
+      let nestedUrl = iframeMatch[1];
+      if (nestedUrl.startsWith('//')) nestedUrl = 'https:' + nestedUrl;
+      if (nestedUrl.startsWith('/')) nestedUrl = new URL(url).origin + nestedUrl;
+      const nestedRes = await fetch(nestedUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Referer': url,
+        },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (nestedRes.ok) {
+        const nestedHtml = await nestedRes.text();
+        for (const pattern of patterns) {
+          const match = nestedHtml.match(pattern);
+          if (match) {
+            let videoUrl = match[1] || match[0];
+            if (videoUrl.startsWith('//')) videoUrl = 'https:' + videoUrl;
+            try { new URL(videoUrl); } catch { continue; }
+            return res.json({ success: true, data: { url: videoUrl, type: videoUrl.includes('.m3u8') ? 'hls' : 'mp4' } });
+          }
+        }
+      }
+    }
+
+    res.json({ success: false, message: 'No video URL found in embed page' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 };

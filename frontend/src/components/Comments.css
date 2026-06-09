@@ -312,18 +312,19 @@
 .awc-options-wrap { position: relative; margin-left: auto; }
 
 .awc-options-btn {
-  width: 26px;
-  height: 26px;
-  border: none;
-  background: transparent;
-  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.5);
   cursor: pointer;
   display: grid;
   place-items: center;
-  transition: color 0.15s;
+  transition: all 0.15s;
 }
 
-.awc-options-btn:hover { color: #ffffff; }
+.awc-options-btn:hover { color: #fff; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.12); }
 .awc-options-btn:focus-visible { outline: 1px solid rgba(255,255,255,0.5); }
 
 .awc-options-menu {

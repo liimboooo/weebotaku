@@ -4,14 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import authService from "../services/authService";
 import settingsService from "../services/settingsService";
-import { clearNotifications } from "../services/notificationService";
 import AnimatedPage from "../components/AnimatedPage";
 import SyncCard from "../components/SyncCard";
 import FavoritesSyncCard from "../components/FavoritesSyncCard";
 import { TOAST_DURATION_MS } from "../utils/constants";
 import {
   User, Settings, Bell, Shield, Link2,
-  Eye, EyeOff, LogOut, Sun, Moon, Monitor,
+  Eye, EyeOff, LogOut,
   CheckCircle, X, Trash2,
   AlertTriangle,
   ChevronLeft, ArrowRight,
@@ -25,9 +24,9 @@ const SECTIONS = [
     subtitle: null,
     cols: 3,
     cards: [
-      { key: "account",       icon: User,     label: "Account",           desc: "Manage profile, email, bio",               color: "#ffffff" },
+      { key: "account",       icon: User,     label: "Account",           desc: "Manage profile, email, username",               color: "#ffffff" },
       { key: "privacy",       icon: Shield,   label: "Privacy & Security",desc: "2FA, password, privacy",                   color: "#ffffff" },
-      { key: "notifications", icon: Bell,     label: "Notifications",     desc: "Email, push, alerts",                      color: "#ffffff" },
+      { key: "notifications", icon: Bell,     label: "Notifications",     desc: "New episodes, replies, recs",                 color: "#ffffff" },
     ],
   },
   {
@@ -35,7 +34,7 @@ const SECTIONS = [
     subtitle: null,
     cols: 1,
     cards: [
-      { key: "preferences",   icon: Settings, label: "Preferences",       desc: "Theme, display, playback",                 color: "#ffffff" },
+      { key: "preferences",   icon: Settings, label: "Preferences",       desc: "Playback, subtitles",                 color: "#ffffff" },
     ],
   },
   {
@@ -57,16 +56,7 @@ const pageVariants = {
 const stagger = { animate: { transition: { staggerChildren: 0.06 } } };
 const cardItem = { initial: { opacity: 0, y: 24 }, animate: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] } } };
 
-const FONT_SIZES = ["Small", "Medium", "Large", "Extra Large"];
-const THEME_ACCENTS = [
-  { label: "Purple", value: "#ffffff" },
-  { label: "Cyan", value: "#ffffff" },
-  { label: "Green", value: "#4ade80" },
-  { label: "Pink", value: "#f472b6" },
-];
 const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
-const CONTENT_RATINGS = ["G", "PG", "PG-13", "R", "R+ (17+)", "Rx (18+)"];
-const LIST_VIEWS = ["Grid", "List", "Compact"];
 
 export default function SettingsPage() {
   useDocumentTitle("Settings");
@@ -106,14 +96,17 @@ export default function SettingsPage() {
   const [syncLoading, setSyncLoading] = useState({ mal: false, anilist: false });
   const [favorites, setFavorites] = useState([]);
 
-  const [profile, setProfile] = useState(() => settingsService.loadUserProfile() || {
-    username: currentUser?.username || "formula09",
-    displayName: currentUser?.username || "formula09",
-    email: currentUser?.email || "user@example.com",
-    bio: currentUser?.bio || "",
-    website: "",
-    emailVerified: true,
+  const [profile, setProfile] = useState(() => {
+    const p = settingsService.loadUserProfile() || {
+      username: currentUser?.username || "",
+      email: currentUser?.email || "",
+      avatar: currentUser?.avatar || "",
+      emailVerified: currentUser?.emailVerified || false,
+    };
+    return p;
   });
+  const initialProfileRef = useRef(null);
+  if (!initialProfileRef.current) initialProfileRef.current = { ...profile };
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -123,14 +116,6 @@ export default function SettingsPage() {
   const [pwErrors, setPwErrors] = useState([]);
   const [pwChanging, setPwChanging] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [twoFAEnabled, setTwoFAEnabled] = useState(false);
-  const [twoFASecret, setTwoFASecret] = useState("");
-  const [twoFAQr, setTwoFAQr] = useState("");
-  const [twoFACode, setTwoFACode] = useState("");
-  const [twoFAStep, setTwoFAStep] = useState("idle");
-  const [twoFABackupCodes, setTwoFABackupCodes] = useState([]);
-  const [twoFADisablePw, setTwoFADisablePw] = useState("");
-  const [twoFALoading, setTwoFALoading] = useState(false);
 
   const isFirstRender = useRef(true);
 
@@ -143,13 +128,6 @@ export default function SettingsPage() {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
     settingsService.save(settings);
   }, [settings, settingsReady]);
-
-  useEffect(() => {
-    if (!settingsReady) return;
-    settingsService.get2FAStatus().then(status => {
-      if (status?.enabled) setTwoFAEnabled(true);
-    }).catch(err => console.error('[AnimeWch] Failed to load 2FA status:', err));
-  }, [settingsReady]);
 
   useEffect(() => {
     if (!settingsReady) return;
@@ -184,7 +162,6 @@ export default function SettingsPage() {
     return () => clearInterval(interval);
   }, [settingsReady, syncStatus.mal?.connected, syncStatus.anilist?.connected]);
 
-  const avatar = currentUser?.avatar || "";
   const initial = (profile.username || "U").charAt(0).toUpperCase();
   const joinDate = currentUser?.memberSince
     ? new Date(currentUser.memberSince).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -192,9 +169,6 @@ export default function SettingsPage() {
 
   const toggle = async (id) => {
     setSettings(prev => ({ ...prev, [id]: !prev[id] }));
-    if (id === "newsNotifications" && settings.newsNotifications === true) {
-      await clearNotifications();
-    }
   };
   const setTog = (id, val) => setSettings(prev => ({ ...prev, [id]: val }));
 
@@ -323,87 +297,42 @@ export default function SettingsPage() {
   };
 
 
+  const [deletePassword, setDeletePassword] = useState("");
+
   const handleDeleteAccount = async () => {
+    if (!deletePassword) { showToast("Enter your password", "error"); return; }
     setDeleting(true);
-    await settingsService.deleteAccount();
+    try {
+      await settingsService.deleteAccount(deletePassword);
+      setShowDeleteModal(false);
+      showToast("Account deleted. Redirecting...", "info");
+      setTimeout(() => { navigate("/"); }, 1500);
+    } catch (e) {
+      showToast(e?.message || "Failed to delete account", "error");
+    }
     setDeleting(false);
-    setShowDeleteModal(false);
-    showToast("Account deleted. Redirecting...", "info");
-    setTimeout(() => {
-      navigate("/");
-    }, 1500);
   };
 
   const handleSaveProfile = async () => {
     try {
-      const data = await authService.updateProfile({
-        username: profile.username,
-        bio: profile.bio,
-      });
+      const init = initialProfileRef.current || {};
+      const changed = {};
+      if (profile.username !== init.username) changed.username = profile.username;
+      if (profile.avatar !== init.avatar) changed.avatar = profile.avatar || "";
+      if (Object.keys(changed).length === 0) { showToast("Nothing to save"); return; }
+      const data = await authService.updateProfile(changed);
       if (data?.success) {
+        initialProfileRef.current = { ...profile };
         settingsService.saveUserProfile(profile);
         showToast("Profile saved!");
-      }
-    } catch {
-      showToast("Failed to save profile.", "error");
-    }
-  };
-
-  const handleSetup2FA = async () => {
-    setTwoFALoading(true);
-    try {
-      const data = await settingsService.setup2FA();
-      if (data?.success) {
-        setTwoFASecret(data.secret);
-        setTwoFAQr(data.qr);
-        setTwoFAStep("scan");
-      }
-    } catch {
-      showToast("Failed to start 2FA setup.", "error");
-    }
-    setTwoFALoading(false);
-  };
-
-  const handleVerify2FA = async () => {
-    if (twoFACode.length < 6) return;
-    setTwoFALoading(true);
-    try {
-      const data = await settingsService.verify2FASetup(twoFACode);
-      if (data?.success) {
-        setTwoFAEnabled(true);
-        setTwoFABackupCodes(data.backupCodes || []);
-        setTwoFAStep("backup");
-        showToast("2FA enabled successfully!");
       } else {
-        showToast(data?.message || "Invalid code", "error");
+        showToast(data?.message || "Failed to save profile", "error");
       }
-    } catch {
-      showToast("Verification failed.", "error");
+    } catch (e) {
+      showToast(e?.message || "Failed to save profile.", "error");
     }
-    setTwoFALoading(false);
   };
 
-  const handleDisable2FA = async () => {
-    if (!twoFADisablePw) { showToast("Enter your password", "error"); return; }
-    setTwoFALoading(true);
-    try {
-      const data = await settingsService.disable2FA(twoFADisablePw);
-      if (data?.success) {
-        setTwoFAEnabled(false);
-        setTwoFAStep("idle");
-        setTwoFASecret("");
-        setTwoFAQr("");
-        setTwoFABackupCodes([]);
-        setTwoFADisablePw("");
-        showToast("2FA disabled");
-      } else {
-        showToast(data?.message || "Failed to disable", "error");
-      }
-    } catch {
-      showToast("Failed to disable 2FA.", "error");
-    }
-    setTwoFALoading(false);
-  };
 
   const handleSavePreferences = async () => {
     await settingsService.save(settings);
@@ -508,12 +437,11 @@ export default function SettingsPage() {
       <div className="st-profile-card">
         <div className="st-profile-left">
           <div className="st-avatar-lg">
-            {avatar ? <img src={avatar} alt={profile.username} /> : <span>{initial}</span>}
+            {profile.avatar ? <img src={profile.avatar} alt={profile.username} /> : <span>{initial}</span>}
           </div>
           <div className="st-profile-info">
             <span className="st-profile-name">{profile.username}</span>
-            <span className="st-profile-status">Synced To Cloud</span>
-            <span className="st-profile-joined">Joined {joinDate}</span>
+            <span className="st-profile-joined">{joinDate !== "Jan 1, 1970" ? "Joined " + joinDate : ""}</span>
           </div>
         </div>
         <button className="st-btn st-btn--danger" onClick={handleLogout}>
@@ -525,39 +453,60 @@ export default function SettingsPage() {
         {renderField("Username", "3-10 characters, letters and numbers only.", (
           <input className="st-input" value={profile.username} onChange={e => updateProfile("username", e.target.value)} placeholder="Enter username" />
         ))}
-        {renderField("Display Name", "How others see your name.", (
-          <input className="st-input" value={profile.displayName} onChange={e => updateProfile("displayName", e.target.value)} placeholder="Enter display name" />
+          {renderField("Avatar", "Click to upload from your device", (
+          <div className="st-avatar-upload-row">
+            <input
+              type="file"
+              accept="image/*"
+              id="avatar-upload"
+              style={{ display: 'none' }}
+              onChange={e => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (file.size > 2 * 1024 * 1024) { showToast("Image must be under 2MB", "error"); return; }
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                  const img = new Image();
+                  img.onload = () => {
+                    let w = img.width, h = img.height;
+                    const max = 200;
+                    if (w > max || h > max) {
+                      const ratio = Math.min(max / w, max / h);
+                      w = Math.round(w * ratio);
+                      h = Math.round(h * ratio);
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    setProfile(p => ({ ...p, avatar: dataUrl }));
+                  };
+                  img.src = ev.target?.result;
+                };
+                reader.readAsDataURL(file);
+              }}
+            />
+            <label htmlFor="avatar-upload" className="st-avatar-upload-label">
+              {profile.avatar ? (
+                <img src={profile.avatar} alt="avatar" className="st-avatar-preview" />
+              ) : (
+                <span className="st-avatar-placeholder">{initial}</span>
+              )}
+              <span className="st-avatar-upload-text">Change</span>
+            </label>
+          </div>
         ))}
-        {renderField("Email Address", "Your primary email address.", (
-          <>
-            <div className="st-input-row">
-              <input className="st-input st-input--flex" value={profile.email} onChange={e => updateProfile("email", e.target.value)} placeholder="Enter email" />
-              {!profile.emailVerified && <button className="st-btn st-btn--amber">Verify Email</button>}
-            </div>
-            <div className="st-verify-status">
-              <span className={`st-badge ${profile.emailVerified ? "st-badge--green" : "st-badge--red"}`}>
-                {profile.emailVerified ? "Verified" : "Unverified"}
-              </span>
-              {profile.emailVerified && <span className="st-verify-date">Verified</span>}
-            </div>
-          </>
+        {renderField("Email", "Your primary email address.", (
+          <div className="st-verify-status" style={{ padding: "0.5rem 0" }}>
+            <span className="st-profile-name" style={{ fontSize: "14px" }}>{profile.email}</span>
+            <span className={`st-badge ${profile.emailVerified ? "st-badge--green" : "st-badge--red"}`} style={{ marginLeft: "0.75rem" }}>
+              {profile.emailVerified ? "Verified" : "Unverified"}
+            </span>
+          </div>
         ))}
       </div>
-
-      <div className="st-divider" />
-
-      {renderField("Bio", "Tell others a bit about you.", (
-        <>
-          <textarea className="st-textarea" value={profile.bio} onChange={e => updateProfile("bio", e.target.value)} placeholder="Write something about yourself..." maxLength={500} />
-          <span className="st-char-count">{profile.bio.length}/500</span>
-        </>
-      ))}
-
-      <div className="st-divider" />
-
-      {renderField("Website", null, (
-        <input className="st-input" value={profile.website} onChange={e => updateProfile("website", e.target.value)} placeholder="https://yoursite.com" />
-      ))}
 
       <button className="st-btn st-btn--green st-btn--full" onClick={handleSaveProfile} style={{ marginTop: "0.5rem" }}>
         Save Profile
@@ -582,54 +531,10 @@ export default function SettingsPage() {
     <motion.div key="preferences" className="st-page" variants={pageVariants} initial="initial" animate="animate" exit="exit">
       <h1 className="st-page-title">Preferences</h1>
 
-      {renderSectionHeader("Display")}
-      <div className="st-form">
-        <div className="st-field">
-          <label className="st-field-label">Theme</label>
-          <div className="st-theme-group">
-            {[
-              { id: "light", icon: Sun, label: "Light" },
-              { id: "dark", icon: Moon, label: "Dark" },
-              { id: "auto", icon: Monitor, label: "Auto" },
-            ].map(({ id, icon: Icon, label }) => (
-              <button key={id} className={`st-theme-btn ${settings.darkMode === id ? "active" : ""}`} onClick={() => setTog("darkMode", id)}>
-                <Icon size={20} /> <span>{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="st-field">
-          <label className="st-field-label">Font Size</label>
-          <div className="st-radio-group">
-            {FONT_SIZES.map(fs => (
-              <button key={fs} className={`st-radio ${settings.fontSize === fs ? "active" : ""}`} onClick={() => setTog("fontSize", fs)}>
-                {fs}
-              </button>
-            ))}
-          </div>
-          <div className="st-font-preview" style={{ fontSize: settings.fontSize === "Small" ? 12 : settings.fontSize === "Large" ? 18 : settings.fontSize === "Extra Large" ? 22 : 14 }}>
-            Preview text showing selected size
-          </div>
-        </div>
-        <div className="st-field">
-          <label className="st-field-label">Accent Color</label>
-          <div className="st-accent-group">
-            {THEME_ACCENTS.map(a => (
-              <button key={a.value} className={`st-accent-btn ${settings.accentColor === a.value ? "active" : ""}`}
-                onClick={() => setTog("accentColor", a.value)} style={{ background: a.value }}>
-                {settings.accentColor === a.value && <CheckCircle size={14} />}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="st-divider" />
       {renderSectionHeader("Video Player")}
       {renderToggle("autoNext", "Auto play next episode", "Automatically play next episode when current finishes")}
       {renderToggle("skipIntro", "Skip intro automatically", "Automatically skip opening sequences")}
       {renderToggle("skipOutro", "Skip outro automatically", "Automatically skip ending sequences")}
-      {renderToggle("showSubtitles", "Show subtitles by default", "Display subtitles on all content")}
 
       <div className="st-field" style={{ marginTop: "1rem" }}>
         <label className="st-field-label">Default Audio</label>
@@ -654,45 +559,6 @@ export default function SettingsPage() {
           ))}
         </div>
       </div>
-
-      <div className="st-divider" />
-      {renderSectionHeader("Content")}
-      {renderToggle("disableAds", "Remove advertisements", "Remove ads across the platform")}
-      {renderToggle("showComments", "Show comments section", "Display community comments on watch pages")}
-      {renderToggle("hideNsfw", "Hide NSFW content", "Filter out adult content")}
-      {renderToggle("showMatureWarnings", "Show mature content warnings", "Display warnings for mature content")}
-
-      <div className="st-field" style={{ marginTop: "1rem" }}>
-        <label className="st-field-label">Content Rating Filter</label>
-        <div className="st-radio-group st-radio-group--wrap">
-          {CONTENT_RATINGS.map(r => (
-            <button key={r} className={`st-radio ${settings.contentRating === r ? "active" : ""}`}
-              onClick={() => setTog("contentRating", r)}>
-              {r}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="st-divider" />
-      {renderSectionHeader("Anime List")}
-      <div className="st-field">
-        <label className="st-field-label">Default List View</label>
-        <div className="st-radio-group">
-          {LIST_VIEWS.map(v => (
-            <button key={v} className={`st-radio ${settings.defaultListView === v ? "active" : ""}`}
-              onClick={() => setTog("defaultListView", v)}>
-              {v}
-            </button>
-          ))}
-        </div>
-      </div>
-      {renderToggle("showEpisodeProgress", "Show episode progress", "Show watched/total episodes on cards")}
-      {renderToggle("showRatingsCards", "Show ratings on cards", "Display user ratings on anime cards")}
-
-      <button className="st-btn st-btn--green st-btn--save" onClick={handleSavePreferences}>
-        <CheckCircle size={16} /> Save Preferences
-      </button>
     </motion.div>
   );
 
@@ -706,21 +572,8 @@ export default function SettingsPage() {
         <div className="st-sub-toggles">
           {renderToggle("newEpisodes", "New episode alerts", "Get notified when new episodes air")}
           {renderToggle("communityActivity", "Community activity", "Replies, mentions, and reactions")}
-          {renderToggle("friendsActivity", "Friend activity", "See what your friends are watching")}
           {renderToggle("systemUpdates", "System updates", "Platform changes and new features")}
           {renderToggle("weeklyRecs", "Weekly recommendations", "Personalized anime suggestions")}
-        </div>
-      )}
-
-      <div className="st-divider" />
-      {renderSectionHeader("Push Notifications", "Requires browser permission.")}
-      {renderToggle("pushNotifs", "Enable push notifications", "Receive browser push notifications")}
-      {settings.pushNotifs && (
-        <div className="st-sub-toggles">
-          {renderToggle("newsNotifications", "News notifications", "Trending anime, trailers, and new episodes")}
-          {renderToggle("newEpisodeAlerts", "New episodes", "Instant alerts for new episodes")}
-          {renderToggle("commentReplies", "Comment replies", "When someone replies to your comment")}
-          {renderToggle("friendRequests", "Friend requests", "When someone sends you a friend request")}
         </div>
       )}
 
@@ -733,65 +586,6 @@ export default function SettingsPage() {
     <motion.div key="privacy" className="st-page" variants={pageVariants} initial="initial" animate="animate" exit="exit">
       <h1 className="st-page-title">Privacy & Security</h1>
 
-      {renderSectionHeader("Two-Factor Authentication")}
-      {!twoFAEnabled && twoFAStep === "idle" && (
-        <div className="st-2fa-card">
-          <p className="st-2fa-desc">Add an extra layer of security to your account using an authenticator app (Google Authenticator, Authy, etc.)</p>
-          <button className="st-btn st-btn--green" onClick={handleSetup2FA} disabled={twoFALoading}>
-            {twoFALoading ? "Loading..." : "Enable 2FA"}
-          </button>
-        </div>
-      )}
-      {twoFAStep === "scan" && (
-        <div className="st-2fa-card">
-          <p className="st-2fa-desc">Scan this QR code with your authenticator app, then enter the 6-digit code below.</p>
-          <div className="st-2fa-qr-wrap">
-            <img src={twoFAQr} alt="2FA QR Code" className="st-2fa-qr-img" />
-          </div>
-          <p className="st-2fa-desc" style={{ fontSize: "12px" }}>Or enter this key manually: <code className="st-2fa-key">{twoFASecret}</code></p>
-          <div className="st-2fa-verify-row">
-            <input className="st-input st-input-code" style={{ textAlign: "center", letterSpacing: "4px" }} type="text" inputMode="numeric" maxLength={6} placeholder="000000" value={twoFACode} onChange={e => setTwoFACode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
-            <button className="st-btn st-btn--green" onClick={handleVerify2FA} disabled={twoFALoading || twoFACode.length < 6}>
-              {twoFALoading ? "Verifying..." : "Verify & Enable"}
-            </button>
-          </div>
-        </div>
-      )}
-      {twoFAStep === "backup" && (
-        <div className="st-2fa-card">
-          <p className="st-2fa-desc" style={{ color: "#ffffff" }}>Save these backup codes in a safe place. Each can be used once if you lose access to your authenticator app.</p>
-          <div className="st-2fa-codes">
-            {twoFABackupCodes.map((code, i) => (
-              <code key={i} className="st-backup-code">{code}</code>
-            ))}
-          </div>
-          <div className="st-2fa-verify-row">
-            <button className="st-btn st-btn--dark" onClick={() => { navigator.clipboard.writeText(twoFABackupCodes.join("\n")); showToast("Codes copied!"); }}>Copy All</button>
-            <button className="st-btn st-btn--dark" onClick={() => { const blob = new Blob([twoFABackupCodes.join("\n")], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "backup-codes.txt"; a.click(); }}>Download</button>
-          </div>
-          <button className="st-btn st-btn--green" style={{ marginTop: "1rem" }} onClick={() => { setTwoFAStep("idle"); setTwoFACode(""); setTwoFASecret(""); setTwoFAQr(""); }}>Done</button>
-        </div>
-      )}
-      {twoFAEnabled && twoFAStep === "idle" && (
-        <div className="st-2fa-card" style={{ borderColor: "rgba(74,222,128,0.3)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
-            <CheckCircle size={20} color="#4ade80" />
-            <span style={{ color: "#4ade80", fontWeight: 600 }}>2FA is enabled</span>
-          </div>
-          <input className="st-input st-input-disable-pw" style={{ marginBottom: "0.5rem" }} type="password" placeholder="Enter password to disable" value={twoFADisablePw} onChange={e => setTwoFADisablePw(e.target.value)} />
-          <button className="st-btn st-btn--danger" onClick={handleDisable2FA} disabled={twoFALoading || !twoFADisablePw}>
-            {twoFALoading ? "Disabling..." : "Disable 2FA"}
-          </button>
-        </div>
-      )}
-
-      <div className="st-divider" />
-      {renderSectionHeader("Privacy")}
-      {renderToggle("publicProfile", "Public profile", "Others can view your profile")}
-      {renderToggle("showWatchlistPublic", "Show watchlist publicly", "Your anime list is visible to everyone")}
-      {renderToggle("showActivityStatus", "Show activity status", "Others see when you're watching")}
-
-      <div className="st-divider" />
       {renderSectionHeader("Password")}
       <div className="st-pw-card">
         <div className="st-form">
@@ -942,14 +736,11 @@ export default function SettingsPage() {
               <div className="st-modal-body">
                 <div className="st-modal-icon"><AlertTriangle size={40} /></div>
                 <p className="st-modal-desc">This action is permanent and cannot be undone. All your data will be deleted.</p>
-                <label className="st-check-label">
-                  <input type="checkbox" checked={deleteConfirm} onChange={e => setDeleteConfirm(e.target.checked)} />
-                  <span>I understand, delete my account</span>
-                </label>
+                <input type="password" className="st-input" style={{ marginTop: "1rem", width: "100%" }} value={deletePassword} onChange={e => setDeletePassword(e.target.value)} placeholder="Enter your password to confirm" />
               </div>
               <div className="st-modal-foot">
                 <button className="st-btn st-btn--dark" onClick={() => setShowDeleteModal(false)}>Cancel</button>
-                <button className="st-btn st-btn--danger" disabled={!deleteConfirm || deleting} onClick={handleDeleteAccount}>
+                <button className="st-btn st-btn--danger" disabled={!deletePassword || deleting} onClick={handleDeleteAccount}>
                   {deleting ? "Deleting..." : "Delete Account"}
                 </button>
               </div>

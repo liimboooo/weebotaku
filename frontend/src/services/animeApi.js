@@ -385,6 +385,17 @@ export async function getMiruroStream(anilistId, episodeNum, category = 'sub') {
   } catch { return null; }
 }
 
+export async function getConsumetStream(anilistId, episodeNum, animeTitle, category = 'sub') {
+  try {
+    const url = `${API_BASE}/stream/consumet/${anilistId}/${episodeNum}?cat=${category}&title=${encodeURIComponent(animeTitle)}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (!json.success) return null;
+    return json.data;
+  } catch { return null; }
+}
+
 export async function findStreamingSource(animeName, anilistId) {
   const source = SOURCES.reanime;
   try {

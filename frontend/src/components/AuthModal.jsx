@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import AuthForm from "../components/AuthForm";
 import authService from "../services/authService";
 import { syncFromBackend } from "../services/storage";
-import { Mail, CheckCircle, AlertCircle, X } from "lucide-react";
+import { Mail, CheckCircle, AlertCircle, X, Eye, EyeOff } from "lucide-react";
 import { useAuthModal } from "../contexts/AuthModalContext";
-import "../pages/AuthPage.css";
+import "./AuthModal.css";
+
+const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 export default function AuthModal() {
   const { isOpen, mode: initialMode, redirectTo, closeAuth } = useAuthModal();
@@ -24,20 +25,24 @@ export default function AuthModal() {
   const [needsVerify, setNeedsVerify] = useState(false);
   const [resending, setResending] = useState(false);
   const [resentMsg, setResentMsg] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const overlayRef = useRef(null);
   const handleCloseRef = useRef(null);
+  const googleBtnRef = useRef(null);
 
   const handleClose = useCallback(() => {
     setError("");
     setUsername("");
     setEmail("");
     setPassword("");
+    setConfirmPassword("");
     setPending2FA(null);
     setTwoFACode("");
     setRegisteredEmail("");
     setNeedsVerify(false);
     setVerifyEmail("");
     setResentMsg("");
+    setShowPw(false);
     setLoading(false);
     closeAuth();
   }, [closeAuth]);
@@ -80,6 +85,7 @@ export default function AuthModal() {
     if (mode === "register") {
       if (!e) { setError("Please enter your email"); return; }
       if (p.length < 4) { setError("Password must be at least 4 characters"); return; }
+      if (p !== confirmPassword) { setError("Passwords do not match"); return; }
     }
 
     setLoading(true);
@@ -170,80 +176,304 @@ export default function AuthModal() {
     setUsername("");
     setEmail("");
     setPassword("");
+    setConfirmPassword("");
     setPending2FA(null);
     setTwoFACode("");
     setRegisteredEmail("");
     setNeedsVerify(false);
     setVerifyEmail("");
     setResentMsg("");
+    setShowPw(false);
     setLoading(false);
   }, []);
 
+  /* Google Sign-In script */
+  useEffect(() => {
+    if (!isOpen || !CLIENT_ID || CLIENT_ID === 'your_google_client_id_here') return;
+
+    const script = document.createElement('script');
+    script.src = process.env.REACT_APP_GOOGLE_API_URL || 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    const interval = setInterval(() => {
+      if (window.google?.accounts?.id) {
+        clearInterval(interval);
+        window.google.accounts.id.initialize({
+          client_id: CLIENT_ID,
+          callback: (res) => {
+            if (res.credential) handleGoogleSuccess(res.credential);
+            else setError("Google sign-in failed");
+          },
+        });
+        if (googleBtnRef.current) {
+          window.google.accounts.id.renderButton(googleBtnRef.current, {
+            theme: 'filled_black',
+            size: 'large',
+            shape: 'rectangular',
+            text: 'continue_with',
+            width: googleBtnRef.current.offsetWidth || 320,
+          });
+        }
+      }
+    }, 200);
+    return () => { clearInterval(interval); };
+  }, [isOpen, CLIENT_ID, handleGoogleSuccess]);
+
   if (!isOpen) return null;
+
+  const renderForm = () => {
+    const isLogin = mode === "login";
+
+    return (
+      <div className="auth-split-card">
+        <div className="auth-split-image">
+          <button className="auth-modal-abs-close" onClick={handleClose}><X size={20} /></button>
+          <img src="/anime-girl-auth.jpg" alt="" />
+        </div>
+
+        {isLogin ? (
+          <div className="auth-split-form">
+            <div className="auth-split-form-inner">
+              <h1 className="auth-split-title">Welcome back</h1>
+              <p className="auth-split-subtitle">Sign in to your animetsu account</p>
+
+              {error && (
+                <div className="auth-split-error">
+                  <AlertCircle size={14} />
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+                <div className="auth-split-field">
+                  <label className="auth-split-label">Username</label>
+                  <div className="auth-split-input-wrap">
+                    <input
+                      className="auth-split-input"
+                      type="text"
+                      placeholder="Enter your username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      autoFocus
+                      autoComplete="username"
+                    />
+                  </div>
+                </div>
+
+                <div className="auth-split-field">
+                  <label className="auth-split-label">Password</label>
+                  <div className="auth-split-input-wrap">
+                    <input
+                      className="auth-split-input"
+                      type={showPw ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="current-password"
+                    />
+                    <button type="button" className="auth-split-pw-toggle" onClick={() => setShowPw(p => !p)} tabIndex={-1}>
+                      {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <button type="submit" className="auth-split-btn" disabled={loading}>
+                  {loading ? <span className="auth-split-spinner" /> : "Sign in"}
+                </button>
+
+                <div className="auth-split-forgot">
+                  <button type="button" onClick={() => navigate('/auth/forgot-password')}>Forgot your password?</button>
+                </div>
+              </form>
+
+              {CLIENT_ID && CLIENT_ID !== 'your_google_client_id_here' && (
+                <>
+                  <div className="auth-split-divider">
+                    <span className="auth-split-divider-line" />
+                    <span className="auth-split-divider-text">or</span>
+                    <span className="auth-split-divider-line" />
+                  </div>
+                  <div className="auth-split-google" ref={googleBtnRef} />
+                </>
+              )}
+
+              <div className="auth-split-toggle">
+                Don't have an account? <button type="button" onClick={switchMode}>Sign up</button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="auth-split-form">
+            <div className="auth-split-form-inner">
+              <h1 className="auth-split-title">Create your account</h1>
+              <p className="auth-split-subtitle">Sign up to get started</p>
+
+              {error && (
+                <div className="auth-split-error">
+                  <AlertCircle size={14} />
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+                <div className="auth-split-field">
+                  <label className="auth-split-label">Username</label>
+                  <div className="auth-split-input-wrap">
+                    <input
+                      className="auth-split-input"
+                      type="text"
+                      placeholder="Choose a username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      autoFocus
+                      autoComplete="new-username"
+                    />
+                  </div>
+                </div>
+
+                <div className="auth-split-field">
+                  <label className="auth-split-label">Email</label>
+                  <div className="auth-split-input-wrap">
+                    <input
+                      className="auth-split-input"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      autoComplete="email"
+                    />
+                  </div>
+                </div>
+
+                <div className="auth-split-field">
+                  <label className="auth-split-label">Password</label>
+                  <div className="auth-split-input-wrap">
+                    <input
+                      className="auth-split-input"
+                      type={showPw ? "text" : "password"}
+                      placeholder="Create a password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="new-password"
+                    />
+                    <button type="button" className="auth-split-pw-toggle" onClick={() => setShowPw(p => !p)} tabIndex={-1}>
+                      {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="auth-split-field">
+                  <label className="auth-split-label">Confirm Password</label>
+                  <div className="auth-split-input-wrap">
+                    <input
+                      className="auth-split-input"
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" className="auth-split-btn" disabled={loading}>
+                  {loading ? <span className="auth-split-spinner" /> : "Sign up"}
+                </button>
+              </form>
+
+              {CLIENT_ID && CLIENT_ID !== 'your_google_client_id_here' && (
+                <>
+                  <div className="auth-split-divider">
+                    <span className="auth-split-divider-line" />
+                    <span className="auth-split-divider-text">or</span>
+                    <span className="auth-split-divider-line" />
+                  </div>
+                  <div className="auth-split-google" ref={googleBtnRef} />
+                </>
+              )}
+
+              <div className="auth-split-toggle">
+                Already have an account? <button type="button" onClick={switchMode}>Sign in</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderStatus = (content) => (
+    <div className="auth-split-card">
+      <div className="auth-split-image">
+        <button className="auth-modal-abs-close" onClick={handleClose}><X size={20} /></button>
+        <img src="/anime-girl-auth.jpg" alt="" />
+      </div>
+      <div className="auth-split-status">
+        {content}
+      </div>
+    </div>
+  );
 
   const renderContent = () => {
     if (registeredEmail) {
-      return (
-        <div className="auth-card auth-status-card">
-          <button className="auth-modal-abs-close" onClick={handleClose}><X size={20} /></button>
-          <div className="auth-status-icon auth-status-icon--success">
+      return renderStatus(
+        <>
+          <div className="auth-split-status-icon">
             <CheckCircle size={48} />
           </div>
-          <h2 className="auth-title">Check your email</h2>
-          <p className="auth-subtitle">
+          <h2 className="auth-split-title">Check your email</h2>
+          <p className="auth-split-subtitle">
             We sent a verification link to<br />
-            <strong className="auth-highlight">{registeredEmail}</strong>
+            <strong className="auth-split-status-highlight">{registeredEmail}</strong>
           </p>
-          <p className="auth-subtitle auth-hint">
+          <p className="auth-split-status-hint">
             Click the link to activate your account, then log in.
           </p>
-          <button className="auth-button" onClick={() => { setRegisteredEmail(""); switchMode(); }}>
+          <button className="auth-split-btn" onClick={() => { setRegisteredEmail(""); switchMode(); }}>
             Back to login
           </button>
-        </div>
+        </>
       );
     }
 
     if (needsVerify) {
-      return (
-        <div className="auth-card auth-status-card">
-          <button className="auth-modal-abs-close" onClick={handleClose}><X size={20} /></button>
-          <div className="auth-status-icon auth-status-icon--warning">
+      return renderStatus(
+        <>
+          <div className="auth-split-status-icon">
             <Mail size={48} />
           </div>
-          <h2 className="auth-title">Email not verified</h2>
-          <p className="auth-subtitle">
+          <h2 className="auth-split-title">Email not verified</h2>
+          <p className="auth-split-subtitle">
             Please verify your email before logging in.
           </p>
           {verifyEmail && (
-            <p className="auth-hint">
-              We sent a link to <strong className="auth-highlight">{verifyEmail}</strong>
+            <p className="auth-split-status-hint">
+              We sent a link to <strong className="auth-split-status-highlight">{verifyEmail}</strong>
             </p>
           )}
           {resentMsg && (
-            <p className={`auth-feedback ${resentMsg.includes("sent") ? "auth-feedback--ok" : "auth-feedback--err"}`}>
-              {resentMsg}
-            </p>
+            <p className="auth-split-feedback">{resentMsg}</p>
           )}
-          <button className="auth-button" onClick={handleResendVerify} disabled={resending}>
+          <button className="auth-split-btn" onClick={handleResendVerify} disabled={resending}>
             {resending ? "Sending..." : "Resend verification email"}
           </button>
-          <button className="auth-back-btn" onClick={() => { setNeedsVerify(false); setError(""); setResentMsg(""); }}>
+          <button className="auth-split-btn auth-split-btn--back" onClick={() => { setNeedsVerify(false); setError(""); setResentMsg(""); }}>
             Back to login
           </button>
-        </div>
+        </>
       );
     }
 
     if (pending2FA) {
-      return (
-        <div className="auth-card auth-status-card">
-          <button className="auth-modal-abs-close" onClick={handleClose}><X size={20} /></button>
-          <h2 className="auth-title">Two-Factor Authentication</h2>
-          <p className="auth-subtitle">Enter the 6-digit code from your authenticator app</p>
-          <div className="auth-input-wrap auth-2fa-wrap">
+      return renderStatus(
+        <>
+          <h2 className="auth-split-title">Two-Factor Authentication</h2>
+          <p className="auth-split-subtitle">Enter the 6-digit code from your authenticator app</p>
+          <div className="auth-split-input-wrap auth-split-2fa-wrap">
             <input
-              className="auth-input auth-input--code"
+              className="auth-split-input auth-split-input--code"
               type="text"
               inputMode="numeric"
               maxLength={6}
@@ -254,49 +484,22 @@ export default function AuthModal() {
               autoFocus
             />
           </div>
-          {error && <div className="auth-error"><AlertCircle size={14} />{error}</div>}
-          <button
-            className="auth-button"
-            onClick={handle2FASubmit}
-            disabled={loading || twoFACode.length < 6}
-          >
-            {loading ? "Verifying..." : "Verify"}
+          {error && <div className="auth-split-error"><AlertCircle size={14} />{error}</div>}
+          <button className="auth-split-btn" onClick={handle2FASubmit} disabled={loading || twoFACode.length < 6}>
+            {loading ? <span className="auth-split-spinner" /> : "Verify"}
           </button>
-          <button className="auth-back-btn" onClick={() => { setPending2FA(null); setTwoFACode(""); setError(""); }}>
+          <button className="auth-split-btn auth-split-btn--back" onClick={() => { setPending2FA(null); setTwoFACode(""); setError(""); }}>
             Back to login
           </button>
-        </div>
+        </>
       );
     }
 
-    return (
-      <>
-        <button className="auth-modal-abs-close" onClick={handleClose}><X size={20} /></button>
-        <AuthForm
-          key={mode}
-          type={mode}
-          username={username}
-          email={email}
-          password={password}
-          setUsername={setUsername}
-          setEmail={setEmail}
-          setPassword={setPassword}
-          setConfirmPassword={setConfirmPassword}
-          onSubmit={handleSubmit}
-          onModeChange={switchMode}
-          error={error}
-          setError={setError}
-          loading={loading}
-          onGoogleSuccess={handleGoogleSuccess}
-          onGoogleError={(msg) => setError(msg)}
-        />
-      </>
-    );
+    return renderForm();
   };
 
   return (
     <div className="auth-modal-overlay" ref={overlayRef} onClick={(e) => { if (e.target === overlayRef.current) handleClose(); }}>
-      <div className="auth-modal-bg" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/tanjiro.png)` }} />
       <div className="auth-modal-container">
         {renderContent()}
       </div>

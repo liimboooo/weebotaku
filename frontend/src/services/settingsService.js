@@ -157,8 +157,8 @@ const settingsService = {
     }
   },
 
-  async deleteAccount() {
-    await api.delete("/auth/account");
+  async deleteAccount(password) {
+    await api.delete("/auth/account", { body: JSON.stringify({ password }) });
     const keys = Object.keys(localStorage);
     keys.forEach(k => {
       if (k.startsWith("animewch_") || k === "token" || k === "user" || k === "isLoggedIn") {

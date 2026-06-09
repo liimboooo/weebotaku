@@ -3,7 +3,32 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bookmark, Calendar, Clock, Film, Home, LogOut, Settings, User } from 'lucide-react';
 import authService from '../services/authService';
+import { useAuthModal } from '../contexts/AuthModalContext';
 import './Sidebar.css';
+
+function SidebarAvatar() {
+  const [src, setSrc] = useState(authService.getCurrentUser()?.avatar || '');
+
+  useEffect(() => {
+    const onUpdate = () => {
+      const u = authService.getCurrentUser();
+      setSrc(u?.avatar || '');
+    };
+    window.addEventListener('profile-avatar-updated', onUpdate);
+    window.addEventListener('auth-login', onUpdate);
+    window.addEventListener('auth-logout', onUpdate);
+    return () => {
+      window.removeEventListener('profile-avatar-updated', onUpdate);
+      window.removeEventListener('auth-login', onUpdate);
+      window.removeEventListener('auth-logout', onUpdate);
+    };
+  }, []);
+
+  if (src) {
+    return <img src={src} alt="" className="sd-item-avatar" />;
+  }
+  return <User size={22} strokeWidth={1.75} className="sd-item-avatar-fallback" />;
+}
 
 const TOP_ITEMS = [
   { icon: Home, label: 'Home', path: '/home' },
@@ -12,7 +37,7 @@ const TOP_ITEMS = [
 ];
 
 const BOTTOM_ITEMS = [
-  { icon: User, label: 'Profile', path: '/profile', auth: true },
+  { icon: User, label: 'Profile', path: '/profile' },
   { icon: Clock, label: 'History', path: '/history' },
   { icon: Bookmark, label: 'Watchlist', path: '/watchlist' },
   { icon: Settings, label: 'Settings', path: '/settings' },
@@ -21,6 +46,7 @@ const BOTTOM_ITEMS = [
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { openAuth } = useAuthModal();
   const [open, setOpen] = useState(false);
   const isLoggedIn = authService.isLoggedIn();
 
@@ -91,16 +117,19 @@ export default function Sidebar() {
         <div className="sd-bottom">
           {BOTTOM_ITEMS.map(item => {
             const Icon = item.icon;
-            if (item.auth && !isLoggedIn) return null;
             const active = isActive(item.path);
             return (
               <button
                 key={item.path}
                 className={`sd-item${active ? ' active' : ''}`}
-                onClick={() => go(item.path)}
+                onClick={() => { if (item.path === '/profile' && !isLoggedIn) { setOpen(false); openAuth('login'); } else { go(item.path); } }}
               >
-                <Icon size={16} strokeWidth={1.75} />
-                <span>{item.label}</span>
+                {item.path === '/profile' ? (
+                  <SidebarAvatar />
+                ) : (
+                  <Icon size={16} strokeWidth={1.75} />
+                )}
+                <span>{item.path === '/profile' ? (authService.getCurrentUser()?.username || 'Guest') : item.label}</span>
               </button>
             );
           })}
