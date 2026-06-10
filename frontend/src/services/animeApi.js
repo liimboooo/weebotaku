@@ -204,10 +204,10 @@ async function searchReanimeSource(source, searchName, anilistId) {
     return scored
       .filter(r => {
         if (r._score === 999 || r._score > 100) return true;
-        if (sigWords.length === 0) return r._score >= 30;
+        if (sigWords.length === 0) return r._score > 30;
         const tWords = r.title.toLowerCase().split(/\W+/).filter(Boolean);
         const sigOverlap = sigWords.filter(w => tWords.includes(w));
-        return r._score >= 30 && sigOverlap.length > 0;
+        return r._score > 30 && sigOverlap.length > 0;
       })
       .sort((a, b) => b._score - a._score);
   };
