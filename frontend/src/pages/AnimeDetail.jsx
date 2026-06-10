@@ -9,7 +9,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { getAnimeById } from "../data/animeData";
 import Hls from "hls.js";
-import { findStreamingSource, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream, getMiruroEpisodes } from "../services/animeApi";
+import { findStreamingSource, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream, getMiruroEpisodes, getConsumetStream } from "../services/animeApi";
 import { loadWatchHistory, addToWatchHistory, addToWatchlist, removeFromWatchlist, isInWatchlist } from "../services/storage";
 import { fetchAnimeRecommendations } from "../services/anilistApi";
 import commentService from "../services/commentService";
@@ -538,6 +538,16 @@ export default function AnimeDetail() {
           }
           if (miruroDub?.stream?.url && miruroDub.stream.url !== miruroSub?.stream?.url) {
             hlsServers.push({ label: 'Dub (HLS)', url: miruroDub.stream.url, type: 'dub' });
+          }
+
+          if (hlsServers.length === 0) {
+            try {
+              const consumet = await getConsumetStream(aniId, epNum, watchAnime.title || anime?.name || '', 'sub');
+              if (cancelled) return;
+              if (consumet?.stream?.url) {
+                hlsServers.push({ label: 'Sub (HLS)', url: consumet.stream.url, type: 'sub' });
+              }
+            } catch (e) { console.error('[Otaku] Failed to get Consumet stream:', e); }
           }
 
           if (hlsServers.length === 0) {
@@ -1347,7 +1357,7 @@ export default function AnimeDetail() {
                       )}
                     </div>
                     <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5">
-                      <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors ${liked === true ? 'bg-amber-500/20 text-amber-300' : 'hover:bg-white/10 text-white'}`} onClick={() => { if (liked === true) { setLiked(null); setLikesCount(c => c - 1); } else { setLiked(true); setLikesCount(c => c + 1); } }}><ThumbsUp size={14} /> {likesCount != null ? (likesCount >= 1000 ? `${(likesCount / 1000).toFixed(1)}K` : likesCount) : '—'}</button>
+                      <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors ${liked === true ? 'bg-amber-500/20 text-amber-300' : 'hover:bg-white/10 text-white'}`} onClick={() => { if (liked === true) { setLiked(null); setLikesCount(c => c - 1); } else { setLiked(true); setLikesCount(c => c + 1); } }}><ThumbsUp size={14} /> {likesCount != null ? (likesCount >= 1000 ? `${(likesCount / 1000).toFixed(1)}K` : likesCount) : 'ï¿½'}</button>
                       <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 transition-colors ${liked === false ? 'bg-red-500/20 text-red-300' : 'hover:bg-white/10 text-white'}`} onClick={() => setLiked(liked === false ? null : false)}><ThumbsDown size={14} /></button>
                     </div>
                     {/* Desktop: show all buttons */}
@@ -1400,7 +1410,7 @@ export default function AnimeDetail() {
 
                 {/* Stats & Synopsis */}
                 <div className="bg-white/5 border border-white/5 rounded-xl p-3 sm:p-4">
-                  <div className="text-[11px] sm:text-sm font-semibold text-zinc-400 mb-2">{anime?.episodes ? `${anime.episodes} episodes` : ''}{anime?.season ? ` • ${anime.season}` : ''}{anime?.year ? ` ${anime.year}` : ''}{anime?.status ? ` • ${anime.status}` : ''}</div>
+                  <div className="text-[11px] sm:text-sm font-semibold text-zinc-400 mb-2">{anime?.episodes ? `${anime.episodes} episodes` : ''}{anime?.season ? ` ï¿½ ${anime.season}` : ''}{anime?.year ? ` ${anime.year}` : ''}{anime?.status ? ` ï¿½ ${anime.status}` : ''}</div>
                   {anime?.description ? (
                     <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">{anime.description.replace(/<[^>]*>/g, '')}</p>
                   ) : (
@@ -1613,7 +1623,7 @@ export default function AnimeDetail() {
                             <h3 className="anime-title">{rec?.name || 'Unknown'}</h3>
                             <div className="sub-meta-row">
                               {rec?.rating && <span className="rating-block"><Star size={10} /> {rec.rating}%</span>}
-                              <span className="type-label">{rec?.genres?.slice(0, 2).join(' • ') || rec?.format || 'Anime'}</span>
+                              <span className="type-label">{rec?.genres?.slice(0, 2).join(' ï¿½ ') || rec?.format || 'Anime'}</span>
                             </div>
                           </div>
                         </div>
