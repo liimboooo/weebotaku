@@ -1,4 +1,5 @@
 const { ANIME } = require('@consumet/extensions');
+const { hentaiStream } = require('./hentaiService');
 
 let hianime = null;
 let animepahe = null;
@@ -122,7 +123,10 @@ exports.consumetStream = async (anilistId, episodeNum, category = 'sub', animeTi
     } catch {}
   }
 
-  return tryProviderStream(anilistId, episodeNum, category, title, 'animepahe');
+  const paheResult = await tryProviderStream(anilistId, episodeNum, category, title, 'animepahe').catch(() => null);
+  if (paheResult) return paheResult;
+
+  return hentaiStream(title, episodeNum);
 };
 
 exports.consumetSearch = async (query) => {
