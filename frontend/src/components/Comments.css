@@ -235,7 +235,8 @@
   display: flex;
   align-items: baseline;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .awc-user {
@@ -269,7 +270,25 @@
 .awc-reply-to {
   font-size: 11px;
   color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
 }
+
+.awc-user-click {
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+}
+
+.awc-user-click:hover { opacity: 0.8; }
 
 .awc-text {
   font-size: 15px;
@@ -309,7 +328,7 @@
 .awc-action-count { font-size: 12px; font-weight: 500; }
 
 /* ─── OPTIONS ─── */
-.awc-options-wrap { position: relative; margin-left: auto; }
+.awc-options-wrap { position: relative; margin-left: auto; flex-shrink: 0; }
 
 .awc-options-btn {
   width: 28px;

@@ -120,7 +120,9 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
 
   const getCommentUser = (u) => {
     if (!u) return { username: "Unknown", avatar: null };
-    if (typeof u === "object") return { username: u.username || "Unknown", avatar: u.avatar || null };
+    if (Array.isArray(u)) u = u[0];
+    if (!u) return { username: "Unknown", avatar: null };
+    if (typeof u === "object") return { username: u.username || u.name || "Unknown", avatar: u.avatar || null };
     return { username: "Unknown", avatar: null };
   };
 
