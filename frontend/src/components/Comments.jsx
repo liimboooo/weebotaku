@@ -73,7 +73,7 @@ function formatExactTime(timeStr) {
   return timeStr;
 }
 
-function CommentItem({ comment, isOPCheck, onLike, onDislike, onEditComment, onDeleteComment, onPostReply, depth = 0, currentUser, parentUser }) {
+function CommentItem({ comment, onLike, onDislike, onEditComment, onDeleteComment, onPostReply, depth = 0, currentUser, parentUser }) {
   const navigate = useNavigate();
   const goProfile = () => { if (comment.user !== "Unknown" && comment.user !== "Guest") navigate(`/profile/${comment.user}`); };
   const [liked, setLiked] = useState(false);
@@ -90,7 +90,6 @@ function CommentItem({ comment, isOPCheck, onLike, onDislike, onEditComment, onD
   const menuRef = useRef(null);
 
   const isOwn = comment.user === currentUser;
-  const isOP = comment.user !== currentUser && comment.user === (parentUser || comment.user);
 
   useEffect(() => {
     if (menuOpen) {
@@ -217,7 +216,7 @@ function CommentItem({ comment, isOPCheck, onLike, onDislike, onEditComment, onD
               {showReplies && (
                 <div className="awc-replies">
                   {comment.replies.map(r => (
-                    <CommentItem key={r.id} comment={r} isOPCheck={isOPCheck}
+                    <CommentItem key={r.id} comment={r}
                       onLike={onLike} onDislike={onDislike}
                       onEditComment={onEditComment} onDeleteComment={onDeleteComment}
                       onPostReply={onPostReply} depth={depth + 1}
@@ -260,7 +259,7 @@ export default function Comments({ comments: externalComments, setComments, curr
   const [posted, setPosted] = useState(false);
   const sortRef = useRef(null);
 
-  const list = externalComments || [];
+  const list = useMemo(() => externalComments || [], [externalComments]);
 
   useEffect(() => {
     const handler = (e) => { if (sortRef.current && !sortRef.current.contains(e.target)) setSortOpen(false); };
@@ -366,7 +365,6 @@ export default function Comments({ comments: externalComments, setComments, curr
       <div className="awc-list">
         {visible.map(cm => (
           <CommentItem key={cm.id} comment={cm}
-            isOPCheck={() => false}
             onLike={handleLike} onDislike={handleDislike}
             onEditComment={handleEdit} onDeleteComment={handleDelete}
             onPostReply={handlePostReply} depth={0}

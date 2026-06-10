@@ -143,7 +143,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       text: r.content,
       time: new Date(r.createdAt).getTime().toString(),
       likes: r.likes?.length || 0,
-      dislikes: 0,
+      dislikes: r.dislikes?.length || 0,
       replies: [],
     }; }),
     pinned: c.pinned || false,
