@@ -36,12 +36,12 @@ async function sendVerificationEmail(email, token, username) {
   const html = loadTemplate('verify-email', { username, link }) || `
     <div style="max-width:480px;margin:0 auto;padding:32px;background:#0a0a0a;color:#fff;font-family:sans-serif;border-radius:12px;border:1px solid rgba(102,126,234,0.15);">
       <h1 style="font-size:24px;margin:0 0 8px;">Verify your email</h1>
-      <p style="color:#888;line-height:1.5;">Hi ${username},<br>Click the button below to verify your email and activate your AnimeWch account.</p>
+      <p style="color:#888;line-height:1.5;">Hi ${username},<br>Click the button below to verify your email and activate your Otaku account.</p>
       <a href="${link}" style="display:inline-block;padding:12px 28px;background:#667eea;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin:16px 0;">Verify Email</a>
       <p style="color:#666;font-size:13px;">This link expires in 24 hours. If you didn't create this account, ignore this email.</p>
     </div>
   `;
-  await sendEmail({ to: email, subject: 'Verify your AnimeWch email', html });
+  await sendEmail({ to: email, subject: 'Verify your Otaku email', html });
 }
 
 async function sendPasswordResetEmail(email, token, username) {
@@ -54,7 +54,7 @@ async function sendPasswordResetEmail(email, token, username) {
       <p style="color:#666;font-size:13px;">This link expires in 1 hour. If you didn't request this, ignore this email.</p>
     </div>
   `;
-  await sendEmail({ to: email, subject: 'Reset your AnimeWch password', html });
+  await sendEmail({ to: email, subject: 'Reset your Otaku password', html });
 }
 
 module.exports = { sendVerificationEmail, sendPasswordResetEmail };

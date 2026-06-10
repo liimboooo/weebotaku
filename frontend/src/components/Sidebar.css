@@ -76,20 +76,11 @@
   opacity: 0.7;
 }
 
-.sd-brand-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  flex-shrink: 0;
-}
-
-.sd-brand-text {
-  font-size: 14.5px;
-  font-weight: 600;
-  color: #fff;
-  letter-spacing: -0.015em;
-  font-family: var(--font-body);
+.sd-brand-logo {
+  height: 48px;
+  width: auto;
+  max-width: 200px;
+  display: block;
 }
 
 /* ─── Top Nav (site links) ────────────────────────────── */

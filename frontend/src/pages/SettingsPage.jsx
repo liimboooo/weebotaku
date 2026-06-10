@@ -76,7 +76,7 @@ export default function SettingsPage() {
 
   const [settings, setSettings] = useState(() => {
     try {
-      const raw = localStorage.getItem("animewch_settings");
+      const raw = localStorage.getItem("otaku_settings");
       if (raw) return JSON.parse(raw);
     } catch {}
     return {};
@@ -135,13 +135,13 @@ export default function SettingsPage() {
       if (res?.success) {
         setSyncStatus({ mal: res.mal, anilist: res.anilist });
       }
-    }).catch(err => console.error('[AnimeWch] Failed to load sync status:', err));
+    }).catch(err => console.error('[Otaku] Failed to load sync status:', err));
     
     authService.getMe().then(res => {
       if (res?.success && res?.user?.favorites) {
         setFavorites(res.user.favorites);
       }
-    }).catch(err => console.error('[AnimeWch] Failed to load user data:', err));
+    }).catch(err => console.error('[Otaku] Failed to load user data:', err));
   }, [settingsReady]);
 
   useEffect(() => {

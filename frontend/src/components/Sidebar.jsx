@@ -90,8 +90,7 @@ export default function Sidebar() {
       >
         <div className="sd-header">
           <button className="sd-brand" onClick={() => go('/home')}>
-            <span className="sd-brand-dot" />
-            <span className="sd-brand-text">AnimeWch</span>
+            <img src="/logo.svg" alt="Otaku" className="sd-brand-logo" />
           </button>
         </div>
 

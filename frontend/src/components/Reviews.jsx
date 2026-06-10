@@ -28,7 +28,7 @@ export default function Reviews({ animeId, selectedEp }) {
           })));
         }
       })
-      .catch(err => { console.error('[AnimeWch] Failed to load reviews:', err); setReviewsError(true); });
+      .catch(err => { console.error('[Otaku] Failed to load reviews:', err); setReviewsError(true); });
   }, [animeId]);
 
   const addReview = async () => {
@@ -69,7 +69,7 @@ export default function Reviews({ animeId, selectedEp }) {
           likes: r.likes?.length || 0,
         })));
       }
-    } catch (e) { console.error('[AnimeWch] Review submit failed:', e); }
+    } catch (e) { console.error('[Otaku] Review submit failed:', e); }
 
     setNewReview("");
     setReviewRating(0);

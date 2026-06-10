@@ -67,7 +67,7 @@ export default function AuthModal() {
   }, [isOpen]);
 
   const onAuthSuccess = useCallback(() => {
-    syncFromBackend().catch(err => console.error('[AnimeWch] Backend sync after login failed:', err));
+    syncFromBackend().catch(err => console.error('[Otaku] Backend sync after login failed:', err));
     window.dispatchEvent(new Event('auth-login'));
     handleClose();
     if (redirectTo) navigate(redirectTo, { replace: true });

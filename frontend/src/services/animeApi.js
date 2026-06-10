@@ -41,7 +41,7 @@ async function raceToFirst(promises) {
   return new Promise((resolve) => {
     for (const p of promises) {
       // eslint-disable-next-line no-loop-func
-      p.then(val => { if (!settled && val) { settled = true; resolve(val); } }).catch(err => console.error('[AnimeWch] raceToFirst: a search promise rejected:', err));
+      p.then(val => { if (!settled && val) { settled = true; resolve(val); } }).catch(err => console.error('[Otaku] raceToFirst: a search promise rejected:', err));
     }
     Promise.allSettled(promises).then(() => { if (!settled) resolve(null); });
   });

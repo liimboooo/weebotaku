@@ -1,4 +1,4 @@
-// Home page - main landing page for AnimeWch
+// Home page - main landing page for Otaku
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -67,7 +67,7 @@ function useAnimeData() {
         setCategories(bundle.genres);
         setUpcomingList(take(bundle.upcoming, 12));
         setPopularList(take(bundle.popular, 20));
-      } catch (e) { console.error('[AnimeWch] Failed to load continue watching:', e); }
+      } catch (e) { console.error('[Otaku] Failed to load continue watching:', e); }
       setLoading(false);
     }
     load();
@@ -101,7 +101,7 @@ function useAnimeData() {
         const used = new Set(topTen.map(a => a.id));
         setTrendingList(r.data.filter(a => !used.has(a.id)).slice(0, 15));
       }
-    } catch (e) { console.error('[AnimeWch] Failed to load top ten:', e); }
+    } catch (e) { console.error('[Otaku] Failed to load top ten:', e); }
   }, [topTen]);
 
   return { spotlight, topTen, trendingList, seasonPicks, upcomingList, popularList, categories, loading, refreshTrending };
@@ -161,7 +161,7 @@ function ContinueWatchingRow() {
         try {
           const data = await fetchAnimeById(item.animeId);
           if (data) setEnriched(prev => ({ ...prev, [item.animeId]: data }));
-        } catch (e) { console.error('[AnimeWch] Failed to enrich data:', e); }
+        } catch (e) { console.error('[Otaku] Failed to enrich data:', e); }
       });
     }
     load();

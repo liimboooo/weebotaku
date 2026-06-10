@@ -2,13 +2,13 @@ import { STORAGE_KEYS } from '../utils/constants';
 import api from './api';
 
 const STORAGE_KEY = STORAGE_KEYS.NOTIFICATIONS;
-const BROADCAST_KEY = 'animewch_broadcast_seen';
+const BROADCAST_KEY = 'otaku_broadcast_seen';
 let counter = Date.now();
 let serverNotifs = [];
 
 const BROADCAST_NOTIFS = [
   {
-    title: 'Welcome to AnimeWch!',
+    title: 'Welcome to Otaku!',
     body: 'Explore thousands of anime and manga. Start your journey today.',
     type: 'system_update',
     link: '/browse/anime',

@@ -9,7 +9,7 @@ import useDocumentTitle from "../hooks/useDocumentTitle";
 import "./AuthPage.css";
 
 export default function AuthPage() {
-  useDocumentTitle("AnimeWch");
+  useDocumentTitle("Otaku");
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -30,7 +30,7 @@ export default function AuthPage() {
   const [resentMsg, setResentMsg] = useState("");
 
   const onAuthSuccess = useCallback(() => {
-    syncFromBackend().catch(err => console.error('[AnimeWch] Backend sync after login failed:', err));
+    syncFromBackend().catch(err => console.error('[Otaku] Backend sync after login failed:', err));
     navigate(from, { replace: true });
   }, [navigate, from]);
 

@@ -157,11 +157,14 @@
   flex-shrink: 0;
 }
 
-.brand-text {
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
-  letter-spacing: -0.015em;
+.brand-logo {
+  height: 44px;
+  width: auto;
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .brand-logo { height: 34px; }
 }
 
 /* ─── Right Cluster ───────────────────────────────────── */

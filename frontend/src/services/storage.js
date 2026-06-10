@@ -51,7 +51,7 @@ export function addToWatchlist(item) {
       status: item.status,
       genres: item.genres,
       listStatus: entry.listStatus,
-    }).catch(err => console.error('[AnimeWch] Failed to sync watchlist to backend:', err));
+    }).catch(err => console.error('[Otaku] Failed to sync watchlist to backend:', err));
   }
 
   return next;
@@ -64,7 +64,7 @@ export function removeFromWatchlist(id) {
   saveWatchlist(next);
 
   if (isLoggedIn()) {
-    api.delete(`/anime/${id}/watchlist`).catch(err => console.error('[AnimeWch] Failed to remove watchlist item from backend:', err));
+    api.delete(`/anime/${id}/watchlist`).catch(err => console.error('[Otaku] Failed to remove watchlist item from backend:', err));
   }
 
   return next;
@@ -85,7 +85,7 @@ export function updateListStatus(animeId, listStatus) {
   }
 
   if (isLoggedIn()) {
-    api.put('/auth/list-status', { animeId, listStatus }).catch(err => console.error('[AnimeWch] Failed to update list status on backend:', err));
+    api.put('/auth/list-status', { animeId, listStatus }).catch(err => console.error('[Otaku] Failed to update list status on backend:', err));
   }
 }
 
@@ -141,7 +141,7 @@ export function addToWatchHistory(animeId, episode, animeName, animeImg, positio
       position,
       animeName,
       animeImg,
-    }).catch(err => console.error('[AnimeWch] Failed to sync watch history to backend:', err));
+    }).catch(err => console.error('[Otaku] Failed to sync watch history to backend:', err));
   }
 
   window.dispatchEvent(new CustomEvent(STORAGE_KEYS.PROFILE_DATA_CHANGED));
@@ -161,7 +161,7 @@ export function rateAnime(animeId, rating) {
   localStorage.setItem(STORAGE_KEYS.USER_RATINGS, JSON.stringify(ratings));
 
   if (isLoggedIn()) {
-    api.post(`/anime/${animeId}/rate`, { rating }).catch(err => console.error('[AnimeWch] Failed to sync rating to backend:', err));
+    api.post(`/anime/${animeId}/rate`, { rating }).catch(err => console.error('[Otaku] Failed to sync rating to backend:', err));
   }
 
   window.dispatchEvent(new CustomEvent(STORAGE_KEYS.PROFILE_DATA_CHANGED));
@@ -186,7 +186,7 @@ export function toggleLikeAnime(animeId) {
   localStorage.setItem(STORAGE_KEYS.LIKED_ANIME, JSON.stringify(liked));
 
   if (isLoggedIn()) {
-    api.post(`/anime/${animeId}/like`).catch(err => console.error('[AnimeWch] Failed to sync like to backend:', err));
+    api.post(`/anime/${animeId}/like`).catch(err => console.error('[Otaku] Failed to sync like to backend:', err));
   }
 
   window.dispatchEvent(new CustomEvent(STORAGE_KEYS.PROFILE_DATA_CHANGED));

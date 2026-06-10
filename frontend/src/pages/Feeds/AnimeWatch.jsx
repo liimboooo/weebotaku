@@ -51,17 +51,17 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   const [showSkipIntro, setShowSkipIntro] = useState(false);
   const [showSkipOutro, setShowSkipOutro] = useState(false);
   const [autoNext, setAutoNext] = useState(() => {
-    try { const s = JSON.parse(localStorage.getItem("animewch_settings") || "{}"); return s.autoNext !== false; } catch { return true; }
+    try { const s = JSON.parse(localStorage.getItem("otaku_settings") || "{}"); return s.autoNext !== false; } catch { return true; }
   });
   const [autoNextCountdown, setAutoNextCountdown] = useState(null);
   const [playbackSpeed, setPlaybackSpeed] = useState(() => {
-    try { const s = JSON.parse(localStorage.getItem("animewch_settings") || "{}"); return s.playbackSpeed || 1; } catch { return 1; }
+    try { const s = JSON.parse(localStorage.getItem("otaku_settings") || "{}"); return s.playbackSpeed || 1; } catch { return 1; }
   });
   const [skipIntroSetting, setSkipIntroSetting] = useState(() => {
-    try { const s = JSON.parse(localStorage.getItem("animewch_settings") || "{}"); return !!s.skipIntro; } catch { return false; }
+    try { const s = JSON.parse(localStorage.getItem("otaku_settings") || "{}"); return !!s.skipIntro; } catch { return false; }
   });
   const [skipOutroSetting, setSkipOutroSetting] = useState(() => {
-    try { const s = JSON.parse(localStorage.getItem("animewch_settings") || "{}"); return !!s.skipOutro; } catch { return false; }
+    try { const s = JSON.parse(localStorage.getItem("otaku_settings") || "{}"); return !!s.skipOutro; } catch { return false; }
   });
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
@@ -184,21 +184,21 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     try {
       await commentService.replyToComment(parentId, content);
       await refetchComments();
-    } catch (e) { console.error('[AnimeWch] Failed to reply to comment:', e); }
+    } catch (e) { console.error('[Otaku] Failed to reply to comment:', e); }
   };
 
   const handleEditComment = async (id, content) => {
     try {
       await commentService.editComment(id, content);
       await refetchComments();
-    } catch (e) { console.error('[AnimeWch] Failed to edit comment:', e); }
+    } catch (e) { console.error('[Otaku] Failed to edit comment:', e); }
   };
 
   const handleDeleteComment = async (id) => {
     try {
       await commentService.deleteComment(id);
       await refetchComments();
-    } catch (e) { console.error('[AnimeWch] Failed to delete comment:', e); }
+    } catch (e) { console.error('[Otaku] Failed to delete comment:', e); }
   };
 
   useEffect(() => {
@@ -221,7 +221,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
           setLoading(false);
           return;
         }
-      } catch (e) { console.error('[AnimeWch] Failed to get streaming links:', e); }
+      } catch (e) { console.error('[Otaku] Failed to get streaming links:', e); }
       if (!timedOut) { clearTimeout(timer); setError("No streaming links available."); setLoading(false); }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -355,7 +355,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
           }
         }
         else setError("No video servers found.");
-      } catch (e) { console.error('[AnimeWch] Stream load error:', e); setError("Failed to load stream."); }
+      } catch (e) { console.error('[Otaku] Stream load error:', e); setError("Failed to load stream."); }
       finally { setStreamLoading(false); }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -975,9 +975,9 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
                                 const video = hlsVideoRef.current;
                                 if (video) video.playbackRate = s;
                                 try {
-                                  const stored = JSON.parse(localStorage.getItem("animewch_settings") || "{}");
+                                  const stored = JSON.parse(localStorage.getItem("otaku_settings") || "{}");
                                   stored.playbackSpeed = s;
-                                  localStorage.setItem("animewch_settings", JSON.stringify(stored));
+                                  localStorage.setItem("otaku_settings", JSON.stringify(stored));
                                 } catch {}
                               }}>
                                 {s}x

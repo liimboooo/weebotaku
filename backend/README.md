@@ -1,6 +1,6 @@
-# AnimeWch Backend API
+# Otaku Backend API
 
-Express.js + MongoDB REST API with JWT authentication for the AnimeWch platform.
+Express.js + MongoDB REST API with JWT authentication for the Otaku platform.
 
 ## Tech Stack
 
@@ -14,7 +14,7 @@ Express.js + MongoDB REST API with JWT authentication for the AnimeWch platform.
 ## Database
 
 `config/db.js` — Auto-detection fallback:
-1. Tries `MONGODB_URI` env var or `mongodb://127.0.0.1:27017/animewch`
+1. Tries `MONGODB_URI` env var or `mongodb://127.0.0.1:27017/otaku`
 2. Falls back to `mongodb-memory-server` (zero-config, data lost on restart)
 
 ---
@@ -147,8 +147,8 @@ Allowed origins: `http://localhost:3000`, `http://127.0.0.1:3000`
 ## Environment (`.env`)
 ```
 PORT=5000
-MONGODB_URI=mongodb://127.0.0.1:27017/animewch
-JWT_SECRET=animewch_super_secret_jwt_key_2026_change_me
+MONGODB_URI=mongodb://127.0.0.1:27017/otaku
+JWT_SECRET=otaku_super_secret_jwt_key_2026_change_me
 JWT_EXPIRE=30d
 NODE_ENV=development
 ```

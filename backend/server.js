@@ -10,7 +10,7 @@ const start = async () => {
     const app = require('./app');
     const PORT = process.env.PORT;
     const server = app.listen(PORT, () => {
-      console.log(`🚀 AnimeWch API running on port ${PORT}`);
+      console.log(`🚀 Otaku API running on port ${PORT}`);
       console.log(`📡 Environment: ${process.env.NODE_ENV}`);
     });
     initIO(server);

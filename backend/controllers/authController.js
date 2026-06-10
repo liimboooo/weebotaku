@@ -391,7 +391,7 @@ exports.exportFavorites = async (req, res) => {
     };
     
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename="animewch-favorites-${Date.now()}.json"`);
+    res.setHeader('Content-Disposition', `attachment; filename="Otaku-favorites-${Date.now()}.json"`);
     res.json({ success: true, data: exportData });
   } catch (error) {
     console.error('ExportFavorites error:', error);
@@ -685,7 +685,7 @@ const crypto = require('crypto');
 // @route   POST /api/auth/2fa/setup
 exports.setup2FA = async (req, res) => {
   try {
-    const secret = speakeasy.generateSecret({ name: `AnimeWch (${req.user.username})` });
+    const secret = speakeasy.generateSecret({ name: `Otaku (${req.user.username})` });
     const user = await User.findById(req.user.id);
     user.twoFactorSecret = secret.base32;
     await user.save();

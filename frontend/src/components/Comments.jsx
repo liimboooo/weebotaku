@@ -286,13 +286,13 @@ export default function Comments({ comments: externalComments, setComments, curr
       setText("");
       setPosted(true);
       setTimeout(() => setPosted(false), 3000);
-    } catch (e) { console.error('[AnimeWch] Comment post failed:', e); }
+    } catch (e) { console.error('[Otaku] Comment post failed:', e); }
     setPosting(false);
   };
 
   const handlePostReply = useCallback(async (parentId, content) => {
     try { await onReplyComment?.(parentId, content); }
-    catch (e) { console.error('[AnimeWch] Reply failed:', e); }
+    catch (e) { console.error('[Otaku] Reply failed:', e); }
   }, [onReplyComment]);
 
   const handleLike = useCallback(async (id) => { await onLikeComment?.(id); }, [onLikeComment]);

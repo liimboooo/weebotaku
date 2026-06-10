@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: animewch-api
+    name: otaku-api
     runtime: node
     rootDir: backend
     buildCommand: npm install

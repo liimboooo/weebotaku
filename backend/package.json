@@ -1,7 +1,7 @@
 {
-  "name": "animewch-backend",
+  "name": "otaku-backend",
   "version": "1.0.0",
-  "description": "AnimeWch Backend API",
+  "description": "Otaku Backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

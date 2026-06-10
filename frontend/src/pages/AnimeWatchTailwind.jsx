@@ -42,14 +42,14 @@ export default function AnimeWatchTailwind() {
             setEpisodes(Array.from({ length: a.episodes }, (_, i) => ({ episode: i + 1, title: `Episode ${i + 1}`, url: String(i + 1) })));
           }
         } catch (e) {
-          console.error('[AnimeWch] Failed to fetch episodes:', e);
+          console.error('[Otaku] Failed to fetch episodes:', e);
           if (a.episodes) {
             setEpisodes(Array.from({ length: a.episodes }, (_, i) => ({ episode: i + 1, title: `Episode ${i + 1}`, url: String(i + 1) })));
           }
         }
         if (!cancelled) setLoading(false);
       } catch (e) {
-        console.error('[AnimeWch] Failed to load anime:', e);
+        console.error('[Otaku] Failed to load anime:', e);
         if (!cancelled) { setError('Failed to load anime'); setLoading(false); }
       }
     })();

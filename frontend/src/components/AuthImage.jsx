@@ -10,7 +10,7 @@ export default function AuthImage() {
   useEffect(() => {
     configService.getFeatures().then(res => {
       if (res.success) setFeatures(res.data);
-    }).catch(err => console.error('[AnimeWch] Failed to load auth page features:', err));
+    }).catch(err => console.error('[Otaku] Failed to load auth page features:', err));
   }, []);
 
   return (
@@ -23,7 +23,7 @@ export default function AuthImage() {
             <span className="auth-image-logo-letter">A</span>
           </div>
           <div className="auth-image-logo-text">
-            <span className="auth-image-logo-title">AnimeWch</span>
+            <span className="auth-image-logo-title">Otaku</span>
             <span className="auth-image-logo-badge">SOCIAL</span>
           </div>
         </div>

@@ -51,7 +51,7 @@ export default function AuthForm({ type, username, email, password, setUsername,
       <div className="auth-header">
         <h1 className="auth-title">
           <Sparkles size={20} />
-          {type === "login" ? "Welcome back" : "Join AnimeWch"}
+          {type === "login" ? "Welcome back" : "Join Otaku"}
         </h1>
         <p className="auth-subtitle">
           {type === "login" ? "Sign in to continue your journey" : "Create your account and start exploring"}

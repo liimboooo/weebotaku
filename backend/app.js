@@ -88,7 +88,7 @@ app.get('/api/health', async (req, res) => {
   }
   res.json({
     success: true,
-    message: 'AnimeWch API is running',
+    message: 'Otaku API is running',
     timestamp: new Date().toISOString(),
     db: dbState,
   });

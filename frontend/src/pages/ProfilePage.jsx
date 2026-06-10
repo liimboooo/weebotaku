@@ -137,7 +137,7 @@ export default function ProfilePage() {
               setJoinDate(`${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`);
             }
           }
-        } catch (e) { console.error('[AnimeWch] Profile load failed:', e); }
+        } catch (e) { console.error('[Otaku] Profile load failed:', e); }
         setLoading(false);
       })();
     } else {
@@ -186,7 +186,7 @@ export default function ProfilePage() {
       updated = [...favorites, { animeId: anime.animeId, name: anime.name, img: anime.img }];
     }
     setFavorites(updated);
-    await authService.updateFavorites(updated).catch(err => console.error('[AnimeWch] Failed to update favorites:', err));
+    await authService.updateFavorites(updated).catch(err => console.error('[Otaku] Failed to update favorites:', err));
   };
 
   const counts = useMemo(() => ({

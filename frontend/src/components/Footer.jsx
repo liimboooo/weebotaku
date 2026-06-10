@@ -52,9 +52,9 @@ export default function Footer() {
           <div className="footer-brand">
             <div className="footer-brand-row">
               <span className="footer-brand-icon">
-                <img src="/logo.png" alt="AnimeWch" className="footer-logo" />
+                <img src="/logo.svg" alt="Otaku" className="footer-logo" />
               </span>
-              <strong>AnimeWch</strong>
+              <strong>Otaku</strong>
             </div>
             <span>Stream, track, and discover your next favorite anime — all in one place.</span>
             <div className="footer-socials">
@@ -118,7 +118,7 @@ export default function Footer() {
         <div className="footer-divider" />
 
         <div className="footer-bottom">
-          <p className="footer-copy">&copy; {new Date().getFullYear()} AnimeWch. Not affiliated with any studios.</p>
+          <p className="footer-copy">&copy; {new Date().getFullYear()} Otaku. Not affiliated with any studios.</p>
           <span className="footer-made">
             Made with <Heart size={12} fill="currentColor" /> for anime fans
           </span>

@@ -243,8 +243,7 @@ export default function Header({ isHome = false, transparentHeader = false }) {
           </button>
           <span className="top-nav-divider" />
           <button className="top-nav-brand" onClick={() => navigate('/home')} aria-label="Home">
-            <span className="brand-dot" />
-            <span className="brand-text">AnimeWch</span>
+            <img src="/logo.svg" alt="Otaku" className="brand-logo" />
           </button>
         </div>
 

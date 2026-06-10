@@ -48,7 +48,7 @@ function getNextEpText(anime) {
         if (days === 1) return "in 1 day";
         return `in ${days} days`;
       }
-    } catch (e) { console.error('[AnimeWch] Date parse error:', e); }
+    } catch (e) { console.error('[Otaku] Date parse error:', e); }
   }
   return null;
 }
@@ -92,11 +92,11 @@ export default function AnimeInfo() {
     try {
       const recs = await fetchAnimeRecommendations(id);
       setRelated(recs);
-    } catch (e) { console.error('[AnimeWch] Failed to fetch recommendations:', e); }
+    } catch (e) { console.error('[Otaku] Failed to fetch recommendations:', e); }
     try {
       const chars = await fetchAnimeCharacters(id);
       setCharacters(chars.slice(0, 8));
-    } catch (e) { console.error('[AnimeWch] Failed to fetch characters:', e); }
+    } catch (e) { console.error('[Otaku] Failed to fetch characters:', e); }
     setLoading(false);
   }, [id]);
 
@@ -195,7 +195,7 @@ export default function AnimeInfo() {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (e) { console.error('[AnimeWch] Copy to clipboard failed:', e); }
+    } catch (e) { console.error('[Otaku] Copy to clipboard failed:', e); }
   };
 
   const handleShare = (key) => {

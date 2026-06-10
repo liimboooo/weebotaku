@@ -1,7 +1,7 @@
 import api from "./api";
 
-const SETTINGS_KEY = "animewch_settings";
-const SYNC_KEY = "animewch_sync";
+const SETTINGS_KEY = "otaku_settings";
+const SYNC_KEY = "otaku_sync";
 
 const DEFAULTS = {
   darkMode: "auto", fontSize: "Medium", accentColor: "#ffffff",
@@ -74,14 +74,14 @@ const settingsService = {
 
   loadUserProfile() {
     try {
-      const stored = localStorage.getItem("animewch_profile");
+      const stored = localStorage.getItem("otaku_profile");
       if (stored) return JSON.parse(stored);
     } catch {}
     return null;
   },
 
   saveUserProfile(profile) {
-    localStorage.setItem("animewch_profile", JSON.stringify(profile));
+    localStorage.setItem("otaku_profile", JSON.stringify(profile));
   },
 
   validatePassword(password) {
@@ -161,7 +161,7 @@ const settingsService = {
     await api.delete("/auth/account", { body: JSON.stringify({ password }) });
     const keys = Object.keys(localStorage);
     keys.forEach(k => {
-      if (k.startsWith("animewch_") || k === "token" || k === "user" || k === "isLoggedIn") {
+      if (k.startsWith("otaku_") || k === "token" || k === "user" || k === "isLoggedIn") {
         localStorage.removeItem(k);
       }
     });

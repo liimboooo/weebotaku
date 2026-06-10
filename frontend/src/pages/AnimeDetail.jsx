@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Loader, Play, Star, Tv, Calendar, Clock, Monitor, Film,
@@ -22,7 +22,7 @@ import useDocumentTitle from "../hooks/useDocumentTitle";
 import VideoPlayer from "../components/VideoPlayer";
 import "../components/TopTrending.css";
 
-const SETTINGS_KEY = "animewch_settings";
+const SETTINGS_KEY = "otaku_settings";
 function loadSettings() {
   try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"); } catch { return {}; }
 }
@@ -63,7 +63,7 @@ export default function AnimeDetail() {
     const s = loadSettings();
     if (s.defaultDubbed === "dubbed") return "dub";
     if (s.defaultDubbed === "subbed") return "sub";
-    return localStorage.getItem("animewch_last_language") || "sub";
+    return localStorage.getItem("otaku_last_language") || "sub";
   });
   const [langKey, setLangKey] = useState(0);
   const [visibleCount, setVisibleCount] = useState(50);
@@ -382,7 +382,7 @@ export default function AnimeDetail() {
   useEffect(() => {
     if (!apiAnime?.id) return;
     let cancelled = false;
-    fetchAnimeRecommendations(apiAnime.id).then(r => { if (!cancelled) setRecommendations(r); }).catch(err => console.error('[AnimeWch] Failed to load recommendations:', err));
+    fetchAnimeRecommendations(apiAnime.id).then(r => { if (!cancelled) setRecommendations(r); }).catch(err => console.error('[Otaku] Failed to load recommendations:', err));
     return () => { cancelled = true; };
   }, [apiAnime?.id]);
 
@@ -437,7 +437,7 @@ export default function AnimeDetail() {
             setLoading(false);
             return;
           }
-        } catch (e) { console.error('[AnimeWch] Failed to get direct stream:', e); }
+        } catch (e) { console.error('[Otaku] Failed to get direct stream:', e); }
       }
 
       try {
@@ -456,7 +456,7 @@ export default function AnimeDetail() {
             }
           }
         }
-      } catch (e) { console.error('[AnimeWch] Failed to get Miruro episodes:', e); }
+      } catch (e) { console.error('[Otaku] Failed to get Miruro episodes:', e); }
 
       const epCount = anime?.episodes || 0;
       if (epCount > 0) {
@@ -553,7 +553,7 @@ export default function AnimeDetail() {
                   outro: prev.outro || direct.outro,
                 }));
               }
-            } catch (e) { console.error('[AnimeWch] Failed to get stream URLs:', e); }
+            } catch (e) { console.error('[Otaku] Failed to get stream URLs:', e); }
           }
         }
 
@@ -573,7 +573,7 @@ export default function AnimeDetail() {
         if (cancelled) return;
         if (urls.length > 0) { setServers(urls); }
         else setError("No video servers found.");
-      } catch (e) { console.error('[AnimeWch] Stream load error:', e); if (!cancelled) setError("Failed to load stream."); }
+      } catch (e) { console.error('[Otaku] Stream load error:', e); if (!cancelled) setError("Failed to load stream."); }
       finally { if (!cancelled) setStreamLoading(false); }
     })();
     return () => { cancelled = true; };
@@ -625,7 +625,7 @@ export default function AnimeDetail() {
           setCurrentQuality(data.levels.length - 1);
         }
         if (prevPos > 2) video.currentTime = prevPos;
-        video.play().catch(err => console.error('[AnimeWch] HLS video play failed:', err));
+        video.play().catch(err => console.error('[Otaku] HLS video play failed:', err));
       });
       hls.on(Hls.Events.ERROR, (_, data) => {
         if (!data.fatal) return;
@@ -648,7 +648,7 @@ export default function AnimeDetail() {
       video.src = streamUrl;
       video.addEventListener("loadedmetadata", () => {
         if (prevPos > 2) video.currentTime = prevPos;
-        video.play().catch(err => console.error('[AnimeWch] Native video play failed:', err));
+        video.play().catch(err => console.error('[Otaku] Native video play failed:', err));
       }, { once: true });
       video.addEventListener("error", () => {
         const currentUrl = streamUrl;
@@ -789,7 +789,7 @@ export default function AnimeDetail() {
   const handleToggleLanguage = useCallback(() => {
     setLanguage(l => {
       const next = l === 'sub' ? 'dub' : 'sub';
-      try { localStorage.setItem('animewch_last_language', next); } catch (e) { console.error('[AnimeWch] Failed to save language pref:', e); }
+      try { localStorage.setItem('otaku_last_language', next); } catch (e) { console.error('[Otaku] Failed to save language pref:', e); }
       return next;
     });
   }, []);
@@ -806,20 +806,20 @@ export default function AnimeDetail() {
     const video = hlsVideoRef.current;
     if (video) video.playbackRate = speed;
     try {
-      const s = JSON.parse(localStorage.getItem("animewch_settings") || "{}");
+      const s = JSON.parse(localStorage.getItem("otaku_settings") || "{}");
       s.playbackSpeed = speed;
-      localStorage.setItem("animewch_settings", JSON.stringify(s));
+      localStorage.setItem("otaku_settings", JSON.stringify(s));
       settingsService.save(s);
-    } catch (e) { console.error('[AnimeWch] Failed to save settings:', e); }
+    } catch (e) { console.error('[Otaku] Failed to save settings:', e); }
   }, []);
 
   const handleToggleAutoNext = useCallback(() => {
     setAutoNext(p => {
       const next = !p;
       try {
-        const s = JSON.parse(localStorage.getItem("animewch_settings") || "{}");
+        const s = JSON.parse(localStorage.getItem("otaku_settings") || "{}");
         s.autoNext = next;
-        localStorage.setItem("animewch_settings", JSON.stringify(s));
+        localStorage.setItem("otaku_settings", JSON.stringify(s));
         settingsService.save(s);
       } catch {}
       return next;
@@ -947,7 +947,7 @@ export default function AnimeDetail() {
       setIframeError(false);
       failedServers.current = new Set();
       setStreamUrl(streamMode === "hls" ? srv.url : toStreamUrl(srv));
-      try { localStorage.setItem('animewch_last_language', srv.type); } catch {}
+      try { localStorage.setItem('otaku_last_language', srv.type); } catch {}
     }
   }, [servers, streamMode]);
 
@@ -1133,10 +1133,10 @@ export default function AnimeDetail() {
       <div className="relative z-10 w-full min-h-screen flex flex-col bg-black/95">
           <div className="flex-1 flex flex-col lg:flex-row min-h-0 relative">
 
-          {/* ─── CENTER COLUMN ─── */}
+          {/* --- CENTER COLUMN --- */}
           <div className="flex-1 flex flex-col min-w-0">
 
-            {/* ─── VIDEO PLAYER ─── */}
+            {/* --- VIDEO PLAYER --- */}
             <div ref={playerStageRef} className="ad-player-container sticky z-20 bg-zinc-900 overflow-hidden mt-3 sm:mt-8 mb-3 sm:mb-5 lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] w-full mx-0 sm:rounded-3xl rounded-xl shadow-2xl" style={{ aspectRatio: '16/9', maxHeight: '65vh', top: 'var(--top-nav-h, 64px)' }}>
               {/* loading */}
               {loading && (
@@ -1247,7 +1247,7 @@ export default function AnimeDetail() {
             </div>
 
             <div className="ad-content-container w-full lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] px-0 sm:px-0">
-              {/* ─── SERVER SELECTOR ─── */}
+              {/* --- SERVER SELECTOR --- */}
               {servers.length > 0 && langServers().length > 1 && (
                 <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 border-b border-white/5">
                   <span className="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-medium">Server</span>
@@ -1280,7 +1280,7 @@ export default function AnimeDetail() {
                 </div>
               )}
 
-              {/* ─── BANNER ─── */}
+              {/* --- BANNER --- */}
               {alertBannerVisible && (
                 <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-[#3d1a04] border-b border-orange-500/20">
                   <AlertTriangle size={11} className="text-orange-400 flex-none sm:inline hidden" />
@@ -1289,7 +1289,7 @@ export default function AnimeDetail() {
                 </div>
               )}
 
-              {/* ─── VIDEO METADATA ─── */}
+              {/* --- VIDEO METADATA --- */}
               <div className="px-3 sm:px-4 py-3 sm:py-4 flex flex-col gap-3 sm:gap-4 border-b border-white/5">
                 {/* Episode Title */}
                 <h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-white leading-tight">
@@ -1347,11 +1347,11 @@ export default function AnimeDetail() {
                       )}
                     </div>
                     <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5">
-                      <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors ${liked === true ? 'bg-amber-500/20 text-amber-300' : 'hover:bg-white/10 text-white'}`} onClick={() => { if (liked === true) { setLiked(null); setLikesCount(c => c - 1); } else { setLiked(true); setLikesCount(c => c + 1); } }}><ThumbsUp size={14} /> {likesCount != null ? (likesCount >= 1000 ? `${(likesCount / 1000).toFixed(1)}K` : likesCount) : '—'}</button>
+                      <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors ${liked === true ? 'bg-amber-500/20 text-amber-300' : 'hover:bg-white/10 text-white'}`} onClick={() => { if (liked === true) { setLiked(null); setLikesCount(c => c - 1); } else { setLiked(true); setLikesCount(c => c + 1); } }}><ThumbsUp size={14} /> {likesCount != null ? (likesCount >= 1000 ? `${(likesCount / 1000).toFixed(1)}K` : likesCount) : '�'}</button>
                       <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 transition-colors ${liked === false ? 'bg-red-500/20 text-red-300' : 'hover:bg-white/10 text-white'}`} onClick={() => setLiked(liked === false ? null : false)}><ThumbsDown size={14} /></button>
                     </div>
                     {/* Desktop: show all buttons */}
-                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('animewch_last_language', language === 'sub' ? 'dub' : 'sub'); } catch (e) { console.error('[AnimeWch] Failed to save language pref:', e); } }}>
+                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('otaku_last_language', language === 'sub' ? 'dub' : 'sub'); } catch (e) { console.error('[Otaku] Failed to save language pref:', e); } }}>
                       Dub <ChevronDown size={12} className="text-zinc-400" />
                     </button>
                     <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
@@ -1376,7 +1376,7 @@ export default function AnimeDetail() {
                             animate={{ opacity: 1, y: 0 }}
                             className="absolute right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-xl py-1 min-w-[140px] shadow-2xl z-50"
                           >
-                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('animewch_last_language', language === 'sub' ? 'dub' : 'sub'); } catch (e) { console.error('[AnimeWch] Failed to save language pref:', e); } setShowMoreActions(false); }}>
+                            <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('otaku_last_language', language === 'sub' ? 'dub' : 'sub'); } catch (e) { console.error('[Otaku] Failed to save language pref:', e); } setShowMoreActions(false); }}>
                               <Tv size={12} /> Dub
                             </button>
                             <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { if (servers.length > 1) { setServerIndex(i => (i + 1) % servers.length); } setShowMoreActions(false); }}>
@@ -1400,7 +1400,7 @@ export default function AnimeDetail() {
 
                 {/* Stats & Synopsis */}
                 <div className="bg-white/5 border border-white/5 rounded-xl p-3 sm:p-4">
-                  <div className="text-[11px] sm:text-sm font-semibold text-zinc-400 mb-2">{anime?.episodes ? `${anime.episodes} episodes` : ''}{anime?.season ? ` • ${anime.season}` : ''}{anime?.year ? ` ${anime.year}` : ''}{anime?.status ? ` • ${anime.status}` : ''}</div>
+                  <div className="text-[11px] sm:text-sm font-semibold text-zinc-400 mb-2">{anime?.episodes ? `${anime.episodes} episodes` : ''}{anime?.season ? ` � ${anime.season}` : ''}{anime?.year ? ` ${anime.year}` : ''}{anime?.status ? ` � ${anime.status}` : ''}</div>
                   {anime?.description ? (
                     <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">{anime.description.replace(/<[^>]*>/g, '')}</p>
                   ) : (
@@ -1409,7 +1409,7 @@ export default function AnimeDetail() {
                 </div>
               </div>
 
-              {/* ─── COMMENTS ─── */}
+              {/* --- COMMENTS --- */}
               <div className="px-3 sm:px-4">
                 {/* Mobile: collapsible comments */}
                 <button
@@ -1449,10 +1449,10 @@ export default function AnimeDetail() {
             </div>
           </div>
 
-          {/* ─── RIGHT SIDEBAR ─── */}
+          {/* --- RIGHT SIDEBAR --- */}
           <aside className="w-full lg:w-[380px] shrink-0 overflow-y-auto overflow-x-hidden rounded-2xl sm:rounded-3xl lg:mr-4 mx-2 sm:mx-4 my-2 sm:my-4 bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/[0.06] shadow-2xl shadow-black/50">
             <div className="p-3 sm:p-4">
-              {/* ─── HEADER ─── */}
+              {/* --- HEADER --- */}
               <div className="flex items-center justify-between mb-3 sm:mb-4 px-1">
                 <div className="min-w-0">
                   <div className="text-sm sm:text-base font-semibold text-white/90 truncate">
@@ -1467,7 +1467,7 @@ export default function AnimeDetail() {
                 </button>
               </div>
 
-              {/* ─── EPISODES ─── */}
+              {/* --- EPISODES --- */}
               <div className={`overflow-hidden transition-[max-height] duration-400 ease-out ${isEpisodesExpanded ? 'max-h-[40vh] lg:max-h-[70vh]' : 'max-h-0'}`}>
                 {/* search & filters bar */}
                 <div className="flex items-center gap-1 sm:gap-1.5 mb-3 sm:mb-4">
@@ -1583,7 +1583,7 @@ export default function AnimeDetail() {
                 </div>
               </div>
 
-              {/* ─── NEXT AIRING ─── */}
+              {/* --- NEXT AIRING --- */}
               {nextAiring && (
                 <div className="flex items-center gap-2 sm:gap-3 -mx-4 mt-0 px-3 sm:px-4 py-2.5 sm:py-3.5 bg-[#0a1f12] border-t border-emerald-500/20">
                   <div className="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse shrink-0 shadow-[0_0_8px_#4caf50]/50" />
@@ -1592,7 +1592,7 @@ export default function AnimeDetail() {
                 </div>
               )}
 
-              {/* ─── MORE LIKE THIS ─── */}
+              {/* --- MORE LIKE THIS --- */}
               {recommendations?.length > 0 && (
                 <div className="mt-5 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                   <div className="text-[11px] font-semibold text-[#555] uppercase tracking-[2px] mb-4 px-1">More Like This</div>
@@ -1613,7 +1613,7 @@ export default function AnimeDetail() {
                             <h3 className="anime-title">{rec?.name || 'Unknown'}</h3>
                             <div className="sub-meta-row">
                               {rec?.rating && <span className="rating-block"><Star size={10} /> {rec.rating}%</span>}
-                              <span className="type-label">{rec?.genres?.slice(0, 2).join(' • ') || rec?.format || 'Anime'}</span>
+                              <span className="type-label">{rec?.genres?.slice(0, 2).join(' � ') || rec?.format || 'Anime'}</span>
                             </div>
                           </div>
                         </div>

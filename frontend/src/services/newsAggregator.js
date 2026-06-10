@@ -6,7 +6,7 @@ const YOUTUBE_EMBED = process.env.REACT_APP_YOUTUBE_EMBED_BASE || "https://www.y
 
 const cache = new Map();
 const CACHE_TTL = 3 * 60 * 1000;
-const NOTIFIED_KEY = "animewch_notified_news";
+const NOTIFIED_KEY = "otaku_notified_news";
 
 function getNotified() {
   try { return JSON.parse(localStorage.getItem(NOTIFIED_KEY)) || {}; } catch { return {}; }
@@ -33,7 +33,7 @@ export async function fetchAggregatedNews() {
   const cached = getCached("aggregated");
   if (cached) {
     try {
-      const s = JSON.parse(localStorage.getItem("animewch_settings"));
+      const s = JSON.parse(localStorage.getItem("otaku_settings"));
       if (!s || s.newsNotifications !== false) queueNotifications(cached);
     } catch { queueNotifications(cached); }
     return cached;
@@ -62,7 +62,7 @@ export async function fetchAggregatedNews() {
   };
 
   try {
-    const s = JSON.parse(localStorage.getItem("animewch_settings"));
+    const s = JSON.parse(localStorage.getItem("otaku_settings"));
     if (!s || s.newsNotifications !== false) queueNotifications(result);
   } catch { queueNotifications(result); }
 

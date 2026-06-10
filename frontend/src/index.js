@@ -13,7 +13,7 @@ function isChunkError(reason) {
 
 function handleChunkError(reason) {
   if (!isChunkError(reason)) return;
-  const key = '__animewch_reload_count';
+  const key = '__otaku_reload_count';
   const count = parseInt(sessionStorage.getItem(key) || '0', 10);
   if (count >= 2) {
     sessionStorage.removeItem(key);

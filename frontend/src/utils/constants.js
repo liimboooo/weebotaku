@@ -1,5 +1,5 @@
 /**
- * Shared constants for the animewch app.
+ * Shared constants for the otaku app.
  *
  * All status mappings, filter options, storage keys, and other
  * hardcoded values that appear in more than one place are defined here
@@ -80,8 +80,8 @@ export const STORAGE_KEYS = {
   BADGES: "badges",
   BADGE_HISTORY: "badgeHistory",
   BADGE_DEFS: "badgeDefs",
-  NOTIFICATIONS: "animewch_notifications",
-  LOCALE: "animewch_locale",
+  NOTIFICATIONS: "otaku_notifications",
+  LOCALE: "otaku_locale",
   WATCHLIST_UPDATED: "watchlist-updated",
   PROFILE_DATA_CHANGED: "profile-data-changed",
   PROFILE_AVATAR_UPDATED: "profile-avatar-updated",

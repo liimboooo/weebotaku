@@ -157,8 +157,8 @@ export default function Browse() {
   const [watchingId, setWatchingId] = useState(null);
 
   useEffect(() => {
-    fetchAnimeGenres().then(setGenres).catch(err => console.error('[AnimeWch] Failed to load genres:', err));
-    fetchAnimeTags().then(setTags).catch(err => console.error('[AnimeWch] Failed to load tags:', err));
+    fetchAnimeGenres().then(setGenres).catch(err => console.error('[Otaku] Failed to load genres:', err));
+    fetchAnimeTags().then(setTags).catch(err => console.error('[Otaku] Failed to load tags:', err));
   }, []);
 
   // debounce search box
