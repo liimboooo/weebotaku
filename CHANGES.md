@@ -38,3 +38,5 @@
 ## 8. Added sidebar auto-scroll to selected episode
 - When clicking an episode, the sidebar now auto-scrolls to bring it into view
 - Uses `scrollIntoView({ block: 'nearest', behavior: 'smooth' })` — scrolls only as much as needed
+- Also re-scrolls when sort order changes (selected episode may move out of view)
+- Default sort order changed to **descending** (latest episode first) for a more natural watch-page experience

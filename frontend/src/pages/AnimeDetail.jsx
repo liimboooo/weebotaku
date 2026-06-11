@@ -104,6 +104,7 @@ export default function AnimeDetail() {
   const hlsInstanceRef = useRef(null);
   const autoNextTimerRef = useRef(null);
   const sidebarRef = useRef(null);
+  const epTimerRef = useRef(null);
 
   const handleSeek = useCallback((seconds) => {
     setSeekTo(seconds);
@@ -414,6 +415,7 @@ export default function AnimeDetail() {
       setError(hasEpsRef.current ? "Stream not available for this episode." : "Request timed out. Try again.");
       setLoading(false);
     }, 12000);
+    epTimerRef.current = timer;
 
     const epCount = anime?.episodes || 0;
     if (epCount > 0) {
@@ -489,6 +491,14 @@ export default function AnimeDetail() {
     const el = sidebarRef.current.querySelector(`[data-ep-index="${epIndex}"]`);
     if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [epIndex, sortOrder]);
+
+  useEffect(() => {
+    if (streamUrl && epTimerRef.current) {
+      clearTimeout(epTimerRef.current);
+      epTimerRef.current = null;
+      setError("");
+    }
+  }, [streamUrl]);
 
   const episode = episodes[epIndex] || null;
 
