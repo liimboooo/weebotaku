@@ -669,6 +669,20 @@ export default function AnimeDetail() {
   }, [servers, language, streamMode]);
 
   const savedPositionRef = useRef(0);
+  const [resumeAt, setResumeAt] = useState(null);
+  const resumeTimerRef = useRef(null);
+
+  const showResumeToast = (pos) => {
+    setResumeAt(pos);
+    clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current = setTimeout(() => setResumeAt(null), 7000);
+  };
+  const handleStartOver = () => {
+    const video = hlsVideoRef.current;
+    if (video) { video.currentTime = 0; video.play?.().catch(() => {}); }
+    setResumeAt(null);
+    clearTimeout(resumeTimerRef.current);
+  };
 
   useEffect(() => {
     if (streamMode !== "hls" || !streamUrl) return;
@@ -699,7 +713,7 @@ export default function AnimeDetail() {
           hls.currentLevel = data.levels.length - 1;
           setCurrentQuality(data.levels.length - 1);
         }
-        if (prevPos > 2) video.currentTime = prevPos;
+        if (prevPos > 2) { video.currentTime = prevPos; showResumeToast(prevPos); }
         video.play().catch(err => console.error('[Otaku] HLS video play failed:', err));
       });
       hls.on(Hls.Events.ERROR, (_, data) => {
@@ -722,7 +736,7 @@ export default function AnimeDetail() {
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = streamUrl;
       video.addEventListener("loadedmetadata", () => {
-        if (prevPos > 2) video.currentTime = prevPos;
+        if (prevPos > 2) { video.currentTime = prevPos; showResumeToast(prevPos); }
         video.play().catch(err => console.error('[Otaku] Native video play failed:', err));
       }, { once: true });
       video.addEventListener("error", () => {
@@ -1334,6 +1348,15 @@ export default function AnimeDetail() {
                 onQualityChange={handleQualityChange}
                 servers={servers}
               />
+              )}
+
+              {/* Resume-from toast */}
+              {resumeAt != null && streamMode === "hls" && (
+                <div className="absolute bottom-16 sm:bottom-20 left-3 sm:left-4 z-30 flex items-center gap-3 px-3 py-2 rounded-xl bg-black/85 backdrop-blur-md border border-white/15 shadow-2xl">
+                  <span className="text-[11px] sm:text-xs text-white">Resumed from <strong className="text-red-400">{formatTime(resumeAt)}</strong></span>
+                  <button onClick={handleStartOver} className="text-[11px] sm:text-xs font-bold text-white/80 hover:text-white underline underline-offset-2">Start over</button>
+                  <button onClick={() => setResumeAt(null)} className="text-white/50 hover:text-white" aria-label="Dismiss"><X size={13} /></button>
+                </div>
               )}
             </div>
 
