@@ -515,7 +515,7 @@ export default function AnimeDetail() {
             const epList = miruroEps.providers[pname]?.sub || miruroEps.providers[pname]?.dub || [];
             if (epList.length > 0) {
               clearTimeout(timer);
-              const allEps = epList.map(ep => ({ episode: ep.number, title: ep.title || `Episode ${ep.number}`, url: String(ep.number), thumbnail: ep.image || ep.thumbnail || anime?.img || '' }));
+              const allEps = epList.map(ep => ({ episode: ep.number, title: ep.title || `Episode ${ep.number}`, url: String(ep.number), thumbnail: ep.image || ep.thumbnail || anime?.img || '', description: ep.description || ep.overview || ep.summary || '' }));
               allEpsRef.current = allEps;
               const idx = Math.min(Math.max(0, selectedEp - 1), allEps.length - 1);
               const initialCount = Math.max(60, idx + 1);
@@ -1666,6 +1666,11 @@ export default function AnimeDetail() {
                                     <div className={`text-[11px] sm:text-sm font-bold truncate transition-colors ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
                                       {epTitle}
                                     </div>
+                                    {ep?.description && (
+                                      <div className="text-[10px] sm:text-[11px] text-[#888] mt-0.5 leading-snug" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                        {ep.description.replace(/<[^>]*>/g, '')}
+                                      </div>
+                                    )}
                                   </div>
                                   {isActive && (
                                     <div className="shrink-0 w-7 h-7 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
