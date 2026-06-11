@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize2, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight, SkipForward, Settings, PictureInPicture2 } from "lucide-react";
 
 export default function VideoPlayer({
@@ -59,26 +59,8 @@ export default function VideoPlayer({
   const [settingsView, setSettingsView] = useState('main');
   const [showRemaining, setShowRemaining] = useState(false);
   const [seekFx, setSeekFx] = useState(null); // { side: 'left'|'right', id }
-  const [volHud, setVolHud] = useState(false);
   const lastTapRef = useRef(0);
   const tapTimerRef = useRef(null);
-  const volReadyRef = useRef(false);
-  const volHudTimer = useRef(null);
-
-  // Ignore the load-time volume restore; only react to real changes afterwards
-  useEffect(() => {
-    const t = setTimeout(() => { volReadyRef.current = true; }, 1500);
-    return () => clearTimeout(t);
-  }, []);
-
-  // Briefly show a volume HUD when the user changes volume/mute
-  useEffect(() => {
-    if (!volReadyRef.current) return;
-    setVolHud(true);
-    clearTimeout(volHudTimer.current);
-    volHudTimer.current = setTimeout(() => setVolHud(false), 900);
-    return () => clearTimeout(volHudTimer.current);
-  }, [volume, muted]);
 
   // YouTube-style: single tap toggles, double tap seeks ±10s (with ripple)
   const handleZoneTap = (side) => {
@@ -133,17 +115,6 @@ export default function VideoPlayer({
             </div>
             <span className="text-[13px] font-bold drop-shadow">10 seconds</span>
           </div>
-        </div>
-      )}
-
-      {/* Volume HUD (scroll-to-change feedback) */}
-      {isHls && volHud && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-sm border border-white/15 pointer-events-none">
-          {muted || volume === 0 ? <VolumeX size={15} className="text-white" /> : <Volume2 size={15} className="text-white" />}
-          <div className="w-20 h-1.5 rounded-full bg-white/20 overflow-hidden">
-            <div className="h-full bg-red-500" style={{ width: `${muted ? 0 : Math.round(volume * 100)}%` }} />
-          </div>
-          <span className="text-[11px] font-semibold text-white tabular-nums w-8 text-right">{muted ? 0 : Math.round(volume * 100)}%</span>
         </div>
       )}
 
