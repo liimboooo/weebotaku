@@ -173,7 +173,7 @@ exports.replyToComment = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Comment not found' });
     }
 
-    const { content } = req.body;
+    const { content, isSpoiler } = req.body;
     if (!content || !content.trim()) {
       return res.status(400).json({ success: false, message: 'Reply content is required' });
     }
@@ -181,6 +181,7 @@ exports.replyToComment = async (req, res) => {
     comment.replies.push({
       user: req.user.id,
       content: content.trim(),
+      isSpoiler: isSpoiler || false,
     });
 
     await comment.save();

@@ -126,6 +126,9 @@ function CommentItem({ comment, onLike, onDislike, onEditComment, onDeleteCommen
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [replying, setReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
+  const [replySpoiler, setReplySpoiler] = useState(false);
+  const [showReplyGif, setShowReplyGif] = useState(false);
+  const replyGifRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const menuRef = useRef(null);
@@ -154,10 +157,24 @@ function CommentItem({ comment, onLike, onDislike, onEditComment, onDeleteCommen
 
   const handleReplyPost = () => {
     if (!replyText.trim()) return;
-    onPostReply?.(comment.id, replyText);
+    onPostReply?.(comment.id, replyText, replySpoiler);
     setReplyText("");
+    setReplySpoiler(false);
+    setShowReplyGif(false);
     setReplying(false);
   };
+
+  const handlePickReplyGif = (url) => {
+    setShowReplyGif(false);
+    setReplyText(t => (t.trim() ? `${t.trim()} ` : "") + `[gif]${url}[/gif] `);
+  };
+
+  useEffect(() => {
+    if (!showReplyGif) return;
+    const onDown = (e) => { if (replyGifRef.current && !replyGifRef.current.contains(e.target)) setShowReplyGif(false); };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [showReplyGif]);
 
   return (
     <>
@@ -264,6 +281,16 @@ function CommentItem({ comment, onLike, onDislike, onEditComment, onDeleteCommen
                   onKeyDown={e => e.key === "Enter" && handleReplyPost()}
                   autoFocus />
                 <div className="awc-reply-input-bar">
+                  <button className={`awc-spoiler-btn ${replySpoiler ? 'active' : ''}`} onClick={() => setReplySpoiler(s => !s)} title={replySpoiler ? 'Remove spoiler tag' : 'Mark as spoiler'}>
+                    {replySpoiler ? <EyeOff size={12} /> : <Eye size={12} />}
+                  </button>
+                  <div className="awc-gif-wrap" ref={replyGifRef}>
+                    <button className={`awc-gif-btn ${showReplyGif ? 'active' : ''}`} onClick={() => setShowReplyGif(s => !s)} title="Add GIF">
+                      <Image size={12} />
+                    </button>
+                    {showReplyGif && <GifPicker onSelect={handlePickReplyGif} onClose={() => setShowReplyGif(false)} />}
+                  </div>
+                  <span className="awc-reply-bar-spacer" />
                   <button className="awc-reply-cancel-sm" onClick={() => setReplying(false)}>Cancel</button>
                   <button className="awc-reply-post-sm" onClick={handleReplyPost} disabled={!replyText.trim()}>
                     <Send size={11} /> Reply
@@ -379,8 +406,8 @@ export default function Comments({ comments: externalComments, setComments, curr
     postContent(text.trim() ? `${text.trim()} ${gif}` : gif, isSpoiler);
   };
 
-  const handlePostReply = useCallback(async (parentId, content) => {
-    try { await onReplyComment?.(parentId, content); }
+  const handlePostReply = useCallback(async (parentId, content, spoiler) => {
+    try { await onReplyComment?.(parentId, content, spoiler); }
     catch (e) { console.error('[Otaku] Reply failed:', e); }
   }, [onReplyComment]);
 

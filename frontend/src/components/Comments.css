@@ -342,10 +342,10 @@
 .awc-options-btn {
   width: 28px;
   height: 28px;
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15);
   border-radius: 6px;
-  background: rgba(255,255,255,0.03);
-  color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.9);
   cursor: pointer;
   display: grid;
   place-items: center;
@@ -359,7 +359,7 @@
   position: absolute;
   top: 30px;
   right: 0;
-  z-index: 50;
+  z-index: 1000;
   min-width: 150px;
   background: #000; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255,255,255,0.1);
@@ -615,11 +615,13 @@
 .awc-reply-input-bar {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
   padding: 4px 8px;
   border-top: 1px solid rgba(255,255,255,0.04);
   border-radius: 0 0 10px 10px;
 }
+
+.awc-reply-bar-spacer { flex: 1; }
 
 .awc-reply-format-bar {
   display: flex;

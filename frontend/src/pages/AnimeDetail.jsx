@@ -280,6 +280,7 @@ export default function AnimeDetail() {
       dislikes: r.dislikes?.length || 0,
       likedByMe: r.likedByMe || false,
       dislikedByMe: r.dislikedByMe || false,
+      hasSpoiler: r.isSpoiler || false,
       replies: [],
     }; }),
     pinned: c.pinned || false,
@@ -348,8 +349,8 @@ export default function AnimeDetail() {
     await commentService.dislikeComment(commentId);
   }, []);
 
-  const handleReplyComment = useCallback(async (commentId, text) => {
-    const res = await commentService.replyToComment(commentId, text);
+  const handleReplyComment = useCallback(async (commentId, text, isSpoiler) => {
+    const res = await commentService.replyToComment(commentId, text, isSpoiler);
     if (res.success) {
       setComments(prev => prev.map(c => c.id === commentId ? mapComment(res.data) : c));
     }

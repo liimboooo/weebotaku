@@ -21,8 +21,8 @@ class CommentService {
     return api.post(`/comments/${commentId}/dislike`);
   }
 
-  async replyToComment(commentId, content) {
-    return api.post(`/comments/${commentId}/reply`, { content });
+  async replyToComment(commentId, content, isSpoiler = false) {
+    return api.post(`/comments/${commentId}/reply`, { content, isSpoiler });
   }
 
   async editComment(commentId, content, isSpoiler) {

@@ -150,6 +150,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       dislikes: r.dislikes?.length || 0,
       likedByMe: r.likedByMe || false,
       dislikedByMe: r.dislikedByMe || false,
+      hasSpoiler: r.isSpoiler || false,
       replies: [],
     }; }),
     pinned: c.pinned || false,
@@ -186,9 +187,9 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     await commentService.dislikeComment(id).catch(() => {});
   };
 
-  const handleReplyComment = async (parentId, content) => {
+  const handleReplyComment = async (parentId, content, isSpoiler) => {
     try {
-      await commentService.replyToComment(parentId, content);
+      await commentService.replyToComment(parentId, content, isSpoiler);
       await refetchComments();
     } catch (e) { console.error('[Otaku] Failed to reply to comment:', e); }
   };
