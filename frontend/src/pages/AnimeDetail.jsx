@@ -418,13 +418,25 @@ export default function AnimeDetail() {
       setEpisodes(placeholders.slice(0, 60));
       setVisibleCount(50);
       setEpIndex(Math.min(Math.max(0, selectedEp - 1), epCount - 1));
+      setLoading(false);
+      if (epCount > 100) return;
+    } else {
+      const mockEps = Array.from({ length: 12 }, (_, i) => ({
+        episode: i + 1, title: `Episode ${i + 1}`, url: String(i + 1), thumbnail: anime?.img || '', airDate: null,
+      }));
+      allEpsRef.current = mockEps;
+      setEpisodes(mockEps);
+      setEpIndex(Math.min(Math.max(0, (selectedEp || 1) - 1), mockEps.length - 1));
+      setLoading(false);
     }
-    setLoading(false);
+
+    let miruroTimedOut = false;
+    const miruroTimer = setTimeout(() => { miruroTimedOut = true; }, 5000);
 
     (async () => {
       try {
         const miruroEps = await getMiruroEpisodes(watchAnime.anilistId);
-        if (timedOut || cancelled) return;
+        if (timedOut || cancelled || miruroTimedOut) return;
         if (miruroEps?.providers) {
           const provNames = Object.keys(miruroEps.providers);
           for (const pname of provNames) {
@@ -441,19 +453,9 @@ export default function AnimeDetail() {
           }
         }
       } catch (e) { console.error('[Otaku] Failed to get Miruro episodes:', e); }
-
-      if (epCount === 0 && !timedOut) {
-        clearTimeout(timer);
-        const mockEps = Array.from({ length: 12 }, (_, i) => ({
-          episode: i + 1, title: `Episode ${i + 1}`, url: String(i + 1), thumbnail: anime?.img || '', airDate: null,
-        }));
-        allEpsRef.current = mockEps;
-        setEpisodes(mockEps);
-        setEpIndex(Math.min(Math.max(0, (selectedEp || 1) - 1), mockEps.length - 1));
-      }
     })();
 
-    return () => { cancelled = true; clearTimeout(timer); };
+    return () => { cancelled = true; clearTimeout(timer); clearTimeout(miruroTimer); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchAnime, sourceLookupDone, retryCount]);
 
