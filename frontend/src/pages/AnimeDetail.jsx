@@ -104,6 +104,8 @@ export default function AnimeDetail() {
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [buffering, setBuffering] = useState(false);
+  const [buffered, setBuffered] = useState(0);
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
   const [showControls, setShowControls] = useState(true);
@@ -794,6 +796,16 @@ export default function AnimeDetail() {
       setVolume(video.volume);
       setMuted(video.muted);
     };
+    // Buffering / seeking feedback
+    const onWaiting = () => setBuffering(true);
+    const onStalled = () => setBuffering(true);
+    const onSeeking = () => setBuffering(true);
+    const onPlayingEv = () => setBuffering(false);
+    const onSeeked = () => setBuffering(false);
+    const onCanPlay = () => setBuffering(false);
+    const onProgress = () => {
+      try { if (video.buffered.length) setBuffered(video.buffered.end(video.buffered.length - 1)); } catch (e) { /* noop */ }
+    };
 
     video.addEventListener("timeupdate", onTimeUpdate);
     video.addEventListener("ended", onEnded);
@@ -801,6 +813,13 @@ export default function AnimeDetail() {
     video.addEventListener("pause", onPause);
     video.addEventListener("volumechange", onVolumeChange);
     video.addEventListener("loadedmetadata", onLoadedMeta);
+    video.addEventListener("waiting", onWaiting);
+    video.addEventListener("stalled", onStalled);
+    video.addEventListener("seeking", onSeeking);
+    video.addEventListener("playing", onPlayingEv);
+    video.addEventListener("seeked", onSeeked);
+    video.addEventListener("canplay", onCanPlay);
+    video.addEventListener("progress", onProgress);
 
     return () => {
       video.removeEventListener("timeupdate", onTimeUpdate);
@@ -809,6 +828,13 @@ export default function AnimeDetail() {
       video.removeEventListener("pause", onPause);
       video.removeEventListener("volumechange", onVolumeChange);
       video.removeEventListener("loadedmetadata", onLoadedMeta);
+      video.removeEventListener("waiting", onWaiting);
+      video.removeEventListener("stalled", onStalled);
+      video.removeEventListener("seeking", onSeeking);
+      video.removeEventListener("playing", onPlayingEv);
+      video.removeEventListener("seeked", onSeeked);
+      video.removeEventListener("canplay", onCanPlay);
+      video.removeEventListener("progress", onProgress);
       if (autoNextTimerRef.current) { clearInterval(autoNextTimerRef.current); autoNextTimerRef.current = null; }
       if (hlsInstanceRef.current) { hlsInstanceRef.current.destroy(); hlsInstanceRef.current = null; }
     };
@@ -1251,6 +1277,8 @@ export default function AnimeDetail() {
                 playing={playing}
                 currentTime={currentTime}
                 duration={duration}
+                buffering={buffering}
+                buffered={buffered}
                 volume={volume}
                 muted={muted}
                 showControls={showControls}
@@ -1460,9 +1488,9 @@ export default function AnimeDetail() {
                       anime?.status,
                     ].filter(Boolean).join(' • ')}
                   </div>
-                  {anime?.description ? (
+                  {(anime?.synopsis || anime?.description) ? (
                     (() => {
-                      const desc = anime.description.replace(/<[^>]*>/g, '').trim();
+                      const desc = (anime.synopsis || anime.description).replace(/<[^>]*>/g, '').trim();
                       const long = desc.length > 220;
                       return (
                         <>
