@@ -72,7 +72,7 @@ exports.createComment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Comment content is required' });
     }
 
-    const comment = await Comment.create({
+    const created = await Comment.create({
       user: req.user.id,
       animeId: parseInt(animeId),
       episode: episode || null,
@@ -80,7 +80,10 @@ exports.createComment = async (req, res) => {
       isSpoiler: isSpoiler || false,
     });
 
-    await comment.populate('user', 'username avatar role');
+    // Re-query with query-level populate (reliable) so the author is filled in
+    const comment = await Comment.findById(created._id)
+      .populate('user', 'username avatar role')
+      .populate('replies.user', 'username avatar role');
 
     broadcastToAnime(comment.animeId, 'new-comment', {
       action: 'created',
@@ -185,7 +188,9 @@ exports.replyToComment = async (req, res) => {
     });
 
     await comment.save();
-    await comment.populate('replies.user', 'username avatar role');
+    const populated = await Comment.findById(comment._id)
+      .populate('user', 'username avatar role')
+      .populate('replies.user', 'username avatar role');
 
     if (comment.user.toString() !== req.user.id) {
       const notif = await Notification.create({
@@ -201,10 +206,10 @@ exports.replyToComment = async (req, res) => {
 
     broadcastToAnime(comment.animeId, 'new-comment', {
       action: 'replied',
-      comment,
+      comment: populated,
     });
 
-    res.status(201).json({ success: true, data: comment });
+    res.status(201).json({ success: true, data: populated });
   } catch (error) {
     console.error('ReplyToComment error:', error);
     res.status(500).json({ success: false, message: 'Server error' });

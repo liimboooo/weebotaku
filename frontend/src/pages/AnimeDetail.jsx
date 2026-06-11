@@ -338,8 +338,16 @@ export default function AnimeDetail() {
 
   const handleAddComment = useCallback(async (text, isSpoiler) => {
     const res = await commentService.createComment(parseInt(id), text, { episode: selectedEp, isSpoiler });
-    if (res.success) setComments(prev => [mapComment(res.data), ...prev]);
-  }, [id, selectedEp, mapComment]);
+    if (res.success) {
+      const mapped = mapComment(res.data);
+      // Safety net: never show the author as Unknown for your own fresh comment
+      if (mapped.user === 'Unknown' && currentUsername && currentUsername !== 'Guest') {
+        mapped.user = currentUsername;
+        mapped.avatar = currentAvatar;
+      }
+      setComments(prev => [mapped, ...prev]);
+    }
+  }, [id, selectedEp, mapComment, currentUsername, currentAvatar]);
 
   const handleLikeComment = useCallback(async (commentId) => {
     await commentService.likeComment(commentId);
