@@ -30,10 +30,18 @@ export async function getAnimeById(id) {
   const k = `animeById:${id}`;
   const cached = getCached(k);
   if (cached) return cached;
+  const stored = sessionStorage.getItem(k);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed && parsed.id) { setCache(k, parsed); return parsed; }
+    } catch {}
+  }
   try {
     const res = await api.get(`/catalog/anime/${id}`);
     if (res.data) {
       setCache(k, res.data);
+      try { sessionStorage.setItem(k, JSON.stringify(res.data)); } catch {}
       return res.data;
     }
   } catch {}

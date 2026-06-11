@@ -321,17 +321,22 @@ exports.getById = async (req, res) => {
   try {
     const { id } = req.params;
     const numId = Number(id);
+    const cacheKey = `byId:${numId}`;
+    const cached = getCached(cacheKey);
+    if (cached) return res.json({ success: true, data: cached });
 
     const q = `query($id:Int){Media(id:$id,type:ANIME){${ANIME_FIELDS} popularity}}`;
     try {
       const data = await gql(q, { id: numId });
-      if (data?.Media) return res.json({ success: true, data: mapAnime(data.Media) });
+      if (data?.Media) { const result = mapAnime(data.Media); setCache(cacheKey, result); return res.json({ success: true, data: result }); }
     } catch {}
 
     const q2 = `query($id:Int){Media(idMal:$id,type:ANIME){${ANIME_FIELDS} popularity}}`;
     const data = await gql(q2, { id: numId });
     if (!data?.Media) return res.status(404).json({ success: false, message: 'Anime not found' });
-    res.json({ success: true, data: mapAnime(data.Media) });
+    const result = mapAnime(data.Media);
+    setCache(cacheKey, result);
+    res.json({ success: true, data: result });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
