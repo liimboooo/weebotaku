@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Play, Pause, Volume2, VolumeX, Maximize2, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight, SkipForward, Settings } from "lucide-react";
+import { useState, useRef } from "react";
+import { Play, Pause, Volume2, VolumeX, Maximize2, ChevronsLeft, ChevronsRight, ChevronLeft, ChevronRight, SkipForward, Settings, PictureInPicture2 } from "lucide-react";
 
 export default function VideoPlayer({
   streamMode,
@@ -29,6 +29,7 @@ export default function VideoPlayer({
   toggleMute,
   handleVolumeSlider,
   toggleFullscreen,
+  togglePiP,
   handleSpeedChange,
   setShowShortcutsHelp,
   handleSkipIntro,
@@ -49,12 +50,35 @@ export default function VideoPlayer({
   currentQuality,
   onQualityChange,
   servers,
+  introOutro,
   children,
 }) {
   const progress = duration ? (currentTime / duration) * 100 : 0;
   const isHls = streamMode === "hls";
   const [showSettings, setShowSettings] = useState(false);
   const [settingsView, setSettingsView] = useState('main');
+  const [showRemaining, setShowRemaining] = useState(false);
+  const [seekFx, setSeekFx] = useState(null); // { side: 'left'|'right', id }
+  const lastTapRef = useRef(0);
+  const tapTimerRef = useRef(null);
+
+  // YouTube-style: single tap toggles, double tap seeks ±10s (with ripple)
+  const handleZoneTap = (side) => {
+    if (!isHls) return;
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      clearTimeout(tapTimerRef.current);
+      lastTapRef.current = 0;
+      (side === 'left' ? skipBack : skipForward)();
+      setSeekFx({ side, id: now });
+      setTimeout(() => setSeekFx(f => (f && f.id === now ? null : f)), 550);
+    } else {
+      lastTapRef.current = now;
+      clearTimeout(tapTimerRef.current);
+      tapTimerRef.current = setTimeout(() => { if (lastTapRef.current === now) togglePlay(); }, 280);
+    }
+  };
+  const pct = (t) => (duration ? Math.max(0, Math.min(100, (t / duration) * 100)) : 0);
   const langs = servers ? [...new Set(servers.map(s => s.type))] : [];
   const langServers = servers ? servers.filter(s => s.type === language) : [];
   const hasMultipleServers = langServers.length > 1;
@@ -63,6 +87,25 @@ export default function VideoPlayer({
   return (
     <div className="absolute inset-0 group">
       {children}
+
+      {/* Tap/double-tap gesture zones (HLS only) — left/right seek, single tap toggles */}
+      {isHls && (
+        <div className="absolute inset-0 z-[5] flex">
+          <div className="w-[35%] h-full" onClick={() => handleZoneTap('left')} onDoubleClick={(e) => e.preventDefault()} />
+          <div className="flex-1 h-full" onClick={() => handleZoneTap('center')} />
+          <div className="w-[35%] h-full" onClick={() => handleZoneTap('right')} onDoubleClick={(e) => e.preventDefault()} />
+        </div>
+      )}
+
+      {/* Double-tap seek ripple feedback */}
+      {seekFx && (
+        <div className={`absolute inset-y-0 ${seekFx.side === 'left' ? 'left-0' : 'right-0'} w-[35%] z-[6] flex items-center justify-center pointer-events-none`}>
+          <div className="flex flex-col items-center gap-1 text-white animate-pulse">
+            {seekFx.side === 'left' ? <ChevronsLeft size={34} /> : <ChevronsRight size={34} />}
+            <span className="text-xs font-bold">10s</span>
+          </div>
+        </div>
+      )}
 
       {/* Center play/pause + buffering spinner (HLS only) */}
       {isHls && (
@@ -103,7 +146,7 @@ export default function VideoPlayer({
       )}
 
       <div
-        className={`absolute inset-0 transition-opacity duration-300 ${
+        className={`absolute inset-0 z-20 transition-opacity duration-300 ${
           showControls || autoNextCountdown !== null ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       >
@@ -132,6 +175,13 @@ export default function VideoPlayer({
               className="absolute inset-y-0 left-0 rounded-full bg-white/25"
               style={{ width: `${duration ? Math.min(100, (buffered / duration) * 100) : 0}%` }}
             />
+            {/* Intro / outro markers */}
+            {isHls && duration > 0 && introOutro?.intro && (
+              <div className="absolute inset-y-0 bg-amber-300/50 pointer-events-none" title="Intro" style={{ left: `${pct(introOutro.intro.start)}%`, width: `${Math.max(0.5, pct(introOutro.intro.end) - pct(introOutro.intro.start))}%` }} />
+            )}
+            {isHls && duration > 0 && introOutro?.outro && (
+              <div className="absolute inset-y-0 bg-amber-300/50 pointer-events-none" title="Outro" style={{ left: `${pct(introOutro.outro.start)}%`, width: `${Math.max(0.5, pct(introOutro.outro.end) - pct(introOutro.outro.start))}%` }} />
+            )}
             <div
               className="absolute inset-y-0 left-0 rounded-full bg-red-500 group-hover/timeline:h-1.5 transition-all"
               style={{ width: `${progress}%` }}
@@ -176,9 +226,13 @@ export default function VideoPlayer({
               >
                 <ChevronsRight size={14} className="sm:w-[16px] sm:h-[16px]" />
               </button>
-              <span className="text-[10px] sm:text-[11px] text-white/80 font-medium ml-1 sm:ml-2 select-none min-w-[60px] sm:min-w-[70px] bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded">
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </span>
+              <button
+                onClick={() => setShowRemaining(r => !r)}
+                title={showRemaining ? "Show total" : "Show remaining"}
+                className="text-[10px] sm:text-[11px] text-white/80 hover:text-white font-medium ml-1 sm:ml-2 select-none min-w-[60px] sm:min-w-[70px] bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded transition-colors"
+              >
+                {formatTime(currentTime)} / {showRemaining ? `-${formatTime(Math.max(0, duration - currentTime))}` : formatTime(duration)}
+              </button>
             </div>
 
             <div className="flex items-center gap-1 sm:gap-1.5">
@@ -385,6 +439,17 @@ export default function VideoPlayer({
                 )}
               </div>
 
+              {isHls && togglePiP && (
+                <button
+                  onClick={togglePiP}
+                  className="hidden sm:flex p-1.5 sm:p-2 rounded-full bg-black/50 backdrop-blur-sm text-white/80 hover:text-white hover:bg-black/70 transition-colors"
+                  aria-label="Picture in picture"
+                  title="Picture in picture"
+                >
+                  <PictureInPicture2 size={14} className="sm:w-[16px] sm:h-[16px]" />
+                </button>
+              )}
+
               <button
                 onClick={toggleFullscreen}
                 className="p-1.5 sm:p-2 rounded-full bg-black/50 backdrop-blur-sm text-white/80 hover:text-white hover:bg-black/70 transition-colors"
@@ -396,6 +461,13 @@ export default function VideoPlayer({
           </div>
           </div>
         </div>
+
+        {/* Mini progress bar — visible when full controls are hidden */}
+        {isHls && (
+          <div className={`absolute bottom-0 left-0 right-0 h-[3px] bg-white/10 transition-opacity duration-300 ${showControls ? "opacity-0" : "opacity-100"}`}>
+            <div className="h-full bg-red-500" style={{ width: `${progress}%` }} />
+          </div>
+        )}
       </div>
 
       {autoNextCountdown !== null && (

@@ -176,6 +176,15 @@ export default function AnimeDetail() {
     video.muted = !video.muted;
   };
 
+  const togglePiP = async () => {
+    const video = hlsVideoRef.current;
+    if (!video) return;
+    try {
+      if (document.pictureInPictureElement) await document.exitPictureInPicture();
+      else if (video.requestPictureInPicture) await video.requestPictureInPicture();
+    } catch (e) { console.error('[Otaku] PiP failed:', e); }
+  };
+
   const toggleFullscreen = () => {
     const stage = playerStageRef.current;
     if (!stage) return;
@@ -1301,6 +1310,8 @@ export default function AnimeDetail() {
                 toggleMute={toggleMute}
                 handleVolumeSlider={handleVolumeSlider}
                 toggleFullscreen={toggleFullscreen}
+                togglePiP={togglePiP}
+                introOutro={introOutro}
                 handleSpeedChange={handleSpeedChange}
                 setShowSpeedMenu={setShowSpeedMenu}
                 setShowShortcutsHelp={setShowShortcutsHelp}
