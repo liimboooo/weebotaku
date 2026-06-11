@@ -227,10 +227,14 @@ export default function AnimeDetail() {
   const autoNextRef = useRef(autoNext);
   const lastHistorySaveRef = useRef(false);
   const allEpsRef = useRef([]);
+  const playingRef = useRef(playing);
   useEffect(() => { epIndexRef.current = epIndex; }, [epIndex]);
   useEffect(() => { episodesRef.current = episodes; }, [episodes]);
   useEffect(() => { serversRef.current = servers; }, [servers]);
   useEffect(() => { autoNextRef.current = autoNext; }, [autoNext]);
+  useEffect(() => { playingRef.current = playing; }, [playing]);
+  // Always reveal controls when paused (hide only while playing)
+  useEffect(() => { if (!playing) setShowControls(true); }, [playing]);
 
   // Scroll over the player to change volume (HLS only)
   useEffect(() => {
@@ -1017,27 +1021,36 @@ export default function AnimeDetail() {
     const stage = playerStageRef.current;
     if (!stage) return;
     let timer = null;
+    const scheduleHide = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (playingRef.current) { // only auto-hide while playing
+          setShowControls(false);
+          stage.style.cursor = "none";
+        }
+      }, 3000);
+    };
     const show = () => {
       setShowControls(true);
       stage.style.cursor = "default";
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        setShowControls(false);
-        stage.style.cursor = "none";
-      }, 3000);
+      scheduleHide();
     };
-    const alwaysShow = () => {
+    const onLeave = () => {
       clearTimeout(timer);
-      setShowControls(true);
-      stage.style.cursor = "default";
+      if (playingRef.current) {
+        setShowControls(false); // YouTube-like: hide on leave while playing
+        stage.style.cursor = "default";
+      } else {
+        setShowControls(true);
+      }
     };
     stage.addEventListener("mousemove", show);
     stage.addEventListener("mouseenter", show);
-    stage.addEventListener("mouseleave", alwaysShow);
+    stage.addEventListener("mouseleave", onLeave);
     return () => {
       stage.removeEventListener("mousemove", show);
       stage.removeEventListener("mouseenter", show);
-      stage.removeEventListener("mouseleave", alwaysShow);
+      stage.removeEventListener("mouseleave", onLeave);
       clearTimeout(timer);
       stage.style.cursor = "default";
     };

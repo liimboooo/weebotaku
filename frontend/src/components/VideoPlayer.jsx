@@ -109,12 +109,23 @@ export default function VideoPlayer({
         </div>
       )}
 
-      {/* Double-tap seek ripple feedback */}
+      {/* Double-tap seek ripple feedback (YouTube-style) */}
       {seekFx && (
-        <div className={`absolute inset-y-0 ${seekFx.side === 'left' ? 'left-0' : 'right-0'} w-[35%] z-[6] flex items-center justify-center pointer-events-none`}>
-          <div className="flex flex-col items-center gap-1 text-white animate-pulse">
-            {seekFx.side === 'left' ? <ChevronsLeft size={34} /> : <ChevronsRight size={34} />}
-            <span className="text-xs font-bold">10s</span>
+        <div
+          key={seekFx.id}
+          className={`absolute inset-y-0 ${seekFx.side === 'left' ? 'left-0' : 'right-0'} w-[42%] z-[6] flex items-center justify-center pointer-events-none overflow-hidden`}
+        >
+          <div
+            className="absolute inset-0 bg-white/10 animate-[awcSeekRipple_0.55s_ease-out]"
+            style={{ borderRadius: seekFx.side === 'left' ? '0 50% 50% 0' : '50% 0 0 50%' }}
+          />
+          <div className="relative flex flex-col items-center gap-1.5 text-white animate-[awcSeekPop_0.55s_ease-out]">
+            <div className="flex items-center -space-x-2">
+              {seekFx.side === 'left'
+                ? <><ChevronLeft size={20} /><ChevronLeft size={20} /><ChevronLeft size={20} /></>
+                : <><ChevronRight size={20} /><ChevronRight size={20} /><ChevronRight size={20} /></>}
+            </div>
+            <span className="text-[13px] font-bold drop-shadow">10 seconds</span>
           </div>
         </div>
       )}
