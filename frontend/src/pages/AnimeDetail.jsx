@@ -55,7 +55,7 @@ export default function AnimeDetail() {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [sidebarView, setSidebarView] = useState('thumbnail');
   const [brokenThumbs, setBrokenThumbs] = useState(new Set());
-  const [sortOrder, setSortOrder] = useState('asc');
+  const [sortOrder, setSortOrder] = useState('desc');
   const [recommendations, setRecommendations] = useState([]);
   const [alertBannerVisible, setAlertBannerVisible] = useState(true);
   const [epSearch, setEpSearch] = useState("");
@@ -488,7 +488,7 @@ export default function AnimeDetail() {
     if (!sidebarRef.current || epIndex < 0) return;
     const el = sidebarRef.current.querySelector(`[data-ep-index="${epIndex}"]`);
     if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, [epIndex]);
+  }, [epIndex, sortOrder]);
 
   const episode = episodes[epIndex] || null;
 
