@@ -358,8 +358,8 @@ export default function AnimeDetail() {
         if (a) {
           setApiAnime(a);
           setAnimeLoading(false);
-        } else if (attempt < 2) {
-          await new Promise(r => setTimeout(r, 1500));
+        } else if (attempt < 1) {
+          await new Promise(r => setTimeout(r, 800));
           if (!cancelled) load(attempt + 1);
         } else {
           setAnimeLoading(false);
@@ -367,8 +367,8 @@ export default function AnimeDetail() {
         }
       } catch {
         if (cancelled) return;
-        if (attempt < 2) {
-          await new Promise(r => setTimeout(r, 1500));
+        if (attempt < 1) {
+          await new Promise(r => setTimeout(r, 800));
           if (!cancelled) load(attempt + 1);
         } else {
           setAnimeLoading(false);
