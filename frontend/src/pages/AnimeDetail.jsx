@@ -1052,8 +1052,8 @@ export default function AnimeDetail() {
             `
           }}
         />
-        <div className="relative z-10 w-full min-h-screen flex flex-col bg-black/95">
-          <div className="flex-1 flex flex-col lg:flex-row min-h-0 relative">
+      <div className="relative z-10 w-full min-h-screen flex flex-col bg-black/95">
+          <div className="flex-1 flex flex-col lg:flex-row min-h-0 relative items-start">
             {/* Center column skeleton */}
             <div className="flex-1 flex flex-col min-w-0">
               {/* Player skeleton */}
@@ -1120,7 +1120,7 @@ export default function AnimeDetail() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-[#0a0a0a] flex overflow-x-hidden">
+    <div className="w-full min-h-screen bg-[#0a0a0a] flex overflow-x-hidden -mt-3">
       {/* ambient bg */}
       <div className="fixed inset-0 pointer-events-none z-0"
         style={{
