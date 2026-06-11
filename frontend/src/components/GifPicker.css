@@ -83,6 +83,7 @@
   padding: 8px;
   max-height: 300px;
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
@@ -99,6 +100,7 @@
 .awc-gif-picker-item {
   display: block;
   width: 100%;
+  box-sizing: border-box;
   margin: 0 0 6px;
   padding: 0;
   border: 1px solid transparent;
