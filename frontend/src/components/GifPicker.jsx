@@ -162,6 +162,7 @@ export default function GifPicker({ onSelect, onClose }) {
       )}
 
       <div className="awc-gif-picker-grid">
+        <div className="awc-gif-picker-masonry">
         {showLoading && <div className="awc-gif-picker-loading"><Loader size={20} className="awc-spin" /></div>}
         {showError && <div className="awc-gif-picker-error">{error}</div>}
         {!showLoading && !showError && view.length === 0 && <div className="awc-gif-picker-empty">{emptyMsg}</div>}
@@ -185,6 +186,7 @@ export default function GifPicker({ onSelect, onClose }) {
             </button>
           </div>
         ))}
+        </div>
       </div>
       <div className="awc-gif-picker-footer">Powered by GIPHY</div>
     </div>

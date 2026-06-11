@@ -104,10 +104,8 @@
 .awc-gif-tab.active { color: #fff; background: rgba(239, 68, 68, 0.16); }
 .awc-gif-tab.active svg { color: #ef4444; }
 
-/* Masonry layout — keeps each GIF's natural aspect ratio */
+/* Scroll container — vertical only */
 .awc-gif-picker-grid {
-  columns: 2;
-  column-gap: 6px;
   padding: 8px;
   max-height: 340px;
   overflow-y: auto;
@@ -115,6 +113,13 @@
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+/* Masonry — auto height so it grows DOWN (multicol + fixed height would
+   instead spill into new columns sideways, breaking vertical scroll) */
+.awc-gif-picker-masonry {
+  columns: 2;
+  column-gap: 6px;
 }
 .awc-gif-picker-grid::-webkit-scrollbar { width: 8px; }
 .awc-gif-picker-grid::-webkit-scrollbar-thumb {
@@ -210,5 +215,5 @@
 }
 
 @media (max-width: 480px) {
-  .awc-gif-picker-grid { columns: 2; max-height: 260px; }
+  .awc-gif-picker-grid { max-height: 260px; }
 }
