@@ -1081,7 +1081,10 @@ export default function AnimeDetail() {
     return (
       <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#000", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
         <p style={{ color: "#ffffff", fontSize: 14 }}>{animeError || "Anime not found"}</p>
-        <button onClick={() => navigate(-1)} className="px-4 py-1.5 sm:px-5 sm:py-2 rounded-lg border border-white/20 bg-white/10 text-white cursor-pointer text-xs sm:text-sm font-bold hover:bg-white/20 transition-colors">Go back</button>
+        <div className="flex gap-3">
+          <button onClick={() => navigate(-1)} className="px-4 py-1.5 sm:px-5 sm:py-2 rounded-lg border border-white/20 bg-white/10 text-white cursor-pointer text-xs sm:text-sm font-bold hover:bg-white/20 transition-colors">Go back</button>
+          <button onClick={() => { setAnimeError(""); setAnimeLoading(true); getAnimeById(id).then(a => { if (a) { setApiAnime(a); setAnimeLoading(false); } else { setAnimeLoading(false); setAnimeError("Could not load this anime."); } }).catch(() => { setAnimeLoading(false); setAnimeError("Failed to load anime details."); }); }} className="px-4 py-1.5 sm:px-5 sm:py-2 rounded-lg border border-white/20 bg-white/10 text-white cursor-pointer text-xs sm:text-sm font-bold hover:bg-white/20 transition-colors">Retry</button>
+        </div>
       </div>
     );
   }
