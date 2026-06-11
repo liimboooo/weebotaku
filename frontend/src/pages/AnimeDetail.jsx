@@ -1266,7 +1266,7 @@ export default function AnimeDetail() {
           <div className="flex-1 flex flex-col min-w-0">
 
             {/* --- VIDEO PLAYER --- */}
-            <div ref={playerStageRef} className="ad-player-container relative z-10 bg-black/80 backdrop-blur-xl overflow-hidden mt-3 sm:mt-6 mb-2 sm:mb-3 lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] w-full mx-0 sm:rounded-3xl rounded-xl shadow-2xl" style={{ aspectRatio: '16/9', maxHeight: '65vh' }}>
+            <div ref={playerStageRef} className="ad-player-container relative z-10 bg-black/95 backdrop-blur-2xl overflow-hidden mt-3 sm:mt-6 mb-2 sm:mb-3 lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] w-full mx-0 sm:rounded-3xl rounded-xl shadow-2xl" style={{ aspectRatio: '16/9', maxHeight: '65vh' }}>
               {/* loading */}
               {loading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
@@ -1394,7 +1394,7 @@ export default function AnimeDetail() {
                 <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 border-b border-white/10">
                   <span className="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-medium">Server</span>
                   <div className="relative">
-                    <button className="flex items-center gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-white/10 transition-colors" onClick={() => setShowServerSelector(p => !p)}>
+                    <button className="flex items-center gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-medium bg-black/95 backdrop-blur-2xl border border-white/10 text-white hover:bg-white/10 transition-colors" onClick={() => setShowServerSelector(p => !p)}>
                       {langServers()[serverIndex]?.label || 'Auto'} <ChevronDown size={10} />
                     </button>
                     {showServerSelector && (
@@ -1403,7 +1403,7 @@ export default function AnimeDetail() {
                         <motion.div
                           initial={{ opacity: 0, y: -4 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="absolute top-full left-0 mt-1 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl py-1 min-w-[160px] sm:min-w-[180px] max-w-[220px] shadow-2xl z-50"
+                          className="absolute top-full left-0 mt-1 bg-black/95 backdrop-blur-2xl border border-white/10 rounded-xl py-1 min-w-[160px] sm:min-w-[180px] max-w-[220px] shadow-2xl z-50"
                         >
                           {langServers().map((srv, idx) => (
                             <button
@@ -1424,7 +1424,7 @@ export default function AnimeDetail() {
 
               {/* --- BANNER --- */}
               {alertBannerVisible && (
-                <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-black/40 backdrop-blur-md border-b border-white/15">
+                <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-black/95 backdrop-blur-2xl border-b border-white/15">
                   <AlertTriangle size={11} className="text-white flex-none sm:inline hidden" />
                   <p className="text-[11px] sm:text-xs text-white flex-1">If the current server doesn't work, feel free to try the other available servers.</p>
                   <button className="text-white/70 hover:text-white cursor-pointer bg-transparent border-none p-1 flex-none" onClick={() => setAlertBannerVisible(false)}><X size={10} /></button>
@@ -1471,7 +1471,7 @@ export default function AnimeDetail() {
                           <motion.div
                             initial={{ opacity: 0, y: -4 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="absolute top-full left-0 mt-1 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl py-1 min-w-[130px] sm:min-w-[140px] shadow-2xl z-50"
+                            className="absolute top-full left-0 mt-1 bg-black/95 backdrop-blur-2xl border border-white/10 rounded-xl py-1 min-w-[130px] sm:min-w-[140px] shadow-2xl z-50"
                           >
                             {["Planning","Watching","Completed","Paused","Dropped"].map(s => (
                               <button
@@ -1488,18 +1488,18 @@ export default function AnimeDetail() {
                         </>
                       )}
                     </div>
-                    <div className="flex items-center bg-black/40 backdrop-blur-md rounded-full overflow-hidden border border-white/10">
+                    <div className="flex items-center bg-black/95 backdrop-blur-2xl rounded-full overflow-hidden border border-white/10">
                       <button disabled={reacting} className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors disabled:opacity-60 ${liked === true ? 'bg-white/15 text-white' : 'hover:bg-white/10 text-white'}`} onClick={() => handleReact('like')}>{reacting ? <Loader size={14} className="animate-spin" /> : <ThumbsUp size={14} fill={liked === true ? 'currentColor' : 'none'} />} {likesCount != null ? (likesCount >= 1000 ? `${(likesCount / 1000).toFixed(1)}K` : likesCount) : 0}</button>
                       <button disabled={reacting} className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 transition-colors disabled:opacity-60 ${liked === false ? 'bg-white/15 text-white' : 'hover:bg-white/10 text-white'}`} onClick={() => handleReact('dislike')}><ThumbsDown size={14} fill={liked === false ? 'currentColor' : 'none'} /> {dislikesCount != null && dislikesCount > 0 ? (dislikesCount >= 1000 ? `${(dislikesCount / 1000).toFixed(1)}K` : dislikesCount) : ''}</button>
                     </div>
                     {/* Desktop: show all buttons */}
-                    <button className="hidden sm:flex bg-black/40 backdrop-blur-md border border-white/10 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" title={`Switch to ${language === 'sub' ? 'Dub' : 'Sub'}`} onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('otaku_last_language', language === 'sub' ? 'dub' : 'sub'); } catch (e) { console.error('[Otaku] Failed to save language pref:', e); } }}>
+                    <button className="hidden sm:flex bg-black/95 backdrop-blur-2xl border border-white/10 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" title={`Switch to ${language === 'sub' ? 'Dub' : 'Sub'}`} onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('otaku_last_language', language === 'sub' ? 'dub' : 'sub'); } catch (e) { console.error('[Otaku] Failed to save language pref:', e); } }}>
                       <Tv size={12} className="text-zinc-400" /> {language === 'dub' ? 'Dub' : 'Sub'}
                     </button>
-                    <button className="hidden sm:flex bg-black/40 backdrop-blur-md border border-white/10 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
+                    <button className="hidden sm:flex bg-black/95 backdrop-blur-2xl border border-white/10 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
                       <Share2 size={12} /> Share
                     </button>
-                    <button className="hidden sm:flex bg-black/40 backdrop-blur-md border border-white/10 hover:bg-white/10 w-8 sm:w-10 h-8 sm:h-10 items-center justify-center rounded-full text-white transition-colors" title="Report" onClick={openReport}>
+                    <button className="hidden sm:flex bg-black/95 backdrop-blur-2xl border border-white/10 hover:bg-white/10 w-8 sm:w-10 h-8 sm:h-10 items-center justify-center rounded-full text-white transition-colors" title="Report" onClick={openReport}>
                       <Flag size={11} />
                     </button>
                     {reportMsg && (
@@ -1507,7 +1507,7 @@ export default function AnimeDetail() {
                     )}
                     {/* Mobile "More" button */}
                     <div className="relative sm:hidden">
-                      <button className="flex items-center justify-center w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 hover:bg-white/10 text-white transition-colors" onClick={() => setShowMoreActions(p => !p)}>
+                      <button className="flex items-center justify-center w-8 h-8 rounded-full bg-black/95 backdrop-blur-2xl border border-white/10 hover:bg-white/10 text-white transition-colors" onClick={() => setShowMoreActions(p => !p)}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
                       </button>
                       {showMoreActions && (
@@ -1516,7 +1516,7 @@ export default function AnimeDetail() {
                           <motion.div
                             initial={{ opacity: 0, y: -4 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="absolute right-0 top-full mt-1 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl py-1 min-w-[140px] shadow-2xl z-50"
+                            className="absolute right-0 top-full mt-1 bg-black/95 backdrop-blur-2xl border border-white/10 rounded-xl py-1 min-w-[140px] shadow-2xl z-50"
                           >
                             <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-2" onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('otaku_last_language', language === 'sub' ? 'dub' : 'sub'); } catch (e) { console.error('[Otaku] Failed to save language pref:', e); } setShowMoreActions(false); }}>
                               <Tv size={12} /> {language === 'sub' ? 'Switch to Dub' : 'Switch to Sub'}
@@ -1541,7 +1541,7 @@ export default function AnimeDetail() {
                 </div>
 
                 {/* Stats & Synopsis */}
-                <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-3 sm:p-4">
+                <div className="bg-black/95 backdrop-blur-2xl border border-white/10 rounded-xl p-3 sm:p-4">
                   <div className="text-[11px] sm:text-sm font-semibold text-zinc-400 mb-2">
                     {[
                       anime?.episodes && `${anime.episodes} episodes`,
@@ -1580,7 +1580,7 @@ export default function AnimeDetail() {
               <div className="px-3 sm:px-4">
                 {/* Mobile: collapsible comments */}
                 <button
-                  className="flex sm:hidden items-center gap-2 w-full py-3 px-4 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-white text-sm font-semibold mb-3"
+                  className="flex sm:hidden items-center gap-2 w-full py-3 px-4 rounded-xl bg-black/95 backdrop-blur-2xl border border-white/10 text-white text-sm font-semibold mb-3"
                   onClick={() => setShowMobileComments(p => !p)}
                 >
                   <MessageCircle size={14} />
@@ -1747,7 +1747,7 @@ export default function AnimeDetail() {
                         })}
                       </AnimatePresence>
                       {(allEpsRef.current.length > visibleCount) && (
-                        <div className="-mx-4 px-4 mt-1 py-3 text-center text-xs font-bold text-neutral-500 hover:text-white hover:bg-black/40 backdrop-blur-md transition-colors cursor-pointer" onClick={handleLoadMore}>
+                        <div className="-mx-4 px-4 mt-1 py-3 text-center text-xs font-bold text-neutral-500 hover:text-white hover:bg-black/95 backdrop-blur-2xl transition-colors cursor-pointer" onClick={handleLoadMore}>
                           Load More ({allEpsRef.current.length - visibleCount} remaining)
                         </div>
                       )}
@@ -1841,7 +1841,7 @@ export default function AnimeDetail() {
                         <button
                           key={opt.value}
                           onClick={() => setReportCategory(opt.value)}
-                          className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left text-sm transition-colors ${reportCategory === opt.value ? 'bg-white/15 border-white/40 text-white' : 'bg-black/40 backdrop-blur-md border-white/10 text-zinc-300 hover:bg-white/10'}`}
+                          className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left text-sm transition-colors ${reportCategory === opt.value ? 'bg-white/15 border-white/40 text-white' : 'bg-black/95 backdrop-blur-2xl border-white/10 text-zinc-300 hover:bg-white/10'}`}
                         >
                           <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${reportCategory === opt.value ? 'border-white/40' : 'border-zinc-600'}`}>
                             {reportCategory === opt.value && <span className="w-2 h-2 rounded-full bg-white" />}
@@ -1856,7 +1856,7 @@ export default function AnimeDetail() {
                       maxLength={500}
                       rows={3}
                       placeholder="Describe what went wrong…"
-                      className="w-full bg-black/40 border border-white/10 focus:border-white/40 rounded-xl px-3 py-2.5 text-sm text-white outline-none resize-none placeholder-zinc-600 transition-colors"
+                      className="w-full bg-black/70 border border-white/10 focus:border-white/40 rounded-xl px-3 py-2.5 text-sm text-white outline-none resize-none placeholder-zinc-600 transition-colors"
                     />
                     {reportMsg && <p className="text-xs text-white">{reportMsg}</p>}
                     <div className="flex items-center justify-end gap-2 pt-1">
