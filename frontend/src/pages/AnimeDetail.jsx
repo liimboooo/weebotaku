@@ -1138,7 +1138,7 @@ export default function AnimeDetail() {
           <div className="flex-1 flex flex-col min-w-0">
 
             {/* --- VIDEO PLAYER --- */}
-            <div ref={playerStageRef} className="ad-player-container sticky z-20 bg-zinc-900 overflow-hidden mt-0 mb-2 sm:mb-3 lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] w-full mx-0 sm:rounded-3xl rounded-xl shadow-2xl" style={{ aspectRatio: '16/9', maxHeight: '80vh', top: 'var(--top-nav-h, 64px)' }}>
+            <div ref={playerStageRef} className="ad-player-container sticky z-20 bg-zinc-900 overflow-hidden mt-0 mb-3 sm:mb-5 lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] w-full mx-0 sm:rounded-3xl rounded-xl shadow-2xl" style={{ aspectRatio: '16/9', maxHeight: '65vh', top: 'var(--top-nav-h, 64px)' }}>
               {/* loading */}
               {loading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
@@ -1451,7 +1451,7 @@ export default function AnimeDetail() {
           </div>
 
           {/* --- RIGHT SIDEBAR --- */}
-          <aside className="w-full lg:w-[380px] shrink-0 overflow-y-auto overflow-x-hidden rounded-2xl sm:rounded-3xl lg:mr-4 mx-2 sm:mx-4 my-2 sm:my-4 bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/[0.06] shadow-2xl shadow-black/50">
+          <aside className="w-full lg:w-[380px] shrink-0 overflow-y-auto overflow-x-hidden rounded-2xl sm:rounded-3xl lg:mr-4 mx-2 sm:mx-4 mt-0 mb-2 sm:mb-4 bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/[0.06] shadow-2xl shadow-black/50">
             <div className="p-3 sm:p-4">
               {/* --- HEADER --- */}
               <div className="flex items-center justify-between mb-3 sm:mb-4 px-1">
