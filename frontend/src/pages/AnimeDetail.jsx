@@ -16,6 +16,7 @@ import commentService from "../services/commentService";
 import authService from "../services/authService";
 import { getSocket, joinAnimeRoom, leaveAnimeRoom } from "../services/socket";
 import reportService from "../services/reportService";
+import reactionService from "../services/reactionService";
 import settingsService from "../services/settingsService";
 import Comments from "../components/Comments";
 import useDocumentTitle from "../hooks/useDocumentTitle";
@@ -90,6 +91,8 @@ export default function AnimeDetail() {
 
   const [liked, setLiked] = useState(null);
   const [likesCount, setLikesCount] = useState(null);
+  const [dislikesCount, setDislikesCount] = useState(null);
+  const [reacting, setReacting] = useState(false);
   const [commentsError, setCommentsError] = useState(false);
   const [reportMsg, setReportMsg] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -356,8 +359,36 @@ export default function AnimeDetail() {
   const anime = apiAnime;
   useDocumentTitle(anime ? `${anime.name} - Ep ${selectedEp}` : "Loading...");
   useEffect(() => {
-    if (anime && likesCount === null) setLikesCount(anime.popularity || 0);
-  }, [anime, likesCount]);
+    if (!id) return;
+    let cancelled = false;
+    reactionService.get(id).then(res => {
+      if (cancelled || !res?.success) return;
+      setLikesCount(res.data.likes);
+      setDislikesCount(res.data.dislikes);
+      setLiked(res.data.liked ? true : res.data.disliked ? false : null);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [id]);
+
+  const handleReact = useCallback(async (type) => {
+    if (reacting) return;
+    // Logged-out users get an optimistic local toggle only (POST requires auth).
+    if (!authService.isLoggedIn()) {
+      if (type === 'like') setLiked(l => l === true ? null : true);
+      else setLiked(l => l === false ? null : false);
+      return;
+    }
+    setReacting(true);
+    try {
+      const res = type === 'like' ? await reactionService.like(id) : await reactionService.dislike(id);
+      if (res?.success) {
+        setLikesCount(res.data.likes);
+        setDislikesCount(res.data.dislikes);
+        setLiked(res.data.liked ? true : res.data.disliked ? false : null);
+      }
+    } catch (e) { console.error('[Otaku] Reaction failed:', e); }
+    setReacting(false);
+  }, [id, reacting]);
   useEffect(() => {
     const epFromUrl = searchParams.get("ep");
     if (epFromUrl) {
@@ -1368,8 +1399,8 @@ export default function AnimeDetail() {
                       )}
                     </div>
                     <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5">
-                      <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors ${liked === true ? 'bg-white/15 text-white' : 'hover:bg-white/10 text-white'}`} onClick={() => { if (liked === true) { setLiked(null); setLikesCount(c => c - 1); } else { setLiked(true); setLikesCount(c => c + 1); } }}><ThumbsUp size={14} fill={liked === true ? 'currentColor' : 'none'} /> {likesCount != null ? (likesCount >= 1000 ? `${(likesCount / 1000).toFixed(1)}K` : likesCount) : '0'}</button>
-                      <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 transition-colors ${liked === false ? 'bg-red-500/20 text-red-300' : 'hover:bg-white/10 text-white'}`} onClick={() => setLiked(liked === false ? null : false)}><ThumbsDown size={14} /></button>
+                      <button disabled={reacting} className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors disabled:opacity-60 ${liked === true ? 'bg-red-500/20 text-red-300' : 'hover:bg-white/10 text-white'}`} onClick={() => handleReact('like')}>{reacting ? <Loader size={14} className="animate-spin" /> : <ThumbsUp size={14} fill={liked === true ? 'currentColor' : 'none'} />} {likesCount != null ? (likesCount >= 1000 ? `${(likesCount / 1000).toFixed(1)}K` : likesCount) : 0}</button>
+                      <button disabled={reacting} className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 transition-colors disabled:opacity-60 ${liked === false ? 'bg-white/15 text-white' : 'hover:bg-white/10 text-white'}`} onClick={() => handleReact('dislike')}><ThumbsDown size={14} fill={liked === false ? 'currentColor' : 'none'} /> {dislikesCount != null && dislikesCount > 0 ? (dislikesCount >= 1000 ? `${(dislikesCount / 1000).toFixed(1)}K` : dislikesCount) : ''}</button>
                     </div>
                     {/* Desktop: show all buttons */}
                     <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" title={`Switch to ${language === 'sub' ? 'Dub' : 'Sub'}`} onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('otaku_last_language', language === 'sub' ? 'dub' : 'sub'); } catch (e) { console.error('[Otaku] Failed to save language pref:', e); } }}>

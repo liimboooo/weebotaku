@@ -70,6 +70,7 @@ app.use('/api/tierlists', require('./routes/tierlists'));
 app.use('/api/rooms', require('./routes/rooms'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/comments', require('./routes/comments'));
+app.use('/api/reactions', require('./routes/reactions'));
 app.use('/api/scrape', require('./routes/scrape'));
 app.use('/api/config', require('./routes/config'));
 app.use('/api/badges', require('./routes/badges'));
@@ -78,6 +79,7 @@ app.use('/api/leaderboard', require('./routes/leaderboard'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/stream', require('./routes/stream'));
 app.use('/api/catalog', require('./routes/catalog'));
+app.use('/api/gifs', require('./routes/gifs'));
 
 // Health check (also keeps DB connection warm for cron)
 app.get('/api/health', async (req, res) => {
