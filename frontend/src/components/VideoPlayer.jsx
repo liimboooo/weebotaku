@@ -175,17 +175,17 @@ export default function VideoPlayer({
               className="absolute inset-y-0 left-0 rounded-full bg-white/25"
               style={{ width: `${duration ? Math.min(100, (buffered / duration) * 100) : 0}%` }}
             />
-            {/* Intro / outro markers */}
-            {isHls && duration > 0 && introOutro?.intro && (
-              <div className="absolute inset-y-0 bg-amber-300/50 pointer-events-none" title="Intro" style={{ left: `${pct(introOutro.intro.start)}%`, width: `${Math.max(0.5, pct(introOutro.intro.end) - pct(introOutro.intro.start))}%` }} />
-            )}
-            {isHls && duration > 0 && introOutro?.outro && (
-              <div className="absolute inset-y-0 bg-amber-300/50 pointer-events-none" title="Outro" style={{ left: `${pct(introOutro.outro.start)}%`, width: `${Math.max(0.5, pct(introOutro.outro.end) - pct(introOutro.outro.start))}%` }} />
-            )}
             <div
               className="absolute inset-y-0 left-0 rounded-full bg-red-500 group-hover/timeline:h-1.5 transition-all"
               style={{ width: `${progress}%` }}
             />
+            {/* Intro / outro markers — drawn on top of progress so they stay visible */}
+            {isHls && duration > 0 && introOutro?.intro && (
+              <div className="absolute -top-1 -bottom-1 rounded-[2px] bg-amber-400 ring-1 ring-black/40 pointer-events-none z-[3]" title="Intro" style={{ left: `${pct(introOutro.intro.start)}%`, width: `${Math.max(0.8, pct(introOutro.intro.end) - pct(introOutro.intro.start))}%` }} />
+            )}
+            {isHls && duration > 0 && introOutro?.outro && (
+              <div className="absolute -top-1 -bottom-1 rounded-[2px] bg-amber-400 ring-1 ring-black/40 pointer-events-none z-[3]" title="Outro" style={{ left: `${pct(introOutro.outro.start)}%`, width: `${Math.max(0.8, pct(introOutro.outro.end) - pct(introOutro.outro.start))}%` }} />
+            )}
             <div
               className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-red-500 opacity-0 group-hover/timeline:opacity-100 transition-all shadow-lg shadow-red-500/30 scale-0 group-hover/timeline:scale-100"
               style={{ left: `${progress}%`, marginLeft: "-8px" }}
