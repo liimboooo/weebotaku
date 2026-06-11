@@ -344,12 +344,13 @@ export default function Comments({ comments: externalComments, setComments, curr
   const remaining = Math.max(0, sorted.length - visibleCount);
   const currentSortLabel = SORT_OPTIONS.find(o => o.key === sort)?.label || "Newest";
 
-  const handleAdd = async () => {
-    if (!text.trim() || !isLoggedIn || posting) return;
+  const postContent = async (content, spoiler) => {
+    const body = (content || "").trim();
+    if (!body || !isLoggedIn || posting) return;
     setPosting(true);
     try {
-      if (onAdd) await onAdd(text, isSpoiler);
-      else setComments?.(c => [{ id: Date.now(), user: currentUser, text, time: Date.now().toString(), likes: 0, dislikes: 0, replies: [], hasSpoiler: isSpoiler }, ...c]);
+      if (onAdd) await onAdd(body, spoiler);
+      else setComments?.(c => [{ id: Date.now(), user: currentUser, text: body, time: Date.now().toString(), likes: 0, dislikes: 0, replies: [], hasSpoiler: spoiler }, ...c]);
       setText("");
       setIsSpoiler(false);
       setPosted(true);
@@ -358,9 +359,14 @@ export default function Comments({ comments: externalComments, setComments, curr
     setPosting(false);
   };
 
+  const handleAdd = () => postContent(text, isSpoiler);
+
+  // Clicking a GIF posts it immediately (with any already-typed text), rather than
+  // dropping the [gif]…[/gif] markup into the input for the user to send manually.
   const handlePickGif = (url) => {
-    setText(t => t + `[gif]${url}[/gif] `);
     setShowGifPicker(false);
+    const gif = `[gif]${url}[/gif]`;
+    postContent(text.trim() ? `${text.trim()} ${gif}` : gif, isSpoiler);
   };
 
   const handlePostReply = useCallback(async (parentId, content) => {

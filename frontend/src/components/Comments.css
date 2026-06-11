@@ -107,7 +107,16 @@
   transition: border-color 0.2s;
 }
 
-.awc-input-main:focus-within { border-color: rgba(255,255,255,0.25); }
+.awc-input-main:focus-within { border-color: rgba(239,68,68,0.5); }
+
+.awc-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+}
 
 .awc-input-field {
   width: 100%;
@@ -164,20 +173,20 @@
   gap: 6px;
   padding: 10px 24px;
   border: none;
-  background: #ffffff;
-  color: #000;
+  background: #ef4444;
+  color: #fff;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
   border-radius: 100px;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.1s;
 }
 
-.awc-submit-btn:hover { background: #000000; }
+.awc-submit-btn:hover { background: #dc2626; }
 .awc-submit-btn:active { transform: scale(0.97); }
 .awc-submit-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-.awc-submit-btn:focus-visible { outline: 2px solid rgba(255,255,255,0.5); outline-offset: 2px; }
+.awc-submit-btn:focus-visible { outline: 2px solid rgba(239,68,68,0.6); outline-offset: 2px; }
 
 .awc-input-chars {
   font-size: 12px;
@@ -405,7 +414,7 @@
   margin-top: 6px;
 }
 
-.awc-edit-cancel, .awc-edit-save {
+.awc-edit-cancel {
   padding: 5px 12px;
   border: none;
   border-radius: 8px;
@@ -422,13 +431,16 @@
 
 .awc-edit-cancel:hover { background: rgba(255,255,255,0.08); color: #ffffff; }
 
-.awc-edit-save {
-  background: rgba(255,255,255,0.1);
-  color: #ffffff;
+.awc-gif {
+  max-width: min(320px, 100%);
+  max-height: 300px;
+  width: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  margin: 6px 0;
+  display: block;
+  object-fit: contain;
 }
-
-.awc-edit-save:hover { background: rgba(255,255,255,0.18); }
-.awc-edit-save:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ─── SPOILER ─── */
 .awc-spoiler-blur {
@@ -449,6 +461,59 @@
 .awc-spoiler-blur svg:last-child { margin-left: auto; opacity: 0.4; }
 .awc-spoiler.revealed .awc-spoiler-blur { display: none; }
 .awc-spoiler:not(.revealed) .awc-text { display: none; }
+
+/* ─── INPUT TOOLBAR ─── */
+.awc-spoiler-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  background: transparent;
+  color: #777;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.awc-spoiler-btn:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.awc-spoiler-btn.active { background: rgba(234,179,8,0.12); border-color: rgba(234,179,8,0.3); color: #eab308; }
+
+.awc-gif-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  background: transparent;
+  color: #777;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.awc-gif-btn:hover { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4); color: #ef4444; }
+
+.awc-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+.awc-edit-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  cursor: pointer;
+}
+.awc-edit-save:hover { background: rgba(255,255,255,0.18); }
+.awc-edit-save:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ─── REPLY TOGGLE ─── */
 .awc-reply-toggle {
@@ -526,7 +591,7 @@
   border-radius: 10px;
 }
 
-.awc-reply-input-main:focus-within { border-color: rgba(255,255,255,0.25); }
+.awc-reply-input-main:focus-within { border-color: rgba(239,68,68,0.5); }
 
 .awc-reply-input-field {
   width: 100%;
@@ -581,11 +646,11 @@
 .awc-reply-cancel-sm:hover { color: #ffffff; }
 
 .awc-reply-post-sm {
-  background: #ffffff;
-  color: #000;
+  background: #ef4444;
+  color: #fff;
 }
 
-.awc-reply-post-sm:hover { background: #000000; }
+.awc-reply-post-sm:hover { background: #dc2626; }
 .awc-reply-post-sm:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ─── LOAD MORE ─── */
