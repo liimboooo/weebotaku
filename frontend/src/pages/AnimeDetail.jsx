@@ -231,8 +231,6 @@ export default function AnimeDetail() {
   useEffect(() => { episodesRef.current = episodes; }, [episodes]);
   useEffect(() => { serversRef.current = servers; }, [servers]);
   useEffect(() => { autoNextRef.current = autoNext; }, [autoNext]);
-  // Reveal controls when the HLS video is paused
-  useEffect(() => { if (!playing) setShowControls(true); }, [playing]);
 
   const toStreamUrl = (srv) => {
     if (!srv) return "";
@@ -585,26 +583,40 @@ export default function AnimeDetail() {
         const hlsServers = [];
 
         if (aniId) {
-          const [miruroSubRes, miruroDubRes] = await Promise.allSettled([
-            getMiruroStream(aniId, epNum, 'sub'),
-            getMiruroStream(aniId, epNum, 'dub'),
-          ]);
+          // Fetch the preferred language FIRST and start playback as soon as it's
+          // ready, instead of waiting for both sub+dub. Load the other in background.
+          const primaryCat = language === 'dub' ? 'dub' : 'sub';
+          const otherCat = primaryCat === 'sub' ? 'dub' : 'sub';
+          const labelFor = (cat) => (cat === 'dub' ? 'Dub (HLS)' : 'Sub (HLS)');
+
+          const primary = await getMiruroStream(aniId, epNum, primaryCat).catch(() => null);
           if (cancelled) return;
-          const miruroSub = miruroSubRes.status === 'fulfilled' ? miruroSubRes.value : null;
-          const miruroDub = miruroDubRes.status === 'fulfilled' ? miruroDubRes.value : null;
-
-          if (miruroSub?.intro || miruroSub?.outro || miruroDub?.intro || miruroDub?.outro) {
-            setIntroOutro({
-              intro: miruroSub?.intro || miruroDub?.intro || null,
-              outro: miruroSub?.outro || miruroDub?.outro || null,
-            });
+          if (primary?.intro || primary?.outro) {
+            setIntroOutro({ intro: primary.intro || null, outro: primary.outro || null });
           }
 
-          if (miruroSub?.stream?.url) {
-            hlsServers.push({ label: 'Sub (HLS)', url: miruroSub.stream.url, type: 'sub' });
+          if (primary?.stream?.url) {
+            setStreamMode('hls');
+            setServers([{ label: labelFor(primaryCat), url: primary.stream.url, type: primaryCat }]);
+            setStreamUrl(primary.stream.url);
+            setStreamLoading(false);
+            // Background: add the other language to the server list without blocking
+            getMiruroStream(aniId, epNum, otherCat).then(other => {
+              if (cancelled || !other?.stream?.url || other.stream.url === primary.stream.url) return;
+              if (other.intro || other.outro) setIntroOutro(prev => ({ intro: prev.intro || other.intro || null, outro: prev.outro || other.outro || null }));
+              setServers(prev => prev.some(s => s.type === otherCat) ? prev : [...prev, { label: labelFor(otherCat), url: other.stream.url, type: otherCat }]);
+            }).catch(() => {});
+            return;
           }
-          if (miruroDub?.stream?.url && miruroDub.stream.url !== miruroSub?.stream?.url) {
-            hlsServers.push({ label: 'Dub (HLS)', url: miruroDub.stream.url, type: 'dub' });
+
+          // Preferred missing — try the other language before deeper fallbacks
+          const other = await getMiruroStream(aniId, epNum, otherCat).catch(() => null);
+          if (cancelled) return;
+          if (other?.intro || other?.outro) {
+            setIntroOutro(prev => ({ intro: prev.intro || other.intro || null, outro: prev.outro || other.outro || null }));
+          }
+          if (other?.stream?.url) {
+            hlsServers.push({ label: labelFor(otherCat), url: other.stream.url, type: otherCat });
           }
 
           if (hlsServers.length === 0) {
