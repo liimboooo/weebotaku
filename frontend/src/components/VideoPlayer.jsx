@@ -122,12 +122,12 @@ export default function VideoPlayer({
       {isHls && (
         <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
           {buffering ? (
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-[3px] border-white/25 border-t-red-500 animate-spin" />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-[3px] border-white/25 border-t-white animate-spin" />
           ) : (
             <button
               onClick={togglePlay}
               aria-label={playing ? "Pause" : "Play"}
-              className={`pointer-events-auto flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black/55 backdrop-blur-sm border border-white/15 text-white shadow-2xl transition-all duration-200 hover:bg-red-500 hover:border-red-500 hover:scale-105 active:scale-95 ${playing ? "opacity-0 group-hover:opacity-100" : "opacity-100"}`}
+              className={`pointer-events-auto flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-black/55 backdrop-blur-sm border border-white/15 text-white shadow-2xl transition-all duration-200 hover:bg-white/25 hover:border-white/40 hover:scale-105 active:scale-95 ${playing ? "opacity-0 group-hover:opacity-100" : "opacity-100"}`}
             >
               {playing ? <Pause size={30} fill="currentColor" /> : <Play size={30} fill="currentColor" className="ml-1" />}
             </button>
@@ -140,7 +140,7 @@ export default function VideoPlayer({
           {showSkipIntro && (
             <button
               onClick={handleSkipIntro}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-black/80 backdrop-blur-xl border border-white/20 text-white text-sm font-semibold hover:bg-red-500/30 hover:border-red-500/40 active:scale-95 transition-all shadow-xl"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-black/80 backdrop-blur-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/20 hover:border-white/40 active:scale-95 transition-all shadow-xl"
             >
               Skip Intro <SkipForward size={14} />
             </button>
@@ -148,7 +148,7 @@ export default function VideoPlayer({
           {showSkipOutro && (
             <button
               onClick={handleSkipOutro}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-black/80 backdrop-blur-xl border border-white/20 text-white text-sm font-semibold hover:bg-red-500/30 hover:border-red-500/40 active:scale-95 transition-all shadow-xl"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-black/80 backdrop-blur-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/20 hover:border-white/40 active:scale-95 transition-all shadow-xl"
             >
               {epIndex < episodesLength - 1 ? "Next Ep" : "Skip Outro"} <SkipForward size={14} />
             </button>
@@ -187,18 +187,18 @@ export default function VideoPlayer({
               style={{ width: `${duration ? Math.min(100, (buffered / duration) * 100) : 0}%` }}
             />
             <div
-              className="absolute inset-y-0 left-0 rounded-full bg-red-500 group-hover/timeline:h-1.5 transition-all"
+              className="absolute inset-y-0 left-0 rounded-full bg-white group-hover/timeline:h-1.5 transition-all"
               style={{ width: `${progress}%` }}
             />
             {/* Intro / outro markers — drawn on top of progress so they stay visible */}
             {isHls && duration > 0 && introOutro?.intro && (
-              <div className="absolute -top-1 -bottom-1 rounded-[2px] bg-amber-400 ring-1 ring-black/40 pointer-events-none z-[3]" title="Intro" style={{ left: `${pct(introOutro.intro.start)}%`, width: `${Math.max(0.8, pct(introOutro.intro.end) - pct(introOutro.intro.start))}%` }} />
+              <div className="absolute -top-1 -bottom-1 rounded-[2px] bg-white ring-1 ring-black/40 pointer-events-none z-[3]" title="Intro" style={{ left: `${pct(introOutro.intro.start)}%`, width: `${Math.max(0.8, pct(introOutro.intro.end) - pct(introOutro.intro.start))}%` }} />
             )}
             {isHls && duration > 0 && introOutro?.outro && (
-              <div className="absolute -top-1 -bottom-1 rounded-[2px] bg-amber-400 ring-1 ring-black/40 pointer-events-none z-[3]" title="Outro" style={{ left: `${pct(introOutro.outro.start)}%`, width: `${Math.max(0.8, pct(introOutro.outro.end) - pct(introOutro.outro.start))}%` }} />
+              <div className="absolute -top-1 -bottom-1 rounded-[2px] bg-white ring-1 ring-black/40 pointer-events-none z-[3]" title="Outro" style={{ left: `${pct(introOutro.outro.start)}%`, width: `${Math.max(0.8, pct(introOutro.outro.end) - pct(introOutro.outro.start))}%` }} />
             )}
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-red-500 opacity-0 group-hover/timeline:opacity-100 transition-all shadow-lg shadow-red-500/30 scale-0 group-hover/timeline:scale-100"
+              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white opacity-0 group-hover/timeline:opacity-100 transition-all shadow-lg shadow-black/40 scale-0 group-hover/timeline:scale-100"
               style={{ left: `${progress}%`, marginLeft: "-8px" }}
             />
             {hoveringTimeline && isHls && (
@@ -265,7 +265,7 @@ export default function VideoPlayer({
                     value={muted ? 0 : volume}
                     onChange={isHls ? handleVolumeSlider : undefined}
                     disabled={!isHls}
-                    className="w-16 h-1 appearance-none bg-white/30 rounded-full cursor-pointer accent-red-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-red-500"
+                    className="w-16 h-1 appearance-none bg-white/30 rounded-full cursor-pointer accent-white [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
                     aria-label="Volume"
                   />
                 </div>
@@ -343,7 +343,7 @@ export default function VideoPlayer({
                             className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/5 transition-colors"
                           >
                             <span className="text-[12px] text-white">Auto next episode</span>
-                            <span className={`text-[11px] font-medium ${autoNext ? 'text-red-500' : 'text-zinc-500'}`}>
+                            <span className={`text-[11px] font-medium ${autoNext ? 'text-white' : 'text-zinc-500'}`}>
                               {autoNext ? 'On' : 'Off'}
                             </span>
                           </button>
@@ -367,13 +367,13 @@ export default function VideoPlayer({
                                   key={`${srv.url}-${i}`}
                                   onClick={() => { onSelectServer(srv); setShowSettings(false); setSettingsView('main'); }}
                                   className={`w-full flex items-center gap-2.5 px-3 py-2 transition-colors ${
-                                    isActive ? 'bg-red-500/10' : 'hover:bg-white/5'
+                                    isActive ? 'bg-white/10' : 'hover:bg-white/5'
                                   }`}
                                 >
-                                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? 'bg-red-500' : 'bg-white/20'}`} />
+                                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? 'bg-white' : 'bg-white/20'}`} />
                                   <span className="text-[12px] text-white truncate">{srv.label || 'Server'}</span>
                                   <span className="text-[10px] uppercase text-zinc-500 ml-auto flex-shrink-0">{srv.type}</span>
-                                  {isActive && <span className="text-[10px] text-red-500 font-medium">Active</span>}
+                                  {isActive && <span className="text-[10px] text-white font-medium">Active</span>}
                                 </button>
                               );
                             })}
@@ -397,7 +397,7 @@ export default function VideoPlayer({
                                 onClick={() => { handleSpeedChange(s); setSettingsView('main'); }}
                                 className={`px-2 py-1.5 rounded-md text-[11px] font-medium transition-colors ${
                                   playbackSpeed === s
-                                    ? 'bg-red-500/20 text-red-500 ring-1 ring-red-500/30'
+                                    ? 'bg-white/20 text-white ring-1 ring-white/30'
                                     : 'text-white/70 hover:text-white hover:bg-white/10'
                                 }`}
                               >
@@ -421,25 +421,25 @@ export default function VideoPlayer({
                             <button
                               onClick={() => { onQualityChange(-1); setSettingsView('main'); }}
                               className={`w-full flex items-center gap-2.5 px-3 py-2 transition-colors ${
-                                currentQuality === -1 ? 'bg-red-500/10' : 'hover:bg-white/5'
+                                currentQuality === -1 ? 'bg-white/10' : 'hover:bg-white/5'
                               }`}
                             >
-                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${currentQuality === -1 ? 'bg-red-500' : 'bg-white/20'}`} />
+                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${currentQuality === -1 ? 'bg-white' : 'bg-white/20'}`} />
                               <span className="text-[12px] text-white">Auto</span>
-                              {currentQuality === -1 && <span className="text-[10px] text-red-500 ml-auto font-medium">Active</span>}
+                              {currentQuality === -1 && <span className="text-[10px] text-white ml-auto font-medium">Active</span>}
                             </button>
                             {hlsLevels.map(l => (
                               <button
                                 key={l.index}
                                 onClick={() => { onQualityChange(l.index); setSettingsView('main'); }}
                                 className={`w-full flex items-center gap-2.5 px-3 py-2 transition-colors ${
-                                  currentQuality === l.index ? 'bg-red-500/10' : 'hover:bg-white/5'
+                                  currentQuality === l.index ? 'bg-white/10' : 'hover:bg-white/5'
                                 }`}
                               >
-                                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${currentQuality === l.index ? 'bg-red-500' : 'bg-white/20'}`} />
+                                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${currentQuality === l.index ? 'bg-white' : 'bg-white/20'}`} />
                                 <span className="text-[12px] text-white">{l.name}</span>
                                 <span className="text-[10px] text-zinc-500 ml-auto">{l.bitrate ? `${(l.bitrate / 1000).toFixed(0)} kbps` : ''}</span>
-                                {currentQuality === l.index && <span className="text-[10px] text-red-500 font-medium">Active</span>}
+                                {currentQuality === l.index && <span className="text-[10px] text-white font-medium">Active</span>}
                               </button>
                             ))}
                           </div>
@@ -476,7 +476,7 @@ export default function VideoPlayer({
         {/* Mini progress bar — visible when full controls are hidden */}
         {isHls && (
           <div className={`absolute bottom-0 left-0 right-0 h-[3px] bg-white/10 transition-opacity duration-300 ${showControls ? "opacity-0" : "opacity-100"}`}>
-            <div className="h-full bg-red-500" style={{ width: `${progress}%` }} />
+            <div className="h-full bg-white" style={{ width: `${progress}%` }} />
           </div>
         )}
       </div>
@@ -488,7 +488,7 @@ export default function VideoPlayer({
             <div className="text-3xl sm:text-5xl font-bold text-white mb-3 sm:mb-4">{autoNextCountdown}</div>
             <div className="flex gap-2 sm:gap-3 justify-center">
               <button
-                className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full bg-red-500 text-white text-[11px] sm:text-sm font-semibold hover:bg-red-500 transition-colors"
+                className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full bg-white text-black text-[11px] sm:text-sm font-semibold hover:bg-white/90 transition-colors"
                 onClick={goToNextEpisode}
               >
                 <Play size={12} /> Play Now

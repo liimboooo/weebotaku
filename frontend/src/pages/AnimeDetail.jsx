@@ -1265,7 +1265,7 @@ export default function AnimeDetail() {
               {/* error */}
               {!loading && error && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 sm:gap-4 px-4 sm:px-0">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 text-lg sm:text-xl font-bold">!</div>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center text-white text-lg sm:text-xl font-bold">!</div>
                   <p className="text-[11px] sm:text-sm text-zinc-400 text-center">{error}</p>
                   {(retryCount + streamRetryCount) < 3 ? (
                     <button className="px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-white/10 text-white text-[11px] sm:text-sm font-medium hover:bg-white/20 transition-colors" onClick={() => { if (episodes.length === 0) setRetryCount(c => c + 1); else setStreamRetryCount(c => c + 1); }}>
@@ -1287,10 +1287,10 @@ export default function AnimeDetail() {
               {/* iframe error */}
               {!loading && !error && iframeError && streamUrl && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 sm:gap-4 px-4 sm:px-0">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400 text-lg sm:text-xl font-bold">!</div>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center text-white text-lg sm:text-xl font-bold">!</div>
                   <p className="text-[11px] sm:text-sm text-zinc-400">Episode not available on this source.</p>
                     <div className="flex flex-wrap gap-2 justify-center">
-                      {serverIndex < langServers().length - 1 && <button className="px-4 py-1.5 max-[480px]:px-3 max-[480px]:py-1 max-[480px]:text-xs sm:px-5 sm:py-2 sm:text-sm rounded-full bg-amber-500/20 text-amber-300 text-sm font-medium hover:bg-amber-500/30 transition-colors" onClick={tryNextServer}>Try Next Source</button>}
+                      {serverIndex < langServers().length - 1 && <button className="px-4 py-1.5 max-[480px]:px-3 max-[480px]:py-1 max-[480px]:text-xs sm:px-5 sm:py-2 sm:text-sm rounded-full bg-white/15 text-white text-sm font-medium hover:bg-white/25 transition-colors" onClick={tryNextServer}>Try Next Source</button>}
                       {epIndex < episodes.length - 1 && <button className="px-4 py-1.5 max-[480px]:px-3 max-[480px]:py-1 max-[480px]:text-xs sm:px-5 sm:py-2 sm:text-sm rounded-full bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors" onClick={() => { setIframeError(false); failedServers.current = new Set(); setEpIndex(i => i + 1); }}>Skip to Next Episode</button>}
                       <button className="px-4 py-1.5 max-[480px]:px-3 max-[480px]:py-1 max-[480px]:text-xs sm:px-5 sm:py-2 sm:text-sm rounded-full bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors" onClick={() => { setIframeError(false); failedServers.current = new Set(); setStreamRetryCount(c => c + 1); }}>Retry</button>
                     </div>
@@ -1299,7 +1299,7 @@ export default function AnimeDetail() {
               {/* stream loading */}
               {!loading && !error && streamLoading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                  <div className="w-8 h-8 rounded-full border-2 border-amber-500/30 border-t-amber-400 animate-spin" />
+                  <div className="w-8 h-8 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                   <p className="text-xs sm:text-sm text-zinc-500">Loading stream...</p>
                 </div>
               )}
@@ -1369,7 +1369,7 @@ export default function AnimeDetail() {
               {/* Resume-from toast */}
               {resumeAt != null && streamMode === "hls" && (
                 <div className="absolute bottom-16 sm:bottom-20 left-3 sm:left-4 z-30 flex items-center gap-3 px-3 py-2 rounded-xl bg-black/85 backdrop-blur-md border border-white/15 shadow-2xl">
-                  <span className="text-[11px] sm:text-xs text-white">Resumed from <strong className="text-red-400">{formatTime(resumeAt)}</strong></span>
+                  <span className="text-[11px] sm:text-xs text-white">Resumed from <strong className="text-white">{formatTime(resumeAt)}</strong></span>
                   <button onClick={handleStartOver} className="text-[11px] sm:text-xs font-bold text-white/80 hover:text-white underline underline-offset-2">Start over</button>
                   <button onClick={() => setResumeAt(null)} className="text-white/50 hover:text-white" aria-label="Dismiss"><X size={13} /></button>
                 </div>
@@ -1396,7 +1396,7 @@ export default function AnimeDetail() {
                           {langServers().map((srv, idx) => (
                             <button
                               key={`${srv.url}-${idx}`}
-                              className={`w-full text-left px-3 py-1.5 text-[11px] sm:text-xs flex items-center gap-2 ${idx === serverIndex ? 'bg-red-500/15 text-red-400' : 'text-zinc-300 hover:text-white hover:bg-zinc-800'}`}
+                              className={`w-full text-left px-3 py-1.5 text-[11px] sm:text-xs flex items-center gap-2 ${idx === serverIndex ? 'bg-white/15 text-white' : 'text-zinc-300 hover:text-white hover:bg-zinc-800'}`}
                               onClick={() => { switchServerFn(idx); setShowServerSelector(false); }}
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M21 12a9 9 0 00-9-9 9 9 0 00-9 9 9 9 0 009 9 9 9 0 009-9"/></svg>
@@ -1412,10 +1412,10 @@ export default function AnimeDetail() {
 
               {/* --- BANNER --- */}
               {alertBannerVisible && (
-                <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-[#3d1a04] border-b border-orange-500/20">
-                  <AlertTriangle size={11} className="text-orange-400 flex-none sm:inline hidden" />
-                  <p className="text-[11px] sm:text-xs text-orange-400 flex-1">If the current server doesn't work, feel free to try the other available servers.</p>
-                  <button className="text-orange-400/70 hover:text-orange-300 cursor-pointer bg-transparent border-none p-1 flex-none" onClick={() => setAlertBannerVisible(false)}><X size={10} /></button>
+                <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white/5 border-b border-white/15">
+                  <AlertTriangle size={11} className="text-white flex-none sm:inline hidden" />
+                  <p className="text-[11px] sm:text-xs text-white flex-1">If the current server doesn't work, feel free to try the other available servers.</p>
+                  <button className="text-white/70 hover:text-white cursor-pointer bg-transparent border-none p-1 flex-none" onClick={() => setAlertBannerVisible(false)}><X size={10} /></button>
                 </div>
               )}
 
@@ -1433,7 +1433,7 @@ export default function AnimeDetail() {
                       {anime?.img && <img src={anime.img} alt={anime?.name || ''} className="w-full h-full object-cover" />}
                     </div>
                     <div className="flex flex-col">
-                      <button className="font-bold text-white text-sm sm:text-base leading-tight hover:text-red-400 transition-colors text-left" onClick={() => navigate(`/anime/${id}/info`)}>
+                      <button className="font-bold text-white text-sm sm:text-base leading-tight hover:text-white transition-colors text-left" onClick={() => navigate(`/anime/${id}/info`)}>
                         {anime?.name || "Anime"}
                       </button>
                       {anime?.myAnimeListUrl && (
@@ -1477,7 +1477,7 @@ export default function AnimeDetail() {
                       )}
                     </div>
                     <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5">
-                      <button disabled={reacting} className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors disabled:opacity-60 ${liked === true ? 'bg-red-500/20 text-red-300' : 'hover:bg-white/10 text-white'}`} onClick={() => handleReact('like')}>{reacting ? <Loader size={14} className="animate-spin" /> : <ThumbsUp size={14} fill={liked === true ? 'currentColor' : 'none'} />} {likesCount != null ? (likesCount >= 1000 ? `${(likesCount / 1000).toFixed(1)}K` : likesCount) : 0}</button>
+                      <button disabled={reacting} className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors disabled:opacity-60 ${liked === true ? 'bg-white/15 text-white' : 'hover:bg-white/10 text-white'}`} onClick={() => handleReact('like')}>{reacting ? <Loader size={14} className="animate-spin" /> : <ThumbsUp size={14} fill={liked === true ? 'currentColor' : 'none'} />} {likesCount != null ? (likesCount >= 1000 ? `${(likesCount / 1000).toFixed(1)}K` : likesCount) : 0}</button>
                       <button disabled={reacting} className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 transition-colors disabled:opacity-60 ${liked === false ? 'bg-white/15 text-white' : 'hover:bg-white/10 text-white'}`} onClick={() => handleReact('dislike')}><ThumbsDown size={14} fill={liked === false ? 'currentColor' : 'none'} /> {dislikesCount != null && dislikesCount > 0 ? (dislikesCount >= 1000 ? `${(dislikesCount / 1000).toFixed(1)}K` : dislikesCount) : ''}</button>
                     </div>
                     {/* Desktop: show all buttons */}
@@ -1578,10 +1578,10 @@ export default function AnimeDetail() {
                 </button>
                 <div className={`sm:block ${showMobileComments ? 'block' : 'hidden'}`}>
                   {commentsError && !commentsLoading && (
-                    <div className="flex items-center gap-2 px-4 py-3 mb-3 rounded-xl bg-red-500/10 border border-red-500/20">
-                      <AlertTriangle size={14} className="text-red-400" />
-                      <p className="text-xs text-red-300 flex-1">Failed to load comments.</p>
-                      <button className="text-xs text-red-300 hover:text-red-200 underline bg-transparent border-none cursor-pointer" onClick={() => { setCommentsError(false); setCommentsLoading(true); commentService.getComments(id, { episode: selectedEp }).then(res => { if (res.success) setComments(res.data.map(mapComment)); else setCommentsError(true); }).catch(() => setCommentsError(true)).finally(() => setCommentsLoading(false)); }}>Retry</button>
+                    <div className="flex items-center gap-2 px-4 py-3 mb-3 rounded-xl bg-white/10 border border-white/15">
+                      <AlertTriangle size={14} className="text-white" />
+                      <p className="text-xs text-white flex-1">Failed to load comments.</p>
+                      <button className="text-xs text-white hover:text-white underline bg-transparent border-none cursor-pointer" onClick={() => { setCommentsError(false); setCommentsLoading(true); commentService.getComments(id, { episode: selectedEp }).then(res => { if (res.success) setComments(res.data.map(mapComment)); else setCommentsError(true); }).catch(() => setCommentsError(true)).finally(() => setCommentsLoading(false)); }}>Retry</button>
                     </div>
                   )}
                   <Comments
@@ -1678,7 +1678,7 @@ export default function AnimeDetail() {
                               className={`relative flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-all duration-300 group rounded-[18px] mx-1 ${isActive ? 'bg-[rgba(22,22,28,0.8)] border border-white/[0.07] shadow-[inset_16px_0_40px_-15px_rgba(255,255,255,0.08)]' : 'bg-[rgba(17,17,20,0.5)] border border-white/[0.02] hover:bg-[rgba(22,22,28,0.8)] hover:border-white/[0.07]'}`}
                               onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
                             >
-                              {isActive && <div className="absolute left-0 top-3 bottom-3 w-[3.5px] rounded-r-[4px] bg-red-500 z-[2]" />}
+                              {isActive && <div className="absolute left-0 top-3 bottom-3 w-[3.5px] rounded-r-[4px] bg-white z-[2]" />}
                               {sidebarView === 'thumbnail' ? (
                                 <>
                                   <div className="relative w-28 sm:w-36 aspect-video flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden bg-neutral-900 shadow-lg ring-1 ring-white/[0.03] group-hover:ring-white/10 transition-all duration-300">
@@ -1829,10 +1829,10 @@ export default function AnimeDetail() {
                         <button
                           key={opt.value}
                           onClick={() => setReportCategory(opt.value)}
-                          className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left text-sm transition-colors ${reportCategory === opt.value ? 'bg-red-500/15 border-red-500/50 text-white' : 'bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10'}`}
+                          className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left text-sm transition-colors ${reportCategory === opt.value ? 'bg-white/15 border-white/40 text-white' : 'bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10'}`}
                         >
-                          <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${reportCategory === opt.value ? 'border-red-500' : 'border-zinc-600'}`}>
-                            {reportCategory === opt.value && <span className="w-2 h-2 rounded-full bg-red-500" />}
+                          <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${reportCategory === opt.value ? 'border-white/40' : 'border-zinc-600'}`}>
+                            {reportCategory === opt.value && <span className="w-2 h-2 rounded-full bg-white" />}
                           </span>
                           {opt.label}
                         </button>
@@ -1844,15 +1844,15 @@ export default function AnimeDetail() {
                       maxLength={500}
                       rows={3}
                       placeholder="Describe what went wrong…"
-                      className="w-full bg-black/40 border border-white/10 focus:border-red-500/50 rounded-xl px-3 py-2.5 text-sm text-white outline-none resize-none placeholder-zinc-600 transition-colors"
+                      className="w-full bg-black/40 border border-white/10 focus:border-white/40 rounded-xl px-3 py-2.5 text-sm text-white outline-none resize-none placeholder-zinc-600 transition-colors"
                     />
-                    {reportMsg && <p className="text-xs text-red-400">{reportMsg}</p>}
+                    {reportMsg && <p className="text-xs text-white">{reportMsg}</p>}
                     <div className="flex items-center justify-end gap-2 pt-1">
                       <button onClick={() => setShowReportModal(false)} className="px-4 py-2 rounded-full text-sm font-semibold text-zinc-300 hover:bg-white/10 transition-colors">Cancel</button>
                       <button
                         onClick={submitReport}
                         disabled={!reportDetails.trim() || reportSubmitting}
-                        className="px-5 py-2 rounded-full text-sm font-semibold bg-red-500 text-white hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+                        className="px-5 py-2 rounded-full text-sm font-semibold bg-white text-black hover:bg-white/90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
                       >
                         {reportSubmitting ? <><Loader size={14} className="animate-spin" /> Sending…</> : 'Submit report'}
                       </button>

@@ -107,7 +107,7 @@
   transition: border-color 0.2s;
 }
 
-.awc-input-main:focus-within { border-color: rgba(239,68,68,0.5); }
+.awc-input-main:focus-within { border-color: rgba(255,255,255,0.5); }
 
 .awc-input-bar {
   display: flex;
@@ -173,8 +173,8 @@
   gap: 6px;
   padding: 10px 24px;
   border: none;
-  background: #ef4444;
-  color: #fff;
+  background: #fff;
+  color: #000;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
@@ -183,10 +183,10 @@
   transition: background 0.15s, transform 0.1s;
 }
 
-.awc-submit-btn:hover { background: #dc2626; }
+.awc-submit-btn:hover { background: #e5e5e5; }
 .awc-submit-btn:active { transform: scale(0.97); }
 .awc-submit-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-.awc-submit-btn:focus-visible { outline: 2px solid rgba(239,68,68,0.6); outline-offset: 2px; }
+.awc-submit-btn:focus-visible { outline: 2px solid rgba(255,255,255,0.6); outline-offset: 2px; }
 
 .awc-input-chars {
   font-size: 12px;
@@ -333,7 +333,7 @@
 .awc-action:hover { color: #ffffff; }
 .awc-action:focus-visible { outline: 1px solid rgba(255,255,255,0.5); }
 .awc-action.liked { color: #4ade80; }
-.awc-action.disliked { color: #f87171; }
+.awc-action.disliked { color: #fff; }
 .awc-action-count { font-size: 12px; font-weight: 500; }
 
 /* ─── OPTIONS ─── */
@@ -492,8 +492,8 @@
   cursor: pointer;
   transition: all 0.15s;
 }
-.awc-gif-btn:hover { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4); color: #ef4444; }
-.awc-gif-btn.active { background: rgba(239,68,68,0.16); border-color: rgba(239,68,68,0.55); color: #ef4444; }
+.awc-gif-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.4); color: #fff; }
+.awc-gif-btn.active { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.55); color: #fff; }
 
 .awc-gif-wrap { position: relative; display: inline-flex; }
 
@@ -594,7 +594,7 @@
   border-radius: 10px;
 }
 
-.awc-reply-input-main:focus-within { border-color: rgba(239,68,68,0.5); }
+.awc-reply-input-main:focus-within { border-color: rgba(255,255,255,0.5); }
 
 .awc-reply-input-field {
   width: 100%;
@@ -649,11 +649,11 @@
 .awc-reply-cancel-sm:hover { color: #ffffff; }
 
 .awc-reply-post-sm {
-  background: #ef4444;
-  color: #fff;
+  background: #fff;
+  color: #000;
 }
 
-.awc-reply-post-sm:hover { background: #dc2626; }
+.awc-reply-post-sm:hover { background: #e5e5e5; }
 .awc-reply-post-sm:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ─── LOAD MORE ─── */
