@@ -4,7 +4,7 @@ import {
   Loader, Play, Star, Tv, Calendar, Clock, Monitor, Film,
   X, RefreshCw, AlertTriangle, Bell, ChevronDown, ChevronUp,
   Share2, Bookmark, Flag, LayoutGrid, List, ArrowUp, ArrowDown, MessageCircle,
-  ThumbsUp, ThumbsDown, ChevronLeft, ChevronRight
+  ThumbsUp, ThumbsDown
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { getAnimeById } from "../data/animeData";
@@ -817,12 +817,6 @@ export default function AnimeDetail() {
     setSelectedEp(episodes[epIndex + 1]?.episode || (epIndex + 2));
   }, [cancelAutoNext, epIndex, episodes]);
 
-  const goToPrevEpisode = useCallback(() => {
-    cancelAutoNext();
-    setEpIndex(i => Math.max(0, i - 1));
-    setSelectedEp(episodes[epIndex - 1]?.episode || epIndex);
-  }, [cancelAutoNext, epIndex, episodes]);
-
   const handleSpeedChange = useCallback((speed) => {
     setPlaybackSpeed(speed);
     setShowSpeedMenu(false);
@@ -1258,29 +1252,6 @@ export default function AnimeDetail() {
             </div>
 
             <div className="ad-content-container w-full lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] px-0 sm:px-0">
-              {/* --- EPISODE NAV --- */}
-              {episodes.length > 1 && (
-                <div className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-white/5">
-                  <button
-                    disabled={epIndex <= 0}
-                    onClick={goToPrevEpisode}
-                    className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full text-[11px] sm:text-sm font-semibold bg-white/5 border border-white/10 text-white transition-colors enabled:hover:bg-red-500/15 enabled:hover:border-red-500/40 enabled:hover:text-red-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft size={14} /> Prev
-                  </button>
-                  <div className="flex flex-col items-center leading-tight min-w-0 px-2">
-                    <span className="text-[11px] sm:text-sm font-bold text-white truncate">Episode {selectedEp || 1}</span>
-                    <span className="text-[10px] sm:text-xs text-zinc-500">of {allEpsRef.current?.length || episodes.length}</span>
-                  </div>
-                  <button
-                    disabled={epIndex >= episodes.length - 1}
-                    onClick={goToNextEpisode}
-                    className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full text-[11px] sm:text-sm font-semibold bg-white/5 border border-white/10 text-white transition-colors enabled:hover:bg-red-500/15 enabled:hover:border-red-500/40 enabled:hover:text-red-300 disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    Next <ChevronRight size={14} />
-                  </button>
-                </div>
-              )}
               {/* --- SERVER SELECTOR --- */}
               {servers.length > 0 && langServers().length > 1 && (
                 <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 border-b border-white/5">
@@ -1385,8 +1356,8 @@ export default function AnimeDetail() {
                       <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 transition-colors ${liked === false ? 'bg-red-500/20 text-red-300' : 'hover:bg-white/10 text-white'}`} onClick={() => setLiked(liked === false ? null : false)}><ThumbsDown size={14} /></button>
                     </div>
                     {/* Desktop: show all buttons */}
-                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('otaku_last_language', language === 'sub' ? 'dub' : 'sub'); } catch (e) { console.error('[Otaku] Failed to save language pref:', e); } }}>
-                      Dub <ChevronDown size={12} className="text-zinc-400" />
+                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" title={`Switch to ${language === 'sub' ? 'Dub' : 'Sub'}`} onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('otaku_last_language', language === 'sub' ? 'dub' : 'sub'); } catch (e) { console.error('[Otaku] Failed to save language pref:', e); } }}>
+                      <Tv size={12} className="text-zinc-400" /> {language === 'dub' ? 'Dub' : 'Sub'}
                     </button>
                     <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
                       <Share2 size={12} /> Share
@@ -1411,7 +1382,7 @@ export default function AnimeDetail() {
                             className="absolute right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-xl py-1 min-w-[140px] shadow-2xl z-50"
                           >
                             <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { setLanguage(l => l === 'sub' ? 'dub' : 'sub'); try { localStorage.setItem('otaku_last_language', language === 'sub' ? 'dub' : 'sub'); } catch (e) { console.error('[Otaku] Failed to save language pref:', e); } setShowMoreActions(false); }}>
-                              <Tv size={12} /> Dub
+                              <Tv size={12} /> {language === 'sub' ? 'Switch to Dub' : 'Switch to Sub'}
                             </button>
                             <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { if (servers.length > 1) { setServerIndex(i => (i + 1) % servers.length); } setShowMoreActions(false); }}>
                               <Monitor size={12} /> Server
