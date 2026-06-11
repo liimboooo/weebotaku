@@ -62,12 +62,18 @@ export default function VideoPlayer({
   const [volHud, setVolHud] = useState(false);
   const lastTapRef = useRef(0);
   const tapTimerRef = useRef(null);
-  const volHudInit = useRef(true);
+  const volReadyRef = useRef(false);
   const volHudTimer = useRef(null);
 
-  // Briefly show a volume HUD when volume/mute changes (e.g. scroll-to-change)
+  // Ignore the load-time volume restore; only react to real changes afterwards
   useEffect(() => {
-    if (volHudInit.current) { volHudInit.current = false; return; }
+    const t = setTimeout(() => { volReadyRef.current = true; }, 1500);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Briefly show a volume HUD when the user changes volume/mute
+  useEffect(() => {
+    if (!volReadyRef.current) return;
     setVolHud(true);
     clearTimeout(volHudTimer.current);
     volHudTimer.current = setTimeout(() => setVolHud(false), 900);

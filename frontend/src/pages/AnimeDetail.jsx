@@ -234,23 +234,6 @@ export default function AnimeDetail() {
   // Reveal controls when the HLS video is paused
   useEffect(() => { if (!playing) setShowControls(true); }, [playing]);
 
-  // Scroll over the player to change volume (HLS only)
-  useEffect(() => {
-    const stage = playerStageRef.current;
-    if (!stage || streamMode !== "hls") return;
-    const onWheel = (e) => {
-      const video = hlsVideoRef.current;
-      if (!video) return;
-      e.preventDefault();
-      const delta = e.deltaY < 0 ? 0.05 : -0.05;
-      const nv = Math.min(1, Math.max(0, +(video.volume + delta).toFixed(2)));
-      video.volume = nv;
-      if (nv > 0 && video.muted) video.muted = false;
-    };
-    stage.addEventListener("wheel", onWheel, { passive: false });
-    return () => stage.removeEventListener("wheel", onWheel);
-  }, [streamMode]);
-
   const toStreamUrl = (srv) => {
     if (!srv) return "";
     try {
