@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-const SEARCH_API = 'https://search.htv.services/search/v1';
+const SEARCH_API = 'https://search.htv-services.com/';
 const VIDEO_API = 'https://hanime.tv/api/v8/video';
 
 async function searchHentai(title) {
@@ -8,8 +8,8 @@ async function searchHentai(title) {
     const res = await fetch(SEARCH_API, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+        'Content-Type': 'application/json;charset=UTF-8',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0.0.0',
       },
       body: JSON.stringify({
         search_text: title,
@@ -24,7 +24,8 @@ async function searchHentai(title) {
     });
     if (!res.ok) return [];
     const data = await res.json();
-    return (data.hits || []).map(h => ({
+    const hits = typeof data.hits === 'string' ? JSON.parse(data.hits) : (data.hits || []);
+    return hits.map(h => ({
       slug: h.slug,
       name: h.name,
     }));
@@ -35,9 +36,9 @@ async function searchHentai(title) {
 
 async function getVideoInfo(slug) {
   try {
-    const res = await fetch(`${VIDEO_API}/${slug}`, {
+    const res = await fetch(`${VIDEO_API}?id=${slug}`, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0.0.0',
         'Referer': 'https://hanime.tv/',
       },
       signal: AbortSignal.timeout(10000),
@@ -55,50 +56,62 @@ function extractStreamUrl(videoData) {
     if (!manifest) return null;
     const servers = manifest.servers || [];
     for (const srv of servers) {
-      if (srv.url && srv.url.includes('.m3u8')) return srv.url;
+      const streams = srv.streams || [];
+      const hls = streams.find(s => s.url && (s.url.includes('.m3u8') || s.kind === 'hls'));
+      if (hls) return hls.url;
     }
-    return servers[0]?.url || null;
+    for (const srv of servers) {
+      if (srv.streams?.[0]?.url) return srv.streams[0].url;
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
+function findEpisodeSlug(videoData, episodeNum) {
+  const videos = videoData.hentai_franchise_hentai_videos || [];
+  if (videos.length === 0) return null;
+  if (episodeNum < 1 || episodeNum > videos.length) return null;
+  return videos[episodeNum - 1].slug;
+}
+
 exports.hentaiStream = async (animeTitle, episodeNum) => {
   const title = (animeTitle || '').trim();
+  const epNum = parseInt(episodeNum, 10) || 1;
   if (!title) return null;
 
   const hits = await searchHentai(title);
   if (!hits.length) return null;
 
-  const slug = hits[0].slug;
-  const videoData = await getVideoInfo(slug);
+  let targetSlug = null;
+
+  const exactSlug = hits.find(h => {
+    const parts = h.slug.split('-');
+    const last = parseInt(parts[parts.length - 1], 10);
+    return !isNaN(last) && last === epNum;
+  });
+  if (exactSlug) {
+    targetSlug = exactSlug.slug;
+  } else {
+    const firstInfo = await getVideoInfo(hits[0].slug);
+    if (firstInfo) {
+      targetSlug = findEpisodeSlug(firstInfo, epNum);
+    }
+    if (!targetSlug) targetSlug = hits[0].slug;
+  }
+
+  const videoData = await getVideoInfo(targetSlug);
   if (!videoData) return null;
 
-  const episodes = videoData.hentai_video?.episodes || videoData.episodes || [];
-  const targetEp = episodes.find(e => e.number === episodeNum || e.episode_number === episodeNum);
-  if (targetEp) {
-    const streamUrl = targetEp.url || targetEp.stream_url || null;
-    if (streamUrl) {
-      return {
-        provider: 'hentai:hanime',
-        stream: { url: streamUrl, quality: 'auto' },
-        subtitles: [],
-        intro: null,
-        outro: null,
-      };
-    }
-  }
-
   const streamUrl = extractStreamUrl(videoData);
-  if (streamUrl) {
-    return {
-      provider: 'hentai:hanime',
-      stream: { url: streamUrl, quality: 'auto' },
-      subtitles: [],
-      intro: null,
-      outro: null,
-    };
-  }
+  if (!streamUrl) return null;
 
-  return null;
+  return {
+    provider: 'hentai:hanime',
+    stream: { url: streamUrl, quality: 'auto' },
+    subtitles: [],
+    intro: null,
+    outro: null,
+  };
 };

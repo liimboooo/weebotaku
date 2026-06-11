@@ -130,6 +130,8 @@ export const FAST_SEARCH_DEBOUNCE_MS = 250;
 export const FAST_SEARCH_MAX_ANIME = 6;
 export const FAST_SEARCH_MAX_USERS = 4;
 
+export const GIPHY_LIMIT = 20;
+
 
 
 
