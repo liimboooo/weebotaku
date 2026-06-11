@@ -42,7 +42,7 @@ export default function ProfilePage() {
   const isOwnProfile = !isRemoteProfile;
   useDocumentTitle(isRemoteProfile ? `${profileUsername}'s Profile` : "My Profile");
 
-  const [username, setUsername] = useState("Anime Fan");
+  const [username, setUsername] = useState("");
   const [avatar, setAvatar] = useState("");
   const [avatarPreview, setAvatarPreview] = useState("");
 
@@ -66,7 +66,7 @@ export default function ProfilePage() {
       const res = await authService.getMe();
       if (res.success && res.user) {
         const u = res.user;
-        setUsername(u.username || "Anime Fan");
+        setUsername(u.username || "Deleted User");
         if (u.avatar) { setAvatar(u.avatar); setAvatarPreview(u.avatar); }
         // Merge backend watchlist with localStorage for immediate sync
         const localWatchlist = loadWatchlist();

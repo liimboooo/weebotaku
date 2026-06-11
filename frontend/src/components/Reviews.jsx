@@ -20,7 +20,7 @@ export default function Reviews({ animeId, selectedEp }) {
             id: r._id,
             text: r.content,
             title: r.title,
-            user: r.user?.username || "Unknown",
+            user: r.user?.username || "Deleted User",
             avatar: r.user?.avatar || "",
             time: new Date(r.createdAt).getTime(),
             rating: r.rating,
@@ -34,7 +34,7 @@ export default function Reviews({ animeId, selectedEp }) {
   const addReview = async () => {
     if (!newReview.trim()) return;
     const currentUser = authService.getCurrentUser();
-    const username = currentUser?.username || "Anime Fan";
+    const username = currentUser?.username || "Deleted User";
 
     const optimistic = {
       id: Date.now(),
@@ -62,7 +62,7 @@ export default function Reviews({ animeId, selectedEp }) {
           id: r._id,
           text: r.content,
           title: r.title,
-          user: r.user?.username || "Unknown",
+          user: r.user?.username || "Deleted User",
           avatar: r.user?.avatar || "",
           time: new Date(r.createdAt).getTime(),
           rating: r.rating,
