@@ -1271,7 +1271,7 @@ export default function AnimeDetail() {
                           {langServers().map((srv, idx) => (
                             <button
                               key={`${srv.url}-${idx}`}
-                              className={`w-full text-left px-3 py-1.5 text-[11px] sm:text-xs flex items-center gap-2 ${idx === serverIndex ? 'bg-amber-500/10 text-amber-400' : 'text-zinc-300 hover:text-white hover:bg-zinc-800'}`}
+                              className={`w-full text-left px-3 py-1.5 text-[11px] sm:text-xs flex items-center gap-2 ${idx === serverIndex ? 'bg-red-500/15 text-red-400' : 'text-zinc-300 hover:text-white hover:bg-zinc-800'}`}
                               onClick={() => { switchServerFn(idx); setShowServerSelector(false); }}
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M21 12a9 9 0 00-9-9 9 9 0 00-9 9 9 9 0 009 9 9 9 0 009-9"/></svg>
@@ -1308,7 +1308,7 @@ export default function AnimeDetail() {
                       {anime?.img && <img src={anime.img} alt={anime?.name || ''} className="w-full h-full object-cover" />}
                     </div>
                     <div className="flex flex-col">
-                      <button className="font-bold text-white text-sm sm:text-base leading-tight hover:text-amber-400 transition-colors text-left" onClick={() => navigate(`/anime/${id}/info`)}>
+                      <button className="font-bold text-white text-sm sm:text-base leading-tight hover:text-red-400 transition-colors text-left" onClick={() => navigate(`/anime/${id}/info`)}>
                         {anime?.name || "Anime"}
                       </button>
                       {anime?.myAnimeListUrl && (
@@ -1352,7 +1352,7 @@ export default function AnimeDetail() {
                       )}
                     </div>
                     <div className="flex items-center bg-white/5 rounded-full overflow-hidden border border-white/5">
-                      <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors ${liked === true ? 'bg-amber-500/20 text-amber-300' : 'hover:bg-white/10 text-white'}`} onClick={() => { if (liked === true) { setLiked(null); setLikesCount(c => c - 1); } else { setLiked(true); setLikesCount(c => c + 1); } }}><ThumbsUp size={14} /> {likesCount != null ? (likesCount >= 1000 ? `${(likesCount / 1000).toFixed(1)}K` : likesCount) : '�'}</button>
+                      <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 border-r border-white/10 transition-colors ${liked === true ? 'bg-white/15 text-white' : 'hover:bg-white/10 text-white'}`} onClick={() => { if (liked === true) { setLiked(null); setLikesCount(c => c - 1); } else { setLiked(true); setLikesCount(c => c + 1); } }}><ThumbsUp size={14} fill={liked === true ? 'currentColor' : 'none'} /> {likesCount != null ? (likesCount >= 1000 ? `${(likesCount / 1000).toFixed(1)}K` : likesCount) : '0'}</button>
                       <button className={`px-2 sm:px-4 py-1.5 sm:py-2.5 font-medium text-[11px] sm:text-sm flex items-center gap-1 sm:gap-2 transition-colors ${liked === false ? 'bg-red-500/20 text-red-300' : 'hover:bg-white/10 text-white'}`} onClick={() => setLiked(liked === false ? null : false)}><ThumbsDown size={14} /></button>
                     </div>
                     {/* Desktop: show all buttons */}
@@ -1405,7 +1405,7 @@ export default function AnimeDetail() {
 
                 {/* Stats & Synopsis */}
                 <div className="bg-white/5 border border-white/5 rounded-xl p-3 sm:p-4">
-                  <div className="text-[11px] sm:text-sm font-semibold text-zinc-400 mb-2">{anime?.episodes ? `${anime.episodes} episodes` : ''}{anime?.season ? ` � ${anime.season}` : ''}{anime?.year ? ` ${anime.year}` : ''}{anime?.status ? ` � ${anime.status}` : ''}</div>
+                  <div className="text-[11px] sm:text-sm font-semibold text-zinc-400 mb-2">{anime?.episodes ? `${anime.episodes} episodes` : ''}{anime?.season ? ` • ${anime.season}` : ''}{anime?.year ? ` ${anime.year}` : ''}{anime?.status ? ` • ${anime.status}` : ''}</div>
                   {anime?.description ? (
                     <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">{anime.description.replace(/<[^>]*>/g, '')}</p>
                   ) : (
@@ -1528,7 +1528,7 @@ export default function AnimeDetail() {
                               className={`relative flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-all duration-300 group rounded-[18px] mx-1 ${isActive ? 'bg-[rgba(22,22,28,0.8)] border border-white/[0.07] shadow-[inset_16px_0_40px_-15px_rgba(255,255,255,0.08)]' : 'bg-[rgba(17,17,20,0.5)] border border-white/[0.02] hover:bg-[rgba(22,22,28,0.8)] hover:border-white/[0.07]'}`}
                               onClick={() => { setEpIndex(realIdx); setSelectedEp(episodes[realIdx]?.episode || (realIdx + 1)); }}
                             >
-                              {isActive && <div className="absolute left-0 top-3 bottom-3 w-[3.5px] rounded-r-[4px] bg-white shadow-[0_0_10px_rgba(255,255,255,0.3)] z-[2]" />}
+                              {isActive && <div className="absolute left-0 top-3 bottom-3 w-[3.5px] rounded-r-[4px] bg-red-500 z-[2]" />}
                               {sidebarView === 'thumbnail' ? (
                                 <>
                                   <div className="relative w-28 sm:w-36 aspect-video flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden bg-neutral-900 shadow-lg ring-1 ring-white/[0.03] group-hover:ring-white/10 transition-all duration-300">
@@ -1619,7 +1619,7 @@ export default function AnimeDetail() {
                             <h3 className="anime-title">{rec?.name || 'Unknown'}</h3>
                             <div className="sub-meta-row">
                               {rec?.rating && <span className="rating-block"><Star size={10} /> {rec.rating}%</span>}
-                              <span className="type-label">{rec?.genres?.slice(0, 2).join(' � ') || rec?.format || 'Anime'}</span>
+                              <span className="type-label">{rec?.genres?.slice(0, 2).join(' • ') || rec?.format || 'Anime'}</span>
                             </div>
                           </div>
                         </div>
