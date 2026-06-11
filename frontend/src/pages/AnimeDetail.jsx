@@ -406,31 +406,25 @@ export default function AnimeDetail() {
   useEffect(() => {
     if (!sourceLookupDone || !watchAnime) return;
     let timedOut = false;
+    let cancelled = false;
     const timer = setTimeout(() => { timedOut = true; setError("Request timed out. Try again."); setLoading(false); }, 25000);
+
+    const epCount = anime?.episodes || 0;
+    if (epCount > 0) {
+      const placeholders = Array.from({ length: epCount }, (_, i) => ({
+        episode: i + 1, title: `Episode ${i + 1}`, url: String(i + 1), thumbnail: anime?.img || '',
+      }));
+      allEpsRef.current = placeholders;
+      setEpisodes(placeholders.slice(0, 60));
+      setVisibleCount(50);
+      setEpIndex(Math.min(Math.max(0, selectedEp - 1), epCount - 1));
+    }
+    setLoading(false);
+
     (async () => {
-      setLoading(true); setError(""); setEpPage(0); setAllEpsLoaded(false);
-
-      if (watchAnime.source !== 'direct') {
-        try {
-          const result = await getEpisodePage(
-            watchAnime.title || watchAnime.slug, watchAnime.tagSlug,
-            watchAnime.source, watchAnime.sourceBase, watchAnime.anilistId, 0
-          );
-          if (timedOut) return;
-          if (result?.episodes?.length > 0) {
-            clearTimeout(timer);
-            setEpisodes(result.episodes);
-            setHasMoreEps(result.hasMore);
-            setEpIndex(Math.min(Math.max(0, selectedEp - 1), result.episodes.length - 1));
-            setLoading(false);
-            return;
-          }
-        } catch (e) { console.error('[Otaku] Failed to get direct stream:', e); }
-      }
-
       try {
         const miruroEps = await getMiruroEpisodes(watchAnime.anilistId);
-        if (timedOut) return;
+        if (timedOut || cancelled) return;
         if (miruroEps?.providers) {
           const provNames = Object.keys(miruroEps.providers);
           for (const pname of provNames) {
@@ -442,36 +436,24 @@ export default function AnimeDetail() {
               setEpisodes(allEps.slice(0, 60));
               setVisibleCount(50);
               setEpIndex(Math.min(Math.max(0, selectedEp - 1), allEps.length - 1));
-              setLoading(false);
               return;
             }
           }
         }
       } catch (e) { console.error('[Otaku] Failed to get Miruro episodes:', e); }
 
-      const epCount = anime?.episodes || 0;
-      if (epCount > 0) {
-        clearTimeout(timer);
-        setEpisodes(Array.from({ length: epCount }, (_, i) => ({ episode: i + 1, title: `Episode ${i + 1}`, url: String(i + 1), thumbnail: anime?.img || '' })));
-        setEpIndex(Math.min(Math.max(0, selectedEp - 1), epCount - 1));
-        setLoading(false);
-        return;
-      }
-
-      if (!timedOut) {
+      if (epCount === 0 && !timedOut) {
         clearTimeout(timer);
         const mockEps = Array.from({ length: 12 }, (_, i) => ({
-          episode: i + 1,
-          title: `Episode ${i + 1}`,
-          url: String(i + 1),
-          thumbnail: anime?.img || '',
-          airDate: null,
+          episode: i + 1, title: `Episode ${i + 1}`, url: String(i + 1), thumbnail: anime?.img || '', airDate: null,
         }));
+        allEpsRef.current = mockEps;
         setEpisodes(mockEps);
         setEpIndex(Math.min(Math.max(0, (selectedEp || 1) - 1), mockEps.length - 1));
-        setLoading(false);
       }
     })();
+
+    return () => { cancelled = true; clearTimeout(timer); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchAnime, sourceLookupDone, retryCount]);
 
