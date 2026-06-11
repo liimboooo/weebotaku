@@ -193,7 +193,7 @@ export default function AnimeDetail() {
       // Backend requires { category, details }; bundle context into details.
       await reportService.submit({
         category: reportCategory,
-        details: `${anime?.name || `Anime ${id}`} — Ep ${selectedEp || 1}\n${reportDetails.trim()}\n${window.location.href}`,
+        details: `${apiAnime?.name || `Anime ${id}`} — Ep ${selectedEp || 1}\n${reportDetails.trim()}\n${window.location.href}`,
       });
       setReportDone(true);
       setTimeout(() => { setShowReportModal(false); setReportDone(false); }, 1600);
@@ -201,7 +201,7 @@ export default function AnimeDetail() {
       setReportMsg('Failed to submit. Please try again.');
     }
     setReportSubmitting(false);
-  }, [reportCategory, reportDetails, reportSubmitting, anime, id, selectedEp]);
+  }, [reportCategory, reportDetails, reportSubmitting, apiAnime, id, selectedEp]);
 
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
@@ -1421,9 +1421,34 @@ export default function AnimeDetail() {
 
                 {/* Stats & Synopsis */}
                 <div className="bg-white/5 border border-white/5 rounded-xl p-3 sm:p-4">
-                  <div className="text-[11px] sm:text-sm font-semibold text-zinc-400 mb-2">{anime?.episodes ? `${anime.episodes} episodes` : ''}{anime?.season ? ` • ${anime.season}` : ''}{anime?.year ? ` ${anime.year}` : ''}{anime?.status ? ` • ${anime.status}` : ''}</div>
+                  <div className="text-[11px] sm:text-sm font-semibold text-zinc-400 mb-2">
+                    {[
+                      anime?.episodes && `${anime.episodes} episodes`,
+                      anime?.season,
+                      anime?.year && !String(anime?.season || '').includes(String(anime.year)) ? anime.year : null,
+                      anime?.status,
+                    ].filter(Boolean).join(' • ')}
+                  </div>
                   {anime?.description ? (
-                    <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">{anime.description.replace(/<[^>]*>/g, '')}</p>
+                    (() => {
+                      const desc = anime.description.replace(/<[^>]*>/g, '').trim();
+                      const long = desc.length > 220;
+                      return (
+                        <>
+                          <p
+                            className="text-xs sm:text-sm text-zinc-300 leading-relaxed whitespace-pre-line"
+                            style={!descExpanded && long ? { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' } : undefined}
+                          >
+                            {desc}
+                          </p>
+                          {long && (
+                            <button onClick={() => setDescExpanded(v => !v)} className="mt-1.5 text-[11px] sm:text-xs font-bold text-zinc-400 hover:text-white transition-colors">
+                              {descExpanded ? 'Show less' : 'Show more'}
+                            </button>
+                          )}
+                        </>
+                      );
+                    })()
                   ) : (
                     <p className="text-xs sm:text-sm text-zinc-500 leading-relaxed">No synopsis available.</p>
                   )}
