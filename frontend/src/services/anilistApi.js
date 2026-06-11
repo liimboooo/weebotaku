@@ -142,29 +142,10 @@ export async function fetchAiringSchedule({ anilistId, malId } = {}) {
 
 export async function fetchHomeBundle() {
   try {
-    const [trendingRes, popularRes, topRes, seasonalRes, upcomingRes, airingRes, genresRes] = await Promise.all([
-      api.get('/catalog/trending?perPage=25'),
-      api.get('/catalog/popular?perPage=25'),
-      api.get('/catalog/top-rated?perPage=25'),
-      api.get('/catalog/seasonal?perPage=25'),
-      api.get('/catalog/upcoming?perPage=25'),
-      api.get('/catalog/airing?perPage=25'),
-      api.get('/catalog/genres'),
-    ]);
-    return {
-      trending: trendingRes.data || [],
-      popular: popularRes.data || [],
-      highRated: topRes.data || [],
-      seasonal: seasonalRes.data || [],
-      upcoming: upcomingRes.data || [],
-      airing: airingRes.data || [],
-      genres: genresRes.data || [],
-    };
+    const res = await api.get('/catalog/home');
+    return res.data || { trending: [], popular: [], highRated: [], seasonal: [], upcoming: [], airing: [], genres: [] };
   } catch {
-    return {
-      trending: [], popular: [], highRated: [],
-      seasonal: [], upcoming: [], airing: [], genres: [],
-    };
+    return { trending: [], popular: [], highRated: [], seasonal: [], upcoming: [], airing: [], genres: [] };
   }
 }
 

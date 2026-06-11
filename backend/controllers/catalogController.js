@@ -317,6 +317,33 @@ exports.search = async (req, res) => {
   }
 };
 
+exports.getHomeBundle = async (req, res) => {
+  try {
+    const cached = getCached('homeBundle');
+    if (cached) return res.json({ success: true, data: cached });
+
+    const [trending, popular, topRated, seasonal, upcoming, airing] = await Promise.all([
+      gql(`query($p:Int,$pp:Int){Page(page:$p,perPage:$pp){media(sort:TRENDING_DESC,type:ANIME){${ANIME_FIELDS}}}}`, { p: 1, pp: 25 }).then(d => (d?.Page?.media || []).map(mapAnime)),
+      gql(`query($p:Int,$pp:Int){Page(page:$p,perPage:$pp){media(sort:POPULARITY_DESC,type:ANIME){${ANIME_FIELDS}}}}`, { p: 1, pp: 25 }).then(d => (d?.Page?.media || []).map(mapAnime)),
+      gql(`query($p:Int,$pp:Int){Page(page:$p,perPage:$pp){media(sort:SCORE_DESC,type:ANIME){${ANIME_FIELDS}}}}`, { p: 1, pp: 25 }).then(d => (d?.Page?.media || []).map(mapAnime)),
+      gql(`query($yr:Int,$seas:MediaSeason,$p:Int,$pp:Int){Page(page:$p,perPage:$pp){media(season:$seas,seasonYear:$yr,type:ANIME,sort:POPULARITY_DESC){${ANIME_FIELDS}}}}`, { yr: new Date().getFullYear(), seas: getCurrentSeason(), p: 1, pp: 25 }).then(d => (d?.Page?.media || []).map(mapAnime)),
+      gql(`query($p:Int,$pp:Int){Page(page:$p,perPage:$pp){media(status:NOT_YET_RELEASED,type:ANIME,sort:POPULARITY_DESC){${ANIME_FIELDS}}}}`, { p: 1, pp: 25 }).then(d => (d?.Page?.media || []).map(mapAnime)),
+      gql(`query($p:Int,$pp:Int){Page(page:$p,perPage:$pp){media(status:RELEASING,type:ANIME,sort:POPULARITY_DESC){${ANIME_FIELDS}}}}`, { p: 1, pp: 25 }).then(d => (d?.Page?.media || []).map(mapAnime)),
+    ]);
+
+    let genres = getCached('genres');
+    if (!genres) {
+      try { const d = await gql(`query{GenreCollection}`); genres = d?.GenreCollection || []; setCache('genres', genres); } catch { genres = []; }
+    }
+
+    const result = { trending, popular, highRated: topRated, seasonal, upcoming, airing, genres };
+    setCache('homeBundle', result);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 exports.getById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -335,6 +362,32 @@ exports.getById = async (req, res) => {
     const data = await gql(q2, { id: numId });
     if (!data?.Media) return res.status(404).json({ success: false, message: 'Anime not found' });
     const result = mapAnime(data.Media);
+    setCache(cacheKey, result);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.getFullAnime = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const numId = Number(id);
+    const cacheKey = `full:${numId}`;
+    const cached = getCached(cacheKey);
+    if (cached) return res.json({ success: true, data: cached });
+
+    const animeQ = `query($id:Int){Media(id:$id,type:ANIME){${ANIME_FIELDS} popularity}}`;
+    const recQ = `query($id:Int){Media(id:$id){recommendations(perPage:10,sort:RATING_DESC){nodes{mediaRecommendation{id title{romaji english} coverImage{large} episodes format}}}}}`;
+
+    const [animeData, recData] = await Promise.all([
+      gql(animeQ, { id: numId }).then(d => d?.Media ? mapAnime(d.Media) : null),
+      gql(recQ, { id: numId }).then(d => (d?.Media?.recommendations?.nodes || []).map(n => n.mediaRecommendation).filter(Boolean).map(r => ({ id: r.id, name: r.title?.english || r.title?.romaji || '', img: r.coverImage?.large || '', episodes: r.episodes || 0, format: r.format || 'TV' }))),
+    ]);
+
+    if (!animeData) return res.status(404).json({ success: false, message: 'Anime not found' });
+
+    const result = { anime: animeData, recommendations: recData || [] };
     setCache(cacheKey, result);
     res.json({ success: true, data: result });
   } catch (err) {

@@ -64,7 +64,7 @@ function useAnimeData() {
         setTopTen(take(bundle.highRated, 10));
         setTrendingList(take(bundle.trending, 15));
         setSeasonPicks(take(bundle.seasonal, 20));
-        setCategories(bundle.genres);
+        setCategories(bundle.genres || []);
         setUpcomingList(take(bundle.upcoming, 12));
         setPopularList(take(bundle.popular, 20));
       } catch (e) { console.error('[Otaku] Failed to load continue watching:', e); }

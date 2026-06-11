@@ -17,7 +17,12 @@ const {
   getGenres,
   getTags,
   getNewsFeed,
+  getHomeBundle,
+  getFullAnime,
 } = require('../controllers/catalogController');
+
+router.get('/home', getHomeBundle);
+router.get('/anime/:id/full', getFullAnime);
 
 router.get('/trending', getTrending);
 router.get('/popular', getPopular);
