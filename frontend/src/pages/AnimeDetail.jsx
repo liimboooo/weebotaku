@@ -103,6 +103,7 @@ export default function AnimeDetail() {
   const hlsVideoRef = useRef(null);
   const hlsInstanceRef = useRef(null);
   const autoNextTimerRef = useRef(null);
+  const sidebarRef = useRef(null);
 
   const handleSeek = useCallback((seconds) => {
     setSeekTo(seconds);
@@ -482,6 +483,12 @@ export default function AnimeDetail() {
     }
     if (!result?.hasMore) setAllEpsLoaded(true);
   };
+
+  useEffect(() => {
+    if (!sidebarRef.current || epIndex < 0) return;
+    const el = sidebarRef.current.querySelector(`[data-ep-index="${epIndex}"]`);
+    if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [epIndex]);
 
   const episode = episodes[epIndex] || null;
 
@@ -1479,7 +1486,7 @@ export default function AnimeDetail() {
                 </div>
 
                 {/* list */}
-                <div className="flex flex-col overflow-y-auto overflow-x-hidden max-h-[240px] lg:max-h-[400px]">
+                <div ref={sidebarRef} className="flex flex-col overflow-y-auto overflow-x-hidden max-h-[240px] lg:max-h-[400px]">
                   {loading ? (
                     <div className="flex items-center justify-center py-12">
                       <Loader size={16} className="text-zinc-500 animate-spin" />
@@ -1497,6 +1504,7 @@ export default function AnimeDetail() {
                           return (
                             <motion.div
                               key={ep?.id || realIdx}
+                              data-ep-index={realIdx}
                               layout
                               initial={{ opacity: 0, y: 8 }}
                               animate={{ opacity: 1, y: 0 }}

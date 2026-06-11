@@ -26,3 +26,15 @@
 - **Root cause**: backend genre-fetching IIFE inside `Promise.all` could silently fail, making `bundle.genres` `undefined`
 - **Backend fix**: moved genre fetch outside `Promise.all` with its own try/catch; defaults to `[]`
 - **Frontend fix**: `setCategories(bundle.genres || [])` defensive fallback so `categories.length` never throws
+
+## 7. Fixed blank player when clicking high episode numbers + timeout improvements
+- **Root cause**: `epIndex` (e.g. 999) was beyond 60-item visible `episodes` array → `episodes[epIndex]` = `undefined` → stream never loaded
+- **Fix**: slice size now expands to `Math.max(60, idx + 1)` so the selected episode is always included
+- **Removed 5-second Miruro timeout**: was unnecessarily rejecting late Miruro responses
+- **Reduced overall timeout** 25s → 12s for faster failure detection
+- **Adaptive error message**: "Stream not available" if episodes loaded, "Request timed out" if nothing loaded
+- **Miruro can rescue after timeout**: if 12s fires but Miruro arrives later, it clears the error and updates episodes
+
+## 8. Added sidebar auto-scroll to selected episode
+- When clicking an episode, the sidebar now auto-scrolls to bring it into view
+- Uses `scrollIntoView({ block: 'nearest', behavior: 'smooth' })` — scrolls only as much as needed
