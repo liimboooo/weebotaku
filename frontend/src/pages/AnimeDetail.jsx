@@ -427,7 +427,7 @@ export default function AnimeDetail() {
       const idx = Math.min(Math.max(0, selectedEp - 1), epCount - 1);
       const initialCount = Math.max(60, idx + 1);
       setEpisodes(placeholders.slice(0, initialCount));
-      setVisibleCount(50);
+      setVisibleCount(Math.max(50, idx + 1));
       hasEpsRef.current = true;
       setEpIndex(idx);
       setLoading(false);
@@ -458,7 +458,7 @@ export default function AnimeDetail() {
               const idx = Math.min(Math.max(0, selectedEp - 1), allEps.length - 1);
               const initialCount = Math.max(60, idx + 1);
               setEpisodes(allEps.slice(0, initialCount));
-              setVisibleCount(50);
+              setVisibleCount(Math.max(50, idx + 1));
               setEpIndex(idx);
               timedOut = false;
               setError("");
