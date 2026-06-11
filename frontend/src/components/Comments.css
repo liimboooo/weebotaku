@@ -540,33 +540,43 @@
 .awc-reply-toggle:hover { color: #ffffff; background: rgba(255,255,255,0.1); }
 .awc-reply-toggle:focus-visible { outline: 1px solid rgba(255,255,255,0.5); outline-offset: 2px; }
 
-.awc-replies { padding-left: 0; }
+.awc-replies { position: relative; padding-left: 0; }
 
-/* ─── NESTED REPLIES ─── */
+/* ─── NESTED REPLIES (YouTube thread style) ─── */
 .awc-item.awc-reply {
-  padding: 6px 0 6px 4px;
-  gap: 10px;
+  position: relative;
+  padding: 8px 0 4px 0;
+  gap: 12px;
 }
 
-.awc-item.awc-reply .awc-item-gutter { display: none; }
+/* show the reply avatar in its own column (smaller than the parent) */
+.awc-item.awc-reply .awc-item-gutter { display: block; width: 32px; }
 
-.awc-item.awc-reply .awc-avatar {
-  display: inline-flex;
-  vertical-align: middle;
-  margin-right: 4px;
-  flex-shrink: 0;
+/* curved connector line linking the parent down into each reply */
+.awc-item.awc-reply::before {
+  content: "";
+  position: absolute;
+  left: -26px;
+  top: -16px;
+  width: 24px;
+  height: 32px;
+  border-left: 2px solid rgba(255,255,255,0.14);
+  border-bottom: 2px solid rgba(255,255,255,0.14);
+  border-bottom-left-radius: 12px;
+  pointer-events: none;
 }
 
 .awc-item.awc-reply .awc-top {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .awc-item.awc-reply .awc-text {
   display: block;
-  margin: 2px 0 4px;
+  margin: 4px 0;
   font-size: 14px;
 }
 
@@ -753,7 +763,8 @@
   .awc-actions { gap: 8px; }
   .awc-action { font-size: 11px; padding: 3px 6px; gap: 3px; }
   .awc-action-count { font-size: 10px; }
-  .awc-item.awc-reply { padding: 4px 0 4px 8px; gap: 6px; }
+  .awc-item.awc-reply { padding: 6px 0 4px 0; gap: 10px; }
+  .awc-item.awc-reply::before { left: -22px; width: 20px; }
   .awc-item.awc-reply .awc-text { font-size: 12px; }
 }
 

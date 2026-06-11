@@ -190,16 +190,13 @@ function CommentItem({ comment, onLike, onDislike, onEditComment, onDeleteCommen
         </div>
       )}
       <div className={`awc-item ${depth > 0 ? "awc-reply" : ""}`} id={`comment-${comment.id}`}>
-        {depth === 0 && (
-          <div className="awc-item-gutter">
-            <div className="awc-avatar-click" onClick={goProfile} style={{ cursor: 'pointer' }}>
-              <CommentAvatar name={comment.user} avatar={comment.avatar} size={40} />
-            </div>
+        <div className="awc-item-gutter">
+          <div className="awc-avatar-click" onClick={goProfile} style={{ cursor: 'pointer' }}>
+            <CommentAvatar name={comment.user} avatar={comment.avatar} size={depth > 0 ? 32 : 40} />
           </div>
-        )}
+        </div>
         <div className="awc-body">
           <div className="awc-top">
-            {depth > 0 && <div className="awc-avatar-click" onClick={goProfile} style={{ cursor: 'pointer' }}><CommentAvatar name={comment.user} avatar={comment.avatar} size={20} /></div>}
             <span className="awc-user-click" onClick={goProfile} style={{ cursor: 'pointer' }}>{comment.user}</span>
             {depth > 0 && parentUser && <span className="awc-reply-to">@{parentUser}</span>}
             <span className="awc-time" title={formatExactTime(comment.time)}>{formatTime(comment.time)}</span>
