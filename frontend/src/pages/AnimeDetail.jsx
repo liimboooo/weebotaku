@@ -194,6 +194,7 @@ export default function AnimeDetail() {
   const episodesRef = useRef(episodes);
   const autoNextRef = useRef(autoNext);
   const lastHistorySaveRef = useRef(false);
+  const allEpsRef = useRef([]);
   useEffect(() => { epIndexRef.current = epIndex; }, [epIndex]);
   useEffect(() => { episodesRef.current = episodes; }, [episodes]);
   useEffect(() => { serversRef.current = servers; }, [servers]);
@@ -403,19 +404,6 @@ export default function AnimeDetail() {
   }, [anime]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (loading && episodes.length === 0) {
-        setEpisodes(Array.from({ length: 12 }, (_, i) => ({
-          episode: i + 1, title: `Episode ${i + 1}`, url: String(i + 1), thumbnail: '', airDate: null,
-        })));
-        setLoading(false);
-      }
-    }, 4000);
-    return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     if (!sourceLookupDone || !watchAnime) return;
     let timedOut = false;
     const timer = setTimeout(() => { timedOut = true; setError("Request timed out. Try again."); setLoading(false); }, 25000);
@@ -449,8 +437,11 @@ export default function AnimeDetail() {
             const epList = miruroEps.providers[pname]?.sub || miruroEps.providers[pname]?.dub || [];
             if (epList.length > 0) {
               clearTimeout(timer);
-              setEpisodes(epList.map(ep => ({ episode: ep.number, title: ep.title || `Episode ${ep.number}`, url: String(ep.number) })));
-              setEpIndex(Math.min(Math.max(0, selectedEp - 1), epList.length - 1));
+              const allEps = epList.map(ep => ({ episode: ep.number, title: ep.title || `Episode ${ep.number}`, url: String(ep.number), thumbnail: ep.image || ep.thumbnail || anime?.img || '' }));
+              allEpsRef.current = allEps;
+              setEpisodes(allEps.slice(0, 60));
+              setVisibleCount(50);
+              setEpIndex(Math.min(Math.max(0, selectedEp - 1), allEps.length - 1));
               setLoading(false);
               return;
             }
@@ -461,7 +452,7 @@ export default function AnimeDetail() {
       const epCount = anime?.episodes || 0;
       if (epCount > 0) {
         clearTimeout(timer);
-        setEpisodes(Array.from({ length: epCount }, (_, i) => ({ episode: i + 1, title: `Episode ${i + 1}`, url: String(i + 1) })));
+        setEpisodes(Array.from({ length: epCount }, (_, i) => ({ episode: i + 1, title: `Episode ${i + 1}`, url: String(i + 1), thumbnail: anime?.img || '' })));
         setEpIndex(Math.min(Math.max(0, selectedEp - 1), epCount - 1));
         setLoading(false);
         return;
@@ -473,7 +464,7 @@ export default function AnimeDetail() {
           episode: i + 1,
           title: `Episode ${i + 1}`,
           url: String(i + 1),
-          thumbnail: '',
+          thumbnail: anime?.img || '',
           airDate: null,
         }));
         setEpisodes(mockEps);
@@ -930,10 +921,11 @@ export default function AnimeDetail() {
   };
 
   const handleLoadMore = () => {
-    if (hasMoreEps && !allEpsLoaded) {
-      loadMoreEpisodes();
+    const nextVisible = visibleCount + 50;
+    if (nextVisible > episodes.length && allEpsRef.current.length > episodes.length) {
+      setEpisodes(allEpsRef.current.slice(0, nextVisible));
     }
-    setVisibleCount(c => c + 50);
+    setVisibleCount(nextVisible);
   };
 
   const langServers = () => servers.filter(s => s.type === language);
@@ -1009,22 +1001,6 @@ export default function AnimeDetail() {
   }, [anime?.id, episodes]);
 
   const [episodeTitles, setEpisodeTitles] = useState(null);
-
-  useEffect(() => {
-    const id = watchAnime?.anilistId || anime?.id;
-    if (!id) return;
-    let cancelled = false;
-    (async () => {
-      const titleMap = {};
-      if (anime?.episodes) {
-        for (let i = 1; i <= anime.episodes; i++) {
-          titleMap[i] = `Episode ${i}`;
-        }
-      }
-      if (!cancelled && titleMap) setEpisodeTitles(titleMap);
-    })();
-    return () => { cancelled = true; };
-  }, [watchAnime?.anilistId, anime?.id, anime?.episodes]);
 
   const metadataItemsFn = useMemo(() => {
     const items = [];
@@ -1519,7 +1495,7 @@ export default function AnimeDetail() {
                         {sortedEpisodes.slice(0, visibleCount).map((ep, i) => {
                           const realIdx = episodes.indexOf(ep);
                           const isActive = realIdx === epIndex;
-                          const epTitle = episodeTitles?.[ep?.episode] || ep?.title || 'Untitled';
+                          const epTitle = ep?.title || episodeTitles?.[ep?.episode] || 'Untitled';
                           const epNum = ep?.episode || realIdx + 1;
                           return (
                             <motion.div
@@ -1583,9 +1559,9 @@ export default function AnimeDetail() {
                           );
                         })}
                       </AnimatePresence>
-                      {(hasMoreEps || sortedEpisodes.length > visibleCount) && (
+                      {(allEpsRef.current.length > visibleCount) && (
                         <div className="-mx-4 px-4 mt-1 py-3 text-center text-xs font-bold text-neutral-500 hover:text-white hover:bg-white/5 transition-colors cursor-pointer" onClick={handleLoadMore}>
-                          Load More ({sortedEpisodes.length - visibleCount} remaining)
+                          Load More ({allEpsRef.current.length - visibleCount} remaining)
                         </div>
                       )}
                     </>

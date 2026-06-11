@@ -191,20 +191,8 @@ export default function Browse() {
     if (gridRef.current) gridRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [page]);
 
-  const openWatch = async (anime) => {
-    setWatchingId(anime.id);
-    try {
-      const src = await findStreamingSource(anime.name, anime.id);
-      if (!src) { addNotification({ title: "Not Available", body: "No streaming source for this title.", type: "error" }); setWatchingId(null); return; }
-      const history = loadWatchHistory();
-      const found = history.find(h => h.animeId === anime.id);
-      setWatchAnime({ ...src, _name: anime.name, _episodes: anime.episodes || 12, startEp: found?.episode || 1 });
-      addNotification({ title: "Now Playing", body: anime.name, type: "watch" });
-    } catch {
-      addNotification({ title: "Stream Error", body: "Failed to find streaming source.", type: "error" });
-    } finally {
-      setWatchingId(null);
-    }
+  const openWatch = (anime) => {
+    navigate(`/anime/${anime.id}/info`);
   };
 
   const [showStatusMenu, setShowStatusMenu] = useState(null);

@@ -407,24 +407,6 @@ export async function getConsumetStream(anilistId, episodeNum, animeTitle, categ
 }
 
 export async function findStreamingSource(animeName, anilistId) {
-  const source = SOURCES.reanime;
-  try {
-    const results = await searchReanimeSource(source, animeName, anilistId);
-    if (results.length > 0) {
-      const best = results[0];
-      const id = best.anilistId || anilistId;
-      return {
-        source: best.source,
-        sourceBase: best.sourceBase,
-        slug: best.slug,
-        id: best.slug,
-        title: best.title,
-        tagSlug: best.slug,
-        anilistId: id,
-      };
-    }
-  } catch {
-  }
   return null;
 }
 
