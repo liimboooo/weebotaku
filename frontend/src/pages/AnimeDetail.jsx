@@ -232,6 +232,23 @@ export default function AnimeDetail() {
   useEffect(() => { serversRef.current = servers; }, [servers]);
   useEffect(() => { autoNextRef.current = autoNext; }, [autoNext]);
 
+  // Scroll over the player to change volume (HLS only)
+  useEffect(() => {
+    const stage = playerStageRef.current;
+    if (!stage || streamMode !== "hls") return;
+    const onWheel = (e) => {
+      const video = hlsVideoRef.current;
+      if (!video) return;
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.05 : -0.05;
+      const nv = Math.min(1, Math.max(0, +(video.volume + delta).toFixed(2)));
+      video.volume = nv;
+      if (nv > 0 && video.muted) video.muted = false;
+    };
+    stage.addEventListener("wheel", onWheel, { passive: false });
+    return () => stage.removeEventListener("wheel", onWheel);
+  }, [streamMode]);
+
   const toStreamUrl = (srv) => {
     if (!srv) return "";
     try {
@@ -813,9 +830,17 @@ export default function AnimeDetail() {
     const onVolumeChange = () => {
       setVolume(video.volume);
       setMuted(video.muted);
+      try { localStorage.setItem('otaku_volume', String(video.volume)); localStorage.setItem('otaku_muted', String(video.muted)); } catch (e) { /* noop */ }
     };
     const onLoadedMeta = () => {
       setDuration(video.duration);
+      // Restore saved volume/mute across sessions
+      try {
+        const sv = localStorage.getItem('otaku_volume');
+        const sm = localStorage.getItem('otaku_muted');
+        if (sv != null && !Number.isNaN(parseFloat(sv))) video.volume = Math.min(1, Math.max(0, parseFloat(sv)));
+        if (sm != null) video.muted = sm === 'true';
+      } catch (e) { /* noop */ }
       setVolume(video.volume);
       setMuted(video.muted);
     };
