@@ -326,6 +326,16 @@ export default function Comments({ comments: externalComments, setComments, curr
   const [posted, setPosted] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
   const sortRef = useRef(null);
+  const gifWrapRef = useRef(null);
+
+  useEffect(() => {
+    if (!showGifPicker) return;
+    const onDown = (e) => { if (gifWrapRef.current && !gifWrapRef.current.contains(e.target)) setShowGifPicker(false); };
+    const onKey = (e) => { if (e.key === "Escape") setShowGifPicker(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [showGifPicker]);
 
   const list = useMemo(() => externalComments || [], [externalComments]);
 
@@ -428,10 +438,12 @@ export default function Comments({ comments: externalComments, setComments, curr
             <button className={`awc-spoiler-btn ${isSpoiler ? 'active' : ''}`} onClick={() => setIsSpoiler(s => !s)} title={isSpoiler ? 'Remove spoiler tag' : 'Mark as spoiler'}>
               {isSpoiler ? <EyeOff size={12} /> : <Eye size={12} />}
             </button>
-            <button className="awc-gif-btn" onClick={() => setShowGifPicker(s => !s)} title="Add GIF">
-              <Image size={12} />
-            </button>
-            {showGifPicker && <GifPicker onSelect={handlePickGif} onClose={() => setShowGifPicker(false)} />}
+            <div className="awc-gif-wrap" ref={gifWrapRef}>
+              <button className={`awc-gif-btn ${showGifPicker ? 'active' : ''}`} onClick={() => setShowGifPicker(s => !s)} title="Add GIF">
+                <Image size={12} />
+              </button>
+              {showGifPicker && <GifPicker onSelect={handlePickGif} onClose={() => setShowGifPicker(false)} />}
+            </div>
             <span className={`awc-input-chars ${text.length > MAX_CHARS * 0.9 ? "warn" : ""}`}>
               {text.length}/{MAX_CHARS}
             </span>

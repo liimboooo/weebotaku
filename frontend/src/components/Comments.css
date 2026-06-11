@@ -493,6 +493,9 @@
   transition: all 0.15s;
 }
 .awc-gif-btn:hover { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.4); color: #ef4444; }
+.awc-gif-btn.active { background: rgba(239,68,68,0.16); border-color: rgba(239,68,68,0.55); color: #ef4444; }
+
+.awc-gif-wrap { position: relative; display: inline-flex; }
 
 .awc-edit-actions {
   display: flex;
