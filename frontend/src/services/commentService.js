@@ -4,7 +4,9 @@ class CommentService {
   async getComments(animeId, { episode, page = 1, limit = 20, sort = 'newest' } = {}) {
     let url = `/comments/${animeId}?page=${page}&limit=${limit}&sort=${sort}`;
     if (episode !== undefined && episode !== null) url += `&episode=${episode}`;
-    return api.get(url, { auth: false });
+    // Send auth (optionalAuth on the backend) so each comment reports likedByMe/dislikedByMe.
+    // skipAuthRedirect: reading comments must never log the user out on a stale token.
+    return api.get(url, { skipAuthRedirect: true });
   }
 
   async createComment(animeId, content, { episode, isSpoiler = false } = {}) {

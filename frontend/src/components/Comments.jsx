@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   MessageCircle, Reply, ChevronDown, ChevronUp,
   MoreHorizontal, Pencil, Trash2, Check, Loader,
-  ThumbsUp, ThumbsDown, Send
+  ThumbsUp, ThumbsDown, Send, Eye, EyeOff, Image
 } from "lucide-react";
 import {
   COMMENTS_SORT_OPTIONS as SORT_OPTIONS,
@@ -13,6 +13,7 @@ import {
   AVATAR_COLORS,
 } from "../utils/constants";
 import "./Comments.css";
+import GifPicker from "./GifPicker";
 
 function getInitials(name) {
   return name
@@ -73,20 +74,60 @@ function formatExactTime(timeStr) {
   return timeStr;
 }
 
+const GIF_RE = /\[gif\](.*?)\[\/gif\]/g;
+const IMG_RE = /(https?:\/\/[^\s]+?\.(?:gif|png|jpe?g|webp))/gi;
+
+function renderContent(text) {
+  const parts = [];
+  let lastIdx = 0;
+
+  GIF_RE.lastIndex = 0;
+  let m;
+  while ((m = GIF_RE.exec(text)) !== null) {
+    if (m.index > lastIdx) parts.push({ t: 'text', v: text.slice(lastIdx, m.index) });
+    parts.push({ t: 'gif', v: m[1] });
+    lastIdx = m.index + m[0].length;
+  }
+  if (lastIdx < text.length) parts.push({ t: 'text', v: text.slice(lastIdx) });
+
+  if (parts.length === 0) parts.push({ t: 'text', v: text });
+
+  const result = [];
+  for (const p of parts) {
+    if (p.t === 'gif') {
+      result.push({ type: 'gif', value: p.v });
+    } else {
+      let s = p.v;
+      let prev = 0;
+      IMG_RE.lastIndex = 0;
+      while ((m = IMG_RE.exec(s)) !== null) {
+        if (m.index > prev) result.push({ type: 'text', value: s.slice(prev, m.index) });
+        result.push({ type: 'img', value: m[1] });
+        prev = m.index + m[0].length;
+      }
+      if (prev < s.length) result.push({ type: 'text', value: s.slice(prev) });
+      if (result.length === 0) result.push({ type: 'text', value: s });
+    }
+  }
+  return result;
+}
+
 function CommentItem({ comment, onLike, onDislike, onEditComment, onDeleteComment, onPostReply, depth = 0, currentUser, parentUser }) {
   const navigate = useNavigate();
   const goProfile = () => { if (comment.user !== "Unknown" && comment.user !== "Guest") navigate(`/profile/${comment.user}`); };
-  const [liked, setLiked] = useState(false);
-  const [disliked, setDisliked] = useState(false);
+  const [liked, setLiked] = useState(comment.likedByMe || false);
+  const [disliked, setDisliked] = useState(comment.dislikedByMe || false);
   const [likes, setLikes] = useState(comment.likes || 0);
   const [dislikes, setDislikes] = useState(comment.dislikes || 0);
   const [showReplies, setShowReplies] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(comment.text || "");
+  const [editSpoiler, setEditSpoiler] = useState(comment.hasSpoiler || false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [replying, setReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const menuRef = useRef(null);
 
   const isOwn = comment.user === currentUser;
@@ -165,13 +206,38 @@ function CommentItem({ comment, onLike, onDislike, onEditComment, onDeleteCommen
               <input className="awc-edit-input" type="text" value={editText}
                 onChange={e => setEditText(e.target.value)}
                 onKeyDown={e => {
-                  if (e.key === "Enter" && editText.trim()) { onEditComment?.(comment.id, editText); setEditing(false); }
-                  if (e.key === "Escape") { setEditing(false); setEditText(comment.text || ""); }
+                  if (e.key === "Enter" && editText.trim()) { onEditComment?.(comment.id, editText, editSpoiler); setEditing(false); }
+                  if (e.key === "Escape") { setEditing(false); setEditText(comment.text || ""); setEditSpoiler(comment.hasSpoiler || false); }
                 }}
                 autoFocus />
+              <div className="awc-edit-actions">
+                <button className={`awc-spoiler-btn ${editSpoiler ? 'active' : ''}`} onClick={() => setEditSpoiler(s => !s)} title="Spoiler">
+                  {editSpoiler ? <EyeOff size={12} /> : <Eye size={12} />}
+                </button>
+                <button className="awc-edit-save" onClick={() => { if (editText.trim()) { onEditComment?.(comment.id, editText, editSpoiler); setEditing(false); } }}>
+                  <Check size={14} />
+                </button>
+              </div>
+            </div>
+          ) : comment.hasSpoiler && !revealed ? (
+            <div className={`awc-spoiler ${revealed ? 'revealed' : ''}`} onClick={() => setRevealed(true)}>
+              <div className="awc-spoiler-blur">
+                <EyeOff size={14} />
+                <span>Spoiler — click to reveal</span>
+                <Eye size={14} />
+              </div>
+              <p className="awc-text">{renderContent(comment.text).map((part, i) => {
+                if (part.type === 'gif') return <img key={i} src={part.value} alt="GIF" className="awc-gif" loading="lazy" />;
+                if (part.type === 'img') return <img key={i} src={part.value} alt="Image" className="awc-gif" loading="lazy" />;
+                return <span key={i}>{part.value}</span>;
+              })}</p>
             </div>
           ) : (
-            <p className="awc-text">{comment.text}</p>
+            <p className="awc-text">{renderContent(comment.text).map((part, i) => {
+              if (part.type === 'gif') return <img key={i} src={part.value} alt="GIF" className="awc-gif" loading="lazy" />;
+              if (part.type === 'img') return <img key={i} src={part.value} alt="Image" className="awc-gif" loading="lazy" />;
+              return <span key={i}>{part.value}</span>;
+            })}</p>
           )}
 
           <div className="awc-actions">
@@ -241,10 +307,10 @@ function deleteCommentDeep(list, id) {
   }, []);
 }
 
-function editCommentDeep(list, id, newText) {
+function editCommentDeep(list, id, newText, spoiler) {
   return list.map(cm => {
-    if (cm.id === id) return { ...cm, text: newText };
-    if (cm.replies?.length) return { ...cm, replies: editCommentDeep(cm.replies, id, newText) };
+    if (cm.id === id) return { ...cm, text: newText, hasSpoiler: spoiler };
+    if (cm.replies?.length) return { ...cm, replies: editCommentDeep(cm.replies, id, newText, spoiler) };
     return cm;
   });
 }
@@ -254,9 +320,11 @@ export default function Comments({ comments: externalComments, setComments, curr
   const [sort, setSort] = useState("newest");
   const [sortOpen, setSortOpen] = useState(false);
   const [text, setText] = useState("");
+  const [isSpoiler, setIsSpoiler] = useState(false);
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
   const [posting, setPosting] = useState(false);
   const [posted, setPosted] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
   const sortRef = useRef(null);
 
   const list = useMemo(() => externalComments || [], [externalComments]);
@@ -280,13 +348,19 @@ export default function Comments({ comments: externalComments, setComments, curr
     if (!text.trim() || !isLoggedIn || posting) return;
     setPosting(true);
     try {
-      if (onAdd) await onAdd(text);
-      else setComments?.(c => [{ id: Date.now(), user: currentUser, text, time: Date.now().toString(), likes: 0, dislikes: 0, replies: [] }, ...c]);
+      if (onAdd) await onAdd(text, isSpoiler);
+      else setComments?.(c => [{ id: Date.now(), user: currentUser, text, time: Date.now().toString(), likes: 0, dislikes: 0, replies: [], hasSpoiler: isSpoiler }, ...c]);
       setText("");
+      setIsSpoiler(false);
       setPosted(true);
       setTimeout(() => setPosted(false), 3000);
     } catch (e) { console.error('[Otaku] Comment post failed:', e); }
     setPosting(false);
+  };
+
+  const handlePickGif = (url) => {
+    setText(t => t + `[gif]${url}[/gif] `);
+    setShowGifPicker(false);
   };
 
   const handlePostReply = useCallback(async (parentId, content) => {
@@ -297,9 +371,9 @@ export default function Comments({ comments: externalComments, setComments, curr
   const handleLike = useCallback(async (id) => { await onLikeComment?.(id); }, [onLikeComment]);
   const handleDislike = useCallback(async (id) => { await onDislikeComment?.(id); }, [onDislikeComment]);
 
-  const handleEdit = useCallback(async (id, newText) => {
-    await onEditCommentApi?.(id, newText);
-    setComments?.(c => editCommentDeep(c, id, newText));
+  const handleEdit = useCallback(async (id, newText, spoiler) => {
+    await onEditCommentApi?.(id, newText, spoiler);
+    setComments?.(c => editCommentDeep(c, id, newText, spoiler));
   }, [setComments, onEditCommentApi]);
 
   const handleDelete = useCallback(async (id) => {
@@ -345,6 +419,13 @@ export default function Comments({ comments: externalComments, setComments, curr
             disabled={posting || !isLoggedIn}
             maxLength={MAX_CHARS} />
           <div className="awc-input-bar">
+            <button className={`awc-spoiler-btn ${isSpoiler ? 'active' : ''}`} onClick={() => setIsSpoiler(s => !s)} title={isSpoiler ? 'Remove spoiler tag' : 'Mark as spoiler'}>
+              {isSpoiler ? <EyeOff size={12} /> : <Eye size={12} />}
+            </button>
+            <button className="awc-gif-btn" onClick={() => setShowGifPicker(s => !s)} title="Add GIF">
+              <Image size={12} />
+            </button>
+            {showGifPicker && <GifPicker onSelect={handlePickGif} onClose={() => setShowGifPicker(false)} />}
             <span className={`awc-input-chars ${text.length > MAX_CHARS * 0.9 ? "warn" : ""}`}>
               {text.length}/{MAX_CHARS}
             </span>

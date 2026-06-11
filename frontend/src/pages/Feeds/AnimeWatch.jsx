@@ -136,6 +136,8 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
     time: new Date(c.createdAt).getTime().toString(),
     likes: c.likes?.length || 0,
     dislikes: c.dislikes?.length || 0,
+    likedByMe: c.likedByMe || false,
+    dislikedByMe: c.dislikedByMe || false,
     replies: (c.replies || []).map(r => {
       const ru = getCommentUser(r.user);
       return {
@@ -146,6 +148,8 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
       time: new Date(r.createdAt).getTime().toString(),
       likes: r.likes?.length || 0,
       dislikes: r.dislikes?.length || 0,
+      likedByMe: r.likedByMe || false,
+      dislikedByMe: r.dislikedByMe || false,
       replies: [],
     }; }),
     pinned: c.pinned || false,

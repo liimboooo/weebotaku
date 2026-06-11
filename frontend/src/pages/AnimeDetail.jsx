@@ -235,6 +235,8 @@ export default function AnimeDetail() {
     time: new Date(c.createdAt).getTime().toString(),
     likes: c.likes?.length || 0,
     dislikes: c.dislikes?.length || 0,
+    likedByMe: c.likedByMe || false,
+    dislikedByMe: c.dislikedByMe || false,
     replies: (c.replies || []).map(r => {
       const ru = getCommentUser(r.user);
       return {
@@ -246,6 +248,8 @@ export default function AnimeDetail() {
       time: new Date(r.createdAt).getTime().toString(),
       likes: r.likes?.length || 0,
       dislikes: r.dislikes?.length || 0,
+      likedByMe: r.likedByMe || false,
+      dislikedByMe: r.dislikedByMe || false,
       replies: [],
     }; }),
     pinned: c.pinned || false,
@@ -301,8 +305,8 @@ export default function AnimeDetail() {
     };
   }, [id, mapComment]);
 
-  const handleAddComment = useCallback(async (text) => {
-    const res = await commentService.createComment(parseInt(id), text, { episode: selectedEp });
+  const handleAddComment = useCallback(async (text, isSpoiler) => {
+    const res = await commentService.createComment(parseInt(id), text, { episode: selectedEp, isSpoiler });
     if (res.success) setComments(prev => [mapComment(res.data), ...prev]);
   }, [id, selectedEp, mapComment]);
 
@@ -321,8 +325,8 @@ export default function AnimeDetail() {
     }
   }, [mapComment]);
 
-  const handleEditComment = useCallback(async (commentId, newText) => {
-    const res = await commentService.editComment(commentId, newText);
+  const handleEditComment = useCallback(async (commentId, newText, isSpoiler) => {
+    const res = await commentService.editComment(commentId, newText, isSpoiler);
     if (res.success) {
       setComments(prev => prev.map(c => c.id === commentId ? mapComment(res.data) : c));
     }

@@ -7,7 +7,7 @@ const {
 } = require('../controllers/commentController');
 const { protect, optionalAuth } = require('../middleware/auth');
 
-router.get('/:animeId', getComments);
+router.get('/:animeId', optionalAuth, getComments);
 router.post('/:animeId', protect, createComment);
 router.post('/:id/like', protect, likeComment);
 router.post('/:id/dislike', protect, dislikeComment);

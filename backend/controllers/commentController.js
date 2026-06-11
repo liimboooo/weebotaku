@@ -36,9 +36,23 @@ exports.getComments = async (req, res) => {
       Comment.countDocuments(query),
     ]);
 
+    const uid = req.user?.id;
+    const hasUser = (arr) => uid ? (arr || []).some(x => x.toString() === uid) : false;
+    const data = comments.map(c => {
+      const obj = c.toObject();
+      obj.likedByMe = hasUser(obj.likes);
+      obj.dislikedByMe = hasUser(obj.dislikes);
+      obj.replies = (obj.replies || []).map(r => ({
+        ...r,
+        likedByMe: hasUser(r.likes),
+        dislikedByMe: hasUser(r.dislikes),
+      }));
+      return obj;
+    });
+
     res.json({
       success: true,
-      data: comments,
+      data,
       page,
       pages: Math.ceil(total / limit),
       total,
