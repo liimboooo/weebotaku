@@ -40,3 +40,7 @@
 - Uses `scrollIntoView({ block: 'nearest', behavior: 'smooth' })` — scrolls only as much as needed
 - Also re-scrolls when sort order changes (selected episode may move out of view)
 - Default sort order changed to **descending** (latest episode first) for a more natural watch-page experience
+
+## 9. Fixed false "Stream not available" error during playback
+- **Root cause**: 12s timer in episode-loading effect was never cleared when stream loaded from non-Miruro sources
+- **Fix**: added `epTimerRef` shared ref; new `useEffect` watches `streamUrl` and clears the timer (and error) when a stream is found

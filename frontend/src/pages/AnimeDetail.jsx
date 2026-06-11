@@ -55,7 +55,7 @@ export default function AnimeDetail() {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [sidebarView, setSidebarView] = useState('thumbnail');
   const [brokenThumbs, setBrokenThumbs] = useState(new Set());
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [sortOrder, setSortOrder] = useState('asc');
   const [recommendations, setRecommendations] = useState([]);
   const [alertBannerVisible, setAlertBannerVisible] = useState(true);
   const [epSearch, setEpSearch] = useState("");
@@ -386,6 +386,7 @@ export default function AnimeDetail() {
     if (!apiAnime?.id) return;
     let cancelled = false;
     fetchAnimeRecommendations(apiAnime.id).then(r => { if (!cancelled) setRecommendations(r); }).catch(err => console.error('[Otaku] Failed to load recommendations:', err));
+    if (apiAnime.episodes > 50) setSortOrder('desc');
     return () => { cancelled = true; };
   }, [apiAnime?.id]);
 
