@@ -1138,7 +1138,7 @@ export default function AnimeDetail() {
           <div className="flex-1 flex flex-col min-w-0">
 
             {/* --- VIDEO PLAYER --- */}
-            <div ref={playerStageRef} className="ad-player-container relative z-10 bg-zinc-900 overflow-hidden mt-2 sm:mt-4 mb-2 sm:mb-3 lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] w-full mx-0 sm:rounded-3xl rounded-xl shadow-2xl" style={{ aspectRatio: '16/9', maxHeight: '65vh' }}>
+            <div ref={playerStageRef} className="ad-player-container relative z-10 bg-zinc-900 overflow-hidden mb-2 sm:mb-3 lg:ml-[40px] lg:mr-0 lg:w-[calc(100%-40px)] w-full mx-0 sm:rounded-3xl rounded-xl shadow-2xl" style={{ aspectRatio: '16/9', maxHeight: '65vh', marginTop: '0.02px' }}>
               {/* loading */}
               {loading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
