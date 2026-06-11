@@ -227,13 +227,11 @@ export default function AnimeDetail() {
   const autoNextRef = useRef(autoNext);
   const lastHistorySaveRef = useRef(false);
   const allEpsRef = useRef([]);
-  const playingRef = useRef(playing);
   useEffect(() => { epIndexRef.current = epIndex; }, [epIndex]);
   useEffect(() => { episodesRef.current = episodes; }, [episodes]);
   useEffect(() => { serversRef.current = servers; }, [servers]);
   useEffect(() => { autoNextRef.current = autoNext; }, [autoNext]);
-  useEffect(() => { playingRef.current = playing; }, [playing]);
-  // Always reveal controls when paused (hide only while playing)
+  // Reveal controls when the HLS video is paused
   useEffect(() => { if (!playing) setShowControls(true); }, [playing]);
 
   // Scroll over the player to change volume (HLS only)
@@ -1024,10 +1022,8 @@ export default function AnimeDetail() {
     const scheduleHide = () => {
       clearTimeout(timer);
       timer = setTimeout(() => {
-        if (playingRef.current) { // only auto-hide while playing
-          setShowControls(false);
-          stage.style.cursor = "none";
-        }
+        setShowControls(false);
+        stage.style.cursor = "none";
       }, 3000);
     };
     const show = () => {
@@ -1037,20 +1033,19 @@ export default function AnimeDetail() {
     };
     const onLeave = () => {
       clearTimeout(timer);
-      if (playingRef.current) {
-        setShowControls(false); // YouTube-like: hide on leave while playing
-        stage.style.cursor = "default";
-      } else {
-        setShowControls(true);
-      }
+      setShowControls(false); // hide on leave
+      stage.style.cursor = "default";
     };
     stage.addEventListener("mousemove", show);
     stage.addEventListener("mouseenter", show);
     stage.addEventListener("mouseleave", onLeave);
+    stage.addEventListener("touchstart", show, { passive: true });
+    scheduleHide(); // hide a few seconds after load even without mouse movement
     return () => {
       stage.removeEventListener("mousemove", show);
       stage.removeEventListener("mouseenter", show);
       stage.removeEventListener("mouseleave", onLeave);
+      stage.removeEventListener("touchstart", show);
       clearTimeout(timer);
       stage.style.cursor = "default";
     };
