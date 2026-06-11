@@ -45,7 +45,5 @@
 - **Root cause**: 12s timer in episode-loading effect was never cleared when stream loaded from non-Miruro sources
 - **Fix**: added `epTimerRef` shared ref; new `useEffect` watches `streamUrl` and clears the timer (and error) when a stream is found
 
-## 10. Fixed vertical alignment — player + sidebar now flush at top
-- **Root cause**: `.app-main--padded` added `padding-top: nav-height + 12px`, creating an extra gap above the player that broke alignment with the sidebar
-- **Fix**: `-mt-3` on AnimeDetail root counters the extra 12px — content starts exactly at nav height
-- Added `items-start` to the flex-row container for proper top alignment
+## 10. Reduced player top margin
+- Changed `mt-3 sm:mt-8` → `mt-2 sm:mt-5` to move player up slightly without overlapping content below
