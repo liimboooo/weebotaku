@@ -21,3 +21,8 @@
 - Miruro returns all episodes at once; initial React state now capped at 60
 - Full list stored in a ref; "Load More" pulls next 50 from the ref on demand
 - Drastically reduces initial render cost for 1000+ episode anime
+
+## 6. Fixed home page crash — missing `genres` field
+- **Root cause**: backend genre-fetching IIFE inside `Promise.all` could silently fail, making `bundle.genres` `undefined`
+- **Backend fix**: moved genre fetch outside `Promise.all` with its own try/catch; defaults to `[]`
+- **Frontend fix**: `setCategories(bundle.genres || [])` defensive fallback so `categories.length` never throws

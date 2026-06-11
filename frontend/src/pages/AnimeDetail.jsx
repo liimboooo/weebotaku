@@ -407,7 +407,12 @@ export default function AnimeDetail() {
     if (!sourceLookupDone || !watchAnime) return;
     let timedOut = false;
     let cancelled = false;
-    const timer = setTimeout(() => { timedOut = true; setError("Request timed out. Try again."); setLoading(false); }, 25000);
+    const hasEpsRef = { current: false };
+    const timer = setTimeout(() => {
+      timedOut = true;
+      setError(hasEpsRef.current ? "Stream not available for this episode." : "Request timed out. Try again.");
+      setLoading(false);
+    }, 12000);
 
     const epCount = anime?.episodes || 0;
     if (epCount > 0) {
@@ -415,9 +420,12 @@ export default function AnimeDetail() {
         episode: i + 1, title: `Episode ${i + 1}`, url: String(i + 1), thumbnail: anime?.img || '',
       }));
       allEpsRef.current = placeholders;
-      setEpisodes(placeholders.slice(0, 60));
+      const idx = Math.min(Math.max(0, selectedEp - 1), epCount - 1);
+      const initialCount = Math.max(60, idx + 1);
+      setEpisodes(placeholders.slice(0, initialCount));
       setVisibleCount(50);
-      setEpIndex(Math.min(Math.max(0, selectedEp - 1), epCount - 1));
+      hasEpsRef.current = true;
+      setEpIndex(idx);
       setLoading(false);
       if (epCount > 100) return;
     } else {
@@ -426,17 +434,15 @@ export default function AnimeDetail() {
       }));
       allEpsRef.current = mockEps;
       setEpisodes(mockEps);
+      hasEpsRef.current = true;
       setEpIndex(Math.min(Math.max(0, (selectedEp || 1) - 1), mockEps.length - 1));
       setLoading(false);
     }
 
-    let miruroTimedOut = false;
-    const miruroTimer = setTimeout(() => { miruroTimedOut = true; }, 5000);
-
     (async () => {
       try {
         const miruroEps = await getMiruroEpisodes(watchAnime.anilistId);
-        if (timedOut || cancelled || miruroTimedOut) return;
+        if (cancelled) return;
         if (miruroEps?.providers) {
           const provNames = Object.keys(miruroEps.providers);
           for (const pname of provNames) {
@@ -445,9 +451,13 @@ export default function AnimeDetail() {
               clearTimeout(timer);
               const allEps = epList.map(ep => ({ episode: ep.number, title: ep.title || `Episode ${ep.number}`, url: String(ep.number), thumbnail: ep.image || ep.thumbnail || anime?.img || '' }));
               allEpsRef.current = allEps;
-              setEpisodes(allEps.slice(0, 60));
+              const idx = Math.min(Math.max(0, selectedEp - 1), allEps.length - 1);
+              const initialCount = Math.max(60, idx + 1);
+              setEpisodes(allEps.slice(0, initialCount));
               setVisibleCount(50);
-              setEpIndex(Math.min(Math.max(0, selectedEp - 1), allEps.length - 1));
+              setEpIndex(idx);
+              timedOut = false;
+              setError("");
               return;
             }
           }
@@ -455,7 +465,7 @@ export default function AnimeDetail() {
       } catch (e) { console.error('[Otaku] Failed to get Miruro episodes:', e); }
     })();
 
-    return () => { cancelled = true; clearTimeout(timer); clearTimeout(miruroTimer); };
+    return () => { cancelled = true; clearTimeout(timer); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchAnime, sourceLookupDone, retryCount]);
 
