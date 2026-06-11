@@ -10,6 +10,25 @@ function broadcastToAnime(animeId, event, data) {
   } catch {}
 }
 
+function addOwnFlag(comment, uid) {
+  const obj = comment.toObject ? comment.toObject() : comment;
+  if (!obj.user || (typeof obj.user === 'object' && !obj.user.username)) {
+    obj.user = { _id: null, username: 'Deleted User', avatar: '', role: 'user' };
+  }
+  const uidStr = uid?.toString();
+  obj.isOwn = uidStr ? (obj.user?._id?.toString() === uidStr) : false;
+  const setOwn = (r) => {
+    if (!r) return;
+    if (!r.user || (typeof r.user === 'object' && !r.user.username)) {
+      r.user = { _id: null, username: 'Deleted User', avatar: '', role: 'user' };
+    }
+    r.isOwn = uidStr ? (r.user?._id?.toString() === uidStr) : false;
+    if (r.replies) r.replies.forEach(setOwn);
+  };
+  if (obj.replies) obj.replies.forEach(setOwn);
+  return obj;
+}
+
 exports.getComments = async (req, res) => {
   try {
     const { animeId } = req.params;
@@ -30,6 +49,7 @@ exports.getComments = async (req, res) => {
       Comment.find(query)
         .populate('user', 'username avatar role')
         .populate('replies.user', 'username avatar role')
+        .populate('replies.replies.user', 'username avatar role')
         .sort({ pinned: -1, ...sortObj })
         .skip(skip)
         .limit(limit),
@@ -38,15 +58,17 @@ exports.getComments = async (req, res) => {
 
     const uid = req.user?.id;
     const hasUser = (arr) => uid ? (arr || []).some(x => x.toString() === uid) : false;
+
     const data = comments.map(c => {
-      const obj = c.toObject();
+      const obj = addOwnFlag(c, uid);
       obj.likedByMe = hasUser(obj.likes);
       obj.dislikedByMe = hasUser(obj.dislikes);
-      obj.replies = (obj.replies || []).map(r => ({
-        ...r,
-        likedByMe: hasUser(r.likes),
-        dislikedByMe: hasUser(r.dislikes),
-      }));
+      const setFlags = (r) => {
+        r.likedByMe = hasUser(r.likes);
+        r.dislikedByMe = hasUser(r.dislikes);
+        if (r.replies) r.replies.forEach(setFlags);
+      };
+      if (obj.replies) obj.replies.forEach(setFlags);
       return obj;
     });
 
@@ -83,14 +105,17 @@ exports.createComment = async (req, res) => {
     // Re-query with query-level populate (reliable) so the author is filled in
     const comment = await Comment.findById(created._id)
       .populate('user', 'username avatar role')
-      .populate('replies.user', 'username avatar role');
+      .populate('replies.user', 'username avatar role')
+      .populate('replies.replies.user', 'username avatar role');
+
+    const withOwn = addOwnFlag(comment, req.user.id);
 
     broadcastToAnime(comment.animeId, 'new-comment', {
       action: 'created',
-      comment,
+      comment: withOwn,
     });
 
-    res.status(201).json({ success: true, data: comment });
+    res.status(201).json({ success: true, data: withOwn });
   } catch (error) {
     console.error('CreateComment error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -171,45 +196,84 @@ exports.dislikeComment = async (req, res) => {
 
 exports.replyToComment = async (req, res) => {
   try {
-    const comment = await Comment.findById(req.params.id);
-    if (!comment) {
-      return res.status(404).json({ success: false, message: 'Comment not found' });
-    }
-
     const { content, isSpoiler } = req.body;
     if (!content || !content.trim()) {
       return res.status(400).json({ success: false, message: 'Reply content is required' });
     }
 
-    comment.replies.push({
-      user: req.user.id,
-      content: content.trim(),
-      isSpoiler: isSpoiler || false,
-    });
+    let comment = await Comment.findById(req.params.id);
+    let notifyUser = null;
+    let parentCommentId = null;
+
+    if (comment) {
+      // Replying to a top-level comment
+      comment.replies.push({
+        user: req.user.id,
+        content: content.trim(),
+        isSpoiler: isSpoiler || false,
+      });
+      notifyUser = comment.user;
+      parentCommentId = comment._id;
+    } else {
+      // Try depth 1 — replying to a reply
+      comment = await Comment.findOne({ 'replies._id': req.params.id });
+      if (comment) {
+        const parentReply = comment.replies.id(req.params.id);
+        if (!parentReply) return res.status(404).json({ success: false, message: 'Reply not found' });
+        parentReply.replies.push({
+          user: req.user.id,
+          content: content.trim(),
+          isSpoiler: isSpoiler || false,
+        });
+        notifyUser = parentReply.user;
+        parentCommentId = comment._id;
+      } else {
+        // Try depth 2 — replying to a nested reply
+        comment = await Comment.findOne({ 'replies.replies._id': req.params.id });
+        if (!comment) return res.status(404).json({ success: false, message: 'Comment or reply not found' });
+
+        const parentReply = comment.replies.find(r =>
+          r.replies && r.replies.id(req.params.id)
+        );
+        if (!parentReply) return res.status(404).json({ success: false, message: 'Reply not found' });
+
+        parentReply.replies.push({
+          user: req.user.id,
+          content: content.trim(),
+          isSpoiler: isSpoiler || false,
+        });
+        notifyUser = parentReply.user;
+        parentCommentId = comment._id;
+      }
+    }
 
     await comment.save();
+
     const populated = await Comment.findById(comment._id)
       .populate('user', 'username avatar role')
-      .populate('replies.user', 'username avatar role');
+      .populate('replies.user', 'username avatar role')
+      .populate('replies.replies.user', 'username avatar role');
 
-    if (comment.user.toString() !== req.user.id) {
+    const withOwn = addOwnFlag(populated, req.user.id);
+
+    if (notifyUser && notifyUser.toString() !== req.user.id) {
       const notif = await Notification.create({
-        user: comment.user,
+        user: notifyUser,
         type: 'comment_reply',
         title: `${req.user.username} replied to your comment`,
         body: content.trim().slice(0, 100),
         link: `/anime/${comment.animeId}?comment=${comment._id}`,
         fromUser: req.user.id,
       });
-      emitNotification(comment.user, notif);
+      emitNotification(notifyUser, notif);
     }
 
     broadcastToAnime(comment.animeId, 'new-comment', {
       action: 'replied',
-      comment: populated,
+      comment: withOwn,
     });
 
-    res.status(201).json({ success: true, data: populated });
+    res.status(201).json({ success: true, data: withOwn });
   } catch (error) {
     console.error('ReplyToComment error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -221,6 +285,8 @@ exports.deleteComment = async (req, res) => {
     let comment = await Comment.findById(req.params.id);
     if (!comment) {
       comment = await Comment.findOne({ 'replies._id': req.params.id });
+      if (comment) { req.params.replyId = req.params.id; return exports.deleteReply(req, res); }
+      comment = await Comment.findOne({ 'replies.replies._id': req.params.id });
       if (comment) { req.params.replyId = req.params.id; return exports.deleteReply(req, res); }
       return res.status(404).json({ success: false, message: 'Comment not found' });
     }
@@ -257,19 +323,33 @@ exports.editComment = async (req, res) => {
     await comment.save();
     await comment.populate('user', 'username avatar role');
 
-    res.json({ success: true, data: comment });
+    const withOwn = addOwnFlag(comment, req.user.id);
+    res.json({ success: true, data: withOwn });
   } catch (error) {
     console.error('EditComment error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
+function findReplyAtDepth(comment, replyId) {
+  let reply = comment.replies.id(replyId);
+  if (reply) return reply;
+  for (const r of comment.replies) {
+    if (r.replies) {
+      reply = r.replies.id(replyId);
+      if (reply) return reply;
+    }
+  }
+  return null;
+}
+
 exports.likeReply = async (req, res) => {
   try {
-    const comment = await Comment.findOne({ 'replies._id': req.params.replyId });
+    let comment = await Comment.findOne({ 'replies._id': req.params.replyId });
+    if (!comment) comment = await Comment.findOne({ 'replies.replies._id': req.params.replyId });
     if (!comment) return res.status(404).json({ success: false, message: 'Reply not found' });
 
-    const reply = comment.replies.id(req.params.replyId);
+    const reply = findReplyAtDepth(comment, req.params.replyId);
     if (!reply) return res.status(404).json({ success: false, message: 'Reply not found' });
 
     const userId = req.user.id;
@@ -295,10 +375,11 @@ exports.likeReply = async (req, res) => {
 
 exports.dislikeReply = async (req, res) => {
   try {
-    const comment = await Comment.findOne({ 'replies._id': req.params.replyId });
+    let comment = await Comment.findOne({ 'replies._id': req.params.replyId });
+    if (!comment) comment = await Comment.findOne({ 'replies.replies._id': req.params.replyId });
     if (!comment) return res.status(404).json({ success: false, message: 'Reply not found' });
 
-    const reply = comment.replies.id(req.params.replyId);
+    const reply = findReplyAtDepth(comment, req.params.replyId);
     if (!reply) return res.status(404).json({ success: false, message: 'Reply not found' });
 
     const userId = req.user.id;
@@ -324,10 +405,11 @@ exports.dislikeReply = async (req, res) => {
 
 exports.editReply = async (req, res) => {
   try {
-    const comment = await Comment.findOne({ 'replies._id': req.params.replyId });
+    let comment = await Comment.findOne({ 'replies._id': req.params.replyId });
+    if (!comment) comment = await Comment.findOne({ 'replies.replies._id': req.params.replyId });
     if (!comment) return res.status(404).json({ success: false, message: 'Reply not found' });
 
-    const reply = comment.replies.id(req.params.replyId);
+    const reply = findReplyAtDepth(comment, req.params.replyId);
     if (!reply) return res.status(404).json({ success: false, message: 'Reply not found' });
 
     if (reply.user.toString() !== req.user.id) {
@@ -338,9 +420,12 @@ exports.editReply = async (req, res) => {
     if (content !== undefined) reply.content = content.trim();
 
     await comment.save();
+    await comment.populate('user', 'username avatar role');
     await comment.populate('replies.user', 'username avatar role');
+    await comment.populate('replies.replies.user', 'username avatar role');
 
-    res.json({ success: true, data: comment });
+    const withOwn = addOwnFlag(comment, req.user.id);
+    res.json({ success: true, data: withOwn });
   } catch (error) {
     console.error('EditReply error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -349,17 +434,29 @@ exports.editReply = async (req, res) => {
 
 exports.deleteReply = async (req, res) => {
   try {
-    const comment = await Comment.findOne({ 'replies._id': req.params.replyId });
+    let comment = await Comment.findOne({ 'replies._id': req.params.replyId });
+    if (!comment) comment = await Comment.findOne({ 'replies.replies._id': req.params.replyId });
     if (!comment) return res.status(404).json({ success: false, message: 'Reply not found' });
 
-    const reply = comment.replies.id(req.params.replyId);
+    const reply = findReplyAtDepth(comment, req.params.replyId);
     if (!reply) return res.status(404).json({ success: false, message: 'Reply not found' });
 
     if (reply.user.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    await reply.deleteOne();
+    const parentReply = comment.replies.id(req.params.replyId);
+    if (parentReply) {
+      comment.replies.pull({ _id: req.params.replyId });
+    } else {
+      const grandParent = comment.replies.find(r =>
+        r.replies && r.replies.id(req.params.replyId)
+      );
+      if (grandParent) {
+        grandParent.replies.pull({ _id: req.params.replyId });
+        comment.markModified('replies');
+      }
+    }
     await comment.save();
 
     res.json({ success: true, message: 'Reply deleted' });

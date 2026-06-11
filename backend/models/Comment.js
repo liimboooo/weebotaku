@@ -8,6 +8,7 @@ const ReplySchema = new mongoose.Schema({
   dislikes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   createdAt: { type: Date, default: Date.now },
 });
+ReplySchema.add({ replies: [ReplySchema] });
 
 const CommentSchema = new mongoose.Schema({
   user: {

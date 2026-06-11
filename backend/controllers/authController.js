@@ -210,6 +210,10 @@ exports.googleLogin = async (req, res) => {
         .replace(/[^a-z0-9_]/g, '')
         .slice(0, 20) || `user${sub.slice(0, 8)}`;
 
+      if (!username || username.length < 2) {
+        username = `user${sub.slice(0, 8)}`;
+      }
+
       const existing = await User.findOne({ username });
       if (existing) {
         username = `${username}${Math.floor(Math.random() * 10000)}`;
@@ -221,6 +225,12 @@ exports.googleLogin = async (req, res) => {
         password: `google_${sub}_${Math.random().toString(36).slice(2)}`,
         avatar: picture || '',
       });
+    } else {
+      // Update existing user's avatar from Google on re-login
+      if (picture) {
+        user.avatar = picture;
+        await user.save();
+      }
     }
 
     const token = user.getSignedJwtToken();

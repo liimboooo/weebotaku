@@ -248,28 +248,21 @@ export default function AnimeDetail() {
   const currentUsername = currentUser?.username || localStorage.getItem('username') || 'Guest';
   const currentAvatar = currentUser?.avatar || localStorage.getItem('avatar') || '';
 
-  const getCommentUser = (u) => {
-    if (!u) return { username: 'Unknown', avatar: '', role: 'user' };
-    if (typeof u === 'object') return { username: u.username || 'Unknown', avatar: u.avatar || '', role: u.role || 'user' };
-    return { username: 'Unknown', avatar: '', role: 'user' };
-  };
-
-  const mapComment = useCallback((c) => {
-    const u = getCommentUser(c.user);
-    return {
-    id: c._id,
-    user: u.username,
-    avatar: u.avatar,
-    role: u.role,
-    text: c.content,
-    time: new Date(c.createdAt).getTime().toString(),
-    likes: c.likes?.length || 0,
-    dislikes: c.dislikes?.length || 0,
-    likedByMe: c.likedByMe || false,
-    dislikedByMe: c.dislikedByMe || false,
-    replies: (c.replies || []).map(r => {
-      const ru = getCommentUser(r.user);
+  const getCommentUser = useCallback((u) => {
+    if (!u) return { username: 'Deleted User', avatar: '', role: 'user' };
+    if (typeof u === 'object') {
       return {
+        username: u.username || u.name || 'Deleted User',
+        avatar: u.avatar || '',
+        role: u.role || 'user',
+      };
+    }
+    return { username: 'Deleted User', avatar: '', role: 'user' };
+  }, []);
+
+  const mapReply = useCallback((r) => {
+    const ru = getCommentUser(r.user);
+    return {
       id: r._id,
       user: ru.username,
       avatar: ru.avatar,
@@ -281,11 +274,30 @@ export default function AnimeDetail() {
       likedByMe: r.likedByMe || false,
       dislikedByMe: r.dislikedByMe || false,
       hasSpoiler: r.isSpoiler || false,
-      replies: [],
-    }; }),
-    pinned: c.pinned || false,
-    hasSpoiler: c.isSpoiler || false,
-  }; }, []);
+      isOwn: r.isOwn || false,
+      replies: (r.replies || []).map(mapReply),
+    };
+  }, [getCommentUser]);
+
+  const mapComment = useCallback((c) => {
+    const u = getCommentUser(c.user);
+    return {
+      id: c._id,
+      user: u.username,
+      avatar: u.avatar,
+      role: u.role,
+      text: c.content,
+      time: new Date(c.createdAt).getTime().toString(),
+      likes: c.likes?.length || 0,
+      dislikes: c.dislikes?.length || 0,
+      likedByMe: c.likedByMe || false,
+      dislikedByMe: c.dislikedByMe || false,
+      isOwn: c.isOwn || false,
+      replies: (c.replies || []).map(mapReply),
+      pinned: c.pinned || false,
+      hasSpoiler: c.isSpoiler || false,
+    };
+  }, [getCommentUser, mapReply]);
 
   useEffect(() => {
     setCommentsLoading(true);
@@ -317,14 +329,34 @@ export default function AnimeDetail() {
 
     const handler = (data) => {
       if (!data?.comment) return;
+      const mapped = mapComment(data.comment);
+      // Safety net: fix deleted/null usernames when the populated user data exists
+      if ((mapped.user === 'Deleted User' || mapped.user === 'Unknown') && data.comment.user && typeof data.comment.user === 'object') {
+        mapped.user = data.comment.user.username || data.comment.user.email?.split('@')[0] || 'Deleted User';
+        mapped.avatar = data.comment.user.avatar || '';
+      }
+      // Same fix for replies
+      if (mapped.replies) {
+        const fixReplies = (replies) => {
+          replies.forEach(r => {
+            if (r.user === 'Deleted User' || r.user === 'Unknown') {
+              const found = data.comment.replies?.find(dr => dr._id === r.id || dr._id?.toString() === r.id);
+              if (found && typeof found.user === 'object' && found.user) {
+                r.user = found.user.username || r.user;
+                r.avatar = found.user.avatar || r.avatar;
+              }
+            }
+            if (r.replies) fixReplies(r.replies);
+          });
+        };
+        fixReplies(mapped.replies);
+      }
       if (data.action === 'created') {
-        const mapped = mapComment(data.comment);
         setComments(prev => {
           if (prev.some(c => c.id === mapped.id)) return prev;
           return [mapped, ...prev];
         });
       } else if (data.action === 'replied') {
-        const mapped = mapComment(data.comment);
         setComments(prev => prev.map(c => c.id === mapped.id ? mapped : c));
       }
     };
@@ -340,8 +372,8 @@ export default function AnimeDetail() {
     const res = await commentService.createComment(parseInt(id), text, { episode: selectedEp, isSpoiler });
     if (res.success) {
       const mapped = mapComment(res.data);
-      // Safety net: never show the author as Unknown for your own fresh comment
-      if (mapped.user === 'Unknown' && currentUsername && currentUsername !== 'Guest') {
+      // Safety net: never show a placeholder for your own fresh comment
+      if ((mapped.user === 'Deleted User' || mapped.user === 'Unknown') && currentUsername && currentUsername !== 'Guest') {
         mapped.user = currentUsername;
         mapped.avatar = currentAvatar;
       }
@@ -360,7 +392,8 @@ export default function AnimeDetail() {
   const handleReplyComment = useCallback(async (commentId, text, isSpoiler) => {
     const res = await commentService.replyToComment(commentId, text, isSpoiler);
     if (res.success) {
-      setComments(prev => prev.map(c => c.id === commentId ? mapComment(res.data) : c));
+      const mapped = mapComment(res.data);
+      setComments(prev => prev.map(c => c.id === mapped.id ? mapped : c));
     }
   }, [mapComment]);
 

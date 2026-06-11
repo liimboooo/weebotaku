@@ -338,7 +338,7 @@
 .awc-action-count { font-size: 12px; font-weight: 500; }
 
 /* ─── OPTIONS ─── */
-.awc-options-wrap { position: relative; margin-left: auto; flex-shrink: 0; }
+.awc-options-wrap { position: relative; margin-left: auto; flex-shrink: 0; z-index: 10; }
 
 .awc-options-btn {
   width: 28px;
@@ -555,6 +555,12 @@
   width: 2px;
   background: rgba(255,255,255,0.14);
   pointer-events: none;
+}
+
+/* Nested reply item also gets a vertical line (32px gutter) */
+.awc-item.awc-reply.replies-open > .awc-item-gutter::after {
+  left: 15px;            /* centered under 32px reply avatar */
+  top: 40px;
 }
 
 .awc-item.awc-reply {
@@ -780,6 +786,7 @@
   .awc-item.awc-reply { padding: 6px 0 4px 0; gap: 10px; }
   .awc-item.awc-reply::before { left: -26px; width: 26px; }
   .awc-item.replies-open > .awc-item-gutter::after { left: 15px; top: 40px; }
+  .awc-item.awc-reply.replies-open > .awc-item-gutter::after { left: 11px; top: 36px; }
   .awc-item.awc-reply .awc-text { font-size: 12px; }
 }
 

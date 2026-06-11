@@ -114,7 +114,7 @@ function renderContent(text) {
 
 function CommentItem({ comment, onLike, onDislike, onEditComment, onDeleteComment, onPostReply, depth = 0, currentUser, parentUser }) {
   const navigate = useNavigate();
-  const goProfile = () => { if (comment.user !== "Unknown" && comment.user !== "Guest") navigate(`/profile/${comment.user}`); };
+  const goProfile = () => { if (comment.user !== "Deleted User" && comment.user !== "Unknown" && comment.user !== "Guest") navigate(`/profile/${comment.user}`); };
   const [liked, setLiked] = useState(comment.likedByMe || false);
   const [disliked, setDisliked] = useState(comment.dislikedByMe || false);
   const [likes, setLikes] = useState(comment.likes || 0);
@@ -123,7 +123,6 @@ function CommentItem({ comment, onLike, onDislike, onEditComment, onDeleteCommen
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(comment.text || "");
   const [editSpoiler, setEditSpoiler] = useState(comment.hasSpoiler || false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [replying, setReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [replySpoiler, setReplySpoiler] = useState(false);
@@ -133,7 +132,7 @@ function CommentItem({ comment, onLike, onDislike, onEditComment, onDeleteCommen
   const [revealed, setRevealed] = useState(false);
   const menuRef = useRef(null);
 
-  const isOwn = comment.user === currentUser;
+  const isOwn = comment.isOwn || false;
 
   useEffect(() => {
     if (menuOpen) {
@@ -178,17 +177,6 @@ function CommentItem({ comment, onLike, onDislike, onEditComment, onDeleteCommen
 
   return (
     <>
-      {showDeleteConfirm && (
-        <div className="awc-dialog-overlay" onClick={() => setShowDeleteConfirm(false)}>
-          <div className="awc-dialog" onClick={e => e.stopPropagation()}>
-            <p className="awc-dialog-text">Delete this comment?</p>
-            <div className="awc-dialog-actions">
-              <button className="awc-dialog-btn" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
-              <button className="awc-dialog-btn awc-dialog-btn-danger" onClick={() => { onDeleteComment?.(comment.id); setShowDeleteConfirm(false); }}>Delete</button>
-            </div>
-          </div>
-        </div>
-      )}
       <div className={`awc-item ${depth > 0 ? "awc-reply" : ""} ${(comment.replies?.length && showReplies) ? "replies-open" : ""}`} id={`comment-${comment.id}`}>
         <div className="awc-item-gutter">
           <div className="awc-avatar-click" onClick={goProfile} style={{ cursor: 'pointer' }}>
@@ -207,7 +195,7 @@ function CommentItem({ comment, onLike, onDislike, onEditComment, onDeleteCommen
                   {isOwn && (
                     <>
                       <button className="awc-options-item" onClick={() => { setEditing(true); setMenuOpen(false); }}><Pencil size={12} /> Edit</button>
-                      <button className="awc-options-item awc-options-item-danger" onClick={() => { setShowDeleteConfirm(true); setMenuOpen(false); }}><Trash2 size={12} /> Delete</button>
+                      <button className="awc-options-item awc-options-item-danger" onClick={() => { onDeleteComment?.(comment.id); setMenuOpen(false); }}><Trash2 size={12} /> Delete</button>
                     </>
                   )}
                 </div>

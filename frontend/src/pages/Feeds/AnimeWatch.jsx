@@ -118,12 +118,16 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
   /* ─── COMMENTS ─── */
   const [comments, setComments] = useState([]);
 
+  const currentUser = authService.getCurrentUser();
+  const currentUsername = currentUser?.username || localStorage.getItem('username') || 'Guest';
+  const currentAvatar = currentUser?.avatar || localStorage.getItem('avatar') || '';
+
   const getCommentUser = (u) => {
-    if (!u) return { username: "Unknown", avatar: null };
+    if (!u) return { username: "Deleted User", avatar: null };
     if (Array.isArray(u)) u = u[0];
-    if (!u) return { username: "Unknown", avatar: null };
-    if (typeof u === "object") return { username: u.username || u.name || "Unknown", avatar: u.avatar || null };
-    return { username: "Unknown", avatar: null };
+    if (!u) return { username: "Deleted User", avatar: null };
+    if (typeof u === "object") return { username: u.username || u.name || "Deleted User", avatar: u.avatar || null };
+    return { username: "Deleted User", avatar: null };
   };
 
   const mapComments = (data) => data.map(c => {
