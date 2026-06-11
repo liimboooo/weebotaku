@@ -92,6 +92,12 @@ export default function AnimeDetail() {
   const [likesCount, setLikesCount] = useState(null);
   const [commentsError, setCommentsError] = useState(false);
   const [reportMsg, setReportMsg] = useState(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportCategory, setReportCategory] = useState('bug');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportDone, setReportDone] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -171,21 +177,31 @@ export default function AnimeDetail() {
     document.fullscreenElement ? document.exitFullscreen() : stage.requestFullscreen();
   };
 
-  const handleReport = useCallback(async () => {
-    setReportMsg('Submitting report...');
+  const openReport = useCallback(() => {
+    setReportCategory('bug');
+    setReportDetails('');
+    setReportDone(false);
+    setReportMsg(null);
+    setShowReportModal(true);
+  }, []);
+
+  const submitReport = useCallback(async () => {
+    if (!reportDetails.trim() || reportSubmitting) return;
+    setReportSubmitting(true);
+    setReportMsg(null);
     try {
+      // Backend requires { category, details }; bundle context into details.
       await reportService.submit({
-        targetType: 'anime',
-        targetId: id,
-        url: window.location.href,
+        category: reportCategory,
+        details: `${anime?.name || `Anime ${id}`} — Ep ${selectedEp || 1}\n${reportDetails.trim()}\n${window.location.href}`,
       });
-      setReportMsg('Report submitted. We\'ll review this content.');
-      setTimeout(() => setReportMsg(null), 3000);
+      setReportDone(true);
+      setTimeout(() => { setShowReportModal(false); setReportDone(false); }, 1600);
     } catch {
-      setReportMsg('Failed to submit report. Try again.');
-      setTimeout(() => setReportMsg(null), 3000);
+      setReportMsg('Failed to submit. Please try again.');
     }
-  }, [id]);
+    setReportSubmitting(false);
+  }, [reportCategory, reportDetails, reportSubmitting, anime, id, selectedEp]);
 
   const scrollRef = useRef(null);
   const iframeRef = useRef(null);
@@ -1362,7 +1378,7 @@ export default function AnimeDetail() {
                     <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 px-2 sm:px-4 py-1.5 sm:py-2.5 rounded-full font-medium text-[11px] sm:text-sm text-white items-center gap-1 sm:gap-2 transition-colors" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); }}>
                       <Share2 size={12} /> Share
                     </button>
-                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 w-8 sm:w-10 h-8 sm:h-10 items-center justify-center rounded-full text-white transition-colors" title="Report" onClick={handleReport}>
+                    <button className="hidden sm:flex bg-white/5 border border-white/5 hover:bg-white/10 w-8 sm:w-10 h-8 sm:h-10 items-center justify-center rounded-full text-white transition-colors" title="Report" onClick={openReport}>
                       <Flag size={11} />
                     </button>
                     {reportMsg && (
@@ -1390,7 +1406,7 @@ export default function AnimeDetail() {
                             <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { if (navigator.share) navigator.share({ title: anime?.name, url: window.location.href }); else navigator.clipboard?.writeText(window.location.href); setShowMoreActions(false); }}>
                               <Share2 size={12} /> Share
                             </button>
-                    <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { handleReport(); setShowMoreActions(false); }}>
+                    <button className="w-full text-left px-4 py-2 text-xs text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2" onClick={() => { openReport(); setShowMoreActions(false); }}>
                       <Flag size={12} /> Report
                     </button>
                             {reportMsg && (
@@ -1636,6 +1652,79 @@ export default function AnimeDetail() {
 
         </div>
       </div>
+
+      {/* --- REPORT MODAL --- */}
+      <AnimatePresence>
+        {showReportModal && (
+          <motion.div
+            className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => { if (!reportSubmitting) setShowReportModal(false); }}
+          >
+            <motion.div
+              className="w-full max-w-sm bg-[#0d0d10]/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+              initial={{ scale: 0.96, y: 8 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+            >
+              {reportDone ? (
+                <div className="flex flex-col items-center text-center gap-3 px-6 py-10">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/15 flex items-center justify-center text-emerald-400">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                  </div>
+                  <p className="text-white font-semibold">Report submitted</p>
+                  <p className="text-xs text-zinc-400">Thanks — our team will review it.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+                    <div className="flex items-center gap-2 text-white font-semibold text-sm"><Flag size={15} /> Report a problem</div>
+                    <button onClick={() => setShowReportModal(false)} className="text-zinc-500 hover:text-white transition-colors"><X size={16} /></button>
+                  </div>
+                  <div className="px-5 py-4 flex flex-col gap-3">
+                    <div className="flex flex-col gap-2">
+                      {[
+                        { value: 'bug', label: 'Video not playing / broken' },
+                        { value: 'content', label: 'Wrong or missing episode' },
+                        { value: 'moderation', label: 'Inappropriate content' },
+                      ].map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setReportCategory(opt.value)}
+                          className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left text-sm transition-colors ${reportCategory === opt.value ? 'bg-red-500/15 border-red-500/50 text-white' : 'bg-white/5 border-white/10 text-zinc-300 hover:bg-white/10'}`}
+                        >
+                          <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${reportCategory === opt.value ? 'border-red-500' : 'border-zinc-600'}`}>
+                            {reportCategory === opt.value && <span className="w-2 h-2 rounded-full bg-red-500" />}
+                          </span>
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      value={reportDetails}
+                      onChange={e => setReportDetails(e.target.value)}
+                      maxLength={500}
+                      rows={3}
+                      placeholder="Describe what went wrong…"
+                      className="w-full bg-black/40 border border-white/10 focus:border-red-500/50 rounded-xl px-3 py-2.5 text-sm text-white outline-none resize-none placeholder-zinc-600 transition-colors"
+                    />
+                    {reportMsg && <p className="text-xs text-red-400">{reportMsg}</p>}
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      <button onClick={() => setShowReportModal(false)} className="px-4 py-2 rounded-full text-sm font-semibold text-zinc-300 hover:bg-white/10 transition-colors">Cancel</button>
+                      <button
+                        onClick={submitReport}
+                        disabled={!reportDetails.trim() || reportSubmitting}
+                        className="px-5 py-2 rounded-full text-sm font-semibold bg-red-500 text-white hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+                      >
+                        {reportSubmitting ? <><Loader size={14} className="animate-spin" /> Sending…</> : 'Submit report'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
