@@ -543,6 +543,20 @@
 .awc-replies { position: relative; padding-left: 0; }
 
 /* ─── NESTED REPLIES (YouTube thread style) ─── */
+/* Vertical thread line: runs down the parent's (full-height) avatar gutter,
+   from just below the parent avatar to the bottom of its replies. */
+.awc-item.replies-open > .awc-item-gutter { position: relative; }
+.awc-item.replies-open > .awc-item-gutter::after {
+  content: "";
+  position: absolute;
+  left: 19px;            /* centered under the 40px parent avatar */
+  top: 48px;             /* just below the avatar */
+  bottom: 0;
+  width: 2px;
+  background: rgba(255,255,255,0.14);
+  pointer-events: none;
+}
+
 .awc-item.awc-reply {
   position: relative;
   padding: 8px 0 4px 0;
@@ -552,14 +566,14 @@
 /* show the reply avatar in its own column (smaller than the parent) */
 .awc-item.awc-reply .awc-item-gutter { display: block; width: 32px; }
 
-/* curved connector line linking the parent down into each reply */
+/* curved branch from the vertical line into each reply avatar */
 .awc-item.awc-reply::before {
   content: "";
   position: absolute;
-  left: -26px;
-  top: -16px;
-  width: 24px;
-  height: 32px;
+  left: -32px;           /* reach back to the parent gutter line */
+  top: -18px;
+  width: 32px;           /* across to the reply avatar */
+  height: 34px;
   border-left: 2px solid rgba(255,255,255,0.14);
   border-bottom: 2px solid rgba(255,255,255,0.14);
   border-bottom-left-radius: 12px;
@@ -764,7 +778,8 @@
   .awc-action { font-size: 11px; padding: 3px 6px; gap: 3px; }
   .awc-action-count { font-size: 10px; }
   .awc-item.awc-reply { padding: 6px 0 4px 0; gap: 10px; }
-  .awc-item.awc-reply::before { left: -22px; width: 20px; }
+  .awc-item.awc-reply::before { left: -26px; width: 26px; }
+  .awc-item.replies-open > .awc-item-gutter::after { left: 15px; top: 40px; }
   .awc-item.awc-reply .awc-text { font-size: 12px; }
 }
 

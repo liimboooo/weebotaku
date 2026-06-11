@@ -189,7 +189,7 @@ function CommentItem({ comment, onLike, onDislike, onEditComment, onDeleteCommen
           </div>
         </div>
       )}
-      <div className={`awc-item ${depth > 0 ? "awc-reply" : ""}`} id={`comment-${comment.id}`}>
+      <div className={`awc-item ${depth > 0 ? "awc-reply" : ""} ${(comment.replies?.length && showReplies) ? "replies-open" : ""}`} id={`comment-${comment.id}`}>
         <div className="awc-item-gutter">
           <div className="awc-avatar-click" onClick={goProfile} style={{ cursor: 'pointer' }}>
             <CommentAvatar name={comment.user} avatar={comment.avatar} size={depth > 0 ? 32 : 40} />
