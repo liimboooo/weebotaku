@@ -221,6 +221,7 @@ export default function AnimeDetail() {
   const iframeRef = useRef(null);
   const playerStageRef = useRef(null);
   const failedServers = useRef(new Set());
+  const streamRetriesRef = useRef(0);
   const serversRef = useRef(servers);
   const epIndexRef = useRef(epIndex);
   const episodesRef = useRef(episodes);
@@ -519,7 +520,7 @@ export default function AnimeDetail() {
       timedOut = true;
       setError(hasEpsRef.current ? "Stream not available for this episode." : "Request timed out. Try again.");
       setLoading(false);
-    }, 12000);
+    }, 30000);
     epTimerRef.current = timer;
 
     const epCount = anime?.episodes || 0;
@@ -535,7 +536,6 @@ export default function AnimeDetail() {
       hasEpsRef.current = true;
       setEpIndex(idx);
       setLoading(false);
-      if (epCount > 100) return;
     } else {
       const mockEps = Array.from({ length: 12 }, (_, i) => ({
         episode: i + 1, title: `Episode ${i + 1}`, url: String(i + 1), thumbnail: anime?.img || '', airDate: null,
@@ -617,6 +617,7 @@ export default function AnimeDetail() {
     setShowSkipOutro(false);
     setAutoNextCountdown(null);
     if (autoNextTimerRef.current) { clearInterval(autoNextTimerRef.current); autoNextTimerRef.current = null; }
+    streamRetriesRef.current = 0;
     (async () => {
       setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
       try {
@@ -785,7 +786,12 @@ export default function AnimeDetail() {
           const newIdx = allServers.findIndex(s => s.url === nextSrv.url);
           if (newIdx !== -1) setServerIndex(newIdx);
         } else {
-          setStreamRetryCount(c => c + 1);
+          if (streamRetriesRef.current < 3) {
+            streamRetriesRef.current += 1;
+            setStreamRetryCount(c => c + 1);
+          } else {
+            setError("Stream unavailable. Try a different source.");
+          }
         }
       });
       hlsInstanceRef.current = hls;
@@ -805,7 +811,12 @@ export default function AnimeDetail() {
           const newIdx = allServers.findIndex(s => s.url === nextSrv.url);
           if (newIdx !== -1) setServerIndex(newIdx);
         } else {
-          setStreamRetryCount(c => c + 1);
+          if (streamRetriesRef.current < 3) {
+            streamRetriesRef.current += 1;
+            setStreamRetryCount(c => c + 1);
+          } else {
+            setError("Stream unavailable. Try a different source.");
+          }
         }
       }, { once: true });
     }
