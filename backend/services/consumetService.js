@@ -3,6 +3,7 @@ const { hentaiStream } = require('./hentaiService');
 
 let hianime = null;
 let animepahe = null;
+let animeunity = null;
 
 function getHianime() {
   if (!hianime) hianime = new ANIME.Hianime();
@@ -14,19 +15,30 @@ function getAnimePahe() {
   return animepahe;
 }
 
+function getAnimeUnity() {
+  if (!animeunity) animeunity = new ANIME.AnimeUnity();
+  return animeunity;
+}
+
+function getProviderInstance(provider) {
+  if (provider === 'animepahe') return getAnimePahe();
+  if (provider === 'animeunity') return getAnimeUnity();
+  return getHianime();
+}
+
 async function searchByTitle(title, provider = 'hianime') {
-  const p = provider === 'animepahe' ? getAnimePahe() : getHianime();
+  const p = getProviderInstance(provider);
   const res = await p.search(title);
   return res.results || [];
 }
 
 async function getAnimeInfo(providerId, provider = 'hianime') {
-  const p = provider === 'animepahe' ? getAnimePahe() : getHianime();
+  const p = getProviderInstance(provider);
   return await p.fetchAnimeInfo(providerId);
 }
 
 async function getEpisodeSources(episodeId, provider = 'hianime') {
-  const p = provider === 'animepahe' ? getAnimePahe() : getHianime();
+  const p = getProviderInstance(provider);
   return await p.fetchEpisodeSources(episodeId);
 }
 
@@ -97,34 +109,43 @@ exports.consumetStream = async (anilistId, episodeNum, category = 'sub', animeTi
   const title = animeTitle || '';
   if (!title) return null;
 
-  const match = await findBestMatch(title, anilistId);
-  if (match) {
-    try {
-      const info = await getAnimeInfo(match.id);
-      if (info.episodes && Array.isArray(info.episodes)) {
-        const ep = info.episodes.find(e => e.number === episodeNum);
-        if (ep && ep.id) {
-          const sources = await getEpisodeSources(ep.id);
-          if (sources) {
-            const hlsSources = (sources.sources || []).filter(s => s.url && (s.isM3U8 || s.url.includes('.m3u8')));
-            if (hlsSources.length) {
-              const best = hlsSources.find(s => s.quality === 'default' || s.quality === 'auto') || hlsSources[0];
-              return {
-                provider: 'consumet:hianime',
-                stream: { url: best.url, quality: best.quality || 'auto' },
-                subtitles: (sources.subtitles || []).map(s => ({ url: s.url, label: s.label || '' })),
-                intro: null,
-                outro: null,
-              };
+  try {
+    const match = await findBestMatch(title, anilistId);
+    if (match) {
+      try {
+        const info = await getAnimeInfo(match.id);
+        if (info.episodes && Array.isArray(info.episodes)) {
+          const ep = info.episodes.find(e => e.number === episodeNum);
+          if (ep && ep.id) {
+            const sources = await getEpisodeSources(ep.id);
+            if (sources) {
+              const hlsSources = (sources.sources || []).filter(s => s.url && (s.isM3U8 || s.url.includes('.m3u8')));
+              if (hlsSources.length) {
+                const best = hlsSources.find(s => s.quality === 'default' || s.quality === 'auto') || hlsSources[0];
+                return {
+                  provider: 'consumet:hianime',
+                  stream: { url: best.url, quality: best.quality || 'auto' },
+                  subtitles: (sources.subtitles || []).map(s => ({ url: s.url, label: s.label || '' })),
+                  intro: null,
+                  outro: null,
+                };
+              }
             }
           }
         }
-      }
-    } catch {}
+      } catch {}
+    }
+  } catch (e) {
+    console.error('[consumet] Hianime path failed:', e.message);
   }
 
   const paheResult = await tryProviderStream(anilistId, episodeNum, category, title, 'animepahe').catch(() => null);
   if (paheResult) return paheResult;
+
+  // AnimeUnity (animeunity.to) is currently the only Consumet provider responding.
+  // Note: catalog is mostly Italian dubs, but it returns playable HLS.
+  const unityResult = await tryProviderStream(anilistId, episodeNum, category, title, 'animeunity').catch(() => null);
+  if (unityResult) return unityResult;
 
   return hentaiStream(title, episodeNum);
 };

@@ -632,7 +632,8 @@ export default function AnimeDetail() {
           const otherCat = primaryCat === 'sub' ? 'dub' : 'sub';
           const labelFor = (cat) => (cat === 'dub' ? 'Dub (HLS)' : 'Sub (HLS)');
 
-          const primary = await getMiruroStream(aniId, epNum, primaryCat).catch(() => null);
+          const streamTitle = watchAnime.title || anime?.name || '';
+          const primary = await getMiruroStream(aniId, epNum, primaryCat, streamTitle).catch(() => null);
           if (cancelled) return;
           if (primary?.intro || primary?.outro) {
             setIntroOutro({ intro: primary.intro || null, outro: primary.outro || null });
@@ -644,7 +645,7 @@ export default function AnimeDetail() {
             setStreamUrl(primary.stream.url);
             setStreamLoading(false);
             // Background: add the other language to the server list without blocking
-            getMiruroStream(aniId, epNum, otherCat).then(other => {
+            getMiruroStream(aniId, epNum, otherCat, streamTitle).then(other => {
               if (cancelled || !other?.stream?.url || other.stream.url === primary.stream.url) return;
               if (other.intro || other.outro) setIntroOutro(prev => ({ intro: prev.intro || other.intro || null, outro: prev.outro || other.outro || null }));
               setServers(prev => prev.some(s => s.type === otherCat) ? prev : [...prev, { label: labelFor(otherCat), url: other.stream.url, type: otherCat }]);
@@ -653,7 +654,7 @@ export default function AnimeDetail() {
           }
 
           // Preferred missing — try the other language before deeper fallbacks
-          const other = await getMiruroStream(aniId, epNum, otherCat).catch(() => null);
+          const other = await getMiruroStream(aniId, epNum, otherCat, streamTitle).catch(() => null);
           if (cancelled) return;
           if (other?.intro || other?.outro) {
             setIntroOutro(prev => ({ intro: prev.intro || other.intro || null, outro: prev.outro || other.outro || null }));

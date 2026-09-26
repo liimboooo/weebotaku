@@ -277,8 +277,8 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
 
         if (aniId) {
           const promises = [
-            getMiruroStream(aniId, epNum, 'sub'),
-            getMiruroStream(aniId, epNum, 'dub'),
+            getMiruroStream(aniId, epNum, 'sub', animeName || ''),
+            getMiruroStream(aniId, epNum, 'dub', animeName || ''),
           ];
           if (animeName) promises.push(getConsumetStream(aniId, epNum, animeName, 'sub'));
 

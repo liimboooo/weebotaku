@@ -385,9 +385,10 @@ export async function getMiruroEpisodes(anilistId) {
   } catch { return null; }
 }
 
-export async function getMiruroStream(anilistId, episodeNum, category = 'sub') {
+export async function getMiruroStream(anilistId, episodeNum, category = 'sub', animeTitle = '') {
   try {
-    const res = await fetch(`${API_BASE}/stream/auto/${anilistId}/${episodeNum}?cat=${category}`);
+    const titleParam = animeTitle ? `&title=${encodeURIComponent(animeTitle)}` : '';
+    const res = await fetch(`${API_BASE}/stream/auto/${anilistId}/${episodeNum}?cat=${category}${titleParam}`);
     if (!res.ok) return null;
     const json = await res.json();
     if (!json.success) return null;

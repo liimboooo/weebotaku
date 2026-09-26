@@ -263,10 +263,19 @@ exports.autoSources = async (req, res) => {
     const epNum = parseInt(episodeNum, 10);
     if (!aid || !epNum) return res.status(400).json({ success: false, message: 'Missing params' });
 
-    const epData = await getEpisodesData(aid);
-
-    const providers = epData.providers || {};
     const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    // Miruro pipe is Cloudflare-gated (403 from datacenter IPs / node-fetch).
+    // Don't let a pipe failure abort the whole request — fall through to
+    // Consumet / ezvidapi fallbacks below instead of 500ing.
+    let providers = {};
+    try {
+      const epData = await getEpisodesData(aid);
+      providers = epData.providers || {};
+    } catch (pipeErr) {
+      console.error(`[stream] Miruro episodes failed for ${aid}:`, pipeErr.message);
+      providers = {};
+    }
 
     const availableProviders = Object.keys(providers);
     const providerOrder = [...new Set([...PROVIDER_PRIORITY, ...availableProviders])];
@@ -309,7 +318,20 @@ exports.autoSources = async (req, res) => {
       } catch { continue; }
     }
 
-    // Fallback: try ezvidapi (TMDB-based) only for sub category
+    // Fallback 1: Consumet providers (AnimeUnity currently works; Hianime/Pahe are down)
+    try {
+      const title = req.query.title || '';
+      if (title) {
+        const result = await consumetStream(aid, epNum, category, title);
+        if (result?.stream?.url) {
+          return res.json({ success: true, data: result });
+        }
+      }
+    } catch (e) {
+      console.error('[stream] Consumet fallback failed:', e.message);
+    }
+
+    // Fallback 2: try ezvidapi (TMDB-based) only for sub category
     if (category === 'sub') {
       try {
         const tmdb = await anilistToTmdb(aid);
