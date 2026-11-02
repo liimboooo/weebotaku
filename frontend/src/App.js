@@ -89,7 +89,7 @@ function AppLayout() {
       {!isAuthPage && <Sidebar />}
       <AuthModal />
       <div className={`app-main${needsHeaderOffset ? ' app-main--padded' : ''}`}>
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/auth" element={token ? <Navigate to="/home" replace /> : <AuthPage />} />
