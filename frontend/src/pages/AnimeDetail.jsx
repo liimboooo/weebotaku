@@ -9,7 +9,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { getAnimeById } from "../data/animeData";
 import Hls from "hls.js";
-import { findStreamingSource, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream, getMiruroEpisodes, getConsumetStream } from "../services/animeApi";
+import { findStreamingSource, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream, getMiruroEpisodes, getConsumetStream, getMultiEmbedStream } from "../services/animeApi";
 import { loadWatchHistory, addToWatchHistory, addToWatchlist, removeFromWatchlist, isInWatchlist } from "../services/storage";
 import { fetchAnimeRecommendations } from "../services/anilistApi";
 import commentService from "../services/commentService";
@@ -705,7 +705,18 @@ export default function AnimeDetail() {
         const urls = await getStreamUrls(episode.url, watchAnime.source, watchAnime.anilistId, parseInt(id), watchAnime.slug);
         if (cancelled) return;
         if (urls.length > 0) { setServers(urls); }
-        else setError("No video servers found.");
+        else {
+          // Last resort: multiembed aggregator iframe (may not have every title).
+          const me = await getMultiEmbedStream(watchAnime.anilistId || parseInt(id), epNum).catch(() => null);
+          if (cancelled) return;
+          if (me?.url) {
+            setServers([{ label: 'MultiEmbed', url: me.url, type: language || 'sub' }]);
+            setStreamUrl(me.url);
+            setStreamLoading(false);
+            return;
+          }
+          setError("No video servers found.");
+        }
       } catch (e) { console.error('[Otaku] Stream load error:', e); if (!cancelled) setError("Failed to load stream."); }
       finally { if (!cancelled) setStreamLoading(false); }
     })();

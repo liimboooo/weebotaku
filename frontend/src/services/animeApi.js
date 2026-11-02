@@ -411,3 +411,16 @@ export async function findStreamingSource(animeName, anilistId) {
   return null;
 }
 
+// Last-resort aggregator embed (multiembed.mov). JS-rendered player, but the
+// URL itself is a valid iframe src. Requires a TMDB id resolved from AniList.
+export async function getMultiEmbedStream(anilistId, episodeNum) {
+  try {
+    const tmdb = await anilistToTmdbClient(anilistId);
+    if (!tmdb) return null;
+    const s = tmdb.season || 1;
+    const e = episodeNum || 1;
+    const url = `https://multiembed.mov/?video_id=${tmdb.id}&tmdb=1&s=${s}&e=${e}`;
+    return { provider: 'multiembed', url, type: 'sub' };
+  } catch { return null; }
+}
+
