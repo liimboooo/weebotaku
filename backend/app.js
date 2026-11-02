@@ -18,7 +18,9 @@ app.use(helmet({
 app.use(hpp());
 
 // ─── CORS ────────────────────────────────────────────────
-app.use(cors({ origin: '*' }));
+// origin '*' cannot be combined with credentials:true (browser rejects). JWT is in
+// Authorization header, so credentials are not needed.
+app.use(cors({ origin: '*', credentials: false }));
 
 // Handle OPTIONS preflight at Express level (fallback)
 app.options('*', (req, res) => {

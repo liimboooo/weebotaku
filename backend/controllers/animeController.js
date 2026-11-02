@@ -100,22 +100,25 @@ exports.updateWatchHistory = async (req, res) => {
   try {
     const animeId = idParam(req);
     if (!animeId) return res.status(400).json({ success: false, message: 'Invalid anime ID' });
-    const { episodeWatched, animeName, animeImg, position } = req.body;
+    const { episodeWatched, animeName, animeImg, position } = req.body || {};
+    const ep = Number.isFinite(Number(episodeWatched)) ? Number(episodeWatched) : 1;
+
     const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     // Dedup: remove existing entry for same anime+episode, then add to front
-    const existingIdx = user.watchHistory.findIndex(
-      h => h.animeId === animeId && h.episode === episodeWatched
+    const existingIdx = (user.watchHistory || []).findIndex(
+      h => h.animeId === animeId && h.episode === ep
     );
     if (existingIdx !== -1) {
       user.watchHistory.splice(existingIdx, 1);
     }
     user.watchHistory.unshift({
       animeId,
-      episode: episodeWatched,
-      position: position || 0,
-      animeName,
-      animeImg,
+      episode: ep,
+      position: Number.isFinite(Number(position)) ? Number(position) : 0,
+      animeName: animeName || '',
+      animeImg: animeImg || '',
       timestamp: new Date(),
     });
 
@@ -126,18 +129,22 @@ exports.updateWatchHistory = async (req, res) => {
 
     await user.save();
 
-    // Sync progress to connected services
-    const watchlistItem = user.watchlist?.find(i => i.animeId === animeId);
-    if (watchlistItem) {
-      pushToConnectedServices(user, animeId, watchlistItem.listStatus || 'Watching', watchlistItem.rating || 0, episodeWatched || 0);
-    } else {
-      pushToConnectedServices(user, animeId, 'Watching', 0, episodeWatched || 0);
+    // Sync progress to connected services (best-effort, never fail the request)
+    try {
+      const watchlistItem = (user.watchlist || []).find(i => i.animeId === animeId);
+      if (watchlistItem) {
+        pushToConnectedServices(user, animeId, watchlistItem.listStatus || 'Watching', watchlistItem.rating || 0, ep);
+      } else {
+        pushToConnectedServices(user, animeId, 'Watching', 0, ep);
+      }
+    } catch (syncErr) {
+      console.error('UpdateWatchHistory sync error:', syncErr?.message);
     }
 
     res.json({ success: true, data: user.watchHistory });
   } catch (error) {
-    console.error('UpdateWatchHistory error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error('UpdateWatchHistory error:', error?.stack || error);
+    res.status(500).json({ success: false, message: error?.message || 'Server error' });
   }
 };
 

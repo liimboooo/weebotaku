@@ -74,7 +74,7 @@ function encodePipeRequest(payload) {
   return Buffer.from(JSON.stringify(payload)).toString('base64url').replace(/=+$/, '');
 }
 
-const PIPE_OBF_KEY = process.env.VITE_PIPE_OBF_KEY || '';
+const PIPE_OBF_KEY = process.env.PIPE_OBF_KEY || process.env.VITE_PIPE_OBF_KEY || '';
 
 function decodePipeResponse(encoded, obfuscationVersion) {
   const padded = encoded + '='.repeat((4 - (encoded.length % 4)) % 4);
