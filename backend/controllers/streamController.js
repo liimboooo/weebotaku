@@ -19,6 +19,8 @@ const ARM_API = 'https://arm.haglund.dev/api/v2/ids';
 const tmdbCache = new Map();
 const episodesCache = new Map();
 const EP_CACHE_TTL = 5 * 60 * 1000;
+const failedEpisodesCache = new Map();
+const FAILED_EPISODES_TTL = 2 * 60 * 1000;
 const MIRURO_JWKS = 'https://www.miruro.tv/.well-known/jwks.json';
 
 let protocolVersion = '0.1.0';
@@ -115,7 +117,7 @@ function deepTranslateIds(obj) {
 async function pipeFetch(payload) {
   const encoded = encodePipeRequest(payload);
   const url = `${MIRURO_PIPE}?e=${encoded}`;
-  const res = await fetch(url, { headers: PIPE_HEADERS, signal: AbortSignal.timeout(15000) });
+  const res = await fetch(url, { headers: PIPE_HEADERS, signal: AbortSignal.timeout(5000) });
   if (!res.ok) throw new Error(`Pipe returned ${res.status}`);
   const obfuscationVersion = res.headers.get('x-obfuscated') || '';
   const body = (await res.text()).trim();
@@ -125,17 +127,27 @@ async function pipeFetch(payload) {
 async function getEpisodesData(anilistId) {
   const cached = episodesCache.get(anilistId);
   if (cached && Date.now() - cached.time < EP_CACHE_TTL) return cached.data;
-  const data = await pipeFetch({
-    path: 'episodes', method: 'GET',
-    query: { anilistId }, body: null, version: await getProtocolVersion(),
-  });
-  deepTranslateIds(data);
-  episodesCache.set(anilistId, { data, time: Date.now() });
-  if (episodesCache.size > 200) {
-    const oldest = episodesCache.keys().next().value;
-    episodesCache.delete(oldest);
+  const failed = failedEpisodesCache.get(anilistId);
+  if (failed && Date.now() - failed.time < FAILED_EPISODES_TTL) {
+    throw new Error('Miruro pipe recently failed (cached)');
   }
-  return data;
+  try {
+    const data = await pipeFetch({
+      path: 'episodes', method: 'GET',
+      query: { anilistId }, body: null, version: await getProtocolVersion(),
+    });
+    deepTranslateIds(data);
+    episodesCache.set(anilistId, { data, time: Date.now() });
+    if (episodesCache.size > 200) {
+      const oldest = episodesCache.keys().next().value;
+      episodesCache.delete(oldest);
+    }
+    failedEpisodesCache.delete(anilistId);
+    return data;
+  } catch (e) {
+    failedEpisodesCache.set(anilistId, { time: Date.now() });
+    throw e;
+  }
 }
 
 async function anilistSearch(query) {

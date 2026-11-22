@@ -377,7 +377,10 @@ export async function getDirectStream(anilistId, episodeNum) {
 
 export async function getMiruroEpisodes(anilistId) {
   try {
-    const res = await fetch(`${API_BASE}/stream/episodes/${anilistId}`);
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 10000);
+    const res = await fetch(`${API_BASE}/stream/episodes/${anilistId}`, { signal: controller.signal });
+    clearTimeout(t);
     if (!res.ok) return null;
     const json = await res.json();
     if (!json.success) return null;
@@ -388,7 +391,10 @@ export async function getMiruroEpisodes(anilistId) {
 export async function getMiruroStream(anilistId, episodeNum, category = 'sub', animeTitle = '') {
   try {
     const titleParam = animeTitle ? `&title=${encodeURIComponent(animeTitle)}` : '';
-    const res = await fetch(`${API_BASE}/stream/auto/${anilistId}/${episodeNum}?cat=${category}${titleParam}`);
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 12000);
+    const res = await fetch(`${API_BASE}/stream/auto/${anilistId}/${episodeNum}?cat=${category}${titleParam}`, { signal: controller.signal });
+    clearTimeout(t);
     if (!res.ok) return null;
     const json = await res.json();
     if (!json.success) return null;
@@ -399,7 +405,10 @@ export async function getMiruroStream(anilistId, episodeNum, category = 'sub', a
 export async function getConsumetStream(anilistId, episodeNum, animeTitle, category = 'sub') {
   try {
     const url = `${API_BASE}/stream/consumet/${anilistId}/${episodeNum}?cat=${category}&title=${encodeURIComponent(animeTitle)}`;
-    const res = await fetch(url);
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 12000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(t);
     if (!res.ok) return null;
     const json = await res.json();
     if (!json.success) return null;
