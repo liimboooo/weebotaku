@@ -761,7 +761,7 @@ export default function SettingsPage() {
           ) : (
             <div className="st-detail">
               {renderBack()}
-              <AnimatePresence mode="wait">
+              <AnimatePresence >
                 {page === "account" && renderAccount()}
                 {page === "preferences" && renderPreferences()}
                 {page === "notifications" && renderNotifications()}

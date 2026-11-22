@@ -1737,7 +1737,7 @@ export default function AnimeDetail() {
                     <p className="text-xs text-[#555] text-center py-12">{epSearch ? 'No matching episodes' : 'No episodes'}</p>
                   ) : (
                     <>
-                      <AnimatePresence mode="wait">
+                      <AnimatePresence >
                         {sortedEpisodes.slice(0, visibleCount).map((ep, i) => {
                           const realIdx = episodes.indexOf(ep);
                           const isActive = realIdx === epIndex;

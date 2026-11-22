@@ -244,7 +244,7 @@ export default function HistoryPage() {
                   <TrendingUp size={13} /> {filtered.length} entries
                 </span>
 
-                <AnimatePresence mode="wait">
+                <AnimatePresence >
                   {confirmClear ? (
                     <motion.div
                       key="confirm"

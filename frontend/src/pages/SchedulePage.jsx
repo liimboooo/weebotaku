@@ -419,7 +419,7 @@ export default function SchedulePage() {
         </motion.div>
 
         {/* ─── Format filter ───────────────────────── */}
-        <AnimatePresence mode="wait">
+        <AnimatePresence >
           {formats.length > 1 && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
@@ -454,7 +454,7 @@ export default function SchedulePage() {
           <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-neutral-800 to-transparent -translate-x-1/2 pointer-events-none" />
           <div className="md:hidden absolute left-2.5 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-neutral-800 to-transparent pointer-events-none" />
 
-          <AnimatePresence mode="wait">
+          <AnimatePresence >
             {isLoading ? (
               <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 {Array.from({ length: 5 }).map((_, i) => (
