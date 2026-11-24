@@ -183,12 +183,20 @@ exports.searchAnime = async (req, res) => {
   }
 };
 
+const episodesCache2 = new Map();
+const EP2_TTL = 10 * 60 * 1000;
+
 exports.getEpisodes = async (req, res) => {
   try {
     const anilistId = parseInt(req.params.anilistId, 10);
     if (!anilistId) return res.status(400).json({ success: false, message: 'anilistId required' });
 
-    const ahRes = await fetch(`${ANIHUB_API}/episodes/${anilistId}`, { signal: AbortSignal.timeout(15000) });
+    const cached = episodesCache2.get(anilistId);
+    if (cached && Date.now() - cached.time < EP2_TTL) {
+      return res.json({ success: true, data: cached.data });
+    }
+
+    const ahRes = await fetch(`${ANIHUB_API}/episodes/${anilistId}`, { signal: AbortSignal.timeout(60000) });
     if (!ahRes.ok) return res.status(404).json({ success: false, message: 'No episodes found' });
     const ahData = await ahRes.json();
 
@@ -218,7 +226,9 @@ exports.getEpisodes = async (req, res) => {
       }
     }
 
-    res.json({ success: true, data: { mappings: ahData.mappings || {}, providers } });
+    const result = { mappings: ahData.mappings || {}, providers };
+    episodesCache2.set(anilistId, { data: result, time: Date.now() });
+    res.json({ success: true, data: result });
   } catch (err) {
     console.error('getEpisodes (anihub) error:', err.message);
     res.status(500).json({ success: false, message: err.message });
@@ -293,7 +303,7 @@ exports.autoSources = async (req, res) => {
     const providersToTry = ['anikoto', 'reanime', 'anizone', 'aniwaves', 'animegg', 'animenosub', 'mkissa', 'senshi', 'kaa', 'animedunya', 'animeonsen', 'anipm'];
     for (const pname of providersToTry) {
       try {
-        const ahRes = await fetch(`${ANIHUB_API}/watch/${pname}/${aid}/${category}/${pname}-${epNum}`, { signal: AbortSignal.timeout(15000) });
+        const ahRes = await fetch(`${ANIHUB_API}/watch/${pname}/${aid}/${category}/${pname}-${epNum}`, { signal: AbortSignal.timeout(30000) });
         if (!ahRes.ok) continue;
         const ahData = await ahRes.json();
         const streams = ahData.streams || [];

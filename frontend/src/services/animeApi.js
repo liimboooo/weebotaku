@@ -365,7 +365,7 @@ export async function getDirectStream(anilistId, episodeNum) {
 export async function getMiruroEpisodes(anilistId) {
   try {
     const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 10000);
+    const t = setTimeout(() => controller.abort(), 65000);
     const res = await fetch(`${API_BASE}/stream/episodes/${anilistId}`, { signal: controller.signal });
     clearTimeout(t);
     if (!res.ok) return null;
