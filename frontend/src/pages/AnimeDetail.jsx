@@ -76,6 +76,7 @@ export default function AnimeDetail() {
   const [sourceLookupDone, setSourceLookupDone] = useState(false);
   const [streamMode, setStreamMode] = useState("iframe");
   const [introOutro, setIntroOutro] = useState({ intro: null, outro: null });
+  const introOutroRef = useRef({ intro: null, outro: null });
   const [showSkipIntro, setShowSkipIntro] = useState(false);
   const [showSkipOutro, setShowSkipOutro] = useState(false);
   const [autoNextCountdown, setAutoNextCountdown] = useState(null);
@@ -632,6 +633,7 @@ export default function AnimeDetail() {
     addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img, 0, anime?.episodes);
     setSeekTo(null);
     setIntroOutro({ intro: null, outro: null });
+    introOutroRef.current = { intro: null, outro: null };
     setShowSkipIntro(false);
     setShowSkipOutro(false);
     setAutoNextCountdown(null);
@@ -655,7 +657,9 @@ export default function AnimeDetail() {
           const primary = await getMiruroStream(aniId, epNum, primaryCat, streamTitle).catch(() => null);
           if (cancelled) return;
           if (primary?.intro || primary?.outro) {
-            setIntroOutro({ intro: primary.intro || null, outro: primary.outro || null });
+            const io = { intro: primary.intro || null, outro: primary.outro || null };
+            setIntroOutro(io);
+            introOutroRef.current = io;
           }
           if (primary?.subtitles) setSubtitles(primary.subtitles);
 
@@ -667,7 +671,7 @@ export default function AnimeDetail() {
             // Background: add the other language to the server list without blocking
             getMiruroStream(aniId, epNum, otherCat, streamTitle).then(other => {
               if (cancelled || !other?.stream?.url || other.stream.url === primary.stream.url) return;
-              if (other.intro || other.outro) setIntroOutro(prev => ({ intro: prev.intro || other.intro || null, outro: prev.outro || other.outro || null }));
+              if (other.intro || other.outro) setIntroOutro(prev => { const io = { intro: prev.intro || other.intro || null, outro: prev.outro || other.outro || null }; introOutroRef.current = io; return io; });
               setServers(prev => prev.some(s => s.type === otherCat) ? prev : [...prev, { label: labelFor(otherCat), url: other.stream.url, type: otherCat }]);
             }).catch(() => {});
             return;
@@ -677,7 +681,7 @@ export default function AnimeDetail() {
           const other = await getMiruroStream(aniId, epNum, otherCat, streamTitle).catch(() => null);
           if (cancelled) return;
           if (other?.intro || other?.outro) {
-            setIntroOutro(prev => ({ intro: prev.intro || other.intro || null, outro: prev.outro || other.outro || null }));
+            setIntroOutro(prev => { const io = { intro: prev.intro || other.intro || null, outro: prev.outro || other.outro || null }; introOutroRef.current = io; return io; });
           }
           if (other?.stream?.url) {
             hlsServers.push({ label: labelFor(otherCat), url: other.stream.url, type: otherCat });
@@ -703,10 +707,14 @@ export default function AnimeDetail() {
                 hlsServers.push({ label: 'Sub (HLS)', url: direct.stream.url, type: 'sub' });
               }
               if (direct?.intro || direct?.outro) {
-                setIntroOutro(prev => ({
-                  intro: prev.intro || direct.intro,
-                  outro: prev.outro || direct.outro,
-                }));
+                setIntroOutro(prev => {
+                  const io = {
+                    intro: prev.intro || direct.intro,
+                    outro: prev.outro || direct.outro,
+                  };
+                  introOutroRef.current = io;
+                  return io;
+                });
               }
             } catch (e) { console.error('[Otaku] Failed to get stream URLs:', e); }
           }
@@ -867,16 +875,17 @@ export default function AnimeDetail() {
       if (dur) setDuration(dur);
       const settings = loadSettings();
 
-      if (introOutro.intro && t >= introOutro.intro.start && t < introOutro.intro.end) {
+      const _intro = introOutroRef.current?.intro || introOutro.intro;
+      if (_intro && t >= _intro.start && t < _intro.end) {
         if (settings.skipIntro && !autoSkippedIntro.done) {
           autoSkippedIntro.done = true;
-          video.currentTime = introOutro.intro.end;
+          video.currentTime = _intro.end;
           return;
         }
         setShowSkipIntro(true);
       } else {
         setShowSkipIntro(false);
-        if (introOutro.intro && t >= introOutro.intro.end) autoSkippedIntro.done = true;
+        if (_intro && t >= _intro.end) autoSkippedIntro.done = true;
       }
 
       if (introOutro.outro && t >= introOutro.outro.start && t < introOutro.outro.end) {
@@ -981,11 +990,12 @@ export default function AnimeDetail() {
 
   const handleSkipIntro = useCallback(() => {
     const video = hlsVideoRef.current;
-    if (video && introOutro.intro) {
-      video.currentTime = introOutro.intro.end;
+    const io = introOutroRef.current || introOutro;
+    if (video && io?.intro) {
+      video.currentTime = io.intro.end;
       setShowSkipIntro(false);
     }
-  }, [introOutro.intro]);
+  }, [introOutro]);
 
   const handleSkipOutro = useCallback(() => {
     if (autoNext && epIndex < episodes.length - 1) {
