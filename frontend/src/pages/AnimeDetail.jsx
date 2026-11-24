@@ -1375,7 +1375,7 @@ export default function AnimeDetail() {
               )}
               {/* hls video */}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && streamMode === "hls" && (
-                <video ref={hlsVideoRef} key={`hls-${episode?.episode || 0}-${serverIndex}`} className="w-full h-full object-contain" autoPlay playsInline style={{ background: '#000' }}>
+                <video ref={hlsVideoRef} crossOrigin="anonymous" key={`hls-${episode?.episode || 0}-${serverIndex}`} className="w-full h-full object-contain" autoPlay playsInline style={{ background: '#000' }}>
                   {(subtitles || []).filter(s => s.url).map((s, i) => (
                     <track key={i} kind="subtitles" src={s.url} srcLang={s.srclang || 'en'} label={s.label || `Track ${i + 1}`} default={!!s.default} />
                   ))}
