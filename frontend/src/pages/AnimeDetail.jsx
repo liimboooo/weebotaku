@@ -47,6 +47,7 @@ export default function AnimeDetail() {
   const [servers, setServers] = useState([]);
   const [serverIndex, setServerIndex] = useState(0);
   const [streamUrl, setStreamUrl] = useState("");
+  const [subtitles, setSubtitles] = useState([]);
   const [error, setError] = useState("");
   const [iframeError, setIframeError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
@@ -619,7 +620,7 @@ export default function AnimeDetail() {
     if (autoNextTimerRef.current) { clearInterval(autoNextTimerRef.current); autoNextTimerRef.current = null; }
     streamRetriesRef.current = 0;
     (async () => {
-      setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setServerIndex(0);
+      setError(""); setStreamLoading(true); setStreamUrl(""); setServers([]); setSubtitles([]); setServerIndex(0);
       try {
         const epNum = episode.episode || (epIndex + 1);
         const aniId = watchAnime.anilistId || parseInt(id);
@@ -638,6 +639,7 @@ export default function AnimeDetail() {
           if (primary?.intro || primary?.outro) {
             setIntroOutro({ intro: primary.intro || null, outro: primary.outro || null });
           }
+          if (primary?.subtitles) setSubtitles(primary.subtitles);
 
           if (primary?.stream?.url) {
             setStreamMode('hls');
@@ -661,6 +663,7 @@ export default function AnimeDetail() {
           }
           if (other?.stream?.url) {
             hlsServers.push({ label: labelFor(otherCat), url: other.stream.url, type: otherCat });
+            if (other.subtitles) setSubtitles(prev => prev.length ? prev : other.subtitles);
           }
 
           if (hlsServers.length === 0) {
@@ -669,6 +672,7 @@ export default function AnimeDetail() {
               if (cancelled) return;
               if (consumet?.stream?.url) {
                 hlsServers.push({ label: 'Sub (HLS)', url: consumet.stream.url, type: 'sub' });
+                if (consumet.subtitles) setSubtitles(prev => prev.length ? prev : consumet.subtitles);
               }
             } catch (e) { console.error('[Otaku] Failed to get Consumet stream:', e); }
           }
@@ -1355,7 +1359,11 @@ export default function AnimeDetail() {
               )}
               {/* hls video */}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && streamMode === "hls" && (
-                <video ref={hlsVideoRef} key={`hls-${episode?.episode || 0}-${serverIndex}`} className="w-full h-full object-contain" autoPlay playsInline style={{ background: '#000' }} />
+                <video ref={hlsVideoRef} key={`hls-${episode?.episode || 0}-${serverIndex}`} className="w-full h-full object-contain" autoPlay playsInline style={{ background: '#000' }}>
+                  {(subtitles || []).filter(s => s.url).map((s, i) => (
+                    <track key={i} kind="subtitles" src={s.url} srcLang={s.srclang || 'en'} label={s.label || `Track ${i + 1}`} default={!!s.default} />
+                  ))}
+                </video>
               )}
               {/* iframe */}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && streamMode === "iframe" && (

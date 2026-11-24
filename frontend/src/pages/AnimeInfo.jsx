@@ -137,7 +137,19 @@ export default function AnimeInfo() {
     if (!anime?.id) return;
     let cancelled = false;
     (async () => {
-      setEpsLoading(true);
+      // Show placeholders immediately so the page isn't blocked by the
+      // (slow) Anihub fetch.
+      const total = anime?.episodes || 0;
+      if (total > 0) {
+        setEpisodes(Array.from({ length: total }, (_, i) => ({
+          episode: i + 1,
+          title: `Episode ${i + 1}`,
+          thumbnail: null,
+          aired: null,
+        })).reverse());
+      }
+      setEpsLoading(false);
+
       const miruro = await getMiruroEpisodes(anime.id).catch(() => null);
       if (cancelled) return;
       if (miruro?.providers) {
