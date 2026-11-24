@@ -274,6 +274,9 @@ exports.getSources = async (req, res) => {
   }
 };
 
+const streamCache = new Map();
+const STREAM_TTL = 5 * 60 * 1000;
+
 exports.autoSources = async (req, res) => {
   try {
     const { anilistId, episodeNum } = req.params;
@@ -282,10 +285,16 @@ exports.autoSources = async (req, res) => {
     const epNum = parseInt(episodeNum, 10);
     if (!aid || !epNum) return res.status(400).json({ success: false, message: 'Missing params' });
 
+    const cacheKey = `${aid}:${epNum}:${category}`;
+    const cached = streamCache.get(cacheKey);
+    if (cached && Date.now() - cached.time < STREAM_TTL) {
+      return res.json({ success: true, data: cached.data });
+    }
+
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
     // Try Anihub providers in order until one returns streams.
-    const providersToTry = ['anikoto', 'reanime', 'anizone', 'aniwaves', 'animegg', 'animenosub', 'mkissa', 'senshi', 'kaa', 'animedunya', 'animeonsen', 'anipm'];
+    const providersToTry = ['reanime', 'anikoto', 'aniwaves', 'animegg', 'anizone', 'animenosub', 'mkissa', 'senshi', 'kaa', 'animedunya', 'animeonsen', 'anipm'];
     for (const pname of providersToTry) {
       try {
         const ahRes = await fetch(`${ANIHUB_API}/watch/${pname}/${aid}/${category}/${pname}-${epNum}`, { signal: AbortSignal.timeout(30000) });
@@ -297,18 +306,17 @@ exports.autoSources = async (req, res) => {
 
         const streamUrl = `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(activeHls.url)}&ref=${encodeURIComponent(activeHls.referer || '')}`;
 
-        return res.json({
-          success: true,
-          data: {
-            provider: `${pname}:${activeHls.server}`,
-            stream: { url: streamUrl, quality: activeHls.server || 'auto' },
-            subtitles: (ahData.subtitles || [])
-              .filter(s => s.url && !/thumbnail/i.test(s.label || '') && !/preview\/thumbnails/i.test(s.url))
-              .map(s => ({ url: s.url, label: s.label || s.srclang, srclang: s.srclang || 'en', default: !!s.default })),
-            intro: ahData.intro || activeHls.intro || null,
-            outro: ahData.outro || activeHls.outro || null,
-          },
-        });
+        const result = {
+          provider: `${pname}:${activeHls.server}`,
+          stream: { url: streamUrl, quality: activeHls.server || 'auto' },
+          subtitles: (ahData.subtitles || [])
+            .filter(s => s.url && !/thumbnail/i.test(s.label || '') && !/preview\/thumbnails/i.test(s.url))
+            .map(s => ({ url: s.url, label: s.label || s.srclang, srclang: s.srclang || 'en', default: !!s.default })),
+          intro: ahData.intro || activeHls.intro || null,
+          outro: ahData.outro || activeHls.outro || null,
+        };
+        streamCache.set(cacheKey, { data: result, time: Date.now() });
+        return res.json({ success: true, data: result });
       } catch { continue; }
     }
 
@@ -412,7 +420,7 @@ exports.consumetSources = async (req, res) => {
     if (!aid || !epNum) return res.status(400).json({ success: false, message: 'Missing params' });
 
     // Delegate to Anihub (consumet is dead)
-    const ahRes = await fetch(`${ANIHUB_API}/watch/anikoto/${aid}/${req.query.cat || 'sub'}/anikoto-${epNum}`, { signal: AbortSignal.timeout(15000) });
+    const ahRes = await fetch(`${ANIHUB_API}/watch/reanime/${aid}/${req.query.cat || 'sub'}/reanime-${epNum}`, { signal: AbortSignal.timeout(15000) });
     if (!ahRes.ok) return res.status(404).json({ success: false, message: 'No stream found' });
     const ahData = await ahRes.json();
     const stream = (ahData.streams || []).find(s => s.type === 'hls' && s.url && s.isActive) || (ahData.streams || []).find(s => s.type === 'hls' && s.url);
@@ -420,7 +428,7 @@ exports.consumetSources = async (req, res) => {
     res.json({
       success: true,
       data: {
-        provider: 'anikoto:' + (stream.server || 'HD'),
+        provider: 'reanime:' + (stream.server || 'HD'),
         stream: { url: `${req.protocol}://${req.get('host')}/api/stream/proxy?url=${encodeURIComponent(stream.url)}&ref=${encodeURIComponent(stream.referer || '')}`, quality: stream.server || 'auto' },
         subtitles: (ahData.subtitles || []).map(s => ({ url: s.url, label: s.label || s.srclang })),
         intro: ahData.intro || null,
