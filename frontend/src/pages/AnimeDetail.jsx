@@ -604,7 +604,25 @@ export default function AnimeDetail() {
       epTimerRef.current = null;
       setError("");
     }
-  }, [streamUrl]);
+    // Enable default subtitle track when available
+    const video = hlsVideoRef.current;
+    if (video && subtitles.length > 0) {
+      setTimeout(() => {
+        try {
+          for (let i = 0; i < video.textTracks.length; i++) {
+            const t = video.textTracks[i];
+            if (t.kind === 'subtitles') {
+              t.mode = t.label && /english/i.test(t.label) ? 'showing' : t.mode;
+            }
+          }
+          // Enable first English track
+          const engTrack = Array.from(video.textTracks).find(t => t.kind === 'subtitles' && /english/i.test(t.label || ''));
+          if (engTrack) engTrack.mode = 'showing';
+          else if (video.textTracks.length > 0) video.textTracks[0].mode = 'showing';
+        } catch (e) { console.error('[Otaku] subtitle track enable failed:', e); }
+      }, 500);
+    }
+  }, [streamUrl, subtitles]);
 
   const episode = episodes[epIndex] || null;
 

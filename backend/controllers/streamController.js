@@ -317,7 +317,7 @@ exports.autoSources = async (req, res) => {
           data: {
             provider: `${pname}:${activeHls.server}`,
             stream: { url: streamUrl, quality: activeHls.server || 'auto' },
-            subtitles: (ahData.subtitles || []).map(s => ({ url: s.url, label: s.label || s.srclang })),
+            subtitles: (ahData.subtitles || []).map(s => ({ url: s.url, label: s.label || s.srclang, srclang: s.srclang || 'en', default: !!s.default })),
             intro: ahData.intro || activeHls.intro || null,
             outro: ahData.outro || activeHls.outro || null,
           },
