@@ -365,7 +365,7 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
             setStreamCache(c => ({ ...c, [episode.url]: { servers: urls, _mode: "iframe" } }));
           }
         }
-        else setError("No video servers found.");
+        else setError("Streaming is currently unavailable.");
       } catch (e) { console.error('[Otaku] Stream load error:', e); setError("Failed to load stream."); }
       finally { setStreamLoading(false); }
     })();

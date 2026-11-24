@@ -26,20 +26,27 @@ function getProviderInstance(provider) {
   return getHianime();
 }
 
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`timeout:${label}`)), ms)),
+  ]);
+}
+
 async function searchByTitle(title, provider = 'hianime') {
   const p = getProviderInstance(provider);
-  const res = await p.search(title);
+  const res = await withTimeout(p.search(title), 6000, 'search:' + provider);
   return res.results || [];
 }
 
 async function getAnimeInfo(providerId, provider = 'hianime') {
   const p = getProviderInstance(provider);
-  return await p.fetchAnimeInfo(providerId);
+  return await withTimeout(p.fetchAnimeInfo(providerId), 6000, 'info:' + provider);
 }
 
 async function getEpisodeSources(episodeId, provider = 'hianime') {
   const p = getProviderInstance(provider);
-  return await p.fetchEpisodeSources(episodeId);
+  return await withTimeout(p.fetchEpisodeSources(episodeId), 8000, 'sources:' + provider);
 }
 
 function scoreMatch(title, query) {

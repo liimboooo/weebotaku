@@ -183,34 +183,9 @@ exports.searchAnime = async (req, res) => {
 };
 
 exports.getEpisodes = async (req, res) => {
-  try {
-    const anilistId = parseInt(req.params.anilistId, 10);
-    if (!anilistId) return res.status(400).json({ success: false, message: 'anilistId required' });
-
-    const data = await getEpisodesData(anilistId);
-
-    const providers = data.providers || {};
-    const simplified = {};
-    for (const [pname, pdata] of Object.entries(providers)) {
-      const episodes = pdata.episodes || {};
-      simplified[pname] = {};
-      const cats = typeof episodes === 'object' && !Array.isArray(episodes) ? episodes : { sub: episodes };
-      for (const [cat, epList] of Object.entries(cats)) {
-        if (!Array.isArray(epList)) continue;
-        simplified[pname][cat] = epList.map(ep => ({
-          number: ep.number,
-          title: ep.title || `Episode ${ep.number}`,
-          id: ep.id,
-          image: ep.image || null,
-          description: ep.description || ep.overview || null,
-        }));
-      }
-    }
-
-    res.json({ success: true, data: { mappings: data.mappings, providers: simplified } });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
+  // Streaming providers are currently unavailable. Return empty so the UI
+  // falls back to placeholder episode lists without hanging.
+  res.json({ success: true, data: { mappings: {}, providers: {} } });
 };
 
 exports.getSources = async (req, res) => {
@@ -268,7 +243,9 @@ exports.getSources = async (req, res) => {
 };
 
 exports.autoSources = async (req, res) => {
-  try {
+  // Streaming providers are currently unavailable.
+  return res.status(404).json({ success: false, message: 'Streaming is temporarily unavailable' });
+  try { void 0;
     const { anilistId, episodeNum } = req.params;
     const category = req.query.cat || 'sub';
     const aid = parseInt(anilistId, 10);
@@ -459,7 +436,8 @@ exports.testProviders = async (req, res) => {
 };
 
 exports.consumetSources = async (req, res) => {
-  try {
+  return res.status(404).json({ success: false, message: 'Streaming is temporarily unavailable' });
+  try { void 0;
     const { anilistId, episodeNum } = req.params;
     const aid = parseInt(anilistId, 10);
     const epNum = parseInt(episodeNum, 10);

@@ -358,62 +358,23 @@ async function ezvidapiResolveClient(tmdbId, season, episode) {
 }
 
 export async function getDirectStream(anilistId, episodeNum) {
-  try {
-    const tmdb = await anilistToTmdbClient(anilistId);
-    if (!tmdb) return null;
-    const ezvid = await ezvidapiResolveClient(tmdb.id, tmdb.season, episodeNum);
-    if (!ezvid) return null;
-    const allSubs = (ezvid.subtitles || []).map(s => ({ url: s.url, label: s.label || s.language || '' }));
-    const engSubs = allSubs.filter(s => /english/i.test(s.label));
-    return {
-      provider: `ezvidapi:${ezvid.provider}`,
-      stream: { url: ezvid.stream_url, quality: 'auto' },
-      subtitles: engSubs.length > 0 ? engSubs : allSubs.slice(0, 3),
-      intro: null,
-      outro: null,
-    };
-  } catch { return null; }
+  // Streaming providers are currently unavailable.
+  return null;
 }
 
 export async function getMiruroEpisodes(anilistId) {
-  try {
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch(`${API_BASE}/stream/episodes/${anilistId}`, { signal: controller.signal });
-    clearTimeout(t);
-    if (!res.ok) return null;
-    const json = await res.json();
-    if (!json.success) return null;
-    return json.data;
-  } catch { return null; }
+  // Streaming providers are currently unavailable.
+  return null;
 }
 
 export async function getMiruroStream(anilistId, episodeNum, category = 'sub', animeTitle = '') {
-  try {
-    const titleParam = animeTitle ? `&title=${encodeURIComponent(animeTitle)}` : '';
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 12000);
-    const res = await fetch(`${API_BASE}/stream/auto/${anilistId}/${episodeNum}?cat=${category}${titleParam}`, { signal: controller.signal });
-    clearTimeout(t);
-    if (!res.ok) return null;
-    const json = await res.json();
-    if (!json.success) return null;
-    return json.data;
-  } catch { return null; }
+  // Streaming providers are currently unavailable.
+  return null;
 }
 
 export async function getConsumetStream(anilistId, episodeNum, animeTitle, category = 'sub') {
-  try {
-    const url = `${API_BASE}/stream/consumet/${anilistId}/${episodeNum}?cat=${category}&title=${encodeURIComponent(animeTitle)}`;
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 12000);
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(t);
-    if (!res.ok) return null;
-    const json = await res.json();
-    if (!json.success) return null;
-    return json.data;
-  } catch { return null; }
+  // Streaming providers are currently unavailable.
+  return null;
 }
 
 export async function findStreamingSource(animeName, anilistId) {
@@ -423,13 +384,7 @@ export async function findStreamingSource(animeName, anilistId) {
 // Last-resort aggregator embed (multiembed.mov). JS-rendered player, but the
 // URL itself is a valid iframe src. Requires a TMDB id resolved from AniList.
 export async function getMultiEmbedStream(anilistId, episodeNum) {
-  try {
-    const tmdb = await anilistToTmdbClient(anilistId);
-    if (!tmdb) return null;
-    const s = tmdb.season || 1;
-    const e = episodeNum || 1;
-    const url = `https://multiembed.mov/?video_id=${tmdb.id}&tmdb=1&s=${s}&e=${e}`;
-    return { provider: 'multiembed', url, type: 'sub' };
-  } catch { return null; }
+  // Streaming providers are currently unavailable.
+  return null;
 }
 
