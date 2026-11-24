@@ -363,18 +363,44 @@ export async function getDirectStream(anilistId, episodeNum) {
 }
 
 export async function getMiruroEpisodes(anilistId) {
-  // Streaming providers are currently unavailable.
-  return null;
+  try {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 10000);
+    const res = await fetch(`${API_BASE}/stream/episodes/${anilistId}`, { signal: controller.signal });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (!json.success) return null;
+    return json.data;
+  } catch { return null; }
 }
 
 export async function getMiruroStream(anilistId, episodeNum, category = 'sub', animeTitle = '') {
-  // Streaming providers are currently unavailable.
-  return null;
+  try {
+    const titleParam = animeTitle ? `&title=${encodeURIComponent(animeTitle)}` : '';
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 12000);
+    const res = await fetch(`${API_BASE}/stream/auto/${anilistId}/${episodeNum}?cat=${category}${titleParam}`, { signal: controller.signal });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (!json.success) return null;
+    return json.data;
+  } catch { return null; }
 }
 
 export async function getConsumetStream(anilistId, episodeNum, animeTitle, category = 'sub') {
-  // Streaming providers are currently unavailable.
-  return null;
+  try {
+    const url = `${API_BASE}/stream/consumet/${anilistId}/${episodeNum}?cat=${category}&title=${encodeURIComponent(animeTitle)}`;
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 12000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (!json.success) return null;
+    return json.data;
+  } catch { return null; }
 }
 
 export async function findStreamingSource(animeName, anilistId) {

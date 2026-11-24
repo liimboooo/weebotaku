@@ -715,7 +715,7 @@ export default function AnimeDetail() {
             setStreamLoading(false);
             return;
           }
-          setError("Streaming is currently unavailable.");
+          setError("No video servers found.");
         }
       } catch (e) { console.error('[Otaku] Stream load error:', e); if (!cancelled) setError("Failed to load stream."); }
       finally { if (!cancelled) setStreamLoading(false); }

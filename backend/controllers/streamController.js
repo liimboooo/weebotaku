@@ -3,6 +3,7 @@ const fetch = require('node-fetch');
 const { consumetStream, consumetDirectSource } = require('../services/consumetService');
 
 const MIRURO_PIPE = 'https://www.miruro.tv/api/secure/pipe';
+const ANIHUB_API = process.env.ANIHUB_API_URL || 'http://localhost:4000';
 const ANILIST_URL = 'https://graphql.anilist.co';
 const PIPE_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -183,9 +184,45 @@ exports.searchAnime = async (req, res) => {
 };
 
 exports.getEpisodes = async (req, res) => {
-  // Streaming providers are currently unavailable. Return empty so the UI
-  // falls back to placeholder episode lists without hanging.
-  res.json({ success: true, data: { mappings: {}, providers: {} } });
+  try {
+    const anilistId = parseInt(req.params.anilistId, 10);
+    if (!anilistId) return res.status(400).json({ success: false, message: 'anilistId required' });
+
+    const ahRes = await fetch(`${ANIHUB_API}/episodes/${anilistId}`, { signal: AbortSignal.timeout(15000) });
+    if (!ahRes.ok) return res.status(404).json({ success: false, message: 'No episodes found' });
+    const ahData = await ahRes.json();
+
+    // Transform Anihub format {provider: {meta, episodes: {sub, dub}}} into
+    // weebotaku format {providers: {provider: {sub: [...], dub: [...]}}}.
+    const providers = {};
+    const providerNames = ['anikoto', 'reanime', 'anizone', 'aniwaves', 'animegg', 'animenosub', 'mkissa', 'senshi', 'kaa', 'animedunya', 'animeonsen', 'anipm', '2dhive', 'anibd'];
+    for (const name of providerNames) {
+      const p = ahData[name];
+      if (!p || !p.episodes) continue;
+      const subEps = (p.episodes.sub || []).map((e) => ({
+        number: e.number,
+        title: e.title || `Episode ${e.number}`,
+        id: e.id,
+        image: e.image || null,
+        description: e.description || null,
+      }));
+      const dubEps = (p.episodes.dub || []).map((e) => ({
+        number: e.number,
+        title: e.title || `Episode ${e.number}`,
+        id: e.id,
+        image: e.image || null,
+        description: e.description || null,
+      }));
+      if (subEps.length || dubEps.length) {
+        providers[name] = { sub: subEps, dub: dubEps };
+      }
+    }
+
+    res.json({ success: true, data: { mappings: ahData.mappings || {}, providers } });
+  } catch (err) {
+    console.error('getEpisodes (anihub) error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
 };
 
 exports.getSources = async (req, res) => {
@@ -243,9 +280,7 @@ exports.getSources = async (req, res) => {
 };
 
 exports.autoSources = async (req, res) => {
-  // Streaming providers are currently unavailable.
-  return res.status(404).json({ success: false, message: 'Streaming is temporarily unavailable' });
-  try { void 0;
+  try {
     const { anilistId, episodeNum } = req.params;
     const category = req.query.cat || 'sub';
     const aid = parseInt(anilistId, 10);
@@ -254,92 +289,30 @@ exports.autoSources = async (req, res) => {
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
-    // Miruro pipe is Cloudflare-gated (403 from datacenter IPs / node-fetch).
-    // Don't let a pipe failure abort the whole request — fall through to
-    // Consumet / ezvidapi fallbacks below instead of 500ing.
-    let providers = {};
-    try {
-      const epData = await getEpisodesData(aid);
-      providers = epData.providers || {};
-    } catch (pipeErr) {
-      console.error(`[stream] Miruro episodes failed for ${aid}:`, pipeErr.message);
-      providers = {};
-    }
-
-    const availableProviders = Object.keys(providers);
-    const providerOrder = [...new Set([...PROVIDER_PRIORITY, ...availableProviders])];
-
-    for (const pname of providerOrder) {
-      const provData = providers[pname];
-      if (!provData) continue;
-      const epsList = provData.episodes?.[category] || [];
-      const ep = epsList.find(e => e.number === epNum);
-      if (!ep) continue;
-
+    // Try Anihub providers in order until one returns streams.
+    const providersToTry = ['anikoto', 'reanime', 'anizone', 'aniwaves', 'animegg', 'animenosub', 'mkissa', 'senshi', 'kaa', 'animedunya', 'animeonsen', 'anipm'];
+    for (const pname of providersToTry) {
       try {
-        const encId = Buffer.from(ep.id).toString('base64url').replace(/=+$/, '');
-        const sources = await pipeFetch({
-          path: 'sources', method: 'GET',
-          query: { episodeId: encId, provider: pname, category, anilistId: aid },
-          body: null, version: await getProtocolVersion(),
+        const ahRes = await fetch(`${ANIHUB_API}/watch/${pname}/${aid}/${category}/${pname}-${epNum}`, { signal: AbortSignal.timeout(15000) });
+        if (!ahRes.ok) continue;
+        const ahData = await ahRes.json();
+        const streams = ahData.streams || [];
+        const activeHls = streams.find(s => s.type === 'hls' && s.url && s.isActive) || streams.find(s => s.type === 'hls' && s.url);
+        if (!activeHls) continue;
+
+        const streamUrl = `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(activeHls.url)}&ref=${encodeURIComponent(activeHls.referer || '')}`;
+
+        return res.json({
+          success: true,
+          data: {
+            provider: `${pname}:${activeHls.server}`,
+            stream: { url: streamUrl, quality: activeHls.server || 'auto' },
+            subtitles: (ahData.subtitles || []).map(s => ({ url: s.url, label: s.label || s.srclang })),
+            intro: ahData.intro || activeHls.intro || null,
+            outro: ahData.outro || activeHls.outro || null,
+          },
         });
-
-        const stream = (sources.streams || []).find(s => s.type === 'hls' && s.url && !BLOCKED_CDN_HOSTS.some(h => s.url.includes(h)));
-
-        if (stream) {
-          const hasCors = CORS_CDN_HOSTS.some(h => stream.url.includes(h));
-          const streamUrl = hasCors
-            ? stream.url
-            : `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(stream.url)}&ref=${encodeURIComponent(stream.referer || '')}`;
-
-          return res.json({
-            success: true,
-            data: {
-              provider: pname,
-              stream: { url: streamUrl, quality: stream.quality },
-              subtitles: (sources.subtitles || []).map(s => ({ url: s.file || s.url, label: s.label || s.language })),
-              intro: sources.intro || null,
-              outro: sources.outro || null,
-            },
-          });
-        }
-
       } catch { continue; }
-    }
-
-    // Fallback 1: Consumet providers (AnimeUnity currently works; Hianime/Pahe are down)
-    try {
-      const title = req.query.title || '';
-      if (title) {
-        const result = await consumetStream(aid, epNum, category, title);
-        if (result?.stream?.url) {
-          return res.json({ success: true, data: result });
-        }
-      }
-    } catch (e) {
-      console.error('[stream] Consumet fallback failed:', e.message);
-    }
-
-    // Fallback 2: try ezvidapi (TMDB-based) only for sub category
-    if (category === 'sub') {
-      try {
-        const tmdb = await anilistToTmdb(aid);
-        if (tmdb) {
-          const ezvid = await ezvidapiResolve(tmdb.id, tmdb.season, epNum);
-          if (ezvid) {
-            return res.json({
-              success: true,
-              data: {
-                provider: `ezvidapi:${ezvid.provider}`,
-                stream: { url: ezvid.stream_url, quality: 'auto' },
-                subtitles: (ezvid.subtitles || []).filter(s => !s.label || /english/i.test(s.label || s.language || '')).map(s => ({ url: s.url, label: s.label || s.language })),
-                intro: null,
-                outro: null,
-              },
-            });
-          }
-        }
-      } catch {}
     }
 
     res.status(404).json({ success: false, message: 'No working stream found across all providers' });
