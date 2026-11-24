@@ -196,7 +196,7 @@ exports.getEpisodes = async (req, res) => {
       return res.json({ success: true, data: cached.data });
     }
 
-    const ahRes = await fetch(`${ANIHUB_API}/episodes/${anilistId}`, { signal: AbortSignal.timeout(60000) });
+    const ahRes = await fetch(`${ANIHUB_API}/episodes/anikoto/reanime/${anilistId}`, { signal: AbortSignal.timeout(15000) });
     if (!ahRes.ok) return res.status(404).json({ success: false, message: 'No episodes found' });
     const ahData = await ahRes.json();
 
