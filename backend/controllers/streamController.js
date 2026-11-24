@@ -1,6 +1,5 @@
 const zlib = require('zlib');
 const fetch = require('node-fetch');
-const { consumetStream, consumetDirectSource } = require('../services/consumetService');
 
 const MIRURO_PIPE = 'https://www.miruro.tv/api/secure/pipe';
 const ANIHUB_API = process.env.ANIHUB_API_URL || 'http://localhost:4000';
@@ -244,44 +243,30 @@ exports.getSources = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing params' });
     }
 
-    const epData = await getEpisodesData(aid);
+    const ahRes = await fetch(`${ANIHUB_API}/watch/${provider}/${aid}/${category || 'sub'}/${provider}-${epNum}`, { signal: AbortSignal.timeout(15000) });
+    if (!ahRes.ok) return res.status(404).json({ success: false, message: `No stream for provider ${provider}` });
+    const ahData = await ahRes.json();
 
-    const provData = epData.providers?.[provider];
-    if (!provData) return res.status(404).json({ success: false, message: `Provider ${provider} not found` });
-
-    const epsList = provData.episodes?.[category || 'sub'] || [];
-    const ep = epsList.find(e => e.number === epNum);
-    if (!ep) return res.status(404).json({ success: false, message: `Episode ${epNum} not found` });
-
-    const encId = Buffer.from(ep.id).toString('base64url').replace(/=+$/, '');
-    const sources = await pipeFetch({
-      path: 'sources', method: 'GET',
-      query: { episodeId: encId, provider, category: category || 'sub', anilistId: aid },
-      body: null, version: await getProtocolVersion(),
-    });
-
-    const hlsStreams = (sources.streams || []).filter(s => s.type === 'hls' && s.url && !BLOCKED_CDN_HOSTS.some(h => s.url.includes(h)));
+    const streams = ahData.streams || [];
+    const hlsStreams = streams.filter(s => s.type === 'hls' && s.url);
     if (!hlsStreams.length) {
       return res.status(404).json({ success: false, message: 'No HLS streams found for this provider' });
     }
 
     const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const proxied = hlsStreams.map(s => {
-      const hasCors = CORS_CDN_HOSTS.some(h => s.url.includes(h));
-      return {
-        url: hasCors ? s.url : `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(s.url)}&ref=${encodeURIComponent(s.referer || '')}`,
-        quality: s.quality,
-        isActive: s.isActive,
-      };
-    });
+    const proxied = hlsStreams.map(s => ({
+      url: `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(s.url)}&ref=${encodeURIComponent(s.referer || '')}`,
+      quality: s.server || s.quality || 'auto',
+      isActive: s.isActive !== false,
+    }));
 
     res.json({
       success: true,
       data: {
         streams: proxied,
-        subtitles: (sources.subtitles || []).map(s => ({ url: s.file || s.url, label: s.label || s.language })),
-        intro: sources.intro || null,
-        outro: sources.outro || null,
+        subtitles: (ahData.subtitles || []).map(s => ({ url: s.url, label: s.label || s.srclang })),
+        intro: ahData.intro || null,
+        outro: ahData.outro || null,
       },
     });
   } catch (err) {
@@ -410,28 +395,38 @@ exports.testProviders = async (req, res) => {
   } catch (e) { results.anilist = { error: e.message }; }
 
   try {
-    const data = await pipeFetch({
-      path: 'episodes', method: 'GET',
-      query: { anilistId: 1535 }, body: null, version: await getProtocolVersion(),
-    });
-    results.miruro = { providers: Object.keys(data.providers || {}) };
-  } catch (e) { results.miruro = { error: e.message }; }
+    const ahRes = await fetch(`${ANIHUB_API}/episodes/anikoto/1535`, { signal: AbortSignal.timeout(15000) });
+    const data = await ahRes.json();
+    results.anihub = { providers: Object.keys(data).filter(k => !['page', 'type', 'mappings', 'raw'].includes(k)) };
+  } catch (e) { results.anihub = { error: e.message }; }
 
   res.json({ success: true, data: results });
 };
 
 exports.consumetSources = async (req, res) => {
-  return res.status(404).json({ success: false, message: 'Streaming is temporarily unavailable' });
-  try { void 0;
+  try {
     const { anilistId, episodeNum } = req.params;
     const aid = parseInt(anilistId, 10);
     const epNum = parseInt(episodeNum, 10);
     const title = req.query.title || '';
     if (!aid || !epNum) return res.status(400).json({ success: false, message: 'Missing params' });
 
-    const result = await consumetStream(aid, epNum, req.query.cat || 'sub', title);
-    if (!result) return res.status(404).json({ success: false, message: 'No Consumet stream found' });
-    res.json({ success: true, data: result });
+    // Delegate to Anihub (consumet is dead)
+    const ahRes = await fetch(`${ANIHUB_API}/watch/anikoto/${aid}/${req.query.cat || 'sub'}/anikoto-${epNum}`, { signal: AbortSignal.timeout(15000) });
+    if (!ahRes.ok) return res.status(404).json({ success: false, message: 'No stream found' });
+    const ahData = await ahRes.json();
+    const stream = (ahData.streams || []).find(s => s.type === 'hls' && s.url && s.isActive) || (ahData.streams || []).find(s => s.type === 'hls' && s.url);
+    if (!stream) return res.status(404).json({ success: false, message: 'No stream found' });
+    res.json({
+      success: true,
+      data: {
+        provider: 'anikoto:' + (stream.server || 'HD'),
+        stream: { url: `${req.protocol}://${req.get('host')}/api/stream/proxy?url=${encodeURIComponent(stream.url)}&ref=${encodeURIComponent(stream.referer || '')}`, quality: stream.server || 'auto' },
+        subtitles: (ahData.subtitles || []).map(s => ({ url: s.url, label: s.label || s.srclang })),
+        intro: ahData.intro || null,
+        outro: ahData.outro || null,
+      },
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

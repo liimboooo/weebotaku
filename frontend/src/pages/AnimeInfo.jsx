@@ -80,20 +80,14 @@ export default function AnimeInfo() {
     setError("");
     try {
       const res = await api.get(`/catalog/anime/${id}/details`);
-      console.log('[AnimeInfo] details response:', res?.success, res?.data?.name, 'id=', id);
       if (res?.data) setAnime(res.data);
-      else setError("Anime not found. (no data in response)");
-    } catch (e) {
-      console.error('[AnimeInfo] details failed:', e?.message, 'id=', id);
+      else setError("Anime not found.");
+    } catch {
       try {
         const res = await api.get(`/catalog/anime/${id}`);
-        console.log('[AnimeInfo] byId response:', res?.success, res?.data?.name);
         if (res?.data) setAnime(res.data);
-        else setError("Anime not found. (no data in response)");
-      } catch (e2) {
-        console.error('[AnimeInfo] byId failed:', e2?.message, 'id=', id);
-        setError("Failed to load anime: " + (e2?.message || 'unknown'));
-      }
+        else setError("Anime not found.");
+      } catch { setError("Failed to load anime."); }
     }
     try {
       const recs = await fetchAnimeRecommendations(id);
