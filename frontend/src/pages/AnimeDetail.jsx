@@ -17,7 +17,7 @@ import authService from "../services/authService";
 import { getSocket, joinAnimeRoom, leaveAnimeRoom } from "../services/socket";
 import reportService from "../services/reportService";
 import reactionService from "../services/reactionService";
-import settingsService from "../services/settingsService";
+
 import Comments from "../components/Comments";
 import useDocumentTitle from "../hooks/useDocumentTitle";
 import VideoPlayer from "../components/VideoPlayer";
@@ -1013,7 +1013,6 @@ export default function AnimeDetail() {
       const s = JSON.parse(localStorage.getItem("otaku_settings") || "{}");
       s.playbackSpeed = speed;
       localStorage.setItem("otaku_settings", JSON.stringify(s));
-      settingsService.save(s);
     } catch (e) { console.error('[Otaku] Failed to save settings:', e); }
   }, []);
 
@@ -1024,7 +1023,6 @@ export default function AnimeDetail() {
         const s = JSON.parse(localStorage.getItem("otaku_settings") || "{}");
         s.autoNext = next;
         localStorage.setItem("otaku_settings", JSON.stringify(s));
-        settingsService.save(s);
       } catch {}
       return next;
     });
