@@ -90,10 +90,10 @@ export default function VideoPlayer({
 
       {/* Tap/double-tap gesture zones (HLS only) — left/right seek, single tap toggles */}
       {isHls && (
-        <div className="absolute inset-0 z-[5] flex">
-          <div className="w-[35%] h-full" onClick={() => handleZoneTap('left')} onDoubleClick={(e) => e.preventDefault()} />
-          <div className="flex-1 h-full" onClick={() => handleZoneTap('center')} />
-          <div className="w-[35%] h-full" onClick={() => handleZoneTap('right')} onDoubleClick={(e) => e.preventDefault()} />
+        <div className="absolute inset-0 z-[5] flex pointer-events-none">
+          <div className="w-[35%] h-full pointer-events-auto" onClick={() => handleZoneTap('left')} onDoubleClick={(e) => e.preventDefault()} />
+          <div className="flex-1 h-full pointer-events-auto" onClick={() => handleZoneTap('center')} />
+          <div className="w-[35%] h-full pointer-events-auto" onClick={() => handleZoneTap('right')} onDoubleClick={(e) => e.preventDefault()} />
         </div>
       )}
 
@@ -140,7 +140,7 @@ export default function VideoPlayer({
           {showSkipIntro && (
             <button
               onClick={handleSkipIntro}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-black/80 backdrop-blur-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/20 hover:border-white/40 active:scale-95 transition-all shadow-xl"
+              className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 rounded-lg bg-black/80 backdrop-blur-xl border border-white/20 text-white text-sm font-semibold hover:bg-white/20 hover:border-white/40 active:scale-95 transition-all shadow-xl"
             >
               Skip Intro <SkipForward size={14} />
             </button>
