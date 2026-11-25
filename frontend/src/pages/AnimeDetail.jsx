@@ -760,8 +760,11 @@ export default function AnimeDetail() {
       const ls = servers.filter(s => s.type === language);
       if (ls.length > 0) {
         setServerIndex(0);
-        setStreamUrl(streamMode === "hls" ? ls[0].url : toStreamUrl(ls[0]));
-        setLangKey(k => k + 1);
+        const next = streamMode === "hls" ? ls[0].url : toStreamUrl(ls[0]);
+        setStreamUrl(prev => {
+          if (next !== prev) setLangKey(k => k + 1);
+          return next;
+        });
       } else {
         if (!streamUrl) setError("No stream available for this language.");
       }
@@ -1422,7 +1425,7 @@ export default function AnimeDetail() {
                 </div>
               )}
 
-              {streamUrl && !loading && !error && !streamLoading && (
+              {streamUrl && !loading && !error && !streamLoading && streamMode === "hls" && (
               <VideoPlayer
                 streamMode={streamMode}
                 playing={playing}
