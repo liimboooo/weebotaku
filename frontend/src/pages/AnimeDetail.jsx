@@ -664,7 +664,8 @@ export default function AnimeDetail() {
           if (primary?.subtitles) setSubtitles(primary.subtitles);
 
           if (primary?.stream?.url) {
-            setStreamMode('hls');
+            const isEmbed = primary.type === 'embed';
+            setStreamMode(isEmbed ? 'iframe' : 'hls');
             setServers([{ label: labelFor(primaryCat), url: primary.stream.url, type: primaryCat }]);
             setStreamUrl(primary.stream.url);
             setStreamLoading(false);
@@ -762,7 +763,7 @@ export default function AnimeDetail() {
         setStreamUrl(streamMode === "hls" ? ls[0].url : toStreamUrl(ls[0]));
         setLangKey(k => k + 1);
       } else {
-        setStreamRetryCount(c => c + 1);
+        if (!streamUrl) setError("No stream available for this language.");
       }
     }
   }, [servers, language, streamMode]);

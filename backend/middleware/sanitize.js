@@ -23,7 +23,9 @@ module.exports = function sanitize(req, res, next) {
   // Stream proxy / embed resolution pass URLs through query params; xss() mangles
   // them (breaks new URL() and upstream fetch). Skip those routes.
   const p = req.path || '';
-  if (p.startsWith('/stream/proxy') || p.startsWith('/stream/resolve-embed')) {
+  const url = req.originalUrl || req.url || '';
+  // Exempt stream proxy and resolve-embed (they carry URLs in query params).
+  if (p.endsWith('/proxy') || url.includes('/stream/proxy') || p.endsWith('/resolve-embed') || url.includes('/stream/resolve-embed')) {
     return next();
   }
   if (req.body) req.body = clean(req.body);

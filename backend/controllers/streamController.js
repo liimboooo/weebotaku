@@ -294,19 +294,38 @@ exports.autoSources = async (req, res) => {
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
     // Try Anihub providers in order until one returns streams.
-    const providersToTry = ['reanime', 'anikoto', 'aniwaves', 'animegg', 'anizone', 'animenosub', 'mkissa', 'senshi', 'kaa', 'animedunya', 'animeonsen', 'anipm'];
+    const providersToTry = ['anikoto', 'reanime', 'aniwaves', 'animegg', 'anizone', 'animenosub', 'mkissa', 'senshi', 'kaa', 'animedunya', 'animeonsen', 'anipm'];
     for (const pname of providersToTry) {
       try {
         const ahRes = await fetch(`${ANIHUB_API}/watch/${pname}/${aid}/${category}/${pname}-${epNum}`, { signal: AbortSignal.timeout(30000) });
         if (!ahRes.ok) continue;
         const ahData = await ahRes.json();
         const streams = ahData.streams || [];
+
+        // Prefer embedUrl (self-contained player page, no segment proxy 403s).
+        const embed = streams.find(s => typeof s.embedUrl === 'string' && s.embedUrl.length > 0);
+        if (embed) {
+          const embedUrl = embed.embedUrl || embed.url;
+          const result = {
+            type: 'embed',
+            provider: `${pname}:${embed.server || 'embed'}`,
+            stream: { url: embedUrl, quality: 'auto' },
+            subtitles: [],
+            intro: ahData.intro || embed.intro || null,
+            outro: ahData.outro || embed.outro || null,
+          };
+          streamCache.set(cacheKey, { data: result, time: Date.now() });
+          return res.json({ success: true, data: result });
+        }
+
+        // Fallback to HLS.
         const activeHls = streams.find(s => s.type === 'hls' && s.url && s.isActive) || streams.find(s => s.type === 'hls' && s.url);
         if (!activeHls) continue;
 
-        const streamUrl = `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(activeHls.url)}&ref=${encodeURIComponent(activeHls.referer || '')}`;
-
+        const referer = activeHls.referer || 'https://megaplay.buzz/';
+        const streamUrl = `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(activeHls.url)}&ref=${encodeURIComponent(referer)}`;
         const result = {
+          type: 'hls',
           provider: `${pname}:${activeHls.server}`,
           stream: { url: streamUrl, quality: activeHls.server || 'auto' },
           subtitles: (ahData.subtitles || [])
@@ -342,6 +361,7 @@ exports.streamProxy = async (req, res) => {
   try {
     const targetUrl = req.query.url;
     const referer = req.query.ref || '';
+    console.log('[proxy] target=', targetUrl?.slice(0, 60), 'ref=', referer);
     if (!targetUrl) return res.status(400).send('url parameter required');
 
     let targetParsed;
@@ -429,7 +449,7 @@ exports.consumetSources = async (req, res) => {
       success: true,
       data: {
         provider: 'reanime:' + (stream.server || 'HD'),
-        stream: { url: `${req.protocol}://${req.get('host')}/api/stream/proxy?url=${encodeURIComponent(stream.url)}&ref=${encodeURIComponent(stream.referer || '')}`, quality: stream.server || 'auto' },
+        stream: { url: `${req.protocol}://${req.get('host')}/api/stream/proxy?url=${encodeURIComponent(stream.url)}&ref=${encodeURIComponent(stream.referer || 'https://megaplay.buzz/')}`, quality: stream.server || 'auto' },
         subtitles: (ahData.subtitles || []).map(s => ({ url: s.url, label: s.label || s.srclang })),
         intro: ahData.intro || null,
         outro: ahData.outro || null,

@@ -288,7 +288,8 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
           const consumet = consumetRes?.status === 'fulfilled' ? consumetRes.value : null;
 
           if (miruroSub?.stream?.url) {
-            hlsServers.push({ label: 'Sub (HLS)', url: miruroSub.stream.url, type: 'sub' });
+            const isEmbed = miruroSub.type === 'embed';
+            hlsServers.push({ label: isEmbed ? 'Sub (Embed)' : 'Sub (HLS)', url: miruroSub.stream.url, type: 'sub', embed: isEmbed });
             const subs = (miruroSub.subtitles || []).filter(s => !s.label || /english/i.test(s.label));
             if (subs.length) setSubtitles(subs);
           }
@@ -321,11 +322,12 @@ export default function AnimeWatch({ anime, animeName, onClose, startEp = 1, onE
         }
 
         if (hlsServers.length > 0) {
-          setStreamMode("hls");
+          const isEmbed = hlsServers.some(s => s.embed);
+          setStreamMode(isEmbed ? "iframe" : "hls");
           setServers(hlsServers);
           const preferred = hlsServers.find(s => s.type === language) || hlsServers[0];
           setStreamUrl(preferred.url);
-          setStreamCache(c => ({ ...c, [episode.url]: { servers: hlsServers, _mode: "hls" } }));
+          setStreamCache(c => ({ ...c, [episode.url]: { servers: hlsServers, _mode: isEmbed ? "iframe" : "hls" } }));
           setStreamLoading(false);
           return;
         }
