@@ -302,7 +302,26 @@ exports.autoSources = async (req, res) => {
         const ahData = await ahRes.json();
         const streams = ahData.streams || [];
 
-        // Prefer embedUrl (self-contained player page, no segment proxy 403s).
+        // Try HLS first (gives normal player controls).
+        const activeHls = streams.find(s => s.type === 'hls' && s.url && s.isActive) || streams.find(s => s.type === 'hls' && s.url);
+        if (activeHls) {
+          const referer = activeHls.referer || 'https://megaplay.buzz/';
+          const streamUrl = `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(activeHls.url)}&ref=${encodeURIComponent(referer)}`;
+          const result = {
+            type: 'hls',
+            provider: `${pname}:${activeHls.server}`,
+            stream: { url: streamUrl, quality: activeHls.server || 'auto' },
+            subtitles: (ahData.subtitles || [])
+              .filter(s => s.url && !/thumbnail/i.test(s.label || '') && !/preview\/thumbnails/i.test(s.url))
+              .map(s => ({ url: s.url, label: s.label || s.srclang, srclang: s.srclang || 'en', default: !!s.default })),
+            intro: ahData.intro || activeHls.intro || null,
+            outro: ahData.outro || activeHls.outro || null,
+          };
+          streamCache.set(cacheKey, { data: result, time: Date.now() });
+          return res.json({ success: true, data: result });
+        }
+
+        // Fallback to embed (self-contained player, no segment proxy).
         const embed = streams.find(s => typeof s.embedUrl === 'string' && s.embedUrl.length > 0);
         if (embed) {
           const embedUrl = embed.embedUrl || embed.url;
@@ -317,25 +336,6 @@ exports.autoSources = async (req, res) => {
           streamCache.set(cacheKey, { data: result, time: Date.now() });
           return res.json({ success: true, data: result });
         }
-
-        // Fallback to HLS.
-        const activeHls = streams.find(s => s.type === 'hls' && s.url && s.isActive) || streams.find(s => s.type === 'hls' && s.url);
-        if (!activeHls) continue;
-
-        const referer = activeHls.referer || 'https://megaplay.buzz/';
-        const streamUrl = `${baseUrl}/api/stream/proxy?url=${encodeURIComponent(activeHls.url)}&ref=${encodeURIComponent(referer)}`;
-        const result = {
-          type: 'hls',
-          provider: `${pname}:${activeHls.server}`,
-          stream: { url: streamUrl, quality: activeHls.server || 'auto' },
-          subtitles: (ahData.subtitles || [])
-            .filter(s => s.url && !/thumbnail/i.test(s.label || '') && !/preview\/thumbnails/i.test(s.url))
-            .map(s => ({ url: s.url, label: s.label || s.srclang, srclang: s.srclang || 'en', default: !!s.default })),
-          intro: ahData.intro || activeHls.intro || null,
-          outro: ahData.outro || activeHls.outro || null,
-        };
-        streamCache.set(cacheKey, { data: result, time: Date.now() });
-        return res.json({ success: true, data: result });
       } catch { continue; }
     }
 
@@ -361,7 +361,6 @@ exports.streamProxy = async (req, res) => {
   try {
     const targetUrl = req.query.url;
     const referer = req.query.ref || '';
-    console.log('[proxy] target=', targetUrl?.slice(0, 60), 'ref=', referer);
     if (!targetUrl) return res.status(400).send('url parameter required');
 
     let targetParsed;
