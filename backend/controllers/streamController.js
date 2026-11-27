@@ -177,7 +177,7 @@ exports.getEpisodes = async (req, res) => {
       return res.json({ success: true, data: cached.data });
     }
 
-    const ahRes = await fetch(`${ANIHUB_API}/episodes/anikoto/reanime/${anilistId}`, { signal: AbortSignal.timeout(15000) });
+    const ahRes = await fetch(`${ANIHUB_API}/episodes/reanime/${anilistId}`, { signal: AbortSignal.timeout(15000) });
     if (!ahRes.ok) return res.status(404).json({ success: false, message: 'No episodes found' });
     const ahData = await ahRes.json();
 
@@ -276,7 +276,7 @@ exports.autoSources = async (req, res) => {
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
     // Try Anihub providers in order until one returns streams.
-    const providersToTry = ['anikoto', 'reanime', 'aniwaves', 'animegg', 'anizone', 'animenosub', 'mkissa', 'senshi', 'kaa', 'animedunya', 'animeonsen', 'anipm'];
+    const providersToTry = ['reanime', 'anikoto', 'aniwaves', 'animegg', 'anizone', 'animenosub', 'mkissa', 'senshi', 'kaa', 'animedunya', 'animeonsen', 'anipm'];
     for (const pname of providersToTry) {
       try {
         const ahRes = await fetch(`${ANIHUB_API}/watch/${pname}/${aid}/${category}/${pname}-${epNum}`, { signal: AbortSignal.timeout(30000) });
@@ -284,7 +284,23 @@ exports.autoSources = async (req, res) => {
         const ahData = await ahRes.json();
         const streams = ahData.streams || [];
 
-        // Try HLS first (gives normal player controls).
+        // Prefer embed (self-contained player, no segment proxy 403 issues).
+        const embed = streams.find(s => typeof s.embedUrl === 'string' && s.embedUrl.length > 0);
+        if (embed) {
+          const embedUrl = embed.embedUrl || embed.url;
+          const result = {
+            type: 'embed',
+            provider: `${pname}:${embed.server || 'embed'}`,
+            stream: { url: embedUrl, quality: 'auto' },
+            subtitles: [],
+            intro: ahData.intro || embed.intro || null,
+            outro: ahData.outro || embed.outro || null,
+          };
+          streamCache.set(cacheKey, { data: result, time: Date.now() });
+          return res.json({ success: true, data: result });
+        }
+
+        // Fallback to HLS.
         const activeHls = streams.find(s => s.type === 'hls' && s.url && s.isActive) || streams.find(s => s.type === 'hls' && s.url);
         if (activeHls) {
           const referer = activeHls.referer || 'https://megaplay.buzz/';
@@ -303,21 +319,6 @@ exports.autoSources = async (req, res) => {
           return res.json({ success: true, data: result });
         }
 
-        // Fallback to embed (self-contained player, no segment proxy).
-        const embed = streams.find(s => typeof s.embedUrl === 'string' && s.embedUrl.length > 0);
-        if (embed) {
-          const embedUrl = embed.embedUrl || embed.url;
-          const result = {
-            type: 'embed',
-            provider: `${pname}:${embed.server || 'embed'}`,
-            stream: { url: embedUrl, quality: 'auto' },
-            subtitles: [],
-            intro: ahData.intro || embed.intro || null,
-            outro: ahData.outro || embed.outro || null,
-          };
-          streamCache.set(cacheKey, { data: result, time: Date.now() });
-          return res.json({ success: true, data: result });
-        }
       } catch { continue; }
     }
 
@@ -350,18 +351,17 @@ exports.streamProxy = async (req, res) => {
     if (targetParsed.protocol !== 'https:' && targetParsed.protocol !== 'http:') return res.status(400).send('Invalid protocol');
     if (isBlockedHost(targetParsed.hostname)) return res.status(403).send('Forbidden');
 
-    const parsed = new URL(referer || targetUrl);
-    const origin = `${parsed.protocol}//${parsed.host}`;
     const headers = {
-      'User-Agent': PIPE_HEADERS['User-Agent'],
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
       'Accept': '*/*',
-      'Accept-Language': 'en-US,en;q=0.9',
-      'Origin': origin,
     };
     if (referer) headers['Referer'] = referer;
 
     const proxyRes = await fetch(targetUrl, { headers, signal: AbortSignal.timeout(9000), redirect: 'follow' });
-    if (!proxyRes.ok) return res.status(proxyRes.status).send('Upstream error');
+    if (!proxyRes.ok) {
+      console.log('[proxy] upstream FAIL:', proxyRes.status, targetUrl.slice(0, 60), 'ref=', referer);
+      return res.status(proxyRes.status).send('Upstream error');
+    }
 
     const contentType = proxyRes.headers.get('content-type') || '';
     const isM3U8 = targetUrl.endsWith('.m3u8') || contentType.includes('mpegurl');
@@ -392,25 +392,12 @@ exports.streamProxy = async (req, res) => {
     res.set('Content-Type', contentType || 'application/octet-stream');
     proxyRes.body.pipe(res);
   } catch (err) {
+    console.error('[proxy] ERROR:', err.message, err.stack?.slice(0, 200));
     res.status(500).send('Proxy error');
   }
 };
 
-exports.testProviders = async (req, res) => {
-  const results = {};
-  try {
-    const anilist = await anilistSearch('Death Note');
-    results.anilist = { count: anilist.length, first: anilist[0]?.title || null };
-  } catch (e) { results.anilist = { error: e.message }; }
 
-  try {
-    const ahRes = await fetch(`${ANIHUB_API}/episodes/anikoto/1535`, { signal: AbortSignal.timeout(15000) });
-    const data = await ahRes.json();
-    results.anihub = { providers: Object.keys(data).filter(k => !['page', 'type', 'mappings', 'raw'].includes(k)) };
-  } catch (e) { results.anihub = { error: e.message }; }
-
-  res.json({ success: true, data: results });
-};
 
 exports.consumetSources = async (req, res) => {
   try {
