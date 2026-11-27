@@ -79,9 +79,7 @@ export default function VideoPlayer({
     }
   };
   const pct = (t) => (duration ? Math.max(0, Math.min(100, (t / duration) * 100)) : 0);
-  const langs = servers ? [...new Set(servers.map(s => s.type))] : [];
   const langServers = servers ? servers.filter(s => s.type === language) : [];
-  const hasMultipleServers = langServers.length > 1;
   const activeServer = servers?.find(s => s.type === language && servers.filter(x => x.type === language).indexOf(s) === serverIndex);
 
   return (

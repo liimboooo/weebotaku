@@ -9,7 +9,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { getAnimeById } from "../data/animeData";
 import Hls from "hls.js";
-import { findStreamingSource, getStreamUrls, getEpisodePage, getDirectStream, getMiruroStream, getMiruroEpisodes, getConsumetStream, getMultiEmbedStream } from "../services/animeApi";
+import { findStreamingSource, getStreamUrls, getDirectStream, getMiruroStream, getMiruroEpisodes, getConsumetStream, getMultiEmbedStream } from "../services/animeApi";
 import { loadWatchHistory, addToWatchHistory, addToWatchlist, removeFromWatchlist, isInWatchlist } from "../services/storage";
 import { fetchAnimeRecommendations } from "../services/anilistApi";
 import commentService from "../services/commentService";
@@ -70,8 +70,6 @@ export default function AnimeDetail() {
   const [langKey, setLangKey] = useState(0);
   const [visibleCount, setVisibleCount] = useState(50);
   const [epPage, setEpPage] = useState(0);
-  const [hasMoreEps, setHasMoreEps] = useState(false);
-  const [allEpsLoaded, setAllEpsLoaded] = useState(false);
   const [seekTo, setSeekTo] = useState(null);
   const [sourceLookupDone, setSourceLookupDone] = useState(false);
   const [streamMode, setStreamMode] = useState("iframe");
@@ -88,7 +86,7 @@ export default function AnimeDetail() {
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [showMoreActions, setShowMoreActions] = useState(false);
   const [showMobileComments, setShowMobileComments] = useState(false);
-  const [showMobileSource, setShowMobileSource] = useState(false);
+
   const [showServerSelector, setShowServerSelector] = useState(false);
 
   const [liked, setLiked] = useState(null);
@@ -578,20 +576,6 @@ export default function AnimeDetail() {
     return () => { cancelled = true; clearTimeout(timer); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchAnime, sourceLookupDone, retryCount]);
-
-  const loadMoreEpisodes = async () => {
-    const nextPage = epPage + 1;
-    const result = await getEpisodePage(
-      watchAnime.title || watchAnime.slug, watchAnime.tagSlug,
-      watchAnime.source, watchAnime.sourceBase, watchAnime.anilistId, nextPage
-    );
-    if (result?.episodes?.length > 0) {
-      setEpisodes(prev => [...prev, ...result.episodes]);
-      setEpPage(nextPage);
-      setHasMoreEps(result.hasMore);
-    }
-    if (!result?.hasMore) setAllEpsLoaded(true);
-  };
 
   useEffect(() => {
     if (!sidebarRef.current || epIndex < 0) return;
