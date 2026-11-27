@@ -277,12 +277,18 @@ exports.getBrowse = async (req, res) => {
     if (source) add('$source:MediaSource', 'source:$source', 'source', source);
 
     const q = `query(${paramDefs.join(',')}){Page(page:$page,perPage:30){pageInfo{total currentPage lastPage hasNextPage} media(${mediaArgs.join(',')}){${ANIME_FIELDS}}}}`;
+    const cacheKey = `browse:${JSON.stringify(req.query)}`;
+    const cached = getCached(cacheKey);
+    if (cached) return res.json(cached);
+
     const data = await gql(q, vars);
-    res.json({
+    const result = {
       success: true,
       data: (data?.Page?.media || []).map(mapAnime),
       pageInfo: data?.Page?.pageInfo || { total: 0, currentPage: page, lastPage: 1, hasNextPage: false },
-    });
+    };
+    setCache(cacheKey, result);
+    res.json(result);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
