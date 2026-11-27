@@ -9,9 +9,7 @@ const PIPE_HEADERS = {
   'Referer': 'https://www.miruro.tv/',
 };
 
-const PROVIDER_PRIORITY = ['kiwi', 'bee', 'bonk', 'ally', 'moo', 'hop', 'ANIMEDUNYA', 'zoro', 'arc', 'telli', 'yugen', 'jet', 'neo'];
-const BLOCKED_CDN_HOSTS = ['uwucdn.top', 'owocdn.top'];
-const CORS_CDN_HOSTS = ['wixmp.com', 'wixstatic.com'];
+
 
 const EZVIDAPI_BASE = 'https://api.ezvidapi.com';
 const EZVIDAPI_PROVIDERS = ['vidsrc', 'vidrock', 'vidnest', 'vixsrc'];
