@@ -122,14 +122,14 @@ export function removeFromWatchHistory(timestamp) {
   return updated;
 }
 
-export function addToWatchHistory(animeId, episode, animeName, animeImg, position = 0, totalEpisodes = 0) {
+export function addToWatchHistory(animeId, episode, animeName, animeImg, position = 0, totalEpisodes = 0, duration = 24) {
   let history = loadWatchHistory();
   const strId = String(animeId);
   const existingIdx = history.findIndex(h => String(h.animeId) === strId && h.episode === episode);
   if (existingIdx !== -1) {
     history.splice(existingIdx, 1);
   }
-  history.unshift({ animeId, episode, position, timestamp: Date.now(), animeName: animeName || "", animeImg: animeImg || "", totalEpisodes });
+  history.unshift({ animeId, episode, position, timestamp: Date.now(), animeName: animeName || "", animeImg: animeImg || "", totalEpisodes, duration });
   if (history.length > 100) history.length = 100;
   localStorage.setItem(STORAGE_KEYS.WATCH_HISTORY, JSON.stringify(history));
   try { window.dispatchEvent(new CustomEvent("history-updated")); } catch {}

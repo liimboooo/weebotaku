@@ -100,7 +100,7 @@ exports.updateWatchHistory = async (req, res) => {
   try {
     const animeId = idParam(req);
     if (!animeId) return res.status(400).json({ success: false, message: 'Invalid anime ID' });
-    const { episodeWatched, animeName, animeImg, position } = req.body || {};
+    const { episodeWatched, animeName, animeImg, position, duration } = req.body || {};
     const ep = Number.isFinite(Number(episodeWatched)) ? Number(episodeWatched) : 1;
 
     const user = await User.findById(req.user.id);
@@ -119,6 +119,7 @@ exports.updateWatchHistory = async (req, res) => {
       position: Number.isFinite(Number(position)) ? Number(position) : 0,
       animeName: animeName || '',
       animeImg: animeImg || '',
+      duration: Number.isFinite(Number(duration)) ? Number(duration) : 24,
       timestamp: new Date(),
     });
 

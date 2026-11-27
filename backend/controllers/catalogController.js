@@ -98,7 +98,7 @@ function mapAnime(a) {
     type: a.format || 'TV',
     trailerUrl: a.trailer?.site === 'youtube' ? `https://www.youtube.com/embed/${a.trailer.id}` : null,
     currentEp: a.episodes || 0,
-    nextEpDate: a.nextAiringEpisode?.airingAt ? new Date(a.nextAiringEpisode.airingAt * 1000).toLocaleDateString() : a.status === 'RELEASING' ? 'TBD' : 'Ended',
+    nextEpDate: a.nextAiringEpisode?.airingAt ? new Date(a.nextAiringEpisode.airingAt * 1000).toISOString().slice(0, 10) : a.status === 'RELEASING' ? 'TBD' : 'Ended',
   };
 }
 
@@ -425,6 +425,7 @@ exports.getDetails = async (req, res) => {
       startDate: a.startDate ? { year: a.startDate.year, month: a.startDate.month, day: a.startDate.day } : null,
       trailerUrl: a.trailer?.site === 'youtube' ? `https://www.youtube.com/embed/${a.trailer.id}` : null,
       nextAiringEpisode: a.nextAiringEpisode || null,
+      nextEpDate: a.nextAiringEpisode?.airingAt ? new Date(a.nextAiringEpisode.airingAt * 1000).toISOString().slice(0, 10) : a.status === 'RELEASING' ? 'TBD' : 'Ended',
     };
 
     res.json({ success: true, data: detail });

@@ -630,7 +630,7 @@ export default function AnimeDetail() {
   useEffect(() => {
     if (!episode || !watchAnime) return;
     let cancelled = false;
-    addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img, 0, anime?.episodes);
+    addToWatchHistory(parseInt(id), episode.episode, anime?.name, anime?.img, 0, anime?.episodes, anime?.duration || 24);
     setSeekTo(null);
     setIntroOutro({ intro: null, outro: null });
     introOutroRef.current = { intro: null, outro: null };

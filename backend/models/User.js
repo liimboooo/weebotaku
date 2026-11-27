@@ -78,6 +78,7 @@ const UserSchema = new mongoose.Schema({
     position: { type: Number, default: 0 },
     animeName: String,
     animeImg: String,
+    duration: { type: Number, default: 24 },
     timestamp: { type: Date, default: Date.now },
   }],
   favorites: [{

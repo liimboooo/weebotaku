@@ -30,13 +30,14 @@ class AnimeService {
     return api.get('/anime/watchlist');
   }
 
-  async updateWatchHistory(animeId, episodeWatched, animeName = '', animeImg = '', position = 0) {
+  async updateWatchHistory(animeId, episodeWatched, animeName = '', animeImg = '', position = 0, duration = 24) {
     return api.post(`/anime/${animeId}/history`, {
       animeId,
       episodeWatched,
       animeName,
       animeImg,
       position,
+      duration,
     });
   }
 

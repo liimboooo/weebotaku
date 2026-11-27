@@ -179,6 +179,7 @@ function ContinueWatchingRow() {
       ...item,
       img: details?.img || item.animeImg || "",
       name: details?.name || item.animeName || "Unknown",
+      duration: item.duration || details?.duration || 24,
     };
   });
 
@@ -208,7 +209,7 @@ function ContinueWatchingRow() {
       <div className="cw-scroll-wrap">
        <div className="cw-scroll">
         {rowItems.map((item) => {
-          const total = 24 * 60;
+          const total = (item.duration || 24) * 60;
           const current = Math.min(item.position || 0, total);
           const pct = total ? Math.min(100, (current / total) * 100) : 0;
           return (
