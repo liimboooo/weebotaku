@@ -658,7 +658,7 @@ export default function AnimeInfo() {
         {(activeTab === "related" || activeTab === "more-like-this") && (
           <div className="animate-in fade-in duration-500">
             {(() => {
-              const list = activeTab === "related" ? (anime.related || []) : related;
+              const list = activeTab === "related" ? (anime.related?.length ? anime.related : related) : related;
               return list.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-5">
                   {list.map((r, i) => (

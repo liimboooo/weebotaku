@@ -1,30 +1,14 @@
 const zlib = require('zlib');
 const fetch = require('node-fetch');
 
-const MIRURO_PIPE = 'https://www.miruro.tv/api/secure/pipe';
 const ANIHUB_API = process.env.ANIHUB_API_URL || 'http://localhost:4000';
-const ANILIST_URL = 'https://graphql.anilist.co';
-const PIPE_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Referer': 'https://www.miruro.tv/',
-};
 
-
-
-const EZVIDAPI_BASE = 'https://api.ezvidapi.com';
-const EZVIDAPI_PROVIDERS = ['vidsrc', 'vidrock', 'vidnest', 'vixsrc'];
-const ARM_API = 'https://arm.haglund.dev/api/v2/ids';
-const tmdbCache = new Map();
 const episodesCache = new Map();
-const EP_CACHE_TTL = 5 * 60 * 1000;
-const failedEpisodesCache = new Map();
-const FAILED_EPISODES_TTL = 2 * 60 * 1000;
-const MIRURO_JWKS = 'https://www.miruro.tv/.well-known/jwks.json';
+const EP_CACHE_TTL = 10 * 60 * 1000;
 
-let protocolVersion = '0.1.0';
-let protoVersionPromise = null;
+// Dead Miruro pipe code removed — streaming now uses Anihub-Api
 
-async function getProtocolVersion() {
+function isBlockedHost(hostname) {
   if (protoVersionPromise) return protoVersionPromise;
   protoVersionPromise = (async () => {
     try {
