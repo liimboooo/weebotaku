@@ -1381,7 +1381,7 @@ export default function AnimeDetail() {
               )}
               {/* iframe */}
               {!loading && !error && streamUrl && !streamLoading && !iframeError && streamMode === "iframe" && (
-                <iframe ref={iframeRef} key={`${episode?.episode || 0}-${serverIndex}-${langKey}-${seekTo ?? 0}`} className="w-full h-full" src={seekTo != null ? `${streamUrl}${streamUrl.includes("#") ? "&" : "#"}t=${seekTo}` : streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen onError={handleIframeError} />
+                <iframe ref={iframeRef} key={`iframe-${episode?.episode || 0}`} className="w-full h-full" src={seekTo != null ? `${streamUrl}${streamUrl.includes("#") ? "&" : "#"}t=${seekTo}` : streamUrl} title={`Episode ${episode?.episode || ""}`} allow="autoplay; fullscreen; encrypted-media" allowFullScreen />
               )}
               {/* iframe error */}
               {!loading && !error && iframeError && streamUrl && (

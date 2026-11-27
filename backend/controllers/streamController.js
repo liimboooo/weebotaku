@@ -276,7 +276,7 @@ exports.autoSources = async (req, res) => {
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 
     // Try Anihub providers in order until one returns streams.
-    const providersToTry = ['reanime', 'anikoto', 'aniwaves', 'animegg', 'anizone', 'animenosub', 'mkissa', 'senshi', 'kaa', 'animedunya', 'animeonsen', 'anipm'];
+    const providersToTry = ['anikoto', 'reanime', 'aniwaves', 'animegg', 'anizone', 'animenosub', 'mkissa', 'senshi', 'kaa', 'animedunya', 'animeonsen', 'anipm'];
     for (const pname of providersToTry) {
       try {
         const ahRes = await fetch(`${ANIHUB_API}/watch/${pname}/${aid}/${category}/${pname}-${epNum}`, { signal: AbortSignal.timeout(30000) });
@@ -344,6 +344,7 @@ exports.streamProxy = async (req, res) => {
   try {
     const targetUrl = req.query.url;
     const referer = req.query.ref || '';
+    console.log('[proxy] target=', targetUrl?.slice(0, 50), 'ref=', referer);
     if (!targetUrl) return res.status(400).send('url parameter required');
 
     let targetParsed;
@@ -353,7 +354,6 @@ exports.streamProxy = async (req, res) => {
 
     const headers = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      'Accept': '*/*',
     };
     if (referer) headers['Referer'] = referer;
 
