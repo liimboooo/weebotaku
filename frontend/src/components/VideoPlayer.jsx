@@ -185,7 +185,7 @@ export default function VideoPlayer({
               style={{ width: `${duration ? Math.min(100, (buffered / duration) * 100) : 0}%` }}
             />
             <div
-              className="absolute inset-y-0 left-0 rounded-full bg-white group-hover/timeline:h-1.5 transition-all"
+              className="absolute inset-y-0 left-0 rounded-full bg-purple-500 group-hover/timeline:h-1.5 transition-all"
               style={{ width: `${progress}%` }}
             />
             {/* Intro / outro markers — drawn on top of progress so they stay visible */}
@@ -196,7 +196,7 @@ export default function VideoPlayer({
               <div className="absolute -top-1 -bottom-1 rounded-[2px] bg-white ring-1 ring-black/40 pointer-events-none z-[3]" title="Outro" style={{ left: `${pct(introOutro.outro.start)}%`, width: `${Math.max(0.8, pct(introOutro.outro.end) - pct(introOutro.outro.start))}%` }} />
             )}
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white opacity-0 group-hover/timeline:opacity-100 transition-all shadow-lg shadow-black/40 scale-0 group-hover/timeline:scale-100"
+              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-purple-500 opacity-0 group-hover/timeline:opacity-100 transition-all shadow-lg shadow-black/40 scale-0 group-hover/timeline:scale-100"
               style={{ left: `${progress}%`, marginLeft: "-8px" }}
             />
             {hoveringTimeline && isHls && (
@@ -474,7 +474,7 @@ export default function VideoPlayer({
         {/* Mini progress bar — visible when full controls are hidden */}
         {isHls && (
           <div className={`absolute bottom-0 left-0 right-0 h-[3px] bg-white/10 transition-opacity duration-300 ${showControls ? "opacity-0" : "opacity-100"}`}>
-            <div className="h-full bg-white" style={{ width: `${progress}%` }} />
+            <div className="h-full bg-purple-500" style={{ width: `${progress}%` }} />
           </div>
         )}
       </div>
