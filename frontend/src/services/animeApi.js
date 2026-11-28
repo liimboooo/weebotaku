@@ -1,5 +1,6 @@
 const REANIME_BASE = process.env.REACT_APP_REANIME_BASE_URL || "https://reanime.to";
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const ANIHUB_BASE = process.env.REACT_APP_ANIHUB_API_URL || "http://localhost:4000";
 const FETCH_TIMEOUT = 5000;
 
 function cleanTitle(title) {
@@ -366,26 +367,67 @@ export async function getMiruroEpisodes(anilistId) {
   try {
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), 15000);
-    const res = await fetch(`${API_BASE}/stream/episodes/${anilistId}`, { signal: controller.signal });
+    const res = await fetch(`${ANIHUB_BASE}/episodes/anikoto/${anilistId}`, { signal: controller.signal });
     clearTimeout(t);
     if (!res.ok) return null;
     const json = await res.json();
-    if (!json.success) return null;
-    return json.data;
+    // Transform Anihub format to weebotaku format
+    const anikoto = json.anikoto;
+    if (!anikoto?.episodes) return null;
+    const subEps = (anikoto.episodes.sub || []).map(e => ({
+      number: e.number,
+      title: e.title || `Episode ${e.number}`,
+      id: e.id,
+      image: e.image || null,
+      description: e.description || null,
+    }));
+    const dubEps = (anikoto.episodes.dub || []).map(e => ({
+      number: e.number,
+      title: e.title || `Episode ${e.number}`,
+      id: e.id,
+      image: e.image || null,
+      description: e.description || null,
+    }));
+    return { providers: { anikoto: { sub: subEps, dub: dubEps } } };
   } catch { return null; }
 }
 
 export async function getMiruroStream(anilistId, episodeNum, category = 'sub', animeTitle = '') {
   try {
-    const titleParam = animeTitle ? `&title=${encodeURIComponent(animeTitle)}` : '';
     const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 12000);
-    const res = await fetch(`${API_BASE}/stream/auto/${anilistId}/${episodeNum}?cat=${category}${titleParam}`, { signal: controller.signal });
+    const t = setTimeout(() => controller.abort(), 15000);
+    const res = await fetch(`${ANIHUB_BASE}/watch/anikoto/${anilistId}/${category}/anikoto-${episodeNum}`, { signal: controller.signal });
     clearTimeout(t);
     if (!res.ok) return null;
     const json = await res.json();
-    if (!json.success) return null;
-    return json.data;
+    const streams = json.streams || [];
+    // Prefer embed (self-contained player)
+    const embed = streams.find(s => typeof s.embedUrl === 'string' && s.embedUrl.length > 0);
+    if (embed) {
+      return {
+        type: 'embed',
+        provider: 'anikoto:' + (embed.server || 'embed'),
+        stream: { url: embed.embedUrl, quality: 'auto' },
+        subtitles: [],
+        intro: json.intro || embed.intro || null,
+        outro: json.outro || embed.outro || null,
+      };
+    }
+    // Fallback to HLS
+    const hls = streams.find(s => s.type === 'hls' && s.url && s.isActive) || streams.find(s => s.type === 'hls' && s.url);
+    if (hls) {
+      const referer = hls.referer || 'https://megaplay.buzz/';
+      return {
+        type: 'hls',
+        provider: 'anikoto:' + (hls.server || 'HD'),
+        stream: { url: hls.url, quality: hls.server || 'auto' },
+        subtitles: (json.subtitles || []).filter(s => s.url && !/thumbnail/i.test(s.label || '')).map(s => ({ url: s.url, label: s.label || s.srclang, srclang: s.srclang || 'en', default: !!s.default })),
+        intro: json.intro || hls.intro || null,
+        outro: json.outro || hls.outro || null,
+        _referer: referer,
+      };
+    }
+    return null;
   } catch { return null; }
 }
 
