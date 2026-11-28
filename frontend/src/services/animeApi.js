@@ -1,4 +1,5 @@
 const REANIME_BASE = process.env.REACT_APP_REANIME_BASE_URL || "https://reanime.to";
+console.debug("[Otaku] api ready");
 const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 const ANIHUB_BASE = process.env.REACT_APP_ANIHUB_API_URL || "http://localhost:4000";
 const FETCH_TIMEOUT = 5000;
@@ -459,4 +460,6 @@ export async function getMultiEmbedStream(anilistId, episodeNum) {
   // Streaming providers are currently unavailable.
   return null;
 }
+
+
 
