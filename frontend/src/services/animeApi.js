@@ -367,68 +367,72 @@ export async function getMiruroEpisodes(anilistId) {
   try {
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), 15000);
-    const res = await fetch(`${ANIHUB_BASE}/episodes/anikoto/${anilistId}`, { signal: controller.signal });
+    const res = await fetch(`${ANIHUB_BASE}/episodes/anikoto/reanime/${anilistId}`, { signal: controller.signal });
     clearTimeout(t);
     if (!res.ok) return null;
     const json = await res.json();
-    // Transform Anihub format to weebotaku format
-    const anikoto = json.anikoto;
-    if (!anikoto?.episodes) return null;
-    const subEps = (anikoto.episodes.sub || []).map(e => ({
+    // Transform Anihub format to weebotaku format (prefer anikoto, fallback reanime)
+    const provider = json.anikoto?.episodes ? 'anikoto' : (json.reanime?.episodes ? 'reanime' : null);
+    if (!provider) return null;
+    const p = json[provider];
+    const subEps = (p.episodes.sub || []).map(e => ({
       number: e.number,
       title: e.title || `Episode ${e.number}`,
       id: e.id,
       image: e.image || null,
       description: e.description || null,
     }));
-    const dubEps = (anikoto.episodes.dub || []).map(e => ({
+    const dubEps = (p.episodes.dub || []).map(e => ({
       number: e.number,
       title: e.title || `Episode ${e.number}`,
       id: e.id,
       image: e.image || null,
       description: e.description || null,
     }));
-    return { providers: { anikoto: { sub: subEps, dub: dubEps } } };
+    return { providers: { [provider]: { sub: subEps, dub: dubEps } } };
   } catch { return null; }
 }
 
 export async function getMiruroStream(anilistId, episodeNum, category = 'sub', animeTitle = '') {
-  try {
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 15000);
-    const res = await fetch(`${ANIHUB_BASE}/watch/anikoto/${anilistId}/${category}/anikoto-${episodeNum}`, { signal: controller.signal });
-    clearTimeout(t);
-    if (!res.ok) return null;
-    const json = await res.json();
-    const streams = json.streams || [];
-    // Prefer embed (self-contained player)
-    const embed = streams.find(s => typeof s.embedUrl === 'string' && s.embedUrl.length > 0);
-    if (embed) {
-      return {
-        type: 'embed',
-        provider: 'anikoto:' + (embed.server || 'embed'),
-        stream: { url: embed.embedUrl, quality: 'auto' },
-        subtitles: [],
-        intro: json.intro || embed.intro || null,
-        outro: json.outro || embed.outro || null,
-      };
-    }
-    // Fallback to HLS
-    const hls = streams.find(s => s.type === 'hls' && s.url && s.isActive) || streams.find(s => s.type === 'hls' && s.url);
-    if (hls) {
-      const referer = hls.referer || 'https://megaplay.buzz/';
-      return {
-        type: 'hls',
-        provider: 'anikoto:' + (hls.server || 'HD'),
-        stream: { url: hls.url, quality: hls.server || 'auto' },
-        subtitles: (json.subtitles || []).filter(s => s.url && !/thumbnail/i.test(s.label || '')).map(s => ({ url: s.url, label: s.label || s.srclang, srclang: s.srclang || 'en', default: !!s.default })),
-        intro: json.intro || hls.intro || null,
-        outro: json.outro || hls.outro || null,
-        _referer: referer,
-      };
-    }
-    return null;
-  } catch { return null; }
+  // Try anikoto first (has embed), then reanime (HLS)
+  for (const prov of ['anikoto', 'reanime']) {
+    try {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch(`${ANIHUB_BASE}/watch/${prov}/${anilistId}/${category}/${prov}-${episodeNum}`, { signal: controller.signal });
+      clearTimeout(t);
+      if (!res.ok) continue;
+      const json = await res.json();
+      const streams = json.streams || [];
+      // Prefer embed (self-contained player)
+      const embed = streams.find(s => typeof s.embedUrl === 'string' && s.embedUrl.length > 0);
+      if (embed) {
+        return {
+          type: 'embed',
+          provider: prov + ':' + (embed.server || 'embed'),
+          stream: { url: embed.embedUrl, quality: 'auto' },
+          subtitles: [],
+          intro: json.intro || embed.intro || null,
+          outro: json.outro || embed.outro || null,
+        };
+      }
+      // Fallback to HLS
+      const hls = streams.find(s => s.type === 'hls' && s.url && s.isActive) || streams.find(s => s.type === 'hls' && s.url);
+      if (hls) {
+        const referer = hls.referer || 'https://megaplay.buzz/';
+        return {
+          type: 'hls',
+          provider: prov + ':' + (hls.server || 'HD'),
+          stream: { url: hls.url, quality: hls.server || 'auto' },
+          subtitles: (json.subtitles || []).filter(s => s.url && !/thumbnail/i.test(s.label || '')).map(s => ({ url: s.url, label: s.label || s.srclang, srclang: s.srclang || 'en', default: !!s.default })),
+          intro: json.intro || hls.intro || null,
+          outro: json.outro || hls.outro || null,
+          _referer: referer,
+        };
+      }
+    } catch { continue; }
+  }
+  return null;
 }
 
 export async function getConsumetStream(anilistId, episodeNum, animeTitle, category = 'sub') {
