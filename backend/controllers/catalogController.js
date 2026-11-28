@@ -50,6 +50,7 @@ async function gql(query, variables = {}, retries = DEFAULT_RETRIES) {
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
+      console.log('[gql] query:', query.slice(0, 80));
       const r = await fetch(ANILIST, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -547,9 +548,11 @@ exports.getTags = async (req, res) => {
     const cached = getCached('tags');
     if (cached) return res.json({ success: true, data: cached });
 
-    const q = 'query { TagCollection { name } }';
+    const q = 'query { MediaTagCollection { name } }';
+    console.log('[getTags] query:', q);
     const data = await gql(q);
-    const tags = (data?.TagCollection || []).map(t => t.name).filter(Boolean).sort();
+    console.log('[getTags] data:', data ? Object.keys(data) : 'null');
+    const tags = (data?.MediaTagCollection || []).map(t => t.name).filter(Boolean).sort();
     setCache('tags', tags);
     res.json({ success: true, data: tags });
   } catch (err) {
